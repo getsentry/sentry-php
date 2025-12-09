@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\ClientReport;
 
 class Reason
 {
-
     /**
      * @var string
      */
     private $value;
 
+    /**
+     * @var array<self>
+     */
     private static $instances = [];
 
     public function __construct(string $value)
@@ -77,9 +81,6 @@ class Reason
         return self::getInstance('backpressure');
     }
 
-    /**
-     * @return string
-     */
     public function getValue(): string
     {
         return $this->value;
@@ -98,5 +99,4 @@ class Reason
 
         return self::$instances[$value];
     }
-
 }

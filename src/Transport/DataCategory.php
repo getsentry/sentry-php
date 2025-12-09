@@ -1,15 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Transport;
 
 class DataCategory
 {
-
     /**
      * @var string
      */
     private $value;
 
+    /**
+     * @var array<self>
+     */
     private static $instances = [];
 
     public function __construct(string $value)
@@ -53,6 +57,11 @@ class DataCategory
         return self::getInstance('trace_metric');
     }
 
+    public static function internal(): self
+    {
+        return self::getInstance('internal');
+    }
+
     public function getValue(): string
     {
         return $this->value;
@@ -63,7 +72,7 @@ class DataCategory
         return $this->value;
     }
 
-    private static function getInstance(string $value)
+    private static function getInstance(string $value): self
     {
         if (!isset(self::$instances[$value])) {
             self::$instances[$value] = new self($value);

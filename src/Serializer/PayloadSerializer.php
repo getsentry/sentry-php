@@ -40,23 +40,26 @@ final class PayloadSerializer implements PayloadSerializerInterface
      */
     public function serialize(Event $event): string
     {
-        // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
-        $envelopeHeader = [
-            'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
-            'dsn' => (string) $this->options->getDsn(),
-            'sdk' => $event->getSdkPayload(),
-        ];
+        $envelopeHeader = null;
+        if ($event->getType() !== EventType::clientReport()) {
+            // @see https://develop.sentry.dev/sdk/envelopes/#envelope-headers
+            $envelopeHeader = [
+                'sent_at' => gmdate('Y-m-d\TH:i:s\Z'),
+                'dsn' => (string) $this->options->getDsn(),
+                'sdk' => $event->getSdkPayload(),
+            ];
 
-        if ($event->getType()->requiresEventId()) {
-            $envelopeHeader['event_id'] = (string) $event->getId();
-        }
+            if ($event->getType()->requiresEventId()) {
+                $envelopeHeader['event_id'] = (string) $event->getId();
+            }
 
-        $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
-        if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
-            $entries = $dynamicSamplingContext->getEntries();
+            $dynamicSamplingContext = $event->getSdkMetadata('dynamic_sampling_context');
+            if ($dynamicSamplingContext instanceof DynamicSamplingContext) {
+                $entries = $dynamicSamplingContext->getEntries();
 
-            if (!empty($entries)) {
-                $envelopeHeader['trace'] = $entries;
+                if (!empty($entries)) {
+                    $envelopeHeader['trace'] = $entries;
+                }
             }
         }
 
@@ -86,6 +89,10 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
         }
 
-        return \sprintf("%s\n%s", JSON::encode($envelopeHeader, \JSON_FORCE_OBJECT), implode("\n", array_filter($items)));
+        if ($envelopeHeader === null) {
+            return \sprintf("{}\n%s", implode("\n", array_filter($items)));
+        }
+
+        return \sprintf("%s\n%s", JSON::encode($envelopeHeader), implode("\n", array_filter($items)));
     }
 }

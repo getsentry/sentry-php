@@ -15,7 +15,7 @@ class ClientReportItem implements EnvelopeItemInterface
 
         $headers = ['type' => 'client_report'];
         $body = [
-            'timestamp' => time(),
+            'timestamp' => $event->getTimestamp(),
             'discarded_events' => array_map(function (ClientReport $report) {
                 return [
                     'category' => $report->getCategory(),

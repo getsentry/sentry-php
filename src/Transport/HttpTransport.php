@@ -6,9 +6,7 @@ namespace Sentry\Transport;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Sentry\ClientReport\FireAndForgetClient;
 use Sentry\Event;
-use Sentry\EventType;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Request;
 use Sentry\Options;
@@ -29,11 +27,6 @@ class HttpTransport implements TransportInterface
      * @var HttpClientInterface The HTTP client
      */
     private $httpClient;
-
-    /**
-     * @var HttpClientInterface Fire and Forget client so we don't have to wait for client report sending
-     */
-    private $clientReportClient;
 
     /**
      * @var PayloadSerializerInterface The event serializer
@@ -67,7 +60,6 @@ class HttpTransport implements TransportInterface
         $this->payloadSerializer = $payloadSerializer;
         $this->logger = $logger ?? new NullLogger();
         $this->rateLimiter = new RateLimiter($this->logger);
-        $this->clientReportClient = new FireAndForgetClient();
     }
 
     /**

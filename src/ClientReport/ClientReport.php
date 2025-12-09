@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\ClientReport;
 
 class ClientReport
 {
-
     /**
      * @var string
      */
@@ -27,28 +28,18 @@ class ClientReport
         $this->quantity = $quantity;
     }
 
-    /**
-     * @return string
-     */
     public function getCategory(): string
     {
         return $this->category;
     }
 
-    /**
-     * @return int
-     */
     public function getQuantity(): int
     {
         return $this->quantity;
     }
 
-    /**
-     * @return string
-     */
     public function getReason(): string
     {
         return $this->reason;
     }
-
 }
