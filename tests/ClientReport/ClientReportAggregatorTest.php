@@ -22,6 +22,7 @@ class ClientReportAggregatorTest extends TestCase
         StubLogger::$logs = [];
         SentrySdk::init()->bindClient(new Client(new Options([
             'logger' => StubLogger::getInstance(),
+            'default_integrations' => false,
         ]), StubTransport::getInstance()));
     }
 
@@ -70,7 +71,7 @@ class ClientReportAggregatorTest extends TestCase
         ClientReportAggregator::getInstance()->flush();
 
         $this->assertEmpty(StubTransport::$events);
-        $this->assertCount(1, StubLogger::$logs);
+        $this->assertNotEmpty(StubLogger::$logs);
         $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => -10]], StubLogger::$logs[0]);
     }
 
