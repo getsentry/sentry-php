@@ -18,11 +18,11 @@ class ClientReportAggregatorTest extends TestCase
 {
     protected function setUp(): void
     {
+        ini_set('zend.exception_ignore_args', '0');
         StubTransport::$events = [];
         StubLogger::$logs = [];
         SentrySdk::init()->bindClient(new Client(new Options([
             'logger' => StubLogger::getInstance(),
-            'default_integrations' => false,
         ]), StubTransport::getInstance()));
     }
 
