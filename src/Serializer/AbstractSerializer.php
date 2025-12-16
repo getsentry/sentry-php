@@ -216,6 +216,10 @@ abstract class AbstractSerializer
      */
     protected function serializeString(string $value): string
     {
+        if ($value === '') {
+            return '';
+        }
+
         // we always guarantee this is coerced, even if we can't detect encoding
         if ($currentEncoding = mb_detect_encoding($value, $this->mbDetectOrder)) {
             $encoded = mb_convert_encoding($value, 'UTF-8', $currentEncoding) ?: '<encoding error>';

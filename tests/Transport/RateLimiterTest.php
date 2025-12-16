@@ -7,8 +7,8 @@ namespace Sentry\Tests\Transport;
 use PHPUnit\Framework\TestCase;
 use Sentry\EventType;
 use Sentry\HttpClient\Response;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Transport\RateLimiter;
-use Sentry\Util\ClockMock;
 
 /**
  * @group time-sensitive

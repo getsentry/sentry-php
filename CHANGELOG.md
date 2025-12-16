@@ -1,5 +1,89 @@
 # CHANGELOG
 
+## 4.19.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.1.
+
+### Bug Fixes
+
+- Don't cast metrics value to `float` in constructor, drop invalid metrics instead. [(#1981)](https://github.com/getsentry/sentry-php/pull/1981)
+
+## 4.19.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.0.
+
+### Features
+
+- Add support for metrics. [(#1968)](https://github.com/getsentry/sentry-php/pull/1968)
+```php
+// Counter metric
+\Sentry\trace_metrics()->count('test-counter', 10, ['my-attribute' => 'foo']);
+
+// Gauge metric
+\Sentry\trace_metrics()->gauge('test-gauge', 50.0, ['my-attribute' => 'foo'], \Sentry\Unit::millisecond());
+
+// Distribution metric
+\Sentry\trace_metrics()->distribution('test-distribution', 20.0, ['my-attribute' => 'foo'], \Sentry\Unit::kilobyte());
+
+// Flush metrics
+\Sentry\trace_metrics()->flush();
+```
+
+### Bug Fixes
+
+- Add rate limiting for profiles and cron check-ins. [(#1970)](https://github.com/getsentry/sentry-php/pull/1970)
+- Fix Spotlight so it always registers the error integrations and emits transport logs even when no DSN is configured. [(#1964)](https://github.com/getsentry/sentry-php/pull/1964)
+
+## 4.18.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.18.1.
+
+### Misc
+
+- Add `addFeatureFlag` helper function. [(#1960)](https://github.com/getsentry/sentry-php/pull/1960)
+```php
+\Sentry\addFeatureFlag("my.feature.enabled", true);
+```
+
+## 4.18.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.18.0.
+
+### Features
+
+- Add support for feature flags. [(#1951)](https://github.com/getsentry/sentry-php/pull/1951)
+```php
+\Sentry\SentrySdk::getCurrentHub()->configureScope(function (\Sentry\State\Scope $scope) {
+    $scope->addFeatureFlag("my.feature.enabled", true);
+});
+```
+- Add more representations for log attributes instead of dropping them. [(#1950)](https://github.com/getsentry/sentry-php/pull/1950)
+
+### Misc
+
+- Merge log attributes in a separate method. [(#1931)](https://github.com/getsentry/sentry-php/pull/1931)
+
+## 4.17.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.17.1.
+
+### Misc
+
+- Call `curl_close` only on PHP version 7.4 and below to prevent deprecation warnings. [(#1947)](https://github.com/getsentry/sentry-php/pull/1947)
+
+## 4.17.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.17.0.
+
+### Bug Fixes
+
+- Empty strings will no longer display `<encoding error>` when serialized. [(#1940)](https://github.com/getsentry/sentry-php/pull/1940)
+
+### Misc
+
+- Remove `symfony/phpunit-bridge` as a dev dependency. [(#1930)](https://github.com/getsentry/sentry-php/pull/1930)
+- Update `sentry.origin` to be consistent with other SDKs. [(#1938)](https://github.com/getsentry/sentry-php/pull/1938)
+
 ## 4.16.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.16.0.

@@ -47,6 +47,11 @@ final class EventType
         return self::getInstance('log');
     }
 
+    public static function metrics(): self
+    {
+        return self::getInstance('trace_metric');
+    }
+
     /**
      * List of all cases on the enum.
      *
@@ -59,7 +64,19 @@ final class EventType
             self::transaction(),
             self::checkIn(),
             self::logs(),
+            self::metrics(),
         ];
+    }
+
+    public function requiresEventId(): bool
+    {
+        switch ($this) {
+            case self::metrics():
+            case self::logs():
+                return false;
+            default:
+                return true;
+        }
     }
 
     public function __toString(): string

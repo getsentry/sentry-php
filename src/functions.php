@@ -8,6 +8,8 @@ use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
+use Sentry\Metrics\Metrics;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -67,7 +69,7 @@ function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init($client);
+    SentrySdk::init()->bindClient($client);
 }
 
 /**
@@ -343,4 +345,20 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 function logger(): Logs
 {
     return Logs::getInstance();
+}
+
+function trace_metrics(): TraceMetrics
+{
+    return TraceMetrics::getInstance();
+}
+
+/**
+ * Adds a feature flag evaluation to the current scope.
+ * When invoked repeatedly for the same name, the most recent value is used.
+ */
+function addFeatureFlag(string $name, bool $result): void
+{
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($name, $result) {
+        $scope->addFeatureFlag($name, $result);
+    });
 }

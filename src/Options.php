@@ -10,6 +10,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Log;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -128,6 +129,27 @@ final class Options
     public function getEnableLogs(): bool
     {
         return $this->options['enable_logs'] ?? false;
+    }
+
+    /**
+     * Sets if metrics should be enabled or not.
+     */
+    public function setEnableMetrics(bool $enableTracing): self
+    {
+        return $this->updateOptions(['enable_metrics' => $enableTracing]);
+    }
+
+    /**
+     * Returns whether metrics are enabled or not.
+     */
+    public function getEnableMetrics(): bool
+    {
+        /**
+         * @var bool $enableMetrics
+         */
+        $enableMetrics = $this->options['enable_metrics'] ?? true;
+
+        return $enableMetrics;
     }
 
     /**
@@ -515,6 +537,35 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked before a metric is added.
+     * Returning `null` means that the metric will be discarded.
+     */
+    public function getBeforeSendMetricCallback(): callable
+    {
+        /**
+         * @var callable $callback
+         */
+        $callback = $this->options['before_send_metric'];
+
+        return $callback;
+    }
+
+    /**
+     * Sets a new callback that is invoked before metrics are sent.
+     * Returning `null` means that the metric will be discarded.
+     *
+     * @return $this
+     */
+    public function setBeforeSendMetricCallback(callable $callback): self
+    {
+        $options = array_merge($this->options, ['before_send_metric' => $callback]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets an allow list of trace propagation targets.
      *
      * @return string[]|null
@@ -851,7 +902,7 @@ final class Options
      *                                   captured. It can be set to one of the
      *                                   following values:
      *
-     *                                    - none: request bodies are never sent
+     *                                    - never: request bodies are never sent
      *                                    - small: only small request bodies will
      *                                      be captured where the cutoff for small
      *                                      depends on the SDK (typically 4KB)
@@ -922,6 +973,7 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('enable_logs', 'bool');
+        $resolver->setAllowedTypes('enable_metrics', 'bool');
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
@@ -939,6 +991,7 @@ final class Options
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('before_send_log', 'callable');
+        $resolver->setAllowedTypes('before_send_metric', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
@@ -991,6 +1044,7 @@ final class Options
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
             'enable_logs' => false,
+            'enable_metrics' => true,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
@@ -1016,6 +1070,9 @@ final class Options
             },
             'before_send_log' => static function (Log $log): Log {
                 return $log;
+            },
+            'before_send_metric' => static function (Metric $metric): Metric {
+                return $metric;
             },
             'trace_propagation_targets' => null,
             'strict_trace_propagation' => false,
@@ -1071,10 +1128,22 @@ final class Options
         }
 
         if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
-            return $booleanOrUrl;
+            return $this->normalizeSpotlightUrl($options, $booleanOrUrl);
         }
 
         return filter_var($booleanOrUrl, \FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
+     * Normalizes the spotlight URL by removing the `/stream` at the end if present.
+     */
+    private function normalizeSpotlightUrl(SymfonyOptions $options, string $url): string
+    {
+        if (substr_compare($url, '/stream', -7, 7) === 0) {
+            return substr($url, 0, -7);
+        }
+
+        return $url;
     }
 
     /**

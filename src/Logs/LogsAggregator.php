@@ -104,8 +104,6 @@ final class LogsAggregator
         $attributes = Arr::simpleDot($attributes);
 
         foreach ($attributes as $key => $value) {
-            $attribute = Attribute::tryFromValue($value);
-
             if (!\is_string($key)) {
                 if ($sdkLogger !== null) {
                     $sdkLogger->info(
@@ -115,6 +113,8 @@ final class LogsAggregator
 
                 continue;
             }
+
+            $attribute = Attribute::tryFromValue($value);
 
             if ($attribute === null) {
                 if ($sdkLogger !== null) {
