@@ -1128,7 +1128,7 @@ final class Options
         }
 
         if (filter_var($booleanOrUrl, \FILTER_VALIDATE_URL)) {
-            return $this->normalizeSpotlightUrl($options, $booleanOrUrl);
+            return $this->normalizeSpotlightUrl((string) $booleanOrUrl);
         }
 
         return filter_var($booleanOrUrl, \FILTER_VALIDATE_BOOLEAN);
@@ -1137,7 +1137,7 @@ final class Options
     /**
      * Normalizes the spotlight URL by removing the `/stream` at the end if present.
      */
-    private function normalizeSpotlightUrl(SymfonyOptions $options, string $url): string
+    private function normalizeSpotlightUrl(string $url): string
     {
         if (substr_compare($url, '/stream', -7, 7) === 0) {
             return substr($url, 0, -7);

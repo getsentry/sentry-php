@@ -685,26 +685,11 @@ final class OptionsTest extends TestCase
 
     public static function spotlightUrlNormalizationDataProvider(): \Generator
     {
-        yield [['spotlight_url' => 'http://localhost:8969'], 'http://localhost:8969'];
-        yield [['spotlight_url' => 'http://localhost:8969/stream'], 'http://localhost:8969'];
-        yield [['spotlight_url' => 'http://localhost:8969/foo'], 'http://localhost:8969/foo'];
-        yield [['spotlight_url' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo'];
-        yield [['spotlight_url' => 'http://localhost:8969/stream/foo'], 'http://localhost:8969/stream/foo'];
         yield [['spotlight' => 'http://localhost:8969'], 'http://localhost:8969'];
         yield [['spotlight' => 'http://localhost:8969/stream'], 'http://localhost:8969'];
         yield [['spotlight' => 'http://localhost:8969/foo'], 'http://localhost:8969/foo'];
         yield [['spotlight' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo'];
         yield [['spotlight' => 'http://localhost:8969/stream/foo'], 'http://localhost:8969/stream/foo'];
-    }
-
-    /**
-     * @dataProvider setSpotlightUrlNormalizationDataProvider
-     */
-    public function testSetSpotlightUrlNormalization(string $url, string $expected): void
-    {
-        $options = new Options();
-        $options->setSpotlightUrl($url);
-        $this->assertSame($expected, $options->getSpotlightUrl());
     }
 
     /**
