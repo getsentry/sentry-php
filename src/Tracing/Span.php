@@ -7,7 +7,6 @@ namespace Sentry\Tracing;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
-use Sentry\Unit;
 
 /**
  * This class stores all the information about a span.

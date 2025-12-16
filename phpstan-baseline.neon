@@ -29,21 +29,6 @@ parameters:
 			path: src/Dsn.php
 
 		-
-			message: "#^Method Sentry\\\\Event\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Method Sentry\\\\Event\\:\\:setMetricsSummary\\(\\) has parameter \\$metricsSummary with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Event.php
-
-		-
-			message: "#^Property Sentry\\\\Integration\\\\RequestIntegration\\:\\:\\$options \\(array\\{pii_sanitize_headers\\: array\\<string\\>\\}\\) does not accept array\\.$#"
-			count: 1
-			path: src/Integration/RequestIntegration.php
-
-		-
 			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
 			count: 1
 			path: src/Logger/DebugLogger.php
