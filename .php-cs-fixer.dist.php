@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return (new PhpCsFixer\Config())
     ->setRules([
         '@PHP71Migration' => true,
@@ -35,6 +37,7 @@ return (new PhpCsFixer\Config())
             'elements' => ['arrays'],
         ],
         'no_whitespace_before_comma_in_array' => false, // Should be dropped when we drop support for PHP 7.x
+        'stringable_for_to_string' => false,
     ])
     ->setRiskyAllowed(true)
     ->setFinder(

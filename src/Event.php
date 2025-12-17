@@ -8,6 +8,7 @@ use Sentry\Attachment\Attachment;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
+use Sentry\Metrics\Types\Metric;
 use Sentry\Profiling\Profile;
 use Sentry\Tracing\Span;
 use Sentry\Util\DebugType;
@@ -72,6 +73,11 @@ final class Event
      * @var Log[]
      */
     private $logs = [];
+
+    /**
+     * @var Metric[]
+     */
+    private $metrics = [];
 
     /**
      * @var string|null The name of the server (e.g. the host name)
@@ -246,6 +252,11 @@ final class Event
     public static function createLogs(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::logs());
+    }
+
+    public static function createMetrics(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::metrics());
     }
 
     /**
@@ -440,6 +451,24 @@ final class Event
     public function setLogs(array $logs): self
     {
         $this->logs = $logs;
+
+        return $this;
+    }
+
+    /**
+     * @return Metric[]
+     */
+    public function getMetrics(): array
+    {
+        return $this->metrics;
+    }
+
+    /**
+     * @param Metric[] $metrics
+     */
+    public function setMetrics(array $metrics): self
+    {
+        $this->metrics = $metrics;
 
         return $this;
     }

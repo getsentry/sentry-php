@@ -26,7 +26,7 @@ declare(strict_types=1);
  * THE SOFTWARE.
  */
 
-namespace Sentry\Util;
+namespace Sentry\Tests\TestUtil;
 
 /**
  * @author Nicolas Grekas <p@tchwork.com>

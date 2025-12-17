@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 use Sentry\Breadcrumb;
 use Sentry\Event;
-use Sentry\Metrics\Metrics;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\Span;
 use Sentry\Transport\RateLimiter;
-use Sentry\Util\ClockMock;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -26,5 +25,4 @@ ClockMock::register(Event::class);
 ClockMock::register(Breadcrumb::class);
 ClockMock::register(Span::class);
 ClockMock::register(RateLimiter::class);
-ClockMock::register(Metrics::class);
 ClockMock::register(Sentry\Serializer\PayloadSerializer::class);

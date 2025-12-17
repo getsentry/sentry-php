@@ -35,13 +35,14 @@ jobs:
           - { version: '8.2', phpunit: '^9.6.21' }
           - { version: '8.3', phpunit: '^9.6.21' }
           - { version: '8.4', phpunit: '^9.6.21' }
+          - { version: '8.5', phpunit: '^9.6.25' }
         dependencies:
           - lowest
           - highest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 2
 
@@ -60,7 +61,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php.version }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}

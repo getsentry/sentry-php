@@ -13,6 +13,7 @@ use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
+use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -76,6 +77,88 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame(['bar' => 'baz'], $event->getTags());
+    }
+
+    public function testSetFlag(): void
+    {
+        $scope = new Scope();
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayNotHasKey('flags', $event->getContexts());
+
+        $scope->addFeatureFlag('foo', true);
+        $scope->addFeatureFlag('bar', false);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayHasKey('flags', $event->getContexts());
+        $this->assertEquals([
+            'values' => [
+                [
+                    'flag' => 'foo',
+                    'result' => true,
+                ],
+                [
+                    'flag' => 'bar',
+                    'result' => false,
+                ],
+            ],
+        ], $event->getContexts()['flags']);
+    }
+
+    public function testSetFlagLimit(): void
+    {
+        $scope = new Scope();
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayNotHasKey('flags', $event->getContexts());
+
+        $expectedFlags = [];
+
+        foreach (range(1, Scope::MAX_FLAGS) as $i) {
+            $scope->addFeatureFlag("feature{$i}", true);
+
+            $expectedFlags[] = [
+                'flag' => "feature{$i}",
+                'result' => true,
+            ];
+        }
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayHasKey('flags', $event->getContexts());
+        $this->assertEquals(['values' => $expectedFlags], $event->getContexts()['flags']);
+
+        array_shift($expectedFlags);
+
+        $scope->addFeatureFlag('should-not-be-discarded', true);
+
+        $expectedFlags[] = [
+            'flag' => 'should-not-be-discarded',
+            'result' => true,
+        ];
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayHasKey('flags', $event->getContexts());
+        $this->assertEquals(['values' => $expectedFlags], $event->getContexts()['flags']);
+    }
+
+    public function testSetFlagPropagatesToSpan(): void
+    {
+        $span = new Span();
+
+        $scope = new Scope();
+        $scope->setSpan($span);
+
+        $scope->addFeatureFlag('feature', true);
+
+        $this->assertSame(['flag.evaluation.feature' => true], $span->getData());
     }
 
     public function testSetAndRemoveContext(): void
@@ -365,6 +448,7 @@ final class ScopeTest extends TestCase
         $scope->setFingerprint(['foo']);
         $scope->setExtras(['foo' => 'bar']);
         $scope->setTags(['bar' => 'foo']);
+        $scope->addFeatureFlag('feature', true);
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
         $scope->clear();
 
@@ -377,6 +461,7 @@ final class ScopeTest extends TestCase
         $this->assertEmpty($event->getExtra());
         $this->assertEmpty($event->getTags());
         $this->assertEmpty($event->getUser());
+        $this->assertArrayNotHasKey('flags', $event->getContexts());
     }
 
     public function testApplyToEvent(): void
@@ -404,6 +489,7 @@ final class ScopeTest extends TestCase
         $scope->setUser($user);
         $scope->setContext('foocontext', ['foo' => 'bar']);
         $scope->setContext('barcontext', ['bar' => 'foo']);
+        $scope->addFeatureFlag('feature', true);
         $scope->setSpan($span);
 
         $this->assertSame($event, $scope->applyToEvent($event));
@@ -417,6 +503,14 @@ final class ScopeTest extends TestCase
             'foocontext' => [
                 'foo' => 'foo',
                 'bar' => 'bar',
+            ],
+            'flags' => [
+                'values' => [
+                    [
+                        'flag' => 'feature',
+                        'result' => true,
+                    ],
+                ],
             ],
             'trace' => [
                 'span_id' => '566e3688a61d4bc8',
