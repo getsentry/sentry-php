@@ -360,6 +360,16 @@ class Scope
     }
 
     /**
+     * Get the global event processors {@see Scope::applyToEvent}
+     *
+     * @return array
+     */
+    public static function getGlobalEventProcessors(): array
+    {
+        return self::$globalEventProcessors;
+    }
+
+    /**
      * Clears the scope and resets any data it contains.
      *
      * @return $this
@@ -464,7 +474,7 @@ class Scope
             $hint = new EventHint();
         }
 
-        foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
+        foreach (array_merge(self::getGlobalEventProcessors(), $this->eventProcessors) as $processor) {
             $event = $processor($event, $hint);
 
             if ($event === null) {
