@@ -360,7 +360,9 @@ class Scope
     }
 
     /**
-     * Get the global event processors {@see Scope::applyToEvent}.
+     * Gets the list of global event processors that are applied in {@see Scope::applyToEvent}.
+     *
+     * @return callable[]
      */
     public static function getGlobalEventProcessors(): array
     {
