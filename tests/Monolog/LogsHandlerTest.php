@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Monolog;
 
+use Monolog\Level;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
-use Sentry\Event;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 use Sentry\Monolog\LogsHandler;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
-use Sentry\Transport\Result;
-use Sentry\Transport\ResultStatus;
-use Sentry\Transport\TransportInterface;
+use Sentry\Tests\StubTransport;
 
 final class LogsHandlerTest extends TestCase
 {
@@ -75,31 +73,53 @@ final class LogsHandlerTest extends TestCase
         $this->assertCount($countLogs, $logs);
     }
 
+    /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLogLevelsMonologEnum($record, int $countLogs): void
+    {
+        if (Logger::API < 3) {
+            $this->markTestSkipped('Test only works for Monolog >= 3');
+        }
+        $handler = new LogsHandler(Level::Warning);
+        $handler->handle($record);
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount($countLogs, $logs);
+    }
+
+    /**
+     * @dataProvider logLevelDataProvider
+     */
+    public function testLogLevelsLegacyMonolog($record, int $countLogs): void
+    {
+        $handler = new LogsHandler(Logger::WARNING);
+        $handler->handle($record);
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount($countLogs, $logs);
+    }
+
+    /**
+     * @dataProvider monologLevelDataProvider
+     */
+    public function testFilterOnMonologLevels(int $level, $record, ?Log $log = null): void
+    {
+        $handler = new LogsHandler($level);
+        $handler->handle($record);
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        if ($log === null) {
+            $this->assertEmpty($logs);
+        } else {
+            $this->assertNotEmpty($logs);
+            $this->assertEquals($log->getLevel(), $logs[0]->getLevel());
+        }
+    }
+
     public function testLogsHandlerDestructor()
     {
-        $transport = new class implements TransportInterface {
-            private $events = [];
-
-            public function send(Event $event): Result
-            {
-                $this->events[] = $event;
-
-                return new Result(ResultStatus::success());
-            }
-
-            public function close(?int $timeout = null): Result
-            {
-                return new Result(ResultStatus::success());
-            }
-
-            /**
-             * @return Event[]
-             */
-            public function getEvents(): array
-            {
-                return $this->events;
-            }
-        };
+        $transport = new StubTransport();
         $client = ClientBuilder::create([
             'enable_logs' => true,
         ])->setTransport($transport)
@@ -110,8 +130,8 @@ final class LogsHandlerTest extends TestCase
 
         $this->handleLogAndDrop();
 
-        $this->assertCount(1, $transport->getEvents());
-        $this->assertSame('I was dropped :(', $transport->getEvents()[0]->getLogs()[0]->getBody());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertSame('I was dropped :(', StubTransport::$events[0]->getLogs()[0]->getBody());
     }
 
     private function handleLogAndDrop(): void
@@ -360,6 +380,71 @@ final class LogsHandlerTest extends TestCase
                 []
             ),
             1,
+        ];
+    }
+
+    public static function monologLevelDataProvider(): iterable
+    {
+        yield [
+            Logger::NOTICE,
+            RecordFactory::create(
+                'foo bar',
+                Logger::NOTICE,
+                'channel.foo'
+            ),
+            new Log(123, 'abc', LogLevel::info(), 'foo bar'),
+        ];
+
+        yield [
+            Logger::NOTICE,
+            RecordFactory::create(
+                'foo bar',
+                Logger::INFO,
+                'channel.foo'
+            ),
+            null,
+        ];
+
+        yield 'Warnings are passed through if Notice is configured' => [
+            Logger::NOTICE,
+            RecordFactory::create('foo bar', Logger::WARNING, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::warn(), 'foo bar'),
+        ];
+
+        yield 'Filter out critical even though both convert to Sentry Fatal' => [
+            Logger::ALERT,
+            RecordFactory::create('foo bar', Logger::CRITICAL, 'channel.foo'),
+            null,
+        ];
+
+        yield [
+            Logger::ALERT,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield [
+            Logger::ALERT,
+            RecordFactory::create('foo bar', Logger::ALERT, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield 'Emergency is passed through if Alert is configured (both are sentry fatal)' => [
+            Logger::ALERT,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield 'Alert is filtered when emergency is configured (both are sentry fatal)' => [
+            Logger::EMERGENCY,
+            RecordFactory::create('foo bar', Logger::ALERT, 'channel.foo'),
+            null,
+        ];
+
+        yield [
+            Logger::EMERGENCY,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
         ];
     }
 }

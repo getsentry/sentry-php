@@ -19,7 +19,7 @@ final class RecordFactory
      *
      * @return array<string, mixed>|LogRecord
      */
-    public static function create(string $message, int $level, string $channel, array $context, array $extra)
+    public static function create(string $message, int $level, string $channel, array $context = [], array $extra = [])
     {
         if (Logger::API >= 3) {
             return new LogRecord(
