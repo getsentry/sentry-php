@@ -118,9 +118,10 @@ final class LogsHandlerTest extends TestCase
     }
 
     /**
+     * @param Level $level
      * @dataProvider monologLevelDataProvider
      */
-    public function testFilterOnNewMonologLevels(Level $level, $record, ?Log $log = null): void
+    public function testFilterOnNewMonologLevels($level, $record, ?Log $log = null): void
     {
         if (!class_exists(Level::class)) {
             $this->markTestSkipped('Test only works for Monolog >= 3');
