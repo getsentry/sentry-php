@@ -44,14 +44,15 @@ class LogsHandler implements HandlerInterface
     }
 
     /**
+     * @psalm-suppress UndefinedDocblockClass
+     * @psalm-suppress UndefinedClass
+     *
      * @param array<string, mixed>|LogRecord $record
      */
     public function isHandling($record): bool
     {
         if ($this->logLevel instanceof LogLevel) {
             return self::getSentryLogLevelFromMonologLevel($record['level'])->getPriority() >= $this->logLevel->getPriority();
-
-            /** @psalm-suppress UndefinedClass */
         } elseif ($this->logLevel instanceof \Monolog\Level) {
             return $record['level'] >= $this->logLevel->value;
         } else {
