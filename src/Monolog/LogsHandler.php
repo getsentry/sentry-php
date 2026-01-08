@@ -34,6 +34,8 @@ class LogsHandler implements HandlerInterface
     /**
      * Creates a new Monolog handler that converts Monolog logs to Sentry logs.
      *
+     * @psalm-suppress UndefinedDocblockClass
+     *
      * @param LogLevel|\Monolog\Level|int|null $logLevel the minimum logging level at which this handler will be triggered and collects the logs
      * @param bool                             $bubble   whether the messages that are handled can bubble up the stack or not
      */
