@@ -18,6 +18,8 @@ class LogsHandler implements HandlerInterface
     /**
      * The minimum logging level at which this handler will be triggered.
      *
+     * @psalm-suppress UndefinedDocblockClass
+     *
      * @var LogLevel|\Monolog\Level|int
      */
     private $logLevel;
@@ -48,7 +50,9 @@ class LogsHandler implements HandlerInterface
     {
         if ($this->logLevel instanceof LogLevel) {
             return self::getSentryLogLevelFromMonologLevel($record['level'])->getPriority() >= $this->logLevel->getPriority();
-        } elseif (class_exists(\Monolog\Level::class) && $this->logLevel instanceof \Monolog\Level) {
+
+            /** @psalm-suppress UndefinedClass */
+        } elseif ($this->logLevel instanceof \Monolog\Level) {
             return $record['level'] >= $this->logLevel->value;
         } else {
             return $record['level'] >= $this->logLevel;
