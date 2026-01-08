@@ -101,10 +101,30 @@ final class LogsHandlerTest extends TestCase
     }
 
     /**
-     * @dataProvider monologLevelDataProvider
+     * @dataProvider monologLegacyLevelDataProvider
      */
     public function testFilterOnMonologLevels(int $level, $record, ?Log $log = null): void
     {
+        $handler = new LogsHandler($level);
+        $handler->handle($record);
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        if ($log === null) {
+            $this->assertEmpty($logs);
+        } else {
+            $this->assertNotEmpty($logs);
+            $this->assertEquals($log->getLevel(), $logs[0]->getLevel());
+        }
+    }
+
+    /**
+     * @dataProvider monologLevelDataProvider
+     */
+    public function testFilterOnNewMonologLevels(Level $level, $record, ?Log $log = null): void
+    {
+        if (!class_exists(Level::class)) {
+            $this->markTestSkipped('Test only works for Monolog >= 3');
+        }
         $handler = new LogsHandler($level);
         $handler->handle($record);
 
@@ -383,7 +403,7 @@ final class LogsHandlerTest extends TestCase
         ];
     }
 
-    public static function monologLevelDataProvider(): iterable
+    public static function monologLegacyLevelDataProvider(): iterable
     {
         yield [
             Logger::NOTICE,
@@ -443,6 +463,71 @@ final class LogsHandlerTest extends TestCase
 
         yield [
             Logger::EMERGENCY,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+    }
+
+    public static function monologLevelDataProvider(): iterable
+    {
+        yield [
+            Level::Notice,
+            RecordFactory::create(
+                'foo bar',
+                Logger::NOTICE,
+                'channel.foo'
+            ),
+            new Log(123, 'abc', LogLevel::info(), 'foo bar'),
+        ];
+
+        yield [
+            Level::Notice,
+            RecordFactory::create(
+                'foo bar',
+                Logger::INFO,
+                'channel.foo'
+            ),
+            null,
+        ];
+
+        yield 'Warnings are passed through if Notice is configured' => [
+            Level::Notice,
+            RecordFactory::create('foo bar', Logger::WARNING, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::warn(), 'foo bar'),
+        ];
+
+        yield 'Filter out critical even though both convert to Sentry Fatal' => [
+            Level::Alert,
+            RecordFactory::create('foo bar', Logger::CRITICAL, 'channel.foo'),
+            null,
+        ];
+
+        yield [
+            Level::Alert,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield [
+            Level::Alert,
+            RecordFactory::create('foo bar', Logger::ALERT, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield 'Emergency is passed through if Alert is configured (both are sentry fatal)' => [
+            Level::Alert,
+            RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
+            new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
+        ];
+
+        yield 'Alert is filtered when emergency is configured (both are sentry fatal)' => [
+            Level::Emergency,
+            RecordFactory::create('foo bar', Logger::ALERT, 'channel.foo'),
+            null,
+        ];
+
+        yield [
+            Level::Emergency,
             RecordFactory::create('foo bar', Logger::EMERGENCY, 'channel.foo'),
             new Log(123, 'abc', LogLevel::fatal(), 'foo bar'),
         ];
