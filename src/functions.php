@@ -65,7 +65,7 @@ use Sentry\Tracing\TransactionContext;
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
- *     transport?: callable,
+ *     transport?: TransportInterface|null,
  * } $options The client options
  */
 function init(array $options = []): void
