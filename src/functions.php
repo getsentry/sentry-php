@@ -15,6 +15,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\TransportInterface;
 
 /**
  * Creates a new Client and Hub which will be set as current.
