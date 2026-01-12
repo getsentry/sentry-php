@@ -374,13 +374,21 @@ function logger(): Logs
 }
 
 /**
- * @deprecated use `trace_metrics` instead
+ * @deprecated use `traceMetrics` instead
  */
 function metrics(): Metrics
 {
     return Metrics::getInstance();
 }
 
+function traceMetrics(): TraceMetrics
+{
+    return TraceMetrics::getInstance();
+}
+
+/**
+ * @deprecated use `traceMetrics` instead
+ */
 function trace_metrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
