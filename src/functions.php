@@ -15,6 +15,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\TransportInterface;
 
 /**
  * Creates a new Client and Hub which will be set as current.
@@ -65,7 +66,7 @@ use Sentry\Tracing\TransactionContext;
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
- *     transport?: callable,
+ *     transport?: TransportInterface|null,
  * } $options The client options
  */
 function init(array $options = []): void
