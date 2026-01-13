@@ -34,7 +34,10 @@ class HttpClient implements HttpClientInterface
         $this->sdkIdentifier = $sdkIdentifier;
         $this->sdkVersion = $sdkVersion;
         if (\function_exists('curl_share_init_persistent')) {
-            $shareOptions = [\CURL_LOCK_DATA_DNS, \CURL_LOCK_DATA_CONNECT];
+            $shareOptions = [\CURL_LOCK_DATA_DNS];
+            if (\defined('CURL_LOCK_DATA_CONNECT')) {
+                $shareOptions[] = \CURL_LOCK_DATA_CONNECT;
+            }
             if (\defined('CURL_LOCK_DATA_SSL_SESSION')) {
                 $shareOptions[] = \CURL_LOCK_DATA_SSL_SESSION;
             }
