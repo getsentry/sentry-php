@@ -22,10 +22,44 @@ class HttpClient implements HttpClientInterface
      */
     protected $sdkVersion;
 
+    /**
+     * Either a persistent share handle or a regular share handle, or null if no share handle can be obtained.
+     *
+     * @var object|resource|null
+     */
+    private $shareHandle;
+
     public function __construct(string $sdkIdentifier, string $sdkVersion)
     {
         $this->sdkIdentifier = $sdkIdentifier;
         $this->sdkVersion = $sdkVersion;
+        if (\function_exists('curl_share_init_persistent')) {
+            $shareOptions = [\CURL_LOCK_DATA_DNS, \CURL_LOCK_DATA_CONNECT];
+            if (\defined('CURL_LOCK_DATA_SSL_SESSION')) {
+                $shareOptions[] = \CURL_LOCK_DATA_SSL_SESSION;
+            }
+            try {
+                $this->shareHandle = curl_share_init_persistent($shareOptions);
+            } catch (\Throwable $throwable) {
+                // don't crash if the share handle cannot be created
+            }
+        }
+
+        // If the persistent share handle cannot be created or doesn't exist
+        if ($this->shareHandle === null) {
+            try {
+                $this->shareHandle = curl_share_init();
+                curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_DNS);
+                if (\defined('CURL_LOCK_DATA_CONNECT')) {
+                    curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_CONNECT);
+                }
+                if (\defined('CURL_LOCK_DATA_SSL_SESSION')) {
+                    curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_SSL_SESSION);
+                }
+            } catch (\Throwable $throwable) {
+                // don't crash if the share handle cannot be created
+            }
+        }
     }
 
     public function sendRequest(Request $request, Options $options): Response
@@ -72,6 +106,9 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curlHandle, \CURLOPT_HEADERFUNCTION, $responseHeaderCallback);
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
+        if ($this->shareHandle !== null) {
+            curl_setopt($curlHandle, \CURLOPT_SHARE, $this->shareHandle);
+        }
 
         $httpSslVerifyPeer = $options->getHttpSslVerifyPeer();
         if (!$httpSslVerifyPeer) {
