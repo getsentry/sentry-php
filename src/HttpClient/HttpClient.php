@@ -49,12 +49,12 @@ class HttpClient implements HttpClientInterface
         if ($this->shareHandle === null) {
             try {
                 $this->shareHandle = curl_share_init();
-                curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_DNS);
+                curl_share_setopt($this->shareHandle, \CURLSHOPT_SHARE, \CURL_LOCK_DATA_DNS);
                 if (\defined('CURL_LOCK_DATA_CONNECT')) {
-                    curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_CONNECT);
+                    curl_share_setopt($this->shareHandle, \CURLSHOPT_SHARE, \CURL_LOCK_DATA_CONNECT);
                 }
                 if (\defined('CURL_LOCK_DATA_SSL_SESSION')) {
-                    curl_share_setopt($this->shareHandle, \CURLOPT_SHARE, \CURL_LOCK_DATA_SSL_SESSION);
+                    curl_share_setopt($this->shareHandle, \CURLSHOPT_SHARE, \CURL_LOCK_DATA_SSL_SESSION);
                 }
             } catch (\Throwable $throwable) {
                 // don't crash if the share handle cannot be created
