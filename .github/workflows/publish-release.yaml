@@ -11,6 +11,10 @@ on:
       merge_target:
         description: Target branch to merge into
         required: false
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
