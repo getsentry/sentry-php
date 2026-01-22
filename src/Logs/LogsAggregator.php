@@ -6,11 +6,14 @@ namespace Sentry\Logs;
 
 use Sentry\Attributes\Attribute;
 use Sentry\Client;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\DataCategory;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
 
@@ -35,6 +38,11 @@ final class LogsAggregator
         array $values = [],
         array $attributes = []
     ): void {
+        if (\count($this->logs) > 5) {
+            ClientReportAggregator::getInstance()->add(DataCategory::logBytes(), Reason::bufferOverflow(), 1);
+
+            return;
+        }
         $timestamp = microtime(true);
 
         $hub = SentrySdk::getCurrentHub();
