@@ -297,7 +297,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         SentrySdk::init($client);
 
-
         $capturedEvent = null;
         $client->expects($this->once())
             ->method('captureEvent')

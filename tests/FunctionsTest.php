@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;

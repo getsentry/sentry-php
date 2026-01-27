@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
-use Sentry\ClientInterface;
 
 /**
  * This class stores all the information about a Transaction.
@@ -43,8 +43,8 @@ final class Transaction extends Span
     /**
      * Span constructor.
      *
-     * @param TransactionContext $context The context to create the transaction with
-     * @param ClientInterface|null $client Instance of a client to flush the transaction
+     * @param TransactionContext   $context The context to create the transaction with
+     * @param ClientInterface|null $client  Instance of a client to flush the transaction
      *
      * @internal
      */

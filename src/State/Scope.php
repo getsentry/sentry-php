@@ -637,7 +637,7 @@ class Scope
      * @internal
      *
      * Merges data from the given scope into this one, overwriting existing values
-     * where applicable.
+     * where applicable
      */
     public function mergeFrom(self $scope): self
     {
@@ -661,7 +661,7 @@ class Scope
             $this->flags = array_merge($this->flags, $scope->flags);
 
             if (\count($this->flags) > self::MAX_FLAGS) {
-                $this->flags = array_slice($this->flags, -self::MAX_FLAGS);
+                $this->flags = \array_slice($this->flags, -self::MAX_FLAGS);
             }
         }
 
@@ -748,7 +748,7 @@ class Scope
     /**
      * @internal
      *
-     * Sorts breadcrumbs by their timestamp (ascending), preserving insertion order for ties.
+     * Sorts breadcrumbs by their timestamp (ascending), preserving insertion order for ties
      */
     public function sortBreadcrumbsByTimestamp(): self
     {

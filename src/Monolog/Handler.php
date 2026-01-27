@@ -30,7 +30,6 @@ final class Handler extends AbstractProcessingHandler
 
     /**
      * {@inheritdoc}
-     *
      */
     public function __construct($level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
     {

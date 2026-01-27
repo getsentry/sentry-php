@@ -84,5 +84,4 @@ final class SentrySdkTest extends TestCase
             'shared' => 'current',
         ], $event->getTags());
     }
-
 }

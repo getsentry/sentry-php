@@ -8,8 +8,8 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
-use Sentry\Monolog\BreadcrumbHandler;
 use Sentry\Event;
+use Sentry\Monolog\BreadcrumbHandler;
 use Sentry\NoOpClient;
 use Sentry\SentrySdk;
 

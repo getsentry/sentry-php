@@ -139,7 +139,7 @@ final class ScopeTest extends TestCase
             'app.session' => 42,
         ]);
 
-        $this->assertSame(true, $scope->getAttributes()->get('app.feature')->getValue());
+        $this->assertTrue($scope->getAttributes()->get('app.feature')->getValue());
         $this->assertSame(42, $scope->getAttributes()->get('app.session')->getValue());
     }
 

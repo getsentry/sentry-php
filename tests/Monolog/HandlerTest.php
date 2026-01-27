@@ -11,9 +11,9 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Monolog\Handler;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Scope;
-use Sentry\SentrySdk;
 
 final class HandlerTest extends TestCase
 {
