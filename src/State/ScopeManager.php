@@ -17,9 +17,9 @@ final class ScopeManager
     private $globalScope;
 
     /**
-     * @var Scope[] Stack of isolation scopes (request/execution context)
+     * @var Scope|null The current isolation scope (request/execution context)
      */
-    private $isolationScopeStack = [];
+    private $isolationScope;
 
     /**
      * @var Scope[] Stack of current scopes (active span context)
@@ -92,38 +92,22 @@ final class ScopeManager
     public function withIsolationScope(callable $callback)
     {
         $this->pushCurrentScope();
-        $scope = $this->pushIsolationScope();
+        $previousIsolationScope = $this->getOrCreateIsolationScope();
+        $scope = clone $previousIsolationScope;
+        $this->isolationScope = $scope;
 
         try {
             return $callback($scope);
         } finally {
             $this->popCurrentScope();
-            $this->popIsolationScope();
+            $this->isolationScope = $previousIsolationScope;
         }
     }
 
     public function resetScopes(): void
     {
-        $this->isolationScopeStack = [];
+        $this->isolationScope = null;
         $this->currentScopeStack = [];
-    }
-
-    private function pushIsolationScope(): Scope
-    {
-        $scope = clone $this->getOrCreateIsolationScope();
-        $scope->setType(ScopeType::isolation());
-        $this->isolationScopeStack[] = $scope;
-
-        return $scope;
-    }
-
-    private function popIsolationScope(): bool
-    {
-        if (\count($this->isolationScopeStack) <= 1) {
-            return false;
-        }
-
-        return array_pop($this->isolationScopeStack) !== null;
     }
 
     private function pushCurrentScope(): Scope
@@ -146,11 +130,11 @@ final class ScopeManager
 
     private function getOrCreateIsolationScope(): Scope
     {
-        if (empty($this->isolationScopeStack)) {
-            $this->isolationScopeStack[] = new Scope(null, ScopeType::isolation());
+        if ($this->isolationScope === null) {
+            $this->isolationScope = new Scope(null, ScopeType::isolation());
         }
 
-        return $this->isolationScopeStack[\count($this->isolationScopeStack) - 1];
+        return $this->isolationScope;
     }
 
     private function getOrCreateCurrentScope(): Scope

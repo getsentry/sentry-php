@@ -11,7 +11,9 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventType;
+use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
@@ -342,6 +344,30 @@ class Scope
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): self
     {
+        $client = $this->getClient() ?? SentrySdk::getClient();
+
+        // No point in storing breadcrumbs if the client will never send them
+        if ($client instanceof NoOpClient) {
+            return $this;
+        }
+
+        $options = $client->getOptions();
+
+        if (\func_num_args() < 2) {
+            $maxBreadcrumbs = $options->getMaxBreadcrumbs();
+        }
+
+        if ($maxBreadcrumbs <= 0) {
+            return $this;
+        }
+
+        $beforeBreadcrumbCallback = $options->getBeforeBreadcrumbCallback();
+        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+
+        if ($breadcrumb === null) {
+            return $this;
+        }
+
         $this->breadcrumbs[] = $breadcrumb;
         $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
 
@@ -800,6 +826,13 @@ class Scope
 
     public function addAttachment(Attachment $attachment): self
     {
+        $client = $this->getClient() ?? SentrySdk::getClient();
+
+        // No point in storing attachments if the client will never send them
+        if ($client instanceof NoOpClient) {
+            return $this;
+        }
+
         $this->attachments[] = $attachment;
 
         return $this;

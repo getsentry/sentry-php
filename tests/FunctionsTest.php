@@ -310,7 +310,11 @@ final class FunctionsTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        SentrySdk::init(new NoOpClient());
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['default_integrations' => false]));
+
+        SentrySdk::init($client);
 
         addBreadcrumb($breadcrumb);
         configureScope(function (Scope $scope) use ($breadcrumb): void {
@@ -318,6 +322,34 @@ final class FunctionsTest extends TestCase
 
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
+        });
+    }
+
+    public function testAddBreadcrumbRespectsBeforeBreadcrumbAndMaxBreadcrumbs(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'before_breadcrumb' => static function (Breadcrumb $breadcrumb): ?Breadcrumb {
+                    return $breadcrumb->withMessage('mutated');
+                },
+                'max_breadcrumbs' => 1,
+                'default_integrations' => false,
+            ]));
+
+        SentrySdk::init($client);
+
+        SentrySdk::getIsolationScope()->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'first', 'first message'));
+        SentrySdk::getIsolationScope()->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'second', 'second message'));
+
+        configureScope(function (Scope $scope): void {
+            $event = $scope->applyToEvent(Event::createEvent());
+
+            $this->assertNotNull($event);
+            $breadcrumbs = $event->getBreadcrumbs();
+            $this->assertCount(1, $breadcrumbs);
+            $this->assertSame('second', $breadcrumbs[0]->getCategory());
+            $this->assertSame('mutated', $breadcrumbs[0]->getMessage());
         });
     }
 

@@ -7,8 +7,10 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\State\ScopeType;
@@ -24,6 +26,15 @@ use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
+    private function createClientWithOptions(): ClientInterface
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['default_integrations' => false]));
+
+        return $client;
+    }
+
     public function testScopeTypeSingletons(): void
     {
         $this->assertSame(ScopeType::global(), ScopeType::global());
@@ -75,13 +86,17 @@ final class ScopeTest extends TestCase
 
     public function testBreadcrumbsAreMergedAndSorted(): void
     {
+        $client = $this->createClientWithOptions();
         $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->bindClient($client);
         $globalScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'global', null, [], 2000.0));
 
         $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->bindClient($client);
         $isolationScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'isolation', null, [], 1500.0));
 
         $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->bindClient($client);
         $currentScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'current', null, [], 1000.0));
 
         $event = Event::createEvent();
@@ -482,6 +497,7 @@ final class ScopeTest extends TestCase
     public function testAddBreadcrumb(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
@@ -510,6 +526,7 @@ final class ScopeTest extends TestCase
     public function testClearBreadcrumbs(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
 
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
@@ -592,6 +609,7 @@ final class ScopeTest extends TestCase
     public function testClear(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope->setLevel(Severity::info());
@@ -632,6 +650,7 @@ final class ScopeTest extends TestCase
         $span->setSpanId(new SpanId('566e3688a61d4bc8'));
 
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $scope->setLevel(Severity::warning());
         $scope->setFingerprint(['foo']);
         $scope->addBreadcrumb($breadcrumb);
@@ -687,6 +706,7 @@ final class ScopeTest extends TestCase
     public function testAttachmentsAppliedForType(Event $event, int $attachmentCount): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $scope->addAttachment(Attachment::fromBytes('test', 'abcde'));
         $scope->applyToEvent($event);
         $this->assertCount($attachmentCount, $event->getAttachments());
