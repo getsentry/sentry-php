@@ -12,8 +12,8 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Monolog\Handler;
 use Sentry\Severity;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\SentrySdk;
 
 final class HandlerTest extends TestCase
 {
@@ -45,7 +45,8 @@ final class HandlerTest extends TestCase
                 })
             );
 
-        $handler = new Handler(new Hub($client, new Scope()), Logger::DEBUG, true, $fillExtraContext);
+        SentrySdk::init($client);
+        $handler = new Handler(Logger::DEBUG, true, $fillExtraContext);
         $handler->handle($record);
     }
 

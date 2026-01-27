@@ -34,7 +34,7 @@ final class ModulesIntegrationTest extends TestCase
             ->method('getIntegration')
             ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         withScope(function (Scope $scope) use ($expectedEmptyModules): void {
             $event = $scope->applyToEvent(Event::createEvent());
@@ -86,7 +86,7 @@ final class ModulesIntegrationTest extends TestCase
                                ->setTransport($transport)
                                ->getClient();
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         $client->captureEvent(Event::createEvent(), null, new Scope());
     }

@@ -7,34 +7,82 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Sentry\NoOpClient;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
+use Sentry\State\ScopeType;
 
 final class SentrySdkTest extends TestCase
 {
-    public function testInit(): void
+    public function testInitBindsClientToGlobalScope(): void
     {
-        $hub1 = SentrySdk::init();
-        $hub2 = SentrySdk::getCurrentHub();
+        $client = $this->createMock(\Sentry\ClientInterface::class);
 
-        $this->assertSame($hub1, $hub2);
-        $this->assertNotSame(SentrySdk::init(), SentrySdk::init());
+        SentrySdk::init($client);
+
+        $this->assertSame($client, SentrySdk::getGlobalScope()->getClient());
     }
 
-    public function testGetCurrentHub(): void
+    public function testInitResetsIsolationAndCurrentScopes(): void
+    {
+        SentrySdk::init(new NoOpClient());
+
+        $oldIsolationScope = SentrySdk::getIsolationScope();
+        $oldCurrentScope = SentrySdk::getCurrentScope();
+
+        SentrySdk::init(new NoOpClient());
+
+        $this->assertNotSame($oldIsolationScope, SentrySdk::getIsolationScope());
+        $this->assertNotSame($oldCurrentScope, SentrySdk::getCurrentScope());
+    }
+
+    public function testScopeAccessorsReturnTypedScopes(): void
     {
         SentrySdk::init();
 
-        $hub2 = SentrySdk::getCurrentHub();
-        $hub3 = SentrySdk::getCurrentHub();
-
-        $this->assertSame($hub2, $hub3);
+        $this->assertSame(ScopeType::global(), SentrySdk::getGlobalScope()->getType());
+        $this->assertSame(ScopeType::isolation(), SentrySdk::getIsolationScope()->getType());
+        $this->assertSame(ScopeType::current(), SentrySdk::getCurrentScope()->getType());
     }
 
-    public function testSetCurrentHub(): void
+    public function testGetClientPrefersCurrentThenIsolationThenGlobal(): void
     {
-        $hub = new Hub(new NoOpClient());
+        $globalClient = $this->createMock(\Sentry\ClientInterface::class);
+        $isolationClient = $this->createMock(\Sentry\ClientInterface::class);
+        $currentClient = $this->createMock(\Sentry\ClientInterface::class);
 
-        $this->assertSame($hub, SentrySdk::setCurrentHub($hub));
-        $this->assertSame($hub, SentrySdk::getCurrentHub());
+        SentrySdk::init(new NoOpClient());
+        SentrySdk::getGlobalScope()->bindClient($globalClient);
+        SentrySdk::getIsolationScope()->bindClient($isolationClient);
+        SentrySdk::getCurrentScope()->bindClient($currentClient);
+
+        $this->assertSame($currentClient, SentrySdk::getClient());
+
+        SentrySdk::getCurrentScope()->bindClient(new NoOpClient());
+        $this->assertSame($isolationClient, SentrySdk::getClient());
+
+        SentrySdk::getIsolationScope()->bindClient(new NoOpClient());
+        $this->assertSame($globalClient, SentrySdk::getClient());
     }
+
+    public function testGetMergedScopeCombinesScopeData(): void
+    {
+        SentrySdk::init(new NoOpClient());
+
+        SentrySdk::getGlobalScope()->setTag('global', 'yes');
+        SentrySdk::getGlobalScope()->setTag('shared', 'global');
+        SentrySdk::getIsolationScope()->setTag('isolation', 'yes');
+        SentrySdk::getIsolationScope()->setTag('shared', 'isolation');
+        SentrySdk::getCurrentScope()->setTag('current', 'yes');
+        SentrySdk::getCurrentScope()->setTag('shared', 'current');
+
+        $event = \Sentry\Event::createEvent();
+        $event = SentrySdk::getMergedScope()->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertEquals([
+            'global' => 'yes',
+            'isolation' => 'yes',
+            'current' => 'yes',
+            'shared' => 'current',
+        ], $event->getTags());
+    }
+
 }

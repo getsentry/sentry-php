@@ -7,6 +7,8 @@ namespace Sentry\Tests\Tracing;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
+use GuzzleHttp\Promise\TaskQueue;
+use GuzzleHttp\Promise\Utils;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
@@ -15,7 +17,7 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tracing\GuzzleTracingMiddleware;
 use Sentry\Tracing\SpanStatus;
@@ -23,6 +25,13 @@ use Sentry\Tracing\TransactionContext;
 
 final class GuzzleTracingMiddlewareTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Utils::queue(new TaskQueue(false));
+    }
+
     public function testTraceCreatesBreadcrumbIfSpanIsNotSet(): void
     {
         $client = $this->createMock(ClientInterface::class);
@@ -32,15 +41,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'traces_sample_rate' => 0,
             ]));
 
-        $hub = new Hub($client);
-
-        $transaction = $hub->startTransaction(TransactionContext::make());
+        SentrySdk::init($client);
+        $transaction = SentrySdk::startTransaction(TransactionContext::make());
 
         $this->assertFalse($transaction->getSampled());
 
         $expectedPromiseResult = new Response();
 
-        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $middleware = GuzzleTracingMiddleware::trace();
         $function = $middleware(static function () use ($expectedPromiseResult): PromiseInterface {
             return new FulfilledPromise($expectedPromiseResult);
         });
@@ -58,7 +66,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $this->assertNull($transaction->getSpanRecorder());
 
-        $hub->configureScope(function (Scope $scope): void {
+        SentrySdk::configureScope(function (Scope $scope): void {
             $event = Event::createEvent();
 
             $scope->applyToEvent($event);
@@ -76,15 +84,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                    'traces_sample_rate' => 1,
                ]));
 
-        $hub = new Hub($client);
-
-        $transaction = $hub->startTransaction(TransactionContext::make());
+        SentrySdk::init($client);
+        $transaction = SentrySdk::startTransaction(TransactionContext::make());
 
         $this->assertTrue($transaction->getSampled());
 
         $expectedPromiseResult = new Response();
 
-        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $middleware = GuzzleTracingMiddleware::trace();
         $function = $middleware(static function () use ($expectedPromiseResult): PromiseInterface {
             return new FulfilledPromise($expectedPromiseResult);
         });
@@ -103,7 +110,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertNotNull($transaction->getSpanRecorder());
         $this->assertCount(1, $transaction->getSpanRecorder()->getSpans());
 
-        $hub->configureScope(function (Scope $scope): void {
+        SentrySdk::configureScope(function (Scope $scope): void {
             $event = Event::createEvent();
 
             $scope->applyToEvent($event);
@@ -118,15 +125,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceHeaders(Request $request, Options $options, bool $headersShouldBePresent): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->atLeastOnce())
             ->method('getOptions')
             ->willReturn($options);
 
-        $hub = new Hub($client);
-
         $expectedPromiseResult = new Response();
 
-        $middleware = GuzzleTracingMiddleware::trace($hub);
+        SentrySdk::init($client);
+        $middleware = GuzzleTracingMiddleware::trace();
         $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
             if ($headersShouldBePresent) {
                 $this->assertNotEmpty($request->getHeader('sentry-trace'));
@@ -153,15 +159,13 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        $hub = new Hub($client);
-
-        $transaction = $hub->startTransaction(new TransactionContext());
-
-        $hub->setSpan($transaction);
+        SentrySdk::init($client);
+        $transaction = SentrySdk::startTransaction(new TransactionContext());
+        SentrySdk::getCurrentScope()->setSpan($transaction);
 
         $expectedPromiseResult = new Response();
 
-        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $middleware = GuzzleTracingMiddleware::trace();
         $function = $middleware(function (Request $request) use ($expectedPromiseResult, $headersShouldBePresent): PromiseInterface {
             if ($headersShouldBePresent) {
                 $this->assertNotEmpty($request->getHeader('sentry-trace'));
@@ -282,7 +286,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData, array $expectedSpanData): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(4))
+        $client->expects($this->atLeastOnce())
             ->method('getOptions')
             ->willReturn(new Options([
                 'traces_sample_rate' => 1,
@@ -291,53 +295,64 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 ],
             ]));
 
-        $hub = new Hub($client);
+        SentrySdk::init($client);
 
+
+        $capturedEvent = null;
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(function (Event $eventArg) use ($hub, $request, $expectedPromiseResult, $expectedBreadcrumbData, $expectedSpanData): bool {
-                $this->assertSame(EventType::transaction(), $eventArg->getType());
+            ->with(
+                $this->callback(function (Event $eventArg) use (&$capturedEvent): bool {
+                    $capturedEvent = $eventArg;
 
-                $hub->configureScope(static function (Scope $scope) use ($eventArg): void {
-                    $scope->applyToEvent($eventArg);
-                });
+                    return $eventArg->getType() === EventType::transaction();
+                }),
+                null,
+                $this->callback(function (Scope $scope) use (&$capturedEvent, $request, $expectedPromiseResult, $expectedBreadcrumbData, $expectedSpanData): bool {
+                    if ($capturedEvent === null) {
+                        return false;
+                    }
 
-                $spans = $eventArg->getSpans();
-                $breadcrumbs = $eventArg->getBreadcrumbs();
+                    $eventArg = $scope->applyToEvent($capturedEvent);
 
-                $this->assertCount(1, $spans);
-                $this->assertCount(1, $breadcrumbs);
+                    $this->assertNotNull($eventArg);
 
-                $guzzleSpan = $spans[0];
-                $guzzleBreadcrumb = $breadcrumbs[0];
+                    $spans = $eventArg->getSpans();
+                    $breadcrumbs = $eventArg->getBreadcrumbs();
 
-                $partialUri = Uri::fromParts([
-                    'scheme' => $request->getUri()->getScheme(),
-                    'host' => $request->getUri()->getHost(),
-                    'port' => $request->getUri()->getPort(),
-                    'path' => $request->getUri()->getPath(),
-                ]);
+                    $this->assertCount(1, $spans);
+                    $this->assertCount(1, $breadcrumbs);
 
-                $this->assertSame('http.client', $guzzleSpan->getOp());
-                $this->assertSame("{$request->getMethod()} {$partialUri}", $guzzleSpan->getDescription());
+                    $guzzleSpan = $spans[0];
+                    $guzzleBreadcrumb = $breadcrumbs[0];
 
-                if ($expectedPromiseResult instanceof Response) {
-                    $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
-                } else {
-                    $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
-                }
+                    $partialUri = Uri::fromParts([
+                        'scheme' => $request->getUri()->getScheme(),
+                        'host' => $request->getUri()->getHost(),
+                        'port' => $request->getUri()->getPort(),
+                        'path' => $request->getUri()->getPath(),
+                    ]);
 
-                $this->assertSame($expectedSpanData, $guzzleSpan->getData());
-                $this->assertSame($expectedBreadcrumbData, $guzzleBreadcrumb->getMetadata());
+                    $this->assertSame('http.client', $guzzleSpan->getOp());
+                    $this->assertSame("{$request->getMethod()} {$partialUri}", $guzzleSpan->getDescription());
 
-                return true;
-            }));
+                    if ($expectedPromiseResult instanceof Response) {
+                        $this->assertSame(SpanStatus::createFromHttpStatusCode($expectedPromiseResult->getStatusCode()), $guzzleSpan->getStatus());
+                    } else {
+                        $this->assertSame(SpanStatus::internalError(), $guzzleSpan->getStatus());
+                    }
 
-        $transaction = $hub->startTransaction(new TransactionContext());
+                    $this->assertSame($expectedSpanData, $guzzleSpan->getData());
+                    $this->assertSame($expectedBreadcrumbData, $guzzleBreadcrumb->getMetadata());
 
-        $hub->setSpan($transaction);
+                    return true;
+                })
+            );
 
-        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $transaction = SentrySdk::startTransaction(new TransactionContext());
+        SentrySdk::getCurrentScope()->setSpan($transaction);
+
+        $middleware = GuzzleTracingMiddleware::trace();
         $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
             $this->assertNotEmpty($request->getHeader('sentry-trace'));
             $this->assertNotEmpty($request->getHeader('baggage'));

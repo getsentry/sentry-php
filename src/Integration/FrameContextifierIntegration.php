@@ -41,7 +41,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(static function (Event $event): Event {
-            $client = SentrySdk::getCurrentHub()->getClient();
+            $client = SentrySdk::getClient();
 
             $maxContextLines = $client->getOptions()->getContextLines();
             $integration = $client->getIntegration(self::class);

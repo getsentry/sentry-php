@@ -10,7 +10,6 @@ use Sentry\ClientBuilder;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -33,8 +32,7 @@ final class LogsAggregatorTest extends TestCase
             'enable_logs' => true,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -91,8 +89,7 @@ final class LogsAggregatorTest extends TestCase
             'enable_logs' => true,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -167,10 +164,9 @@ final class LogsAggregatorTest extends TestCase
             'server_name' => 'web-server-01',
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
-        $hub->configureScope(function (Scope $scope) {
+        SentrySdk::configureScope(function (Scope $scope) {
             $userDataBag = new UserDataBag();
             $userDataBag->setId('unique_id');
             $userDataBag->setEmail('foo@example.com');
@@ -182,7 +178,7 @@ final class LogsAggregatorTest extends TestCase
         $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
         $span = new Span($spanContext);
-        $hub->setSpan($span);
+        SentrySdk::getCurrentScope()->setSpan($span);
 
         $aggregator = new LogsAggregator();
 

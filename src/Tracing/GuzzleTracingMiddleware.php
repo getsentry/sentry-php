@@ -11,7 +11,6 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
@@ -21,13 +20,12 @@ use function Sentry\getTraceparent;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?HubInterface $hub = null): \Closure
+    public static function trace(): \Closure
     {
-        return static function (callable $handler) use ($hub): \Closure {
-            return static function (RequestInterface $request, array $options) use ($hub, $handler) {
-                $hub = $hub ?? SentrySdk::getCurrentHub();
-                $client = $hub->getClient();
-                $parentSpan = $hub->getSpan();
+        return static function (callable $handler): \Closure {
+            return static function (RequestInterface $request, array $options) use ($handler) {
+                $client = SentrySdk::getClient();
+                $parentSpan = SentrySdk::getCurrentScope()->getSpan();
 
                 $partialUri = Uri::fromParts([
                     'scheme' => $request->getUri()->getScheme(),
@@ -59,7 +57,7 @@ final class GuzzleTracingMiddleware
 
                     $childSpan = $parentSpan->startChild($spanContext);
 
-                    $hub->setSpan($childSpan);
+                    SentrySdk::getCurrentScope()->setSpan($childSpan);
                 }
 
                 if (self::shouldAttachTracingHeaders($client, $request)) {
@@ -68,13 +66,13 @@ final class GuzzleTracingMiddleware
                         ->withHeader('baggage', getBaggage());
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
                         $childSpan->finish();
 
-                        $hub->setSpan($parentSpan);
+                        SentrySdk::getCurrentScope()->setSpan($parentSpan);
                     }
 
                     $response = null;
@@ -108,7 +106,7 @@ final class GuzzleTracingMiddleware
                         }
                     }
 
-                    $hub->addBreadcrumb(new Breadcrumb(
+                    $breadcrumb = new Breadcrumb(
                         $breadcrumbLevel,
                         Breadcrumb::TYPE_HTTP,
                         'http',
@@ -116,7 +114,8 @@ final class GuzzleTracingMiddleware
                         array_merge([
                             'url' => (string) $partialUri,
                         ], $spanAndBreadcrumbData)
-                    ));
+                    );
+                    SentrySdk::getIsolationScope()->addBreadcrumb($breadcrumb);
 
                     if ($responseOrException instanceof \Throwable) {
                         throw $responseOrException;

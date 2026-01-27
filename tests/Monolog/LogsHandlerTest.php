@@ -13,7 +13,6 @@ use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 use Sentry\Monolog\LogsHandler;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -30,8 +29,7 @@ final class LogsHandlerTest extends TestCase
             },
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
     }
 
     /**
@@ -105,8 +103,7 @@ final class LogsHandlerTest extends TestCase
         ])->setTransport($transport)
             ->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $this->handleLogAndDrop();
 

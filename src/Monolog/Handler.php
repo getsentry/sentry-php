@@ -9,12 +9,11 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use Sentry\Event;
 use Sentry\EventHint;
-use Sentry\State\HubInterface;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 /**
- * This Monolog handler logs every message to a Sentry's server using the given
- * hub instance.
+ * This Monolog handler logs every message to a Sentry's server.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
@@ -25,11 +24,6 @@ final class Handler extends AbstractProcessingHandler
     private const CONTEXT_EXCEPTION_KEY = 'exception';
 
     /**
-     * @var HubInterface
-     */
-    private $hub;
-
-    /**
      * @var bool
      */
     private $fillExtraContext;
@@ -37,13 +31,11 @@ final class Handler extends AbstractProcessingHandler
     /**
      * {@inheritdoc}
      *
-     * @param HubInterface $hub The hub to which errors are reported
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
+    public function __construct($level = Logger::DEBUG, bool $bubble = true, bool $fillExtraContext = false)
     {
         parent::__construct($level, $bubble);
 
-        $this->hub = $hub;
         $this->fillExtraContext = $fillExtraContext;
     }
 
@@ -63,7 +55,7 @@ final class Handler extends AbstractProcessingHandler
             $hint->exception = $record['context']['exception'];
         }
 
-        $this->hub->withScope(function (Scope $scope) use ($record, $event, $hint): void {
+        SentrySdk::withScope(function (Scope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
@@ -79,7 +71,7 @@ final class Handler extends AbstractProcessingHandler
                 $scope->setExtra('monolog.extra', $monologExtraData);
             }
 
-            $this->hub->captureEvent($event, $hint);
+            \Sentry\captureEvent($event, $hint);
         });
     }
 

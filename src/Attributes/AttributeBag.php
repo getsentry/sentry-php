@@ -30,6 +30,17 @@ class AttributeBag
         return $this;
     }
 
+    public function __clone()
+    {
+        $attributes = [];
+
+        foreach ($this->attributes as $key => $attribute) {
+            $attributes[$key] = clone $attribute;
+        }
+
+        $this->attributes = $attributes;
+    }
+
     public function get(string $key): ?Attribute
     {
         return $this->attributes[$key] ?? null;

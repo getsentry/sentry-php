@@ -57,6 +57,13 @@ interface ClientInterface
     public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId;
 
     /**
+     * Captures a check-in.
+     *
+     * @param int|float|null $duration
+     */
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string;
+
+    /**
      * Returns the integration instance if it is installed on the client.
      *
      * @param string $className The FQCN of the integration

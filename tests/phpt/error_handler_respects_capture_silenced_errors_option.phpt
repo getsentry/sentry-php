@@ -48,7 +48,7 @@ $client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 echo 'Triggering silenced error' . PHP_EOL;
 

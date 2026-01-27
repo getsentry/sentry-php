@@ -11,6 +11,7 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\State\ScopeType;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -23,6 +24,156 @@ use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
+    public function testScopeTypeSingletons(): void
+    {
+        $this->assertSame(ScopeType::global(), ScopeType::global());
+        $this->assertSame(ScopeType::isolation(), ScopeType::isolation());
+        $this->assertSame(ScopeType::current(), ScopeType::current());
+        $this->assertSame(ScopeType::merged(), ScopeType::merged());
+
+        $this->assertNotSame(ScopeType::global(), ScopeType::isolation());
+        $this->assertSame('global', (string) ScopeType::global());
+    }
+
+    public function testScopeTypeAssignmentAndClone(): void
+    {
+        $scope = new Scope(null, ScopeType::global());
+        $this->assertSame(ScopeType::global(), $scope->getType());
+
+        $scope->setType(ScopeType::current());
+        $this->assertSame(ScopeType::current(), $scope->getType());
+
+        $clone = clone $scope;
+        $this->assertSame(ScopeType::current(), $clone->getType());
+    }
+
+    public function testMergeOrderPrefersCurrentScope(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->setTag('global', 'yes');
+        $globalScope->setTag('shared', 'global');
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->setTag('isolation', 'yes');
+        $isolationScope->setTag('shared', 'isolation');
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->setTag('current', 'yes');
+        $currentScope->setTag('shared', 'current');
+
+        $event = Event::createEvent();
+        $event = Scope::applyToEventFromScopes($event, $globalScope, $isolationScope, $currentScope);
+
+        $this->assertNotNull($event);
+        $this->assertEquals([
+            'global' => 'yes',
+            'isolation' => 'yes',
+            'current' => 'yes',
+            'shared' => 'current',
+        ], $event->getTags());
+    }
+
+    public function testBreadcrumbsAreMergedAndSorted(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'global', null, [], 2000.0));
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'isolation', null, [], 1500.0));
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'current', null, [], 1000.0));
+
+        $event = Event::createEvent();
+        $event = Scope::applyToEventFromScopes($event, $globalScope, $isolationScope, $currentScope);
+
+        $this->assertNotNull($event);
+        $breadcrumbs = $event->getBreadcrumbs();
+
+        $this->assertSame('current', $breadcrumbs[0]->getCategory());
+        $this->assertSame('isolation', $breadcrumbs[1]->getCategory());
+        $this->assertSame('global', $breadcrumbs[2]->getCategory());
+    }
+
+    public function testEventProcessorsRunInScopeOrder(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->addEventProcessor(function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'global';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->addEventProcessor(function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'isolation';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->addEventProcessor(function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'current';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $event = Event::createEvent();
+        $event = Scope::applyToEventFromScopes($event, $globalScope, $isolationScope, $currentScope);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['global', 'isolation', 'current'], $event->getExtra()['order']);
+    }
+
+    public function testScopeAttributesApplyToScope(): void
+    {
+        $scope = new Scope();
+        $scope->setAttribute('app.feature', true);
+        $scope->setAttributes([
+            'app.session' => 42,
+        ]);
+
+        $this->assertSame(true, $scope->getAttributes()->get('app.feature')->getValue());
+        $this->assertSame(42, $scope->getAttributes()->get('app.session')->getValue());
+    }
+
+    public function testAttributesAreMergedWithPrecedence(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->setAttribute('global.attribute', 'global');
+        $globalScope->setAttribute('overwritten.attribute', 'global');
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->setAttribute('isolation.attribute', 'isolation');
+        $isolationScope->setAttribute('overwritten.attribute', 'isolation');
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->setAttribute('current.attribute', 'current');
+        $currentScope->setAttribute('overwritten.attribute', 'current');
+
+        $scope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+
+        $this->assertSame('global', $scope->getAttributes()->get('global.attribute')->getValue());
+        $this->assertSame('isolation', $scope->getAttributes()->get('isolation.attribute')->getValue());
+        $this->assertSame('current', $scope->getAttributes()->get('current.attribute')->getValue());
+        $this->assertSame('current', $scope->getAttributes()->get('overwritten.attribute')->getValue());
+    }
+
+    public function testRemoveAttribute(): void
+    {
+        $scope = new Scope();
+        $scope->setAttribute('app.feature', true);
+        $scope->removeAttribute('app.feature');
+
+        $this->assertNull($scope->getAttributes()->get('app.feature'));
+    }
+
     public function testSetTag(): void
     {
         $scope = new Scope();

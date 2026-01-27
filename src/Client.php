@@ -204,6 +204,30 @@ class Client implements ClientInterface
 
     /**
      * {@inheritdoc}
+     *
+     * @param int|float|null $duration
+     */
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
+    {
+        $options = $this->getOptions();
+        $event = Event::createCheckIn();
+        $checkIn = new CheckIn(
+            $slug,
+            $status,
+            $checkInId,
+            $options->getRelease(),
+            $options->getEnvironment(),
+            $duration,
+            $monitorConfig
+        );
+        $event->setCheckIn($checkIn);
+        $this->captureEvent($event, null, SentrySdk::getMergedScope());
+
+        return $checkIn->getId();
+    }
+
+    /**
+     * {@inheritdoc}
      */
     public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId
     {

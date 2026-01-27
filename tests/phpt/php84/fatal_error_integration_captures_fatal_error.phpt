@@ -56,7 +56,7 @@ $client = (new ClientBuilder($options))
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 final class TestClass implements \JsonSerializable
 {
