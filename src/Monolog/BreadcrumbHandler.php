@@ -10,9 +10,7 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use Psr\Log\LogLevel;
 use Sentry\Breadcrumb;
-use Sentry\Event;
-use Sentry\State\HubInterface;
-use Sentry\State\Scope;
+use Sentry\SentrySdk;
 
 /**
  * This Monolog handler logs every message as a {@see Breadcrumb} into the current {@see Scope},
@@ -21,23 +19,15 @@ use Sentry\State\Scope;
 final class BreadcrumbHandler extends AbstractProcessingHandler
 {
     /**
-     * @var HubInterface
-     */
-    private $hub;
-
-    /**
-     * @param HubInterface $hub    The hub to which errors are reported
-     * @param int|string   $level  The minimum logging level at which this
-     *                             handler will be triggered
-     * @param bool         $bubble Whether the messages that are handled can
-     *                             bubble up the stack or not
+     * @param int|string $level  The minimum logging level at which this
+     *                           handler will be triggered
+     * @param bool       $bubble Whether the messages that are handled can
+     *                           bubble up the stack or not
      *
      * @phpstan-param int|string|Level|LogLevel::* $level
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct($level = Logger::DEBUG, bool $bubble = true)
     {
-        $this->hub = $hub;
-
         parent::__construct($level, $bubble);
     }
 
@@ -63,7 +53,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
             $record['datetime']->getTimestamp()
         );
 
-        $this->hub->addBreadcrumb($breadcrumb);
+        SentrySdk::getIsolationScope()->addBreadcrumb($breadcrumb);
     }
 
     /**

@@ -12,7 +12,7 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
-use Sentry\State\HubAdapter;
+use Sentry\SentrySdk;
 
 use function Sentry\trace_metrics;
 
@@ -20,7 +20,7 @@ final class TraceMetricsTest extends TestCase
 {
     protected function setUp(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options(), StubTransport::getInstance()));
+        SentrySdk::init(new Client(new Options(), StubTransport::getInstance()));
         StubTransport::$events = [];
     }
 
@@ -86,7 +86,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testEnableMetrics(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'enable_metrics' => false,
         ]), StubTransport::getInstance()));
 
@@ -98,7 +98,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testBeforeSendMetricAltersContent()
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'before_send_metric' => static function (Metric $metric) {
                 $metric->setValue(99999);
 

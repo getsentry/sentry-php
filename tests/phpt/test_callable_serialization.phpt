@@ -49,11 +49,11 @@ $client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 class Foo {
     function __construct(string $bar) {
-        SentrySdk::getCurrentHub()->captureException(new Exception('doh!'));
+        \Sentry\captureException(new Exception('doh!'));
     }
 }
 

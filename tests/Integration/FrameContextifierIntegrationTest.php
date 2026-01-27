@@ -40,7 +40,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         $stacktrace = new Stacktrace([
             new Frame('[unknown]', $fixtureFilePath, $lineNumber, null, $fixtureFilePath),
@@ -133,7 +133,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         $stacktrace = new Stacktrace([
             new Frame(null, '[internal]', 0),

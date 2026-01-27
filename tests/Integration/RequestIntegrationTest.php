@@ -44,7 +44,7 @@ final class RequestIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn(new Options($options));
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
             $event = $scope->applyToEvent($event);

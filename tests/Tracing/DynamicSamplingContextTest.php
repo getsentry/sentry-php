@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\NoOpClient;
 use Sentry\Options;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
@@ -91,16 +90,14 @@ final class DynamicSamplingContextTest extends TestCase
                 'environment' => 'test',
             ]));
 
-        $hub = new Hub($client);
-
         $transactionContext = new TransactionContext();
         $transactionContext->setName('foo');
 
-        $transaction = new Transaction($transactionContext, $hub);
+        $transaction = new Transaction($transactionContext, $client);
         $transaction->getMetadata()->setSamplingRate(1.0);
         $transaction->getMetadata()->setSampleRand(0.5);
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $client);
 
         $this->assertSame((string) $transaction->getTraceId(), $samplingContext->get('trace_id'));
         $this->assertSame((string) $transaction->getMetaData()->getSamplingRate(), $samplingContext->get('sample_rate'));
@@ -114,15 +111,15 @@ final class DynamicSamplingContextTest extends TestCase
 
     public function testFromTransactionSourceUrl(): void
     {
-        $hub = new Hub(new NoOpClient());
+        $client = new NoOpClient();
 
         $transactionContext = new TransactionContext();
         $transactionContext->setName('/foo/bar/123');
         $transactionContext->setSource(TransactionSource::url());
 
-        $transaction = new Transaction($transactionContext, $hub);
+        $transaction = new Transaction($transactionContext, $client);
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $client);
 
         $this->assertNull($samplingContext->get('transaction'));
     }

@@ -22,20 +22,18 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
     {
         $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
         $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
-            $currentHub = SentrySdk::getCurrentHub();
-            $integration = $currentHub->getIntegration(self::class);
+            $client = SentrySdk::getClient();
+            $integration = $client->getIntegration(self::class);
 
             if ($integration === null) {
                 return;
             }
 
-            $client = $currentHub->getClient();
-
             if (!($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
                 return;
             }
 
-            $integration->captureException($currentHub, $exception);
+            $integration->captureException($exception);
         });
     }
 }
