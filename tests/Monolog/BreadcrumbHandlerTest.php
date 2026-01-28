@@ -8,9 +8,10 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Monolog\BreadcrumbHandler;
-use Sentry\NoOpClient;
+use Sentry\Options;
 use Sentry\SentrySdk;
 
 final class BreadcrumbHandlerTest extends TestCase
@@ -20,7 +21,11 @@ final class BreadcrumbHandlerTest extends TestCase
      */
     public function testHandle($record, Breadcrumb $expectedBreadcrumb): void
     {
-        SentrySdk::init(new NoOpClient());
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['default_integrations' => false]));
+
+        SentrySdk::init($client);
         $handler = new BreadcrumbHandler();
         $handler->handle($record);
 
