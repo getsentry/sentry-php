@@ -27,15 +27,15 @@ jobs:
           - ubuntu-latest
           - windows-latest
         php:
-          - { version: '7.2', phpunit: '^8.5.40' }
-          - { version: '7.3', phpunit: '^9.6.21' }
-          - { version: '7.4', phpunit: '^9.6.21' }
-          - { version: '8.0', phpunit: '^9.6.21' }
-          - { version: '8.1', phpunit: '^9.6.21' }
-          - { version: '8.2', phpunit: '^9.6.21' }
-          - { version: '8.3', phpunit: '^9.6.21' }
-          - { version: '8.4', phpunit: '^9.6.21' }
-          - { version: '8.5', phpunit: '^9.6.25' }
+          - { version: '7.2', phpunit: '^8.5.52' }
+          - { version: '7.3', phpunit: '^9.6.33' }
+          - { version: '7.4', phpunit: '^9.6.33' }
+          - { version: '8.0', phpunit: '^9.6.33' }
+          - { version: '8.1', phpunit: '^9.6.33' }
+          - { version: '8.2', phpunit: '^9.6.33' }
+          - { version: '8.3', phpunit: '^9.6.33' }
+          - { version: '8.4', phpunit: '^9.6.33' }
+          - { version: '8.5', phpunit: '^9.6.33' }
         dependencies:
           - lowest
           - highest
