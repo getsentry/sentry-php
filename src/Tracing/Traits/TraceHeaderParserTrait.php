@@ -78,7 +78,7 @@ trait TraceHeaderParserTrait
 
             // Store the propagated traces sample rate
             if ($samplingContext->has('sample_rate')) {
-                $result['parentSamplingRate'] = (float)$samplingContext->get('sample_rate');
+                $result['parentSamplingRate'] = (float) $samplingContext->get('sample_rate');
             }
         }
 
