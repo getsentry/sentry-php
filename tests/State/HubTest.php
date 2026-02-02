@@ -240,7 +240,7 @@ final class HubTest extends TestCase
         $eventId = EventId::generate();
         $hub = new Hub();
 
-        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+        $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
         });
 
@@ -299,7 +299,7 @@ final class HubTest extends TestCase
         $eventId = EventId::generate();
         $hub = new Hub();
 
-        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+        $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
         });
 
@@ -354,7 +354,7 @@ final class HubTest extends TestCase
         $eventId = EventId::generate();
         $hub = new Hub();
 
-        $hub->configureScope(function (Scope $scope) use ($propagationContext): void {
+        $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
             $scope->setPropagationContext($propagationContext);
         });
 
@@ -829,7 +829,7 @@ final class HubTest extends TestCase
         $client->expects($this->once())
             ->method('getOptions')
             ->willReturn(new Options([
-                'traces_sampler' => function (SamplingContext $samplingContext): float {
+                'traces_sampler' => static function (SamplingContext $samplingContext): float {
                     return 1.0;
                 },
             ]));

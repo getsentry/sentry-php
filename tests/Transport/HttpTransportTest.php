@@ -62,7 +62,7 @@ final class HttpTransportTest extends TestCase
             $this->logger->expects($this->exactly(\count($messages)))
                 ->method($level)
                 ->with($this->logicalOr(
-                    ...array_map(function (string $message) {
+                    ...array_map(static function (string $message) {
                         return new StringMatchesFormatDescription($message);
                     }, $messages)
                 ));

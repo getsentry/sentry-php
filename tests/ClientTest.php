@@ -1033,7 +1033,7 @@ final class ClientTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
                   ->method('send')
-                  ->with($this->callback(function (Event $event): bool {
+                  ->with($this->callback(static function (Event $event): bool {
                       $result = $event->getStacktrace();
 
                       return $result !== null;

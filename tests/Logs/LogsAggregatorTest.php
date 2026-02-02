@@ -170,7 +170,7 @@ final class LogsAggregatorTest extends TestCase
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
 
-        $hub->configureScope(function (Scope $scope) {
+        $hub->configureScope(static function (Scope $scope) {
             $userDataBag = new UserDataBag();
             $userDataBag->setId('unique_id');
             $userDataBag->setEmail('foo@example.com');
