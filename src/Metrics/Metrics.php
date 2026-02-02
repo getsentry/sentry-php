@@ -109,7 +109,7 @@ class Metrics
         int $stackLevel = 0
     ) {
         return trace(
-            function () use ($callback) {
+            static function () use ($callback) {
                 return $callback();
             },
             SpanContext::make()

@@ -252,7 +252,7 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
  */
 function trace(callable $trace, SpanContext $context)
 {
-    return SentrySdk::getCurrentHub()->withScope(function (Scope $scope) use ($context, $trace) {
+    return SentrySdk::getCurrentHub()->withScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
 
         // If there is a span set on the scope and it's sampled there is an active transaction.
@@ -299,7 +299,7 @@ function getTraceparent(): string
     }
 
     $traceParent = '';
-    $hub->configureScope(function (Scope $scope) use (&$traceParent) {
+    $hub->configureScope(static function (Scope $scope) use (&$traceParent) {
         $traceParent = $scope->getPropagationContext()->toTraceparent();
     });
 
@@ -342,7 +342,7 @@ function getBaggage(): string
     }
 
     $baggage = '';
-    $hub->configureScope(function (Scope $scope) use (&$baggage) {
+    $hub->configureScope(static function (Scope $scope) use (&$baggage) {
         $baggage = $scope->getPropagationContext()->toBaggage();
     });
 
@@ -358,7 +358,7 @@ function getBaggage(): string
 function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 {
     $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(function (Scope $scope) use ($sentryTrace, $baggage) {
+    $hub->configureScope(static function (Scope $scope) use ($sentryTrace, $baggage) {
         $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
         $scope->setPropagationContext($propagationContext);
     });
@@ -393,7 +393,7 @@ function trace_metrics(): TraceMetrics
  */
 function addFeatureFlag(string $name, bool $result): void
 {
-    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($name, $result) {
+    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
         $scope->addFeatureFlag($name, $result);
     });
 }
