@@ -438,7 +438,7 @@ abstract class AbstractSerializerTest extends TestCase
 
         return [
             [
-                'callable' => function (array $param1) {
+                'callable' => static function (array $param1) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -446,7 +446,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [array param1]',
             ],
             [
-                'callable' => function ($param1a) {
+                'callable' => static function ($param1a) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -454,7 +454,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [mixed|null param1a]',
             ],
             [
-                'callable' => function (callable $param1c) {
+                'callable' => static function (callable $param1c) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -462,7 +462,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [callable param1c]',
             ],
             [
-                'callable' => function (\stdClass $param1d) {
+                'callable' => static function (\stdClass $param1d) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -470,7 +470,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass param1d]',
             ],
             [
-                'callable' => function (?\stdClass $param1e = null) {
+                'callable' => static function (?\stdClass $param1e = null) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -478,7 +478,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [stdClass|null [param1e]]',
             ],
             [
-                'callable' => function (array &$param1f) {
+                'callable' => static function (array &$param1f) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -486,7 +486,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [array &param1f]',
             ],
             [
-                'callable' => function (?array &$param1g = null) {
+                'callable' => static function (?array &$param1g = null) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -514,7 +514,7 @@ abstract class AbstractSerializerTest extends TestCase
                 'expected' => 'Callable void ' . SerializerTestObject::class . '::testy []',
             ],
             [
-                'callable' => function (int $param1_70a) {
+                'callable' => static function (int $param1_70a) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -522,7 +522,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [int param1_70a]',
             ],
             [
-                'callable' => function (&$param): int {
+                'callable' => static function (&$param): int {
                     return (int) $param;
                 },
                 'expected' => $prettyClosureNames
@@ -530,7 +530,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda int ' . __NAMESPACE__ . '\\{closure} [mixed|null &param]',
             ],
             [
-                'callable' => function (int $param): ?int {
+                'callable' => static function (int $param): ?int {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -538,7 +538,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda int ' . __NAMESPACE__ . '\\{closure} [int param]',
             ],
             [
-                'callable' => function (?int $param1_70b) {
+                'callable' => static function (?int $param1_70b) {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
@@ -546,7 +546,7 @@ abstract class AbstractSerializerTest extends TestCase
                     : 'Lambda ' . __NAMESPACE__ . '\\{closure} [int|null param1_70b]',
             ],
             [
-                'callable' => function (?int $param1_70c): void {
+                'callable' => static function (?int $param1_70c): void {
                     throw new \Exception('Don\'t even think about invoke me');
                 },
                 'expected' => $prettyClosureNames
