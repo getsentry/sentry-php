@@ -406,7 +406,7 @@ final class ScopeTest extends TestCase
             return null;
         });
 
-        $scope->addEventProcessor(function () use (&$callback3Called) {
+        $scope->addEventProcessor(static function () use (&$callback3Called) {
             $callback3Called = true;
 
             return null;
@@ -426,7 +426,7 @@ final class ScopeTest extends TestCase
         $processorCalled = false;
         $processorReceivedHint = null;
 
-        $scope->addEventProcessor(function (Event $eventArg, EventHint $hint) use (&$processorCalled, &$processorReceivedHint): ?Event {
+        $scope->addEventProcessor(static function (Event $eventArg, EventHint $hint) use (&$processorCalled, &$processorReceivedHint): ?Event {
             $processorCalled = true;
             $processorReceivedHint = $hint;
 
