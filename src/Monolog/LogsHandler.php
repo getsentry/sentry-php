@@ -57,9 +57,9 @@ class LogsHandler implements HandlerInterface
             return self::getSentryLogLevelFromMonologLevel($record['level'])->getPriority() >= $this->logLevel->getPriority();
         } elseif ($this->logLevel instanceof \Monolog\Level) {
             return $record['level'] >= $this->logLevel->value;
-        } else {
-            return $record['level'] >= $this->logLevel;
         }
+
+        return $record['level'] >= $this->logLevel;
     }
 
     /**
