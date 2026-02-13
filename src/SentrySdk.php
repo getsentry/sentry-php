@@ -214,25 +214,11 @@ final class SentrySdk
 
     public static function getClient(): ClientInterface
     {
-        $currentScope = self::getCurrentScope();
-        $client = $currentScope->getClient();
-        if ($client !== null && !$client instanceof NoOpClient) {
-            return $client;
-        }
-
-        $isolationScope = self::getIsolationScope();
-        $client = $isolationScope->getClient();
-        if ($client !== null && !$client instanceof NoOpClient) {
-            return $client;
-        }
-
-        $globalScope = self::getGlobalScope();
-        $client = $globalScope->getClient();
-        if ($client !== null) {
-            return $client;
-        }
-
-        return new NoOpClient();
+        return Scope::getClientFromScopes(
+            self::getGlobalScope(),
+            self::getIsolationScope(),
+            self::getCurrentScope()
+        );
     }
 
     private static function getScopeManager(): ScopeManager

@@ -46,7 +46,7 @@ class Scope
     private $type;
 
     /**
-     * @var ClientInterface|null Client bound to this scope
+     * @var ClientInterface Client bound to this scope
      */
     private $client;
 
@@ -125,6 +125,7 @@ class Scope
     {
         $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
         $this->type = $type;
+        $this->client = new NoOpClient();
         $this->attributes = new AttributeBag();
     }
 
@@ -344,7 +345,10 @@ class Scope
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): self
     {
-        $client = $this->getClient() ?? SentrySdk::getClient();
+        $client = $this->getClient();
+        if ($client instanceof NoOpClient) {
+            $client = SentrySdk::getClient();
+        }
 
         // No point in storing breadcrumbs if the client will never send them
         if ($client instanceof NoOpClient) {
@@ -612,14 +616,14 @@ class Scope
         return $this->propagationContext;
     }
 
-    public function getClient(): ?ClientInterface
+    public function getClient(): ClientInterface
     {
         return $this->client;
     }
 
     public function setClient(?ClientInterface $client): self
     {
-        $this->client = $client;
+        $this->client = $client ?? new NoOpClient();
 
         return $this;
     }
@@ -661,9 +665,6 @@ class Scope
 
     /**
      * @internal
-     *
-     * Merges data from the given scope into this one, overwriting existing values
-     * where applicable
      */
     public function mergeFrom(self $scope): self
     {
@@ -752,29 +753,39 @@ class Scope
         $mergedScope->setType(ScopeType::merged());
         $mergedScope->sortBreadcrumbsByTimestamp();
 
+        $client = self::getClientFromScopes($globalScope, $isolationScope, $currentScope);
+        $mergedScope->trimBreadcrumbs($client->getOptions()->getMaxBreadcrumbs());
+
         return $mergedScope;
     }
 
     /**
      * @internal
      */
-    public static function applyToEventFromScopes(
-        Event $event,
-        Scope $globalScope,
-        ?Scope $isolationScope,
-        ?Scope $currentScope,
-        ?EventHint $hint = null,
-        ?Options $options = null
-    ): ?Event {
-        $mergedScope = self::mergeScopes($globalScope, $isolationScope, $currentScope);
+    public static function getClientFromScopes(Scope $globalScope, ?Scope $isolationScope, ?Scope $currentScope): ClientInterface
+    {
+        if ($currentScope !== null) {
+            $currentScopeClient = $currentScope->getClient();
+            if (!$currentScopeClient instanceof NoOpClient) {
+                return $currentScopeClient;
+            }
+        }
 
-        return $mergedScope->applyToEvent($event, $hint, $options);
+        if ($isolationScope !== null) {
+            $isolationScopeClient = $isolationScope->getClient();
+            if (!$isolationScopeClient instanceof NoOpClient) {
+                return $isolationScopeClient;
+            }
+        }
+
+        return $globalScope->getClient();
     }
 
     /**
      * @internal
      *
-     * Sorts breadcrumbs by their timestamp (ascending), preserving insertion order for ties
+     * Sorts breadcrumbs by timestamp. This is important because merging scopes can lead to an invalid ordering.
+     * If we trim after merge without sorting, we cannot guarantee that we keep the last max_breadcrumbs.
      */
     public function sortBreadcrumbsByTimestamp(): self
     {
@@ -782,33 +793,27 @@ class Scope
             return $this;
         }
 
-        $indexed = [];
-
-        foreach ($this->breadcrumbs as $index => $breadcrumb) {
-            $indexed[] = [$breadcrumb, $index];
-        }
-
-        usort($indexed, static function (array $left, array $right): int {
-            /** @var Breadcrumb $leftBreadcrumb */
-            $leftBreadcrumb = $left[0];
-            /** @var Breadcrumb $rightBreadcrumb */
-            $rightBreadcrumb = $right[0];
-            $leftIndex = $left[1];
-            $rightIndex = $right[1];
-
-            $leftTimestamp = $leftBreadcrumb->getTimestamp();
-            $rightTimestamp = $rightBreadcrumb->getTimestamp();
-
-            if ($leftTimestamp === $rightTimestamp) {
-                return $leftIndex <=> $rightIndex;
-            }
-
-            return $leftTimestamp <=> $rightTimestamp;
+        usort($this->breadcrumbs, static function (Breadcrumb $left, Breadcrumb $right): int {
+            return $left->getTimestamp() <=> $right->getTimestamp();
         });
 
-        $this->breadcrumbs = array_map(static function (array $entry): Breadcrumb {
-            return $entry[0];
-        }, $indexed);
+        return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public function trimBreadcrumbs(int $maxBreadcrumbs): self
+    {
+        if ($maxBreadcrumbs <= 0) {
+            $this->breadcrumbs = [];
+
+            return $this;
+        }
+
+        if (\count($this->breadcrumbs) > $maxBreadcrumbs) {
+            $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+        }
 
         return $this;
     }
@@ -826,7 +831,10 @@ class Scope
 
     public function addAttachment(Attachment $attachment): self
     {
-        $client = $this->getClient() ?? SentrySdk::getClient();
+        $client = $this->getClient();
+        if ($client instanceof NoOpClient) {
+            $client = SentrySdk::getClient();
+        }
 
         // No point in storing attachments if the client will never send them
         if ($client instanceof NoOpClient) {

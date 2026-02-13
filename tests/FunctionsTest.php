@@ -64,6 +64,8 @@ final class FunctionsTest extends TestCase
         $hint = $functionCallArgs[2] ?? null;
 
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->once())
             ->method('captureMessage')
             ->with(
@@ -110,6 +112,8 @@ final class FunctionsTest extends TestCase
         $hint = $functionCallArgs[1] ?? null;
 
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->once())
             ->method('captureException')
             ->with(
@@ -148,6 +152,8 @@ final class FunctionsTest extends TestCase
         $hint = new EventHint();
 
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->once())
             ->method('captureEvent')
             ->with(
@@ -174,6 +180,8 @@ final class FunctionsTest extends TestCase
         $hint = $functionCallArgs[0] ?? null;
 
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->once())
             ->method('captureLastError')
             ->with(
@@ -312,7 +320,7 @@ final class FunctionsTest extends TestCase
 
         $client = $this->createMock(ClientInterface::class);
         $client->method('getOptions')
-            ->willReturn(new Options(['default_integrations' => false]));
+            ->willReturn(new Options());
 
         SentrySdk::init($client);
 
@@ -334,7 +342,6 @@ final class FunctionsTest extends TestCase
                     return $breadcrumb->withMessage('mutated');
                 },
                 'max_breadcrumbs' => 1,
-                'default_integrations' => false,
             ]));
 
         SentrySdk::init($client);
@@ -371,6 +378,26 @@ final class FunctionsTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
+    }
+
+    public function testConfigureScopeWritesToIsolationScope(): void
+    {
+        SentrySdk::init(new NoOpClient());
+
+        withScope(static function (Scope $scope): void {
+            $scope->setTag('current', 'foo');
+
+            configureScope(static function (Scope $scope): void {
+                $scope->setTag('isolation', 'foo');
+            });
+        });
+
+        $event = Event::createEvent();
+        $event = SentrySdk::getMergedScope()->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertSame('foo', $event->getTags()['isolation'] ?? null);
+        $this->assertArrayNotHasKey('current', $event->getTags());
     }
 
     public function testStartTransaction(): void

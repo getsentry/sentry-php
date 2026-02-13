@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Breadcrumb;
 use Sentry\NoOpClient;
+use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\ScopeType;
 
@@ -33,13 +35,36 @@ final class SentrySdkTest extends TestCase
         $this->assertNotSame($oldCurrentScope, SentrySdk::getCurrentScope());
     }
 
-    public function testScopeAccessorsReturnTypedScopes(): void
+    public function testInitDoesNotResetGlobalScope(): void
+    {
+        SentrySdk::init(new NoOpClient());
+        SentrySdk::getGlobalScope()->setTag('global', 'foo');
+
+        SentrySdk::init(new NoOpClient());
+
+        $event = \Sentry\Event::createEvent();
+        $event = SentrySdk::getMergedScope()->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertSame('foo', $event->getTags()['global'] ?? null);
+    }
+
+    public function testScopesHaveCorrectTypes(): void
     {
         SentrySdk::init();
 
         $this->assertSame(ScopeType::global(), SentrySdk::getGlobalScope()->getType());
         $this->assertSame(ScopeType::isolation(), SentrySdk::getIsolationScope()->getType());
         $this->assertSame(ScopeType::current(), SentrySdk::getCurrentScope()->getType());
+    }
+
+    public function testScopesNoOpClientByDefault(): void
+    {
+        SentrySdk::init(new NoOpClient());
+
+        $this->assertInstanceOf(NoOpClient::class, SentrySdk::getGlobalScope()->getClient());
+        $this->assertInstanceOf(NoOpClient::class, SentrySdk::getIsolationScope()->getClient());
+        $this->assertInstanceOf(NoOpClient::class, SentrySdk::getCurrentScope()->getClient());
     }
 
     public function testGetClientPrefersCurrentThenIsolationThenGlobal(): void
