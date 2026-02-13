@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Logs\Logs;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\State\Scope;
 use Sentry\State\ScopeManager;
 use Sentry\Tracing\SamplingContext;
@@ -273,5 +275,21 @@ final class SentrySdk
         }
 
         return true;
+    }
+
+    /**
+     * Flushes all buffered telemetry data.
+     *
+     * This is a convenience facade that forwards the flush operation to all
+     * internally managed components.
+     *
+     * Calling this method is equivalent to invoking `flush()` on each component
+     * individually. It does not change flushing behavior, improve performance,
+     * or reduce the number of network requests.
+     */
+    public static function flush(): void
+    {
+        Logs::getInstance()->flush();
+        TraceMetrics::getInstance()->flush();
     }
 }

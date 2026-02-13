@@ -14,6 +14,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\TransportInterface;
 
 /**
  * Creates a new Client and binds it to the global scope.
@@ -61,7 +62,7 @@ use Sentry\Tracing\TransactionContext;
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
- *     transport?: callable,
+ *     transport?: TransportInterface|null,
  * } $options The client options
  */
 function init(array $options = []): void
@@ -247,7 +248,7 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
  */
 function trace(callable $trace, SpanContext $context)
 {
-    return SentrySdk::withScope(function (Scope $scope) use ($context, $trace) {
+    return SentrySdk::withScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
 
         // If there is a span set on the scope and it's sampled there is an active transaction.
@@ -346,7 +347,22 @@ function trace_metrics(): TraceMetrics
  */
 function addFeatureFlag(string $name, bool $result): void
 {
-    SentrySdk::configureScope(function (Scope $scope) use ($name, $result) {
+    SentrySdk::configureScope(static function (Scope $scope) use ($name, $result): void {
         $scope->addFeatureFlag($name, $result);
     });
+}
+
+/**
+ * Flushes all buffered telemetry data.
+ *
+ * This is a convenience facade that forwards the flush operation to all
+ * internally managed components.
+ *
+ * Calling this method is equivalent to invoking `flush()` on each component
+ * individually. It does not change flushing behavior, improve performance,
+ * or reduce the number of network requests.
+ */
+function flush(): void
+{
+    SentrySdk::flush();
 }

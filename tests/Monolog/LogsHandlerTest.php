@@ -4,18 +4,16 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Monolog;
 
+use Monolog\Level;
 use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientBuilder;
-use Sentry\Event;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\Logs;
 use Sentry\Monolog\LogsHandler;
 use Sentry\SentrySdk;
-use Sentry\Transport\Result;
-use Sentry\Transport\ResultStatus;
-use Sentry\Transport\TransportInterface;
+use Sentry\Tests\StubTransport;
 
 final class LogsHandlerTest extends TestCase
 {
@@ -62,42 +60,47 @@ final class LogsHandlerTest extends TestCase
     }
 
     /**
-     * @dataProvider logLevelDataProvider
+     * @dataProvider monologLegacyLevelDataProvider
      */
-    public function testLogLevels($record, int $countLogs): void
+    public function testFiltersAndMapsUsingLegacyMonologThreshold(int $threshold, int $recordLevel, int $expectedCount, ?LogLevel $expectedMappedLevel): void
     {
-        $handler = new LogsHandler(LogLevel::warn());
-        $handler->handle($record);
+        $handler = new LogsHandler($threshold);
+        $handler->handle(RecordFactory::create('foo bar', $recordLevel, 'channel.foo', [], []));
 
         $logs = Logs::getInstance()->aggregator()->all();
-        $this->assertCount($countLogs, $logs);
+        $this->assertCount($expectedCount, $logs);
+
+        if ($expectedMappedLevel !== null) {
+            $this->assertEquals($expectedMappedLevel, $logs[0]->getLevel());
+        }
+    }
+
+    /**
+     * @dataProvider monologLevelDataProvider
+     */
+    public function testFiltersAndMapsUsingMonologEnumThreshold($threshold, $recordLevel, int $expectedCount, ?LogLevel $expectedMappedLevel): void
+    {
+        if (!class_exists(Level::class)) {
+            $this->markTestSkipped('Test only works for Monolog >= 3');
+        }
+
+        $this->assertInstanceOf(Level::class, $threshold);
+        $this->assertInstanceOf(Level::class, $recordLevel);
+
+        $handler = new LogsHandler($threshold);
+        $handler->handle(RecordFactory::create('foo bar', $recordLevel->value, 'channel.foo', [], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount($expectedCount, $logs);
+
+        if ($expectedMappedLevel !== null) {
+            $this->assertEquals($expectedMappedLevel, $logs[0]->getLevel());
+        }
     }
 
     public function testLogsHandlerDestructor()
     {
-        $transport = new class implements TransportInterface {
-            private $events = [];
-
-            public function send(Event $event): Result
-            {
-                $this->events[] = $event;
-
-                return new Result(ResultStatus::success());
-            }
-
-            public function close(?int $timeout = null): Result
-            {
-                return new Result(ResultStatus::success());
-            }
-
-            /**
-             * @return Event[]
-             */
-            public function getEvents(): array
-            {
-                return $this->events;
-            }
-        };
+        $transport = new StubTransport();
         $client = ClientBuilder::create([
             'enable_logs' => true,
         ])->setTransport($transport)
@@ -107,8 +110,8 @@ final class LogsHandlerTest extends TestCase
 
         $this->handleLogAndDrop();
 
-        $this->assertCount(1, $transport->getEvents());
-        $this->assertSame('I was dropped :(', $transport->getEvents()[0]->getLogs()[0]->getBody());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertSame('I was dropped :(', StubTransport::$events[0]->getLogs()[0]->getBody());
     }
 
     private function handleLogAndDrop(): void
@@ -280,83 +283,127 @@ final class LogsHandlerTest extends TestCase
         ];
     }
 
-    public static function logLevelDataProvider(): iterable
+    public static function monologLegacyLevelDataProvider(): iterable
     {
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::DEBUG,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'NOTICE threshold drops INFO (both map to sentry info)' => [
+            Logger::NOTICE,
+            Logger::INFO,
             0,
+            null,
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::NOTICE,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'NOTICE threshold keeps NOTICE (mapped to sentry info)' => [
+            Logger::NOTICE,
+            Logger::NOTICE,
+            1,
+            LogLevel::info(),
+        ];
+
+        yield 'NOTICE threshold keeps WARNING (mapped to sentry warn)' => [
+            Logger::NOTICE,
+            Logger::WARNING,
+            1,
+            LogLevel::warn(),
+        ];
+
+        yield 'ALERT threshold drops CRITICAL (both map to sentry fatal)' => [
+            Logger::ALERT,
+            Logger::CRITICAL,
             0,
+            null,
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::INFO,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'ALERT threshold keeps ALERT (mapped to sentry fatal)' => [
+            Logger::ALERT,
+            Logger::ALERT,
+            1,
+            LogLevel::fatal(),
+        ];
+
+        yield 'ALERT threshold keeps EMERGENCY (mapped to sentry fatal)' => [
+            Logger::ALERT,
+            Logger::EMERGENCY,
+            1,
+            LogLevel::fatal(),
+        ];
+
+        yield 'EMERGENCY threshold drops ALERT (both map to sentry fatal)' => [
+            Logger::EMERGENCY,
+            Logger::ALERT,
             0,
+            null,
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::WARNING,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'EMERGENCY threshold keeps EMERGENCY (mapped to sentry fatal)' => [
+            Logger::EMERGENCY,
+            Logger::EMERGENCY,
             1,
+            LogLevel::fatal(),
+        ];
+    }
+
+    public static function monologLevelDataProvider(): iterable
+    {
+        if (!class_exists(Level::class)) {
+            yield 'Monolog < 3 (skipped)' => [null, null, 0, null];
+
+            return;
+        }
+
+        yield 'NOTICE threshold drops INFO (both map to sentry info)' => [
+            Level::Notice,
+            Level::Info,
+            0,
+            null,
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::CRITICAL,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'NOTICE threshold keeps NOTICE (mapped to sentry info)' => [
+            Level::Notice,
+            Level::Notice,
             1,
+            LogLevel::info(),
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::ALERT,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'NOTICE threshold keeps WARNING (mapped to sentry warn)' => [
+            Level::Notice,
+            Level::Warning,
             1,
+            LogLevel::warn(),
         ];
 
-        yield [
-            RecordFactory::create(
-                'foo bar',
-                Logger::EMERGENCY,
-                'channel.foo',
-                [],
-                []
-            ),
+        yield 'ALERT threshold drops CRITICAL (both map to sentry fatal)' => [
+            Level::Alert,
+            Level::Critical,
+            0,
+            null,
+        ];
+
+        yield 'ALERT threshold keeps ALERT (mapped to sentry fatal)' => [
+            Level::Alert,
+            Level::Alert,
             1,
+            LogLevel::fatal(),
+        ];
+
+        yield 'ALERT threshold keeps EMERGENCY (mapped to sentry fatal)' => [
+            Level::Alert,
+            Level::Emergency,
+            1,
+            LogLevel::fatal(),
+        ];
+
+        yield 'EMERGENCY threshold drops ALERT (both map to sentry fatal)' => [
+            Level::Emergency,
+            Level::Alert,
+            0,
+            null,
+        ];
+
+        yield 'EMERGENCY threshold keeps EMERGENCY (mapped to sentry fatal)' => [
+            Level::Emergency,
+            Level::Emergency,
+            1,
+            LogLevel::fatal(),
         ];
     }
 }

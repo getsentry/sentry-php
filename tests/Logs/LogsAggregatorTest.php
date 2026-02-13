@@ -166,7 +166,7 @@ final class LogsAggregatorTest extends TestCase
 
         SentrySdk::init($client);
 
-        SentrySdk::configureScope(function (Scope $scope) {
+        SentrySdk::configureScope(static function (Scope $scope): void {
             $userDataBag = new UserDataBag();
             $userDataBag->setId('unique_id');
             $userDataBag->setEmail('foo@example.com');
