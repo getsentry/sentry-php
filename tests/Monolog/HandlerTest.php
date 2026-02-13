@@ -269,6 +269,7 @@ final class HandlerTest extends TestCase
                 [
                     'foo' => 'bar',
                     'bar' => 'baz',
+                    'exception' => 'just a message',
                 ],
                 []
             ),
@@ -280,6 +281,7 @@ final class HandlerTest extends TestCase
                 'monolog.context' => [
                     'foo' => 'bar',
                     'bar' => 'baz',
+                    'exception' => 'just a message',
                 ],
             ],
         ];
