@@ -114,7 +114,7 @@ class OptionResolverTest extends TestCase
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'bar']);
         $resolver->setAllowedTypes('foo', ['string']);
-        $resolver->setNormalizer('foo', function ($value) {
+        $resolver->setNormalizer('foo', static function ($value) {
             return 8;
         });
         $result = $resolver->resolve(['foo' => 'test']);
@@ -126,7 +126,7 @@ class OptionResolverTest extends TestCase
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);
         $resolver->setAllowedValues('foo', ['a', 'b', 'c']);
-        $resolver->setNormalizer('foo', function ($value) {
+        $resolver->setNormalizer('foo', static function ($value) {
             return 'z';
         });
         $result = $resolver->resolve(['foo' => 'a']);
@@ -138,7 +138,7 @@ class OptionResolverTest extends TestCase
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);
         $resolver->setAllowedValues('foo', ['a', 'b', 'c']);
-        $resolver->setNormalizer('foo', function ($value) {
+        $resolver->setNormalizer('foo', static function ($value) {
             return false;
         });
         $result = $resolver->resolve(['foo' => 'a']);
@@ -237,7 +237,7 @@ class OptionResolverTest extends TestCase
         yield 'Callback validates successfully' => [
             ['count' => 50],
             ['count' => 10],
-            ['count' => function ($value) {
+            ['count' => static function ($value) {
                 return $value >= 0 && $value <= 100;
             }],
             ['count' => 10],
@@ -246,7 +246,7 @@ class OptionResolverTest extends TestCase
         yield 'Callback validation fails' => [
             ['count' => 50],
             ['count' => 200],
-            ['count' => function ($value) {
+            ['count' => static function ($value) {
                 return $value >= 0 && $value <= 100;
             }],
             ['count' => 50],
@@ -281,7 +281,7 @@ class OptionResolverTest extends TestCase
         yield 'Normalizes successful' => [
             ['a' => 'b'],
             ['a' => '   c    '],
-            ['a' => function ($value) {
+            ['a' => static function ($value) {
                 return trim($value);
             }],
             ['a' => 'c'],

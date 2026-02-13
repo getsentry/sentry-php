@@ -79,7 +79,7 @@ final class MetricsAggregator
             ];
 
             if ($options->shouldSendDefaultPii()) {
-                $hub->configureScope(function (Scope $scope) use (&$defaultAttributes) {
+                $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
                     $user = $scope->getUser();
                     if ($user !== null) {
                         if ($user->getId() !== null) {
@@ -111,7 +111,7 @@ final class MetricsAggregator
             $spanId = $span->getSpanId();
             $traceId = $span->getTraceId();
         } else {
-            $hub->configureScope(function (Scope $scope) use (&$traceId, &$spanId) {
+            $hub->configureScope(static function (Scope $scope) use (&$traceId, &$spanId) {
                 $propagationContext = $scope->getPropagationContext();
                 $traceId = $propagationContext->getTraceId();
                 $spanId = $propagationContext->getSpanId();
