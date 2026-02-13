@@ -17,12 +17,12 @@ final class ScopeManager
     private $globalScope;
 
     /**
-     * @var Scope|null The current isolation scope (request/execution context)
+     * @var Scope|null The current isolation scope
      */
     private $isolationScope;
 
     /**
-     * @var Scope[] Stack of current scopes (active span context)
+     * @var Scope[] Stack of current scopes
      */
     private $currentScopeStack = [];
 
@@ -55,13 +55,11 @@ final class ScopeManager
     /**
      * Forks the current scope and executes the given callback within it.
      *
-     * @param callable $callback The callback to be executed
-     *
      * @psalm-template T
      *
      * @psalm-param callable(Scope): T $callback
      *
-     * @return mixed|void The callback's return value, upon successful execution
+     * @return mixed|void
      *
      * @psalm-return T
      */
@@ -77,15 +75,13 @@ final class ScopeManager
     }
 
     /**
-     * Forks the isolation scope (and current scope) and executes the callback within it.
-     *
-     * @param callable $callback The callback to be executed
+     * Forks the isolation and current scope and executes the callback within it.
      *
      * @psalm-template T
      *
      * @psalm-param callable(Scope): T $callback
      *
-     * @return mixed|void The callback's return value, upon successful execution
+     * @return mixed|void
      *
      * @psalm-return T
      */

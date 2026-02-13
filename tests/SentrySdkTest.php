@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Breadcrumb;
 use Sentry\NoOpClient;
-use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\ScopeType;
 

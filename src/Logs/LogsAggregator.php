@@ -65,11 +65,13 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
+        $span = SentrySdk::getCurrentScope()->getSpan();
+
         $log = (new Log($timestamp, $this->getTraceId(), $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', SentrySdk::getCurrentScope()->getSpan() ? SentrySdk::getCurrentScope()->getSpan()->getSpanId() : null);
+            ->setAttribute('sentry.trace.parent_span_id', $span !== null ? $span->getSpanId() : null);
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());

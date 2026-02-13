@@ -71,7 +71,7 @@ final class FunctionsTest extends TestCase
             ->with(
                 $message,
                 $level,
-                $this->callback(function (Scope $scope): bool {
+                $this->callback(static function (Scope $scope): bool {
                     return $scope instanceof Scope;
                 }),
                 $hint
@@ -118,7 +118,7 @@ final class FunctionsTest extends TestCase
             ->method('captureException')
             ->with(
                 $exception,
-                $this->callback(function (Scope $scope): bool {
+                $this->callback(static function (Scope $scope): bool {
                     return $scope instanceof Scope;
                 }),
                 $hint
@@ -159,7 +159,7 @@ final class FunctionsTest extends TestCase
             ->with(
                 $event,
                 $hint,
-                $this->callback(function (Scope $scope): bool {
+                $this->callback(static function (Scope $scope): bool {
                     return $scope instanceof Scope;
                 })
             )
@@ -185,7 +185,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->once())
             ->method('captureLastError')
             ->with(
-                $this->callback(function (Scope $scope): bool {
+                $this->callback(static function (Scope $scope): bool {
                     return $scope instanceof Scope;
                 }),
                 $hint

@@ -58,7 +58,7 @@ final class TransactionTest extends TestCase
                     return true;
                 }),
                 null,
-                $this->callback(function (Scope $scope): bool {
+                $this->callback(static function (Scope $scope): bool {
                     return $scope instanceof Scope;
                 })
             )

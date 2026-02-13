@@ -301,7 +301,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $client->expects($this->once())
             ->method('captureEvent')
             ->with(
-                $this->callback(function (Event $eventArg) use (&$capturedEvent): bool {
+                $this->callback(static function (Event $eventArg) use (&$capturedEvent): bool {
                     $capturedEvent = $eventArg;
 
                     return $eventArg->getType() === EventType::transaction();

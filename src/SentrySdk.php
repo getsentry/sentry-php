@@ -63,13 +63,11 @@ final class SentrySdk
     /**
      * Forks the current scope and executes the given callback within it.
      *
-     * @param callable $callback The callback to be executed
-     *
      * @psalm-template T
      *
      * @psalm-param callable(Scope): T $callback
      *
-     * @return mixed|void The callback's return value, upon successful execution
+     * @return mixed|void
      *
      * @psalm-return T
      */
@@ -79,15 +77,13 @@ final class SentrySdk
     }
 
     /**
-     * Forks the isolation scope (and current scope) and executes the callback within it.
-     *
-     * @param callable $callback The callback to be executed
+     * Forks the isolation and current scope and executes the callback within it.
      *
      * @psalm-template T
      *
      * @psalm-param callable(Scope): T $callback
      *
-     * @return mixed|void The callback's return value, upon successful execution
+     * @return mixed|void
      *
      * @psalm-return T
      */
@@ -98,8 +94,6 @@ final class SentrySdk
 
     /**
      * Configures the isolation scope by invoking the callback with it.
-     *
-     * @param callable $callback The callback to be executed
      */
     public static function configureScope(callable $callback): void
     {

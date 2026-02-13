@@ -165,7 +165,7 @@ final class ScopeTest extends TestCase
     public function testEventProcessorsRunInScopeOrder(): void
     {
         $globalScope = new Scope(null, ScopeType::global());
-        $globalScope->addEventProcessor(function (Event $event) {
+        $globalScope->addEventProcessor(static function (Event $event) {
             $order = $event->getExtra()['order'] ?? [];
             $order[] = 'global';
             $event->setExtra(['order' => $order]);
@@ -174,7 +174,7 @@ final class ScopeTest extends TestCase
         });
 
         $isolationScope = new Scope(null, ScopeType::isolation());
-        $isolationScope->addEventProcessor(function (Event $event) {
+        $isolationScope->addEventProcessor(static function (Event $event) {
             $order = $event->getExtra()['order'] ?? [];
             $order[] = 'isolation';
             $event->setExtra(['order' => $order]);
@@ -183,7 +183,7 @@ final class ScopeTest extends TestCase
         });
 
         $currentScope = new Scope(null, ScopeType::current());
-        $currentScope->addEventProcessor(function (Event $event) {
+        $currentScope->addEventProcessor(static function (Event $event) {
             $order = $event->getExtra()['order'] ?? [];
             $order[] = 'current';
             $event->setExtra(['order' => $order]);
