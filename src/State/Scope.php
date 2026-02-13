@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\Attachment\Attachment;
+use Sentry\Attributes\AttributeBag;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventType;
+use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
@@ -35,6 +39,16 @@ class Scope
      * @var PropagationContext
      */
     private $propagationContext;
+
+    /**
+     * @var ScopeType|null
+     */
+    private $type;
+
+    /**
+     * @var ClientInterface Client bound to this scope
+     */
+    private $client;
 
     /**
      * @var Breadcrumb[] The list of breadcrumbs recorded in this scope
@@ -96,15 +110,23 @@ class Scope
     private $attachments = [];
 
     /**
+     * @var AttributeBag
+     */
+    private $attributes;
+
+    /**
      * @var callable[] List of event processors
      *
      * @psalm-var array<callable(Event, EventHint): ?Event>
      */
     private static $globalEventProcessors = [];
 
-    public function __construct(?PropagationContext $propagationContext = null)
+    public function __construct(?PropagationContext $propagationContext = null, ?ScopeType $type = null)
     {
         $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
+        $this->type = $type;
+        $this->client = new NoOpClient();
+        $this->attributes = new AttributeBag();
     }
 
     /**
@@ -323,6 +345,33 @@ class Scope
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): self
     {
+        $client = $this->getClient();
+        if ($client instanceof NoOpClient) {
+            $client = SentrySdk::getClient();
+        }
+
+        // No point in storing breadcrumbs if the client will never send them
+        if ($client instanceof NoOpClient) {
+            return $this;
+        }
+
+        $options = $client->getOptions();
+
+        if (\func_num_args() < 2) {
+            $maxBreadcrumbs = $options->getMaxBreadcrumbs();
+        }
+
+        if ($maxBreadcrumbs <= 0) {
+            return $this;
+        }
+
+        $beforeBreadcrumbCallback = $options->getBeforeBreadcrumbCallback();
+        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+
+        if ($breadcrumb === null) {
+            return $this;
+        }
+
         $this->breadcrumbs[] = $breadcrumb;
         $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
 
@@ -384,6 +433,7 @@ class Scope
         $this->extra = [];
         $this->contexts = [];
         $this->attachments = [];
+        $this->attributes = new AttributeBag();
 
         return $this;
     }
@@ -495,6 +545,39 @@ class Scope
     }
 
     /**
+     * Sets attributes on the scope.
+     *
+     * @param array<string, mixed> $attributes
+     */
+    public function setAttributes(array $attributes): self
+    {
+        foreach ($attributes as $key => $value) {
+            $this->setAttribute($key, $value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets an attribute on the scope.
+     *
+     * @param mixed $value
+     */
+    public function setAttribute(string $key, $value): self
+    {
+        $this->attributes->set($key, $value);
+
+        return $this;
+    }
+
+    public function removeAttribute(string $key): self
+    {
+        $this->attributes->forget($key);
+
+        return $this;
+    }
+
+    /**
      * Returns the span that is on the scope.
      */
     public function getSpan(): ?Span
@@ -533,9 +616,204 @@ class Scope
         return $this->propagationContext;
     }
 
+    public function getClient(): ClientInterface
+    {
+        return $this->client;
+    }
+
+    public function setClient(?ClientInterface $client): self
+    {
+        $this->client = $client ?? new NoOpClient();
+
+        return $this;
+    }
+
+    /**
+     * Binds the given client to this scope.
+     */
+    public function bindClient(ClientInterface $client): self
+    {
+        return $this->setClient($client);
+    }
+
+    public function getType(): ?ScopeType
+    {
+        return $this->type;
+    }
+
+    public function setType(ScopeType $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
     public function setPropagationContext(PropagationContext $propagationContext): self
     {
         $this->propagationContext = $propagationContext;
+
+        return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public function getAttributes(): AttributeBag
+    {
+        return $this->attributes;
+    }
+
+    /**
+     * @internal
+     */
+    public function mergeFrom(self $scope): self
+    {
+        if ($scope->level !== null) {
+            $this->level = $scope->level;
+        }
+
+        if (!empty($scope->fingerprint)) {
+            $this->fingerprint = array_merge($this->fingerprint, $scope->fingerprint);
+        }
+
+        if (!empty($scope->breadcrumbs)) {
+            $this->breadcrumbs = array_merge($this->breadcrumbs, $scope->breadcrumbs);
+        }
+
+        if (!empty($scope->tags)) {
+            $this->tags = array_merge($this->tags, $scope->tags);
+        }
+
+        if (!empty($scope->flags)) {
+            $this->flags = array_merge($this->flags, $scope->flags);
+
+            if (\count($this->flags) > self::MAX_FLAGS) {
+                $this->flags = \array_slice($this->flags, -self::MAX_FLAGS);
+            }
+        }
+
+        if (!empty($scope->extra)) {
+            $this->extra = array_merge($this->extra, $scope->extra);
+        }
+
+        if (!empty($scope->contexts)) {
+            $this->contexts = array_merge($this->contexts, $scope->contexts);
+        }
+
+        if ($scope->user !== null) {
+            if ($this->user === null) {
+                $this->user = clone $scope->user;
+            } else {
+                $user = clone $this->user;
+                $user->merge($scope->user);
+                $this->user = $user;
+            }
+        }
+
+        if ($scope->span !== null) {
+            $this->span = $scope->span;
+        }
+
+        if (!empty($scope->attachments)) {
+            $this->attachments = array_merge($this->attachments, $scope->attachments);
+        }
+
+        if (!empty($scope->attributes->all())) {
+            foreach ($scope->attributes->all() as $key => $attribute) {
+                $this->attributes->set($key, $attribute);
+            }
+        }
+
+        if (!empty($scope->eventProcessors)) {
+            $this->eventProcessors = array_merge($this->eventProcessors, $scope->eventProcessors);
+        }
+
+        if ($scope->propagationContext !== null && $scope->getType() !== ScopeType::current()) {
+            $this->propagationContext = $scope->propagationContext;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public static function mergeScopes(Scope $globalScope, ?Scope $isolationScope, ?Scope $currentScope): self
+    {
+        $mergedScope = clone $globalScope;
+
+        if ($isolationScope !== null) {
+            $mergedScope->mergeFrom($isolationScope);
+        }
+
+        if ($currentScope !== null) {
+            $mergedScope->mergeFrom($currentScope);
+        }
+
+        $mergedScope->setType(ScopeType::merged());
+        $mergedScope->sortBreadcrumbsByTimestamp();
+
+        $client = self::getClientFromScopes($globalScope, $isolationScope, $currentScope);
+        $mergedScope->trimBreadcrumbs($client->getOptions()->getMaxBreadcrumbs());
+
+        return $mergedScope;
+    }
+
+    /**
+     * @internal
+     */
+    public static function getClientFromScopes(Scope $globalScope, ?Scope $isolationScope, ?Scope $currentScope): ClientInterface
+    {
+        if ($currentScope !== null) {
+            $currentScopeClient = $currentScope->getClient();
+            if (!$currentScopeClient instanceof NoOpClient) {
+                return $currentScopeClient;
+            }
+        }
+
+        if ($isolationScope !== null) {
+            $isolationScopeClient = $isolationScope->getClient();
+            if (!$isolationScopeClient instanceof NoOpClient) {
+                return $isolationScopeClient;
+            }
+        }
+
+        return $globalScope->getClient();
+    }
+
+    /**
+     * @internal
+     *
+     * Sorts breadcrumbs by timestamp. This is important because merging scopes can lead to an invalid ordering.
+     * If we trim after merge without sorting, we cannot guarantee that we keep the last max_breadcrumbs.
+     */
+    public function sortBreadcrumbsByTimestamp(): self
+    {
+        if (\count($this->breadcrumbs) <= 1) {
+            return $this;
+        }
+
+        usort($this->breadcrumbs, static function (Breadcrumb $left, Breadcrumb $right): int {
+            return $left->getTimestamp() <=> $right->getTimestamp();
+        });
+
+        return $this;
+    }
+
+    /**
+     * @internal
+     */
+    public function trimBreadcrumbs(int $maxBreadcrumbs): self
+    {
+        if ($maxBreadcrumbs <= 0) {
+            $this->breadcrumbs = [];
+
+            return $this;
+        }
+
+        if (\count($this->breadcrumbs) > $maxBreadcrumbs) {
+            $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+        }
 
         return $this;
     }
@@ -548,10 +826,21 @@ class Scope
         if ($this->propagationContext !== null) {
             $this->propagationContext = clone $this->propagationContext;
         }
+        $this->attributes = clone $this->attributes;
     }
 
     public function addAttachment(Attachment $attachment): self
     {
+        $client = $this->getClient();
+        if ($client instanceof NoOpClient) {
+            $client = SentrySdk::getClient();
+        }
+
+        // No point in storing attachments if the client will never send them
+        if ($client instanceof NoOpClient) {
+            return $this;
+        }
+
         $this->attachments[] = $attachment;
 
         return $this;

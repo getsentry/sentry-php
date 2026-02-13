@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientInterface;
 use Sentry\Options;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 
 /**
@@ -149,7 +149,7 @@ final class DynamicSamplingContext
      *
      * @see https://develop.sentry.dev/sdk/performance/dynamic-sampling-context/#baggage-header
      */
-    public static function fromTransaction(Transaction $transaction, HubInterface $hub): self
+    public static function fromTransaction(Transaction $transaction, ClientInterface $client): self
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $transaction->getTraceId());
@@ -163,8 +163,6 @@ final class DynamicSamplingContext
         if ($transaction->getMetadata()->getSource() !== TransactionSource::url()) {
             $samplingContext->set('transaction', $transaction->getName());
         }
-
-        $client = $hub->getClient();
 
         $options = $client->getOptions();
 
