@@ -75,6 +75,59 @@ class HttpClientTest extends TestCase
         $this->assertEquals(\strlen($request->getStringBody()), $serverOutput['headers']['Content-Length']);
     }
 
+    public function testClientMakesRequestWhenShareHandleDisabled(): void
+    {
+        $testServer = $this->startTestServer();
+
+        $options = new Options([
+            'dsn' => "http://publicKey@{$testServer}/200",
+            'http_enable_curl_share_handle' => false,
+        ]);
+
+        $request = new Request();
+        $request->setStringBody('test');
+
+        $client = new HttpClient('sentry.php', 'testing');
+        $response = $client->sendRequest($request, $options);
+
+        $serverOutput = $this->stopTestServer();
+
+        $this->assertTrue($response->isSuccess());
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals($response->getStatusCode(), $serverOutput['status']);
+        $this->assertEquals($request->getStringBody(), $serverOutput['body']);
+        $this->assertNull($this->getShareHandleFromClient($client));
+    }
+
+    public function testShareHandleIsInitializedOnlyOncePerHttpClientInstance(): void
+    {
+        $testServer = $this->startTestServer();
+
+        $options = new Options([
+            'dsn' => "http://publicKey@{$testServer}/200",
+            'http_enable_curl_share_handle' => true,
+        ]);
+
+        $request = new Request();
+        $request->setStringBody('test');
+
+        $client = new HttpClient('sentry.php', 'testing');
+
+        $firstResponse = $client->sendRequest($request, $options);
+        $firstShareHandle = $this->getShareHandleFromClient($client);
+
+        $secondResponse = $client->sendRequest($request, $options);
+        $secondShareHandle = $this->getShareHandleFromClient($client);
+
+        $this->stopTestServer();
+
+        $this->assertTrue($firstResponse->isSuccess());
+        $this->assertTrue($secondResponse->isSuccess());
+        $this->assertNotNull($firstShareHandle);
+        $this->assertShareHandleHasExpectedType($firstShareHandle);
+        $this->assertSame($firstShareHandle, $secondShareHandle);
+    }
+
     public function testClientReturnsBodyAsErrorOnNonSuccessStatusCode(): void
     {
         $testServer = $this->startTestServer();
@@ -117,5 +170,39 @@ class HttpClientTest extends TestCase
 
         $client = new HttpClient('sentry.php', 'testing');
         $client->sendRequest(new Request(), $options);
+    }
+
+    /**
+     * @return object|resource|null
+     */
+    private function getShareHandleFromClient(HttpClient $client)
+    {
+        $reflectionProperty = new \ReflectionProperty(HttpClient::class, 'shareHandle');
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
+
+        return $reflectionProperty->getValue($client);
+    }
+
+    /**
+     * @param object|resource $shareHandle
+     */
+    private function assertShareHandleHasExpectedType($shareHandle): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->assertTrue(\is_resource($shareHandle));
+
+            return;
+        }
+
+        if (\PHP_VERSION_ID >= 80500) {
+            $this->assertTrue(\class_exists('CurlSharePersistentHandle'));
+            $this->assertInstanceOf(\CurlSharePersistentHandle::class, $shareHandle);
+
+            return;
+        }
+
+        $this->assertInstanceOf(\CurlShareHandle::class, $shareHandle);
     }
 }
