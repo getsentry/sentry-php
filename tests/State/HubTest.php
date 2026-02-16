@@ -636,6 +636,22 @@ final class HubTest extends TestCase
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
 
+    public function testStartTransactionIgnoresBaggageSampleRateWithoutSentryTrace(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0.0,
+            ]));
+
+        $hub = new Hub($client);
+        $transactionContext = TransactionContext::fromHeaders('', 'sentry-sample_rate=1');
+        $transaction = $hub->startTransaction($transactionContext);
+
+        $this->assertFalse($transaction->getSampled());
+    }
+
     public static function startTransactionDataProvider(): iterable
     {
         yield 'Acceptable float value returned from traces_sampler' => [

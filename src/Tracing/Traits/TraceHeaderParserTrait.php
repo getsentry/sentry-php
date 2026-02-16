@@ -65,22 +65,21 @@ trait TraceHeaderParserTrait
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
-        if ($hasSentryTrace && !$samplingContext->hasEntries()) {
+        if ($hasSentryTrace) {
             // The request comes from an old SDK which does not support Dynamic Sampling.
             // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
-            $samplingContext->freeze();
-            $result['dynamicSamplingContext'] = $samplingContext;
-        }
+            if (!$samplingContext->hasEntries()) {
+                $samplingContext->freeze();
+            }
 
-        if ($hasSentryTrace && $samplingContext->hasEntries()) {
             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
             // Propagate this Dynamic Sampling Context.
             $result['dynamicSamplingContext'] = $samplingContext;
-        }
 
-        // Store the propagated traces sample rate
-        if ($samplingContext->has('sample_rate')) {
-            $result['parentSamplingRate'] = (float) $samplingContext->get('sample_rate');
+            // Store the propagated traces sample rate
+            if ($samplingContext->has('sample_rate')) {
+                $result['parentSamplingRate'] = (float) $samplingContext->get('sample_rate');
+            }
         }
 
         // Store the propagated trace sample rand or generate a new one
