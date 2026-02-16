@@ -114,6 +114,18 @@ final class HttpTransportTest extends TestCase
             ],
         ];
 
+        yield [
+            new Response(413, [], ''),
+            ResultStatus::contentTooLarge(),
+            false,
+            [
+                'info' => [
+                    'Sending event [%s] to %s [project:%s].',
+                    'Sent event [%s] to %s [project:%s]. Result: "content_too_large" (status: 413).',
+                ],
+            ],
+        ];
+
         ClockMock::withClockMock(1644105600);
 
         yield [
