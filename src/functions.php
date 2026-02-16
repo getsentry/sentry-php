@@ -41,6 +41,7 @@ use Sentry\Tracing\TransactionContext;
  *     http_proxy_authentication?: string|null,
  *     http_ssl_verify_peer?: bool,
  *     http_timeout?: int|float,
+ *     http_enable_curl_share_handle?: bool,
  *     ignore_exceptions?: array<class-string>,
  *     ignore_transactions?: array<string>,
  *     in_app_exclude?: array<string>,
