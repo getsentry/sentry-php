@@ -81,7 +81,9 @@ class HttpClient implements HttpClientInterface
         curl_setopt($curlHandle, \CURLOPT_HTTP_VERSION, \CURL_HTTP_VERSION_1_1);
         if ($options->isShareHandleEnabled()) {
             $shareHandle = $this->getShareHandle();
-            curl_setopt($curlHandle, \CURLOPT_SHARE, $shareHandle);
+            if ($shareHandle !== null) {
+                curl_setopt($curlHandle, \CURLOPT_SHARE, $shareHandle);
+            }
         }
 
         $httpSslVerifyPeer = $options->getHttpSslVerifyPeer();
