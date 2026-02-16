@@ -197,7 +197,7 @@ class HttpClientTest extends TestCase
         }
 
         if (\PHP_VERSION_ID >= 80500) {
-            $this->assertTrue(\class_exists('CurlSharePersistentHandle'));
+            $this->assertTrue(class_exists('CurlSharePersistentHandle'));
             $this->assertInstanceOf(\CurlSharePersistentHandle::class, $shareHandle);
 
             return;
