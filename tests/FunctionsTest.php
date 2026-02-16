@@ -224,15 +224,15 @@ final class FunctionsTest extends TestCase
         $hub->expects($this->exactly(2))
             ->method('captureCheckIn')
             ->with(
-                $this->callback(function (string $slug): bool {
+                $this->callback(static function (string $slug): bool {
                     return $slug === 'test-crontab';
                 }),
-                $this->callback(function (CheckInStatus $checkInStatus): bool {
+                $this->callback(static function (CheckInStatus $checkInStatus): bool {
                     // just check for type CheckInStatus
                     return true;
                 }),
                 $this->anything(),
-                $this->callback(function (MonitorConfig $monitorConfig): bool {
+                $this->callback(static function (MonitorConfig $monitorConfig): bool {
                     return $monitorConfig->getSchedule()->getValue() === '*/5 * * * *'
                         && $monitorConfig->getSchedule()->getType() === MonitorSchedule::TYPE_CRONTAB
                         && $monitorConfig->getCheckinMargin() === 5
@@ -243,7 +243,7 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::setCurrentHub($hub);
 
-        withMonitor('test-crontab', function () {
+        withMonitor('test-crontab', static function () {
             // Do something...
         }, new MonitorConfig(
             new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
@@ -261,15 +261,15 @@ final class FunctionsTest extends TestCase
         $hub->expects($this->exactly(2))
             ->method('captureCheckIn')
             ->with(
-                $this->callback(function (string $slug): bool {
+                $this->callback(static function (string $slug): bool {
                     return $slug === 'test-crontab';
                 }),
-                $this->callback(function (CheckInStatus $checkInStatus): bool {
+                $this->callback(static function (CheckInStatus $checkInStatus): bool {
                     // just check for type CheckInStatus
                     return true;
                 }),
                 $this->anything(),
-                $this->callback(function (MonitorConfig $monitorConfig): bool {
+                $this->callback(static function (MonitorConfig $monitorConfig): bool {
                     return $monitorConfig->getSchedule()->getValue() === '*/5 * * * *'
                         && $monitorConfig->getSchedule()->getType() === MonitorSchedule::TYPE_CRONTAB
                         && $monitorConfig->getCheckinMargin() === 5
@@ -280,7 +280,7 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::setCurrentHub($hub);
 
-        withMonitor('test-crontab', function () {
+        withMonitor('test-crontab', static function () {
             throw new \Exception();
         }, new MonitorConfig(
             new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
@@ -352,7 +352,7 @@ final class FunctionsTest extends TestCase
     {
         $returnValue = 'foo';
 
-        $result = trace(function () use ($returnValue) {
+        $result = trace(static function () use ($returnValue) {
             return $returnValue;
         }, new SpanContext());
 
@@ -379,7 +379,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($transaction, $hub->getSpan());
 
         try {
-            trace(function () {
+            trace(static function () {
                 throw new \RuntimeException('Throwing should still restore the previous span');
             }, new SpanContext());
         } catch (\RuntimeException $e) {

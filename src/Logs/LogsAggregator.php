@@ -83,7 +83,7 @@ final class LogsAggregator
             $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
         }
 
-        $hub->configureScope(function (Scope $scope) use ($log) {
+        $hub->configureScope(static function (Scope $scope) use ($log) {
             $user = $scope->getUser();
             if ($user !== null) {
                 if ($user->getId() !== null) {
@@ -186,7 +186,7 @@ final class LogsAggregator
 
         $traceId = '';
 
-        $hub->configureScope(function (Scope $scope) use (&$traceId) {
+        $hub->configureScope(static function (Scope $scope) use (&$traceId) {
             $traceId = (string) $scope->getPropagationContext()->getTraceId();
         });
 
