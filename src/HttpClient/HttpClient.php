@@ -162,6 +162,7 @@ class HttpClient implements HttpClientInterface
                 $this->shareHandle = curl_share_init_persistent($shareOptions);
             } catch (\Throwable $throwable) {
                 // don't crash if the share handle cannot be created
+                $this->shareHandle = null;
             }
         }
 
@@ -178,6 +179,7 @@ class HttpClient implements HttpClientInterface
                 }
             } catch (\Throwable $throwable) {
                 // don't crash if the share handle cannot be created
+                $this->shareHandle = null;
             }
         }
 
