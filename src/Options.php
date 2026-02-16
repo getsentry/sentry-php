@@ -1150,7 +1150,12 @@ final class Options
      */
     public function isShareHandleEnabled(): bool
     {
-        return $this->options['http_enable_curl_share_handle'];
+        /**
+         * @var bool $shareHandleEnabled
+         */
+        $shareHandleEnabled = $this->options['http_enable_curl_share_handle'];
+
+        return $shareHandleEnabled;
     }
 
     /**
