@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 4.20.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.20.0.
+
+### Features
+
+- Add a high-level `flush()` helper that flushes all buffered telemetry resources (logs and trace metrics). [(#1989)](https://github.com/getsentry/sentry-php/pull/1989)
+- Add share handles to cURL (persistent for PHP >= 8.5, non-persistent otherwise). [(#1996)](https://github.com/getsentry/sentry-php/pull/1996)
+- Handle HTTP 413 responses explicitly with a dedicated `content_too_large` status. [(#2008)](https://github.com/getsentry/sentry-php/pull/2008)
+
+### Bug Fixes
+
+- Normalize Spotlight URLs to optionally allow trailing `/stream`. [(#1984)](https://github.com/getsentry/sentry-php/pull/1984)
+- Monolog messages are now filtered by their original Monolog level before being mapped to Sentry log levels. [(#1992)](https://github.com/getsentry/sentry-php/pull/1992)
+- Handle bracketed IPv6 addresses (such as `[::1]`). [(#2007)](https://github.com/getsentry/sentry-php/pull/2007)
+- Ignore propagated baggage `sample_rate` when no `sentry-trace` header is present. [(#2002)](https://github.com/getsentry/sentry-php/pull/2002)
+
+### Misc
+
+- Add the `traceMetrics()` helper and deprecate `trace_metrics()`. [(#1995)](https://github.com/getsentry/sentry-php/pull/1995)
+
 ## 4.19.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.1.
