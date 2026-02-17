@@ -178,7 +178,10 @@ class Client implements ClientInterface
      */
     public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId
     {
-        $event = $this->prepareEvent($event, $hint, $scope);
+        // Client reports don't need to be augmented in the prepareEvent pipeline.
+        if ($event->getType() !== EventType::clientReport()) {
+            $event = $this->prepareEvent($event, $hint, $scope);
+        }
 
         if ($event === null) {
             return null;
