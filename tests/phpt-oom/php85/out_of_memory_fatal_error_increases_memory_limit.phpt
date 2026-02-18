@@ -24,6 +24,8 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $vendor = __DIR__;
 
 while (!file_exists($vendor . '/vendor')) {
