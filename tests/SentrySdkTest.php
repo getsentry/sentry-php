@@ -12,10 +12,10 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
-use Sentry\Transport\Result;
-use Sentry\Transport\ResultStatus;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 
 final class SentrySdkTest extends TestCase
 {
@@ -166,7 +166,7 @@ final class SentrySdkTest extends TestCase
                 $scope->setTag('outer', 'yes');
             });
 
-            SentrySdk::withContext(function () use (&$innerHub, &$innerContextId): void {
+            SentrySdk::withContext(static function () use (&$innerHub, &$innerContextId): void {
                 $innerHub = SentrySdk::getCurrentHub();
                 $innerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
             });

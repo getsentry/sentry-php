@@ -244,9 +244,11 @@ function endContext(?int $timeout = null): void
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
  *
  * @psalm-template T
+ *
  * @psalm-param callable(): T $callback
  *
  * @return mixed
+ *
  * @psalm-return T
  */
 function withContext(callable $callback, ?int $timeout = null)

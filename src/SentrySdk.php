@@ -95,9 +95,11 @@ final class SentrySdk
      * @param callable $callback The callback to execute
      *
      * @psalm-template T
+     *
      * @psalm-param callable(): T $callback
      *
      * @return mixed
+     *
      * @psalm-return T
      */
     public static function withContext(callable $callback, ?int $timeout = null)

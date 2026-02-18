@@ -75,6 +75,10 @@ jobs:
       - name: Remove unused dependencies
         run: composer remove vimeo/psalm phpstan/phpstan friendsofphp/php-cs-fixer  --dev --no-interaction --no-update
 
+      - name: Remove RoadRunner dependencies on unsupported PHP versions
+        if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
+        run: composer remove spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
+
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
 

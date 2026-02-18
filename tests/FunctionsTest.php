@@ -20,8 +20,6 @@ use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
-use Sentry\Transport\Result;
-use Sentry\Transport\ResultStatus;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -29,6 +27,8 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
 use function Sentry\addBreadcrumb;
@@ -384,7 +384,7 @@ final class FunctionsTest extends TestCase
                 $scope->setTag('outer', 'yes');
             });
 
-            withContext(function () use (&$innerHub): void {
+            withContext(static function () use (&$innerHub): void {
                 $innerHub = SentrySdk::getCurrentHub();
             });
 

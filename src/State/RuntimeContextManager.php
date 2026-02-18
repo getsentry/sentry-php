@@ -88,6 +88,7 @@ final class RuntimeContextManager
 
         if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
             $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
+
             return $this->activeContexts[$runtimeContextId];
         }
 
@@ -257,7 +258,7 @@ final class RuntimeContextManager
 
     private function generateRuntimeContextId(): string
     {
-        return sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
+        return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
     }
 
     private function getExecutionContextKey(): string
