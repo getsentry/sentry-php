@@ -14,9 +14,6 @@ class Logs
      */
     private static $instance;
 
-    /**
-     * Constructor.
-     */
     private function __construct()
     {
     }

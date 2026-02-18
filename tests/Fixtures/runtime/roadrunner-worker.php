@@ -71,12 +71,6 @@ while (true) {
     }
 }
 
-/**
- * @param object $worker
- * @param object $factory
- *
- * @return object
- */
 function createPsrWorker($worker, $factory)
 {
     $reflectionClass = new ReflectionClass(PSR7Worker::class);
@@ -88,9 +82,6 @@ function createPsrWorker($worker, $factory)
     return $reflectionClass->newInstanceArgs(array_slice($arguments, 0, $requiredParameterCount));
 }
 
-/**
- * @param object $request
- */
 function handleRequest($request): Response
 {
     $path = $request->getUri()->getPath();

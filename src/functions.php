@@ -217,19 +217,11 @@ function withScope(callable $callback)
     return SentrySdk::getCurrentHub()->withScope($callback);
 }
 
-/**
- * Starts a new context for the current execution context.
- */
 function startContext(): void
 {
     SentrySdk::startContext();
 }
 
-/**
- * Ends the active context for the current execution context.
- *
- * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
- */
 function endContext(?int $timeout = null): void
 {
     SentrySdk::endContext($timeout);
