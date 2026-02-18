@@ -144,6 +144,12 @@ final class SentrySdk
     {
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
+
+        $client = self::getCurrentHub()->getClient();
+
+        if ($client !== null) {
+            $client->flush();
+        }
     }
 
     private static function getRuntimeContextManager(): RuntimeContextManager

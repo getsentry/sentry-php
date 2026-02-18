@@ -129,6 +129,20 @@ final class SentrySdkTest extends TestCase
         SentrySdk::endContext(12);
     }
 
+    public function testFlushFlushesClientTransport(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('flush')
+            ->with(null)
+            ->willReturn(new Result(ResultStatus::success()));
+
+        SentrySdk::init()->bindClient($client);
+
+        SentrySdk::flush();
+    }
+
     public function testWithContextReturnsCallbackResultAndRestoresGlobalHub(): void
     {
         SentrySdk::init();
