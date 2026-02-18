@@ -218,6 +218,43 @@ function withScope(callable $callback)
 }
 
 /**
+ * Starts a new context for the current execution context.
+ */
+function startContext(): void
+{
+    SentrySdk::startContext();
+}
+
+/**
+ * Ends the active context for the current execution context.
+ *
+ * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+ */
+function endContext(?int $timeout = null): void
+{
+    SentrySdk::endContext($timeout);
+}
+
+/**
+ * Executes the given callback within an isolated context.
+ *
+ * If a context is already active for the current execution key, it is reused.
+ *
+ * @param callable $callback The callback to execute
+ * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
+ *
+ * @psalm-template T
+ * @psalm-param callable(): T $callback
+ *
+ * @return mixed
+ * @psalm-return T
+ */
+function withContext(callable $callback, ?int $timeout = null)
+{
+    return SentrySdk::withContext($callback, $timeout);
+}
+
+/**
  * Starts a new `Transaction` and returns it. This is the entry point to manual
  * tracing instrumentation.
  *

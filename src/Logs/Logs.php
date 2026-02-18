@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Logs;
 
 use Sentry\EventId;
+use Sentry\SentrySdk;
 
 class Logs
 {
@@ -14,13 +15,10 @@ class Logs
     private static $instance;
 
     /**
-     * @var LogsAggregator
+     * Constructor.
      */
-    private $aggregator;
-
     private function __construct()
     {
-        $this->aggregator = new LogsAggregator();
     }
 
     public static function getInstance(): self
@@ -39,7 +37,7 @@ class Logs
      */
     public function trace(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::trace(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::trace(), $message, $values, $attributes);
     }
 
     /**
@@ -49,7 +47,7 @@ class Logs
      */
     public function debug(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::debug(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::debug(), $message, $values, $attributes);
     }
 
     /**
@@ -59,7 +57,7 @@ class Logs
      */
     public function info(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::info(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::info(), $message, $values, $attributes);
     }
 
     /**
@@ -69,7 +67,7 @@ class Logs
      */
     public function warn(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::warn(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::warn(), $message, $values, $attributes);
     }
 
     /**
@@ -79,7 +77,7 @@ class Logs
      */
     public function error(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::error(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::error(), $message, $values, $attributes);
     }
 
     /**
@@ -89,7 +87,7 @@ class Logs
      */
     public function fatal(string $message, array $values = [], array $attributes = []): void
     {
-        $this->aggregator->add(LogLevel::fatal(), $message, $values, $attributes);
+        $this->aggregator()->add(LogLevel::fatal(), $message, $values, $attributes);
     }
 
     /**
@@ -97,7 +95,7 @@ class Logs
      */
     public function flush(): ?EventId
     {
-        return $this->aggregator->flush();
+        return $this->aggregator()->flush();
     }
 
     /**
@@ -107,6 +105,6 @@ class Logs
      */
     public function aggregator(): LogsAggregator
     {
-        return $this->aggregator;
+        return SentrySdk::getCurrentRuntimeContext()->getLogsAggregator();
     }
 }
