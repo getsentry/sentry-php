@@ -32,6 +32,8 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $options = new Options([
     'dsn' => 'http://public@example.com/sentry/1',
 ]);

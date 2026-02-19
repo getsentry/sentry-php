@@ -12,6 +12,7 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Unit;
 use Sentry\Util\RingBuffer;
@@ -134,13 +135,13 @@ final class MetricsAggregator
         $this->metrics->push($metric);
     }
 
-    public function flush(): ?EventId
+    public function flush(?HubInterface $hub = null): ?EventId
     {
         if ($this->metrics->isEmpty()) {
             return null;
         }
 
-        $hub = SentrySdk::getCurrentHub();
+        $hub = $hub ?? SentrySdk::getCurrentHub();
         $event = Event::createMetrics()->setMetrics($this->metrics->drain());
 
         return $hub->captureEvent($event);

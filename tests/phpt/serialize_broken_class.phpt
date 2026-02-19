@@ -19,6 +19,8 @@ while (!file_exists($vendor . '/vendor')) {
 
 require $vendor . '/vendor/autoload.php';
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 // issue present itself in backtrace serialization, see:
 // - https://github.com/getsentry/sentry-php/pull/818
 // - https://github.com/getsentry/sentry-symfony/issues/63#issuecomment-493046411

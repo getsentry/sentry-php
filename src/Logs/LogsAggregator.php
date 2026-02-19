@@ -154,13 +154,13 @@ final class LogsAggregator
         $this->logs[] = $log;
     }
 
-    public function flush(): ?EventId
+    public function flush(?HubInterface $hub = null): ?EventId
     {
         if (empty($this->logs)) {
             return null;
         }
 
-        $hub = SentrySdk::getCurrentHub();
+        $hub = $hub ?? SentrySdk::getCurrentHub();
         $event = Event::createLogs()->setLogs($this->logs);
 
         $this->logs = [];

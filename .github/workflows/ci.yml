@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  FRANKENPHP_VERSION: v1.11.2
+  ROADRUNNER_VERSION: v2025.1.7
+
 # Cancel in progress workflows on pull_requests.
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
 concurrency:
@@ -71,6 +75,10 @@ jobs:
       - name: Remove unused dependencies
         run: composer remove vimeo/psalm phpstan/phpstan friendsofphp/php-cs-fixer  --dev --no-interaction --no-update
 
+      - name: Remove RoadRunner dependencies on unsupported PHP versions
+        if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
+        run: composer remove spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
+
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
 
@@ -96,3 +104,138 @@ jobs:
       - name: Check benchmarks
         run: vendor/bin/phpbench run --revs=1 --iterations=1
         if: ${{ matrix.dependencies == 'highest' && matrix.php.version == '8.4' }}
+
+  runtime-tests-frankenphp:
+    name: Runtime tests (FrankenPHP)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Determine Composer cache directory
+        id: composer-cache
+        run: echo "directory=$(composer config cache-dir)" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.directory }}
+          key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-runtime-frankenphp-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction --prefer-dist
+
+      - name: Install FrankenPHP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          case "$(uname -m)" in
+            x86_64) asset="frankenphp-linux-x86_64" ;;
+            aarch64|arm64) asset="frankenphp-linux-aarch64" ;;
+            *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
+          esac
+
+          digest="$(gh api "repos/php/frankenphp/releases/tags/${FRANKENPHP_VERSION}" --jq ".assets[] | select(.name == \"${asset}\") | .digest")"
+
+          if [ -z "${digest}" ]; then
+            echo "Unable to resolve digest for ${asset} (${FRANKENPHP_VERSION})."
+            exit 1
+          fi
+
+          gh release download "${FRANKENPHP_VERSION}" \
+            --repo php/frankenphp \
+            --pattern "${asset}" \
+            --output "${asset}"
+
+          echo "${digest#sha256:}  ${asset}" | sha256sum --check --
+          mkdir -p "${RUNNER_TEMP}/bin"
+          install -m 0755 "${asset}" "${RUNNER_TEMP}/bin/frankenphp"
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/bin/frankenphp" version
+        shell: bash
+
+      - name: Run PHPUnit tests (excluding PHPT)
+        run: vendor/bin/phpunit tests --test-suffix Test.php --verbose
+
+  runtime-tests-roadrunner:
+    name: Runtime tests (RoadRunner)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Determine Composer cache directory
+        id: composer-cache
+        run: echo "directory=$(composer config cache-dir)" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.composer-cache.outputs.directory }}
+          key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-runtime-roadrunner-composer-
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction --prefer-dist
+
+      - name: Install RoadRunner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          case "$(uname -m)" in
+            x86_64) arch="amd64" ;;
+            aarch64|arm64) arch="arm64" ;;
+            *) echo "Unsupported architecture: $(uname -m)"; exit 1 ;;
+          esac
+
+          version_no_prefix="${ROADRUNNER_VERSION#v}"
+          asset="roadrunner-${version_no_prefix}-linux-${arch}.tar.gz"
+
+          digest="$(gh api "repos/roadrunner-server/roadrunner/releases/tags/${ROADRUNNER_VERSION}" --jq ".assets[] | select(.name == \"${asset}\") | .digest")"
+
+          if [ -z "${digest}" ]; then
+            echo "Unable to resolve digest for ${asset} (${ROADRUNNER_VERSION})."
+            exit 1
+          fi
+
+          gh release download "${ROADRUNNER_VERSION}" \
+            --repo roadrunner-server/roadrunner \
+            --pattern "${asset}" \
+            --output "${asset}"
+
+          echo "${digest#sha256:}  ${asset}" | sha256sum --check --
+          tar -xzf "${asset}" --strip-components=1 "${asset%.tar.gz}/rr"
+          mkdir -p "${RUNNER_TEMP}/bin"
+          install -m 0755 rr "${RUNNER_TEMP}/bin/rr"
+          echo "${RUNNER_TEMP}/bin" >> "${GITHUB_PATH}"
+          "${RUNNER_TEMP}/bin/rr" --version
+        shell: bash
+
+      - name: Run PHPUnit tests (excluding PHPT)
+        run: vendor/bin/phpunit tests --test-suffix Test.php --verbose
+
