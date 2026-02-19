@@ -89,6 +89,42 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($baselineSpan, SentrySdk::getCurrentHub()->getSpan());
     }
 
+    public function testStartContextCreatesFreshPropagationContext(): void
+    {
+        SentrySdk::init();
+
+        $globalTraceparent = $this->getCurrentScopeTraceparent();
+
+        SentrySdk::startContext();
+        $firstContextTraceparent = $this->getCurrentScopeTraceparent();
+        SentrySdk::endContext();
+
+        SentrySdk::startContext();
+        $secondContextTraceparent = $this->getCurrentScopeTraceparent();
+        SentrySdk::endContext();
+
+        $this->assertNotSame($globalTraceparent, $firstContextTraceparent);
+        $this->assertNotSame($firstContextTraceparent, $secondContextTraceparent);
+    }
+
+    public function testWithContextResetsSpanAndTransactionAcrossInvocations(): void
+    {
+        SentrySdk::init();
+
+        SentrySdk::withContext(function (): void {
+            $transaction = SentrySdk::getCurrentHub()->startTransaction(new \Sentry\Tracing\TransactionContext('request-1'));
+            SentrySdk::getCurrentHub()->setSpan($transaction);
+
+            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getTransaction());
+        });
+
+        SentrySdk::withContext(function (): void {
+            $this->assertNull(SentrySdk::getCurrentHub()->getSpan());
+            $this->assertNull(SentrySdk::getCurrentHub()->getTransaction());
+        });
+    }
+
     public function testNestedStartContextIsNoOp(): void
     {
         SentrySdk::init();
@@ -227,5 +263,16 @@ final class SentrySdkTest extends TestCase
         $this->assertNotNull($callbackHub);
         $this->assertNotSame($globalHub, $callbackHub);
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    private function getCurrentScopeTraceparent(): string
+    {
+        $traceparent = '';
+
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use (&$traceparent): void {
+            $traceparent = $scope->getPropagationContext()->toTraceparent();
+        });
+
+        return $traceparent;
     }
 }

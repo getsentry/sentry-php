@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\Tracing\PropagationContext;
 
 /**
  * Manages runtime-local SDK state across different execution models.
@@ -238,8 +239,9 @@ final class RuntimeContextManager
 
         $this->baseHub->configureScope(static function (Scope $scope) use (&$clonedScope): void {
             $clonedScope = clone $scope;
-            // Do not inherit active spans into a new runtime context.
+            // Do not inherit active traces into a new runtime context.
             $clonedScope->setSpan(null);
+            $clonedScope->setPropagationContext(PropagationContext::fromDefaults());
         });
 
         return new Hub($this->baseHub->getClient(), $clonedScope ?? new Scope());

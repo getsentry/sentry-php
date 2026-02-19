@@ -11,6 +11,7 @@ use Spiral\RoadRunner\Http\PSR7Worker;
 use Spiral\RoadRunner\Worker;
 
 use function Sentry\configureScope;
+use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\withContext;
 
@@ -122,6 +123,7 @@ function handleRequest($request): Response
 
         $encoded = json_encode([
             'runtime_context_id' => SentrySdk::getCurrentRuntimeContext()->getId(),
+            'traceparent' => getTraceparent(),
             'tags' => $tags,
         ]);
 

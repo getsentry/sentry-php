@@ -57,6 +57,7 @@ abstract class RuntimeContextWorkerModeIntegrationTestCase extends TestCase
         $this->assertArrayNotHasKey('leak', $secondResponse['tags']);
 
         $this->assertNotSame($firstResponse['runtime_context_id'], $secondResponse['runtime_context_id']);
+        $this->assertNotSame($firstResponse['traceparent'] ?? null, $secondResponse['traceparent'] ?? null);
     }
 
     abstract protected function skipUnlessRuntimeIsAvailable(): void;
@@ -150,7 +151,7 @@ abstract class RuntimeContextWorkerModeIntegrationTestCase extends TestCase
     }
 
     /**
-     * @return array{runtime_context_id: string, tags: array<string, string>}
+     * @return array{runtime_context_id: string, traceparent: string, tags: array<string, string>}
      */
     final protected function requestJson(string $path): array
     {

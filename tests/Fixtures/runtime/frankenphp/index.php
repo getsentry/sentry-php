@@ -7,6 +7,7 @@ use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
 use function Sentry\configureScope;
+use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\withContext;
 
@@ -67,6 +68,7 @@ $handler = static function (): void {
         header('Content-Type: application/json');
         echo json_encode([
             'runtime_context_id' => SentrySdk::getCurrentRuntimeContext()->getId(),
+            'traceparent' => getTraceparent(),
             'tags' => $tags,
         ]);
     });
