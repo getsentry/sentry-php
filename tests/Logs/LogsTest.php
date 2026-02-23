@@ -171,7 +171,7 @@ final class LogsTest extends TestCase
         $transport = $this->createMock(TransportInterface::class);
         $transport->expects($this->once())
                   ->method('send')
-                  ->with($this->callback(function (Event $event) use ($assert): bool {
+                  ->with($this->callback(static function (Event $event) use ($assert): bool {
                       $assert($event);
 
                       return true;

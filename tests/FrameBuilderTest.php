@@ -290,7 +290,7 @@ final class FrameBuilderTest extends TestCase
         $options = new Options([]);
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
 
-        $testFunction = function (string $first, int $second, ...$rest) {
+        $testFunction = static function (string $first, int $second, ...$rest) {
         };
 
         $backtraceFrame = [
@@ -325,7 +325,7 @@ final class FrameBuilderTest extends TestCase
         $options = new Options([]);
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
 
-        $testFunction = function (...$args) {
+        $testFunction = static function (...$args) {
         };
 
         $backtraceFrame = [
@@ -352,7 +352,7 @@ final class FrameBuilderTest extends TestCase
         $options = new Options([]);
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
 
-        $testFunction = function (string $first, ...$rest) {
+        $testFunction = static function (string $first, ...$rest) {
         };
 
         $backtraceFrame = [
@@ -381,7 +381,7 @@ final class FrameBuilderTest extends TestCase
         $options = new Options([]);
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
 
-        $testFunction = function (string $first, $second, ...$rest) {
+        $testFunction = static function (string $first, $second, ...$rest) {
         };
 
         $backtraceFrame = [
@@ -411,7 +411,7 @@ final class FrameBuilderTest extends TestCase
         $options = new Options([]);
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
 
-        $testFunction = function (string $first, int $second, ...$rest) {
+        $testFunction = static function (string $first, int $second, ...$rest) {
         };
 
         $backtraceFrameArgs = [];

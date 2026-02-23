@@ -59,6 +59,15 @@ class ResultStatus implements \Stringable
 
     /**
      * Returns an instance of this enum representing the fact that the event
+     * failed to be sent because the content was too large.
+     */
+    public static function contentTooLarge(): self
+    {
+        return self::getInstance('CONTENT_TOO_LARGE');
+    }
+
+    /**
+     * Returns an instance of this enum representing the fact that the event
      * failed to be sent because of API rate limiting.
      */
     public static function rateLimit(): self
@@ -94,6 +103,8 @@ class ResultStatus implements \Stringable
         switch (true) {
             case $statusCode >= 200 && $statusCode < 300:
                 return self::success();
+            case $statusCode === 413:
+                return self::contentTooLarge();
             case $statusCode === 429:
                 return self::rateLimit();
             case $statusCode >= 400 && $statusCode < 500:

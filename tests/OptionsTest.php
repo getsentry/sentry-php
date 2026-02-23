@@ -416,6 +416,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'http_enable_curl_share_handle',
+            false,
+            'isShareHandleEnabled',
+            'setEnableShareHandle',
+        ];
+
+        yield [
             'capture_silenced_errors',
             true,
             'shouldCaptureSilencedErrors',

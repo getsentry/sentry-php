@@ -62,7 +62,7 @@ final class HttpTransportTest extends TestCase
             $this->logger->expects($this->exactly(\count($messages)))
                 ->method($level)
                 ->with($this->logicalOr(
-                    ...array_map(function (string $message) {
+                    ...array_map(static function (string $message) {
                         return new StringMatchesFormatDescription($message);
                     }, $messages)
                 ));
@@ -110,6 +110,18 @@ final class HttpTransportTest extends TestCase
                 'info' => [
                     'Sending event [%s] to %s [project:%s].',
                     'Sent event [%s] to %s [project:%s]. Result: "invalid" (status: 401).',
+                ],
+            ],
+        ];
+
+        yield [
+            new Response(413, [], ''),
+            ResultStatus::contentTooLarge(),
+            false,
+            [
+                'info' => [
+                    'Sending event [%s] to %s [project:%s].',
+                    'Sent event [%s] to %s [project:%s]. Result: "content_too_large" (status: 413).',
                 ],
             ],
         ];

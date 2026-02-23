@@ -7,3 +7,6 @@ package.xml
 .phpunit.result.cache
 docs/_build
 tests/clover.xml
+
+# Local Claude Code settings that should not be committed
+.claude/settings.local.json

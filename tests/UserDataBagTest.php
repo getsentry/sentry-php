@@ -162,29 +162,46 @@ final class UserDataBagTest extends TestCase
         ];
     }
 
-    public function testConstructorThrowsIfIpAddressArgumentIsInvalid(): void
+    /**
+     * @dataProvider bracketedIpv6AddressDataProvider
+     */
+    public function testSetIpAddressStripsBracketsFromIpv6(string $input, string $expected): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
-
-        new UserDataBag(null, null, 'foo');
-    }
-
-    public function testSetIpAddressThrowsIfArgumentIsInvalid(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
-
         $userDataBag = new UserDataBag();
-        $userDataBag->setIpAddress('foo');
+        $userDataBag->setIpAddress($input);
+
+        $this->assertSame($expected, $userDataBag->getIpAddress());
     }
 
-    public function testCreateFromIpAddressThrowsIfArgumentIsInvalid(): void
+    public static function bracketedIpv6AddressDataProvider(): iterable
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('The "foo" value is not a valid IP address.');
+        yield 'IPv6 loopback with brackets' => ['[::1]', '::1'];
+        yield 'IPv6 full address with brackets' => ['[2001:db8::1]', '2001:db8::1'];
+        yield 'IPv6 loopback without brackets' => ['::1', '::1'];
+        yield 'IPv4 address' => ['127.0.0.1', '127.0.0.1'];
+    }
 
-        UserDataBag::createFromUserIpAddress('foo');
+    public function testConstructorDoesNotSetInvalidIpAddress(): void
+    {
+        $userDataBag = new UserDataBag(null, null, 'foo');
+
+        $this->assertNull($userDataBag->getIpAddress());
+    }
+
+    public function testSetIpAddressDoesNotSetInvalidIpAddress(): void
+    {
+        $userDataBag = new UserDataBag();
+        $userDataBag->setIpAddress('127.0.0.1');
+        $userDataBag->setIpAddress('foo');
+
+        $this->assertSame('127.0.0.1', $userDataBag->getIpAddress());
+    }
+
+    public function testCreateFromIpAddressDoesNotSetInvalidIpAddress(): void
+    {
+        $userDataBag = UserDataBag::createFromUserIpAddress('foo');
+
+        $this->assertNull($userDataBag->getIpAddress());
     }
 
     public function testMerge(): void

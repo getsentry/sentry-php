@@ -300,7 +300,7 @@ class Span
      */
     public function setHttpStatus(int $statusCode)
     {
-        SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($statusCode) {
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($statusCode) {
             $scope->setContext('response', [
                 'status_code' => $statusCode,
             ]);

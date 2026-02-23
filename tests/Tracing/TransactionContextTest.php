@@ -149,4 +149,11 @@ final class TransactionContextTest extends TestCase
         $this->assertGreaterThanOrEqual(0.4, $sampleRand);
         $this->assertLessThanOrEqual(0.999999, $sampleRand);
     }
+
+    public function testParentSamplingRateIsIgnoredWithoutSentryTraceHeader(): void
+    {
+        $context = TransactionContext::fromHeaders('', 'sentry-sample_rate=1');
+
+        $this->assertNull($context->getMetadata()->getParentSamplingRate());
+    }
 }

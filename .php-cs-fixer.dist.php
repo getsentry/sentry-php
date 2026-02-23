@@ -38,6 +38,7 @@ return (new PhpCsFixer\Config())
         ],
         'no_whitespace_before_comma_in_array' => false, // Should be dropped when we drop support for PHP 7.x
         'stringable_for_to_string' => false,
+        'modern_serialization_methods' => false, // Could be re-enabled when we drop support for PHP 7.3 and lower
     ])
     ->setRiskyAllowed(true)
     ->setFinder(

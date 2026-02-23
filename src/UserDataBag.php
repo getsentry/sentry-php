@@ -220,8 +220,23 @@ final class UserDataBag
      */
     public function setIpAddress(?string $ipAddress): self
     {
-        if ($ipAddress !== null && filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
-            throw new \InvalidArgumentException(\sprintf('The "%s" value is not a valid IP address.', $ipAddress));
+        if ($ipAddress !== null) {
+            // Strip brackets from IPv6 addresses (e.g. [::1] -> ::1)
+            if (strpos($ipAddress, '[') === 0 && substr($ipAddress, -1) === ']') {
+                $ipAddress = substr($ipAddress, 1, -1);
+            }
+
+            if (filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
+                $client = SentrySdk::getCurrentHub()->getClient();
+
+                if ($client !== null) {
+                    $client->getOptions()->getLoggerOrNullLogger()->debug(
+                        \sprintf('The "%s" value is not a valid IP address.', $ipAddress)
+                    );
+                }
+
+                return $this;
+            }
         }
 
         $this->ipAddress = $ipAddress;
