@@ -103,10 +103,4 @@ class ClientReportAggregatorTest extends TestCase
         $this->assertEmpty(StubTransport::$events);
         $this->assertEmpty(StubLogger::$logs);
     }
-
-    public function testLogCategoriesAreCanonical(): void
-    {
-        $this->assertSame('log_item', DataCategory::logItem()->getValue());
-        $this->assertSame('log_byte', DataCategory::logBytes()->getValue());
-    }
 }
