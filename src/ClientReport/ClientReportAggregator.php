@@ -68,7 +68,7 @@ class ClientReportAggregator
         // can be sent on the next flush, or it gets discarded anyway.
         if (HubAdapter::getInstance()->captureEvent($event) !== null) {
             $this->reports = [];
-        };
+        }
     }
 
     public static function getInstance(): self
