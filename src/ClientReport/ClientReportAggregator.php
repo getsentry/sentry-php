@@ -38,7 +38,7 @@ class ClientReportAggregator
             $client = HubAdapter::getInstance()->getClient();
             if ($client !== null) {
                 $logger = $client->getOptions()->getLoggerOrNullLogger();
-                $logger->debug('Dropping Client report with category={category} and reason={} because quantity is zero or negative ({quantity})', [
+                $logger->debug('Dropping Client report with category={category} and reason={reason} because quantity is zero or negative ({quantity})', [
                     'category' => $category,
                     'reason' => $reason,
                     'quantity' => $quantity,

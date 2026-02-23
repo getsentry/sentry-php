@@ -6,14 +6,11 @@ namespace Sentry\Logs;
 
 use Sentry\Attributes\Attribute;
 use Sentry\Client;
-use Sentry\ClientReport\ClientReportAggregator;
-use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
-use Sentry\Transport\DataCategory;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
 

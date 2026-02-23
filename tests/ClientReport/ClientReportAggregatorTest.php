@@ -8,8 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\ClientReport\Reason;
-use Sentry\Logs\LogLevel;
-use Sentry\Logs\LogsAggregator;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
@@ -75,7 +73,7 @@ class ClientReportAggregatorTest extends TestCase
 
         $this->assertEmpty(StubTransport::$events);
         $this->assertNotEmpty(StubLogger::$logs);
-        $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => -10]], StubLogger::$logs[0]);
+        $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={reason} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => -10]], StubLogger::$logs[0]);
     }
 
     public function testZeroQuantityDiscarded(): void
@@ -85,7 +83,7 @@ class ClientReportAggregatorTest extends TestCase
 
         $this->assertEmpty(StubTransport::$events);
         $this->assertCount(1, StubLogger::$logs);
-        $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => 0]], StubLogger::$logs[0]);
+        $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={reason} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => 0]], StubLogger::$logs[0]);
     }
 
     public function testNegativeQuantityDiscardedWhenNoClientIsBound(): void
