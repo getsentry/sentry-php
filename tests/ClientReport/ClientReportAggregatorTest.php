@@ -8,8 +8,11 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\ClientReport\Reason;
+use Sentry\Logs\LogLevel;
+use Sentry\Logs\LogsAggregator;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\State\Hub;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Transport\DataCategory;
@@ -83,5 +86,51 @@ class ClientReportAggregatorTest extends TestCase
         $this->assertEmpty(StubTransport::$events);
         $this->assertCount(1, StubLogger::$logs);
         $this->assertSame(['level' => 'debug', 'message' => 'Dropping Client report with category={category} and reason={} because quantity is zero or negative ({quantity})', 'context' => ['category' => 'profile', 'reason' => 'event_processor', 'quantity' => 0]], StubLogger::$logs[0]);
+    }
+
+    public function testNegativeQuantityDiscardedWhenNoClientIsBound(): void
+    {
+        SentrySdk::setCurrentHub(new Hub());
+
+        ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
+
+        SentrySdk::setCurrentHub(new Hub(new Client(new Options([
+            'logger' => StubLogger::getInstance(),
+        ]), StubTransport::getInstance())));
+
+        ClientReportAggregator::getInstance()->flush();
+
+        $this->assertEmpty(StubTransport::$events);
+        $this->assertEmpty(StubLogger::$logs);
+    }
+
+    public function testLogCategoriesAreCanonical(): void
+    {
+        $this->assertSame('log_item', DataCategory::logItem()->getValue());
+        $this->assertSame('log_byte', DataCategory::logBytes()->getValue());
+    }
+
+    public function testLogOverflowReportsLogItemCount(): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'enable_logs' => true,
+        ]), StubTransport::getInstance()));
+
+        $logsAggregator = new LogsAggregator();
+
+        for ($i = 0; $i < 8; ++$i) {
+            $logsAggregator->add(LogLevel::info(), 'Log %d', [$i]);
+        }
+
+        ClientReportAggregator::getInstance()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $reports = StubTransport::$events[0]->getClientReports();
+        $this->assertCount(1, $reports);
+
+        $report = $reports[0];
+        $this->assertSame(DataCategory::logItem()->getValue(), $report->getCategory());
+        $this->assertSame(Reason::bufferOverflow()->getValue(), $report->getReason());
+        $this->assertSame(2, $report->getQuantity());
     }
 }

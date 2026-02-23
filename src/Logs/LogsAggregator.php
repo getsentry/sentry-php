@@ -39,7 +39,7 @@ final class LogsAggregator
         array $attributes = []
     ): void {
         if (\count($this->logs) > 5) {
-            ClientReportAggregator::getInstance()->add(DataCategory::logBytes(), Reason::bufferOverflow(), 1);
+            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::bufferOverflow(), 1);
 
             return;
         }

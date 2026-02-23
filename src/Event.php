@@ -214,7 +214,7 @@ final class Event
     /**
      * @var ClientReport[]
      */
-    private $clientReports;
+    private $clientReports = [];
 
     private function __construct(?EventId $eventId, EventType $eventType)
     {

@@ -475,6 +475,34 @@ TEXT
         ];
 
         $event = Event::createClientReport();
+
+        yield [
+            $event,
+            <<<TEXT
+{}
+{"type":"client_report"}
+{"timestamp":1597790835,"discarded_events":[]}
+TEXT
+            ,
+        ];
+
+        $event = Event::createClientReport();
+        $event->setClientReports([
+            new ClientReport('log_item', 'buffer_overflow', 1),
+            new ClientReport('log_byte', 'buffer_overflow', 256),
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{}
+{"type":"client_report"}
+{"timestamp":1597790835,"discarded_events":[{"category":"log_item","reason":"buffer_overflow","quantity":1},{"category":"log_byte","reason":"buffer_overflow","quantity":256}]}
+TEXT
+            ,
+        ];
+
+        $event = Event::createClientReport();
         $event->setClientReports([
             new ClientReport('error', 'before_send', 10),
             new ClientReport('profile', 'internal_sdk_error', 50),

@@ -44,7 +44,7 @@ class DataCategory
 
     public static function logBytes(): self
     {
-        return self::getInstance('log_bytes');
+        return self::getInstance('log_byte');
     }
 
     public static function profile(): self

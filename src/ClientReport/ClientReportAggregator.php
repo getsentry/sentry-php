@@ -43,9 +43,9 @@ class ClientReportAggregator
                     'reason' => $reason,
                     'quantity' => $quantity,
                 ]);
-
-                return;
             }
+
+            return;
         }
         $this->reports[$category][$reason] = ($this->reports[$category][$reason] ?? 0) + $quantity;
     }
