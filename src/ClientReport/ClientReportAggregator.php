@@ -64,8 +64,11 @@ class ClientReportAggregator
         $event = Event::createClientReport();
         $event->setClientReports($reports);
 
-        HubAdapter::getInstance()->captureEvent($event);
-        $this->reports = [];
+        // Reset the client reports only if we successfully sent an event. If it fails it
+        // can be sent on the next flush, or it gets discarded anyway.
+        if (HubAdapter::getInstance()->captureEvent($event) !== null) {
+            $this->reports = [];
+        };
     }
 
     public static function getInstance(): self
