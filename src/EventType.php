@@ -79,6 +79,7 @@ final class EventType implements \Stringable
         switch ($this) {
             case self::metrics():
             case self::logs():
+            case self::clientReport():
                 return false;
             default:
                 return true;
