@@ -38,11 +38,6 @@ final class LogsAggregator
         array $values = [],
         array $attributes = []
     ): void {
-        if (\count($this->logs) > 5) {
-            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::bufferOverflow(), 1);
-
-            return;
-        }
         $timestamp = microtime(true);
 
         $hub = SentrySdk::getCurrentHub();
