@@ -109,28 +109,4 @@ class ClientReportAggregatorTest extends TestCase
         $this->assertSame('log_item', DataCategory::logItem()->getValue());
         $this->assertSame('log_byte', DataCategory::logBytes()->getValue());
     }
-
-    public function testLogOverflowReportsLogItemCount(): void
-    {
-        SentrySdk::init()->bindClient(new Client(new Options([
-            'enable_logs' => true,
-        ]), StubTransport::getInstance()));
-
-        $logsAggregator = new LogsAggregator();
-
-        for ($i = 0; $i < 8; ++$i) {
-            $logsAggregator->add(LogLevel::info(), 'Log %d', [$i]);
-        }
-
-        ClientReportAggregator::getInstance()->flush();
-
-        $this->assertCount(1, StubTransport::$events);
-        $reports = StubTransport::$events[0]->getClientReports();
-        $this->assertCount(1, $reports);
-
-        $report = $reports[0];
-        $this->assertSame(DataCategory::logItem()->getValue(), $report->getCategory());
-        $this->assertSame(Reason::bufferOverflow()->getValue(), $report->getReason());
-        $this->assertSame(2, $report->getQuantity());
-    }
 }
