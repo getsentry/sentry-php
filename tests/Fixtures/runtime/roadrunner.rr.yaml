@@ -1,0 +1,12 @@
+version: "3"
+
+rpc:
+  listen: tcp://127.0.0.1:6001
+
+server:
+  command: "php roadrunner-worker.php"
+
+http:
+  address: 127.0.0.1:8080
+  pool:
+    num_workers: 1

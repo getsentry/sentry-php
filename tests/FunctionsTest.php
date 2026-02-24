@@ -27,6 +27,8 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
 use function Sentry\addBreadcrumb;
@@ -37,11 +39,14 @@ use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\continueTrace;
+use function Sentry\endContext;
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
 use function Sentry\init;
+use function Sentry\startContext;
 use function Sentry\startTransaction;
 use function Sentry\trace;
+use function Sentry\withContext;
 use function Sentry\withMonitor;
 use function Sentry\withScope;
 
@@ -329,6 +334,99 @@ final class FunctionsTest extends TestCase
         });
 
         $this->assertTrue($callbackInvoked);
+    }
+
+    public function testStartAndEndContext(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+
+        startContext();
+
+        $requestHub = SentrySdk::getCurrentHub();
+
+        $this->assertNotSame($globalHub, $requestHub);
+
+        endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testWithContext(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+
+        $result = withContext(function () use ($globalHub): string {
+            $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+
+            return 'ok';
+        });
+
+        $this->assertSame('ok', $result);
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testNestedWithContextReusesOuterContext(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+        $outerHub = null;
+        $innerHub = null;
+
+        withContext(function () use (&$outerHub, &$innerHub, $globalHub): void {
+            $outerHub = SentrySdk::getCurrentHub();
+
+            configureScope(static function (Scope $scope): void {
+                $scope->setTag('outer', 'yes');
+            });
+
+            withContext(static function () use (&$innerHub): void {
+                $innerHub = SentrySdk::getCurrentHub();
+            });
+
+            $event = Event::createEvent();
+
+            configureScope(static function (Scope $scope) use (&$event): void {
+                $event = $scope->applyToEvent($event);
+            });
+
+            $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+            $this->assertSame('yes', $event->getTags()['outer'] ?? null);
+        });
+
+        $this->assertNotNull($outerHub);
+        $this->assertNotNull($innerHub);
+        $this->assertSame($outerHub, $innerHub);
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testWithContextAlwaysEndsContextWithOptionalTimeout(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->once())
+            ->method('flush')
+            ->with(13)
+            ->willReturn(new Result(ResultStatus::success()));
+
+        SentrySdk::init()->bindClient($client);
+
+        try {
+            withContext(static function (): void {
+                throw new \RuntimeException('callback failed');
+            }, 13);
+
+            $this->fail('The callback exception should be rethrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('callback failed', $exception->getMessage());
+        }
     }
 
     public function testStartTransaction(): void
