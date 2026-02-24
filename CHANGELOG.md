@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## 4.21.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.21.0.
+
+### Features
+
+- Add `RuntimeContext` and context lifecycle helpers for long-lived runtimes such as FrankenPHP and RoadRunner. [(#2011)](https://github.com/getsentry/sentry-php/pull/2011)
+
+Long-lived worker runtimes keep process memory between requests, which can cause scope data to leak from one request to the next.
+`RuntimeContext` isolates SDK state per request and flushes buffered telemetry when the request context ends.
+Data configured before a runtime context is started is copied into each new context as baseline scope data.
+
+Example:
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+]);
+
+$handler = static function (): void {
+    \Sentry\withContext(static function (): void {
+        // Handle one request.
+    });
+};
+
+while (frankenphp_handle_request($handler)) {}
+```
+
+When using a runtime context, manual `\Sentry\flush()` calls are not needed for request teardown.
+It is still necessary to finish transactions explicitly.
+
 ## 4.20.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.20.0.
