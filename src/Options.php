@@ -61,6 +61,12 @@ final class Options
 
         $this->configureOptions($this->resolver);
 
+        // Migrate `strict_trace_propagation` over to `strict_trace_continuation` if not set.
+        // If both are set, then `strict_trace_continuation` will take precedence.
+        if (isset($options['strict_trace_propagation']) && !isset($options['strict_trace_continuation'])) {
+            $options['strict_trace_continuation'] = $options['strict_trace_propagation'];
+        }
+
         $this->options = $this->resolver->resolve($options);
 
         if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
