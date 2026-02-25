@@ -153,6 +153,64 @@ final class DynamicSamplingContextTest extends TestCase
         $this->assertTrue($samplingContext->isFrozen());
     }
 
+    public function testFromOptionsUsesConfiguredOrgIdOverDsnOrgId(): void
+    {
+        $options = new Options([
+            'dsn' => 'http://public@o1.example.com/1',
+            'org_id' => 2,
+        ]);
+
+        $scope = new Scope();
+        $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+
+        $this->assertSame('2', $samplingContext->get('org_id'));
+    }
+
+    public function testFromOptionsFallsBackToDsnOrgId(): void
+    {
+        $options = new Options([
+            'dsn' => 'http://public@o1.example.com/1',
+        ]);
+
+        $scope = new Scope();
+        $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
+
+        $this->assertSame('1', $samplingContext->get('org_id'));
+    }
+
+    public function testFromTransactionUsesConfiguredOrgIdOverDsnOrgId(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'dsn' => 'http://public@o1.example.com/1',
+                'org_id' => 2,
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = new Transaction(new TransactionContext(), $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+
+        $this->assertSame('2', $samplingContext->get('org_id'));
+    }
+
+    public function testFromTransactionFallsBackToDsnOrgId(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'dsn' => 'http://public@o1.example.com/1',
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = new Transaction(new TransactionContext(), $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+
+        $this->assertSame('1', $samplingContext->get('org_id'));
+    }
+
     /**
      * @dataProvider getEntriesDataProvider
      */

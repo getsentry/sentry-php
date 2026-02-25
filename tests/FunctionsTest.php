@@ -637,4 +637,77 @@ final class FunctionsTest extends TestCase
             $this->assertTrue($dynamicSamplingContext->isFrozen());
         });
     }
+
+    public function testContinueTraceWhenOrgMismatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=2'
+        );
+
+        $newTraceId = (string) $transactionContext->getTraceId();
+        $newSampleRand = $transactionContext->getMetadata()->getSampleRand();
+
+        $this->assertNotSame('566e3688a61d4bc888951642d6f14a19', $newTraceId);
+        $this->assertNotEmpty($newTraceId);
+        $this->assertNull($transactionContext->getParentSpanId());
+        $this->assertNull($transactionContext->getParentSampled());
+        $this->assertNull($transactionContext->getMetadata()->getDynamicSamplingContext());
+        $this->assertNotNull($newSampleRand);
+
+        configureScope(function (Scope $scope) use ($newTraceId, $newSampleRand): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame($newTraceId, (string) $propagationContext->getTraceId());
+            $this->assertNull($propagationContext->getParentSpanId());
+            $this->assertNull($propagationContext->getDynamicSamplingContext());
+            $this->assertSame($newSampleRand, $propagationContext->getSampleRand());
+        });
+    }
+
+    public function testContinueTraceWhenOrgMatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=1'
+        );
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $transactionContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
+        $this->assertTrue($transactionContext->getParentSampled());
+
+        configureScope(function (Scope $scope): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+
+            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+
+            $this->assertNotNull($dynamicSamplingContext);
+            $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
+        });
+    }
 }

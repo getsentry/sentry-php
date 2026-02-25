@@ -61,6 +61,10 @@ final class Options
 
         $this->configureOptions($this->resolver);
 
+        if (!array_key_exists('strict_trace_continuation', $options) && array_key_exists('strict_trace_propagation', $options)) {
+            $options['strict_trace_continuation'] = $options['strict_trace_propagation'];
+        }
+
         $this->options = $this->resolver->resolve($options);
 
         if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
@@ -775,23 +779,43 @@ final class Options
     }
 
     /**
-     * Returns whether strict trace propagation is enabled or not.
+     * Returns whether strict trace continuation is enabled or not.
      */
-    public function isStrictTracePropagationEnabled(): bool
+    public function isStrictTraceContinuationEnabled(): bool
     {
-        return $this->options['strict_trace_propagation'];
+        return (bool) $this->options['strict_trace_continuation'];
     }
 
     /**
-     * Sets if strict trace propagation should be enabled or not.
+     * Sets if strict trace continuation should be enabled or not.
      */
-    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    public function enableStrictTraceContinuation(bool $strictTraceContinuation): self
     {
-        $options = array_merge($this->options, ['strict_trace_propagation' => $strictTracePropagation]);
+        $options = array_merge($this->options, ['strict_trace_continuation' => $strictTraceContinuation]);
 
         $this->options = $this->resolver->resolve($options);
 
         return $this;
+    }
+
+    /**
+     * Returns whether strict trace propagation is enabled or not.
+     *
+     * @deprecated since version 4.21. To be removed in version 5.0. Use `isStrictTraceContinuationEnabled` instead.
+     */
+    public function isStrictTracePropagationEnabled(): bool
+    {
+        return $this->isStrictTraceContinuationEnabled();
+    }
+
+    /**
+     * Sets if strict trace propagation should be enabled or not.
+     *
+     * @deprecated since version 4.21. To be removed in version 5.0. Use `enableStrictTraceContinuation` instead.
+     */
+    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    {
+        return $this->enableStrictTraceContinuation($strictTracePropagation);
     }
 
     /**
@@ -1352,6 +1376,7 @@ final class Options
                 return $metric;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_continuation' => false,
             'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
@@ -1406,6 +1431,7 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
