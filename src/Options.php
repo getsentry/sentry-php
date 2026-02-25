@@ -789,6 +789,7 @@ final class Options
          * @var bool $result
          */
         $result = $this->options['strict_trace_continuation'];
+
         return $result;
     }
 
