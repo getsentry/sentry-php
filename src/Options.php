@@ -779,7 +779,11 @@ final class Options
      */
     public function isStrictTraceContinuationEnabled(): bool
     {
-        return (bool) $this->options['strict_trace_continuation'];
+        /**
+         * @var bool $result
+         */
+        $result = $this->options['strict_trace_continuation'];
+        return $result;
     }
 
     /**

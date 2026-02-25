@@ -158,5 +158,4 @@ trait TraceHeaderParserTrait
 
         return true;
     }
-
 }
