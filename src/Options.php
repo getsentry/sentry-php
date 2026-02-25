@@ -61,10 +61,6 @@ final class Options
 
         $this->configureOptions($this->resolver);
 
-        if (!array_key_exists('strict_trace_continuation', $options) && array_key_exists('strict_trace_propagation', $options)) {
-            $options['strict_trace_continuation'] = $options['strict_trace_propagation'];
-        }
-
         $this->options = $this->resolver->resolve($options);
 
         if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
