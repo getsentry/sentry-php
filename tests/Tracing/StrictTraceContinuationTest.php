@@ -86,6 +86,7 @@ final class StrictTraceContinuationTest extends TestCase
 
     public static function strictTraceContinuationDataProvider(): \Generator
     {
+        // First 10 Test cases are modelled after: https://develop.sentry.dev/sdk/telemetry/traces/#stricttracecontinuation
         yield [
             new Options([
                 'strict_trace_continuation' => false,
