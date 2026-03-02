@@ -25,7 +25,7 @@ final class BreadcrumbHandlerTest extends TestCase
                 $this->assertSame($expectedBreadcrumb->getMessage(), $breadcrumb->getMessage());
                 $this->assertSame($expectedBreadcrumb->getLevel(), $breadcrumb->getLevel());
                 $this->assertSame($expectedBreadcrumb->getType(), $breadcrumb->getType());
-                $this->assertEquals($record['datetime']->getTimestamp(), $breadcrumb->getTimestamp());
+                $this->assertEquals((float) $record['datetime']->format('U.u'), $breadcrumb->getTimestamp());
                 $this->assertSame($expectedBreadcrumb->getCategory(), $breadcrumb->getCategory());
                 $this->assertEquals($expectedBreadcrumb->getMetadata(), $breadcrumb->getMetadata());
 

@@ -60,7 +60,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
             $record['channel'],
             $record['message'],
             ($record['context'] ?? []) + ($record['extra'] ?? []),
-            $record['datetime']->getTimestamp()
+            (float) $record['datetime']->format('U.u')
         );
 
         $this->hub->addBreadcrumb($breadcrumb);
