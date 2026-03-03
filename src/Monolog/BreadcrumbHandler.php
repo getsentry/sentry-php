@@ -56,7 +56,7 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     {
         $datetime = $record['datetime'] ?? null;
         $timestamp = $datetime instanceof \DateTimeInterface
-            ? (float) ($datetime->format('U.u'))
+            ? $datetime->getTimestamp() + (int) $datetime->format('u') / 1000000
             : null;
 
         $breadcrumb = new Breadcrumb(
