@@ -290,6 +290,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'strict_trace_continuation',
+            true,
+            'isStrictTraceContinuationEnabled',
+            'enableStrictTraceContinuation',
+        ];
+
+        yield [
             'strict_trace_propagation',
             true,
             'isStrictTracePropagationEnabled',
