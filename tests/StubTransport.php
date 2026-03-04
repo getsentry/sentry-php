@@ -37,7 +37,7 @@ class StubTransport implements TransportInterface
     {
         self::$events[] = $event;
 
-        return new Result(ResultStatus::success());
+        return new Result(ResultStatus::success(), $event);
     }
 
     public function close(?int $timeout = null): Result
