@@ -1,0 +1,1693 @@
+variant = "loose"
+
+[[issues]]
+file = "src/Client.php"
+code = "implicit-to-string-cast"
+message = 'Implicit conversion to `string` for left operand via `Sentry\Severity::__toString()`.'
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 2
+
+[[issues]]
+file = "src/Client.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #1 of `Sentry\StacktraceBuilder::buildfrombacktrace`: expected `list<array{'args'?: array<array-key, mixed>, 'class'?: class-string, 'file'?: string, 'function'?: string, 'line'?: int, 'type'?: string}>`, but possibly received `array<array-key, mixed>`.'''
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "possibly-null-argument"
+message = 'Argument #1 of method `Sentry\StacktraceBuilder::buildfromexception` is possibly `null`, but parameter type `Throwable` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "possibly-null-argument"
+message = 'Argument #1 of method `sentry\exceptiondatabag::__construct` is possibly `null`, but parameter type `Throwable` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "possibly-null-operand"
+message = 'Possibly null left operand used in string concatenation (type `Sentry\Severity|null`).'
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "redundant-docblock-type"
+message = "Redundant docblock type for variable `$result`."
+count = 1
+
+[[issues]]
+file = "src/Client.php"
+code = "unused-template-parameter"
+message = 'Template parameter `T` is never used in method `Sentry\Client::getIntegration`.'
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-false-operand"
+message = "Left operand in `==` comparison might be `false` (type `false|int`)."
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-null-argument"
+message = "Argument #2 of function `preg_match` is possibly `null`, but parameter type `string` does not accept it."
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-null-argument"
+message = 'Argument #2 of method `sentry\dsn::__construct` is possibly `null`, but parameter type `string` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-null-argument"
+message = 'Argument #6 of method `sentry\dsn::__construct` is possibly `null`, but parameter type `string` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-undefined-string-array-index"
+message = "Possibly undefined array key 'host' accessed on `array{'fragment'?: non-empty-string, 'host'?: non-empty-string, 'pass'?: non-empty-string, 'path': string, 'port'?: int<0, 65535>, 'query'?: non-empty-string, 'scheme': string('http')|string('https'), 'user'?: non-empty-string}`."
+count = 2
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-undefined-string-array-index"
+message = "Possibly undefined array key 'scheme' accessed on `array{'fragment'?: non-empty-string, 'host'?: non-empty-string, 'pass'?: non-empty-string, 'path': string, 'port'?: int<0, 65535>, 'query'?: non-empty-string, 'scheme'?: non-empty-string, 'user'?: non-empty-string}`."
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "possibly-undefined-string-array-index"
+message = "Possibly undefined array key 'user' accessed on `array{'fragment'?: non-empty-string, 'host'?: non-empty-string, 'pass'?: non-empty-string, 'path': string, 'port'?: int<0, 65535>, 'query'?: non-empty-string, 'scheme': string('http')|string('https'), 'user'?: non-empty-string}`."
+count = 1
+
+[[issues]]
+file = "src/Dsn.php"
+code = "redundant-comparison"
+message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
+count = 2
+
+[[issues]]
+file = "src/Dsn.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 2
+
+[[issues]]
+file = "src/Dsn.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "less-specific-nested-argument-type"
+message = '''Argument type mismatch for argument #1 of `closure::fromcallable`: expected `(callable(...mixed=): mixed)`, but provided type `list{Sentry\ErrorHandler&static|sentry\errorhandler, string('handleError')}` is less specific.'''
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "less-specific-nested-argument-type"
+message = '''Argument type mismatch for argument #1 of `closure::fromcallable`: expected `(callable(...mixed=): mixed)`, but provided type `list{Sentry\ErrorHandler&static|sentry\errorhandler, string('handleException')}` is less specific.'''
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "less-specific-nested-argument-type"
+message = '''Argument type mismatch for argument #1 of `closure::fromcallable`: expected `(callable(...mixed=): mixed)`, but provided type `list{Sentry\ErrorHandler&static|sentry\errorhandler, string('handleFatalError')}` is less specific.'''
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #1 of `Sentry\ErrorHandler::cleanbacktracefromerrorhandlerframes`: expected `list<array{'args'?: array<array-key, mixed>, 'class'?: class-string, 'file'?: string, 'function'?: string, 'line'?: int, 'type'?: string}>`, but possibly received `array<array-key, mixed>`.'''
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "redundant-comparison"
+message = "Redundant `>=` comparison: left-hand side is always greater than or equal to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/ErrorHandler.php"
+code = "write-only-property"
+message = "Property `$reservedMemory` is written to but never read."
+count = 1
+
+[[issues]]
+file = "src/Event.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/Event.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Event.php"
+code = "no-value"
+message = "Argument #1 passed to function `get_debug_type` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/EventHint.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 4
+
+[[issues]]
+file = "src/EventHint.php"
+code = "no-value"
+message = "Argument #1 passed to function `get_debug_type` has type `never`, meaning it cannot produce a value."
+count = 4
+
+[[issues]]
+file = "src/EventHint.php"
+code = "redundant-logical-operation"
+message = "Redundant `&&` operation: left operand is evaluated and right operand is always falsy."
+count = 3
+
+[[issues]]
+file = "src/EventHint.php"
+code = "redundant-type-comparison"
+message = "Redundant type assertion: `$extra` of type `array<string, mixed>` is always not `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/FrameBuilder.php"
+code = "invalid-operand"
+message = "Right operand in `&&` operation is an `array`."
+count = 1
+
+[[issues]]
+file = "src/FrameBuilder.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/FrameBuilder.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 2
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "less-specific-argument"
+message = "Argument type mismatch for argument #1 of `curl_share_setopt`: expected `CurlShareHandle`, but provided type `null|object|resource` is less specific."
+count = 2
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\httpclient\response::__construct`: expected `int`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\util\http::parseresponseheaders`: expected `string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `version_compare`: expected `string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-operand"
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "mixed-property-type-coercion"
+message = "A value with a less specific type `mixed` is being assigned to property `$$shareHandle` (null|object|resource)."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "non-existent-function"
+message = 'Could not find definition for function `Sentry\HttpClient\curl_share_init_persistent` (also tried as `curl_share_init_persistent` in a broader scope).'
+count = 1
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "possibly-null-argument"
+message = "Argument #1 of function `curl_share_setopt` is possibly `null`, but parameter type `CurlShareHandle` does not accept it."
+count = 2
+
+[[issues]]
+file = "src/HttpClient/HttpClient.php"
+code = "redundant-comparison"
+message = "Redundant `<` comparison: left-hand side is never less than right-hand side."
+count = 2
+
+[[issues]]
+file = "src/HttpClient/Request.php"
+code = "redundant-comparison"
+message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/Response.php"
+code = "less-specific-argument"
+message = "Argument type mismatch for argument #1 of `strtolower`: expected `string`, but provided type `array-key` is less specific."
+count = 1
+
+[[issues]]
+file = "src/HttpClient/Response.php"
+code = "property-type-coercion"
+message = "A value of a less specific type `array{'': array-key, ...<array-key, array-key>}` is being assigned to property `$$headerNames` (array<array-key, string>)."
+count = 1
+
+[[issues]]
+file = "src/Integration/FrameContextifierIntegration.php"
+code = "possibly-null-argument"
+message = 'Argument #2 of method `Sentry\Integration\FrameContextifierIntegration::addcontexttostacktraceframes` is possibly `null`, but parameter type `Sentry\Stacktrace` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Integration/FrameContextifierIntegration.php"
+code = "possibly-null-argument"
+message = 'Argument #2 of method `Sentry\Integration\FrameContextifierIntegration::getsourcecodeexcerpt` is possibly `null`, but parameter type `string` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "invalid-property-assignment-value"
+message = 'Invalid type for property `$integrations`: expected `array<class-string<Sentry\Integration\IntegrationInterface>, bool>`, but got `array<class-string<Sentry\Integration\IntegrationInterface>|string, bool>`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `sentry\integration\integrationregistry::getintegrationstosetup`: expected `array<array-key, Sentry\Integration\IntegrationInterface>`, but found `array{}|non-empty-list<(callable(array<array-key, Sentry\Integration\IntegrationInterface>): Sentry\Integration\IntegrationInterface)|Sentry\Integration\IntegrationInterface>`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `sentry\integration\integrationregistry::setupintegrations`: expected `array<class-string<Sentry\Integration\IntegrationInterface>, Sentry\Integration\IntegrationInterface>`, but found `array<string, Sentry\Integration\IntegrationInterface>`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #1 of `array_map`: expected `(callable((callable(array<array-key, Sentry\Integration\IntegrationInterface>): Sentry\Integration\IntegrationInterface)|object): string)|(callable((callable(array<array-key, Sentry\Integration\IntegrationInterface>): Sentry\Integration\IntegrationInterface)|object, ('S.array_map() extends mixed)): string)|null`, but possibly received `string('get_class')`.'''
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #1 of `get_class`: expected `object`, but possibly received `(callable(array<array-key, Sentry\Integration\IntegrationInterface>): Sentry\Integration\IntegrationInterface)|Sentry\Integration\IntegrationInterface`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "redundant-type-comparison"
+message = 'Redundant type assertion: `$userIntegrations` of type `array<array-key, (callable(array<array-key, Sentry\Integration\IntegrationInterface>): Sentry\Integration\IntegrationInterface)|Sentry\Integration\IntegrationInterface>` is always not `array<array-key, mixed>`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/IntegrationRegistry.php"
+code = "unreachable-else-clause"
+message = "Unreachable else clause"
+count = 1
+
+[[issues]]
+file = "src/Integration/ModulesIntegration.php"
+code = "invalid-argument"
+message = "Invalid argument type for argument #1 of `array_keys`: expected `array<never, never>`, but found `list{}`."
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "invalid-property-assignment-value"
+message = "Invalid type for property `$options`: expected `array{'pii_sanitize_headers': array<array-key, string>}`, but got `array<array-key, mixed>`."
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "less-specific-argument"
+message = 'Argument type mismatch for argument #1 of `Sentry\Integration\RequestIntegration::parseuploadedfiles`: expected `array<string, mixed>`, but provided type `array<array-key, mixed>` is less specific.'
+count = 2
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "less-specific-return-statement"
+message = 'Returned type `array<array-key, array<array-key, string>>` is less specific than the declared return type `array<string, array<array-key, string>>` for function `sentry\integration\requestintegration::sanitizeheaders`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setipaddress`: expected `null|string`, but found `truthy-mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `min`: expected `array<array-key, int(10000)>|int(10000)`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\userdatabag::createfromuseripaddress`: expected `string`, but found `truthy-mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `strlen`: expected `string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 4
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-operand"
+message = "Invalid right operand: type `mixed` cannot be reliably used in string concatenation."
+count = 1
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-operand"
+message = "Left operand in `>` comparison has `mixed` type."
+count = 2
+
+[[issues]]
+file = "src/Integration/RequestIntegration.php"
+code = "mixed-operand"
+message = "Left operand in binary operation has type `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Logs/LogsAggregator.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/Logs/LogsAggregator.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Logs/LogsAggregator.php"
+code = "no-value"
+message = "Argument #2 passed to function `sprintf` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/Logs/LogsAggregator.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 1
+
+[[issues]]
+file = "src/Logs/LogsAggregator.php"
+code = "redundant-type-comparison"
+message = "Redundant type assertion: `$key` of type `string` is always not `string`."
+count = 1
+
+[[issues]]
+file = "src/Metrics/Metrics.php"
+code = "deprecated-class"
+message = 'Class `Sentry\Metrics\Metrics` is deprecated and should no longer be used.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "ambiguous-instantiation-target"
+message = "Ambiguous instantiation: the expression used with `new` can resolve to multiple different classes."
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\Util\RingBuffer::push`: expected `Sentry\Metrics\Types\Metric`, but found `nonnull`.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "mixed-property-type-coercion"
+message = 'A value with a less specific type `Sentry\Util\RingBuffer<mixed>` is being assigned to property `$$metrics` (Sentry\Util\RingBuffer<Sentry\Metrics\Types\Metric>).'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #5 of `sentry\metrics\types\countermetric::__construct`: expected `array<string, bool|float|int|string>`, but possibly received `array<string, bool|float|int|string>|array{'sentry.environment': string, 'sentry.release'?: string, 'sentry.sdk.name': string, 'sentry.sdk.version': string, 'server.address': string, 'user.email'?: null|string, 'user.id'?: int|null|string, 'user.name'?: null|string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #5 of `sentry\metrics\types\distributionmetric::__construct`: expected `array<string, bool|float|int|string>`, but possibly received `array<string, bool|float|int|string>|array{'sentry.environment': string, 'sentry.release'?: string, 'sentry.sdk.name': string, 'sentry.sdk.version': string, 'server.address': string, 'user.email'?: null|string, 'user.id'?: int|null|string, 'user.name'?: null|string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #5 of `sentry\metrics\types\gaugemetric::__construct`: expected `array<string, bool|float|int|string>`, but possibly received `array<string, bool|float|int|string>|array{'sentry.environment': string, 'sentry.release'?: string, 'sentry.sdk.name': string, 'sentry.sdk.version': string, 'server.address': string, 'user.email'?: null|string, 'user.id'?: int|null|string, 'user.name'?: null|string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #3 of method `sentry\metrics\types\countermetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\TraceId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #3 of method `sentry\metrics\types\distributionmetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\TraceId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #3 of method `sentry\metrics\types\gaugemetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\TraceId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #4 of method `sentry\metrics\types\countermetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\SpanId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #4 of method `sentry\metrics\types\distributionmetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\SpanId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "possibly-null-argument"
+message = 'Argument #4 of method `sentry\metrics\types\gaugemetric::__construct` is possibly `null`, but parameter type `Sentry\Tracing\SpanId` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "redundant-logical-operation"
+message = "Redundant `&&` operation: left operand is evaluated and right operand is always falsy."
+count = 1
+
+[[issues]]
+file = "src/Metrics/MetricsAggregator.php"
+code = "redundant-type-comparison"
+message = "Redundant type assertion: `$value` of type `float` is always not `float`."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "impossible-nonnull-entry-check"
+message = "Impossible `isset` check on key `'context'` accessed on `array{'channel': string, 'datetime': DateTimeImmutable, 'extra'?: array<string, mixed>, 'level': int, 'message': string}`."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`array<array-key, mixed>`)."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`int`)."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`string`)."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "less-specific-argument"
+message = 'Argument type mismatch for argument #5 of `sentry\breadcrumb::__construct`: expected `array<string, mixed>`, but provided type `array<array-key, mixed>|int` is less specific.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #6 of `sentry\breadcrumb::__construct`: expected `float|null`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #1 of `Sentry\Monolog\BreadcrumbHandler::getbreadcrumblevel`: expected `enum(Monolog\Level)|int`, but possibly received `DateTimeImmutable|array<array-key, mixed>|int|string`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #1 of `Sentry\Monolog\BreadcrumbHandler::getbreadcrumbtype`: expected `int`, but possibly received `DateTimeImmutable|array<array-key, mixed>|int|string`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #1 of `monolog\handler\abstracthandler::__construct`: expected `enum(Monolog\Level)|int(100)|int(200)|int(250)|int(300)|int(400)|int(500)|int(550)|int(600)|string('ALERT')|string('CRITICAL')|string('DEBUG')|string('EMERGENCY')|string('ERROR')|string('INFO')|string('NOTICE')|string('WARNING')|string('alert')|string('critical')|string('debug')|string('emergency')|string('error')|string('info')|string('notice')|string('warning')`, but possibly received `enum(Monolog\Level)|int|string`.'''
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #3 of `sentry\breadcrumb::__construct`: expected `string`, but possibly received `DateTimeImmutable|array<array-key, mixed>|int|string`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #4 of `sentry\breadcrumb::__construct`: expected `null|string`, but possibly received `DateTimeImmutable|array<array-key, mixed>|int|string`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-operand"
+message = "Possibly invalid type for left operand."
+count = 1
+
+[[issues]]
+file = "src/Monolog/BreadcrumbHandler.php"
+code = "possibly-invalid-operand"
+message = "Possibly invalid type for right operand."
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityLogLevelTrait.php"
+code = "duplicate-definition"
+message = 'Trait `Sentry\Monolog\CompatibilityLogLevelTrait` is already defined elsewhere.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityLogLevelTrait.php"
+code = "redundant-comparison"
+message = "Redundant `>=` comparison: left-hand side is always greater than or equal to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityLogLevelTrait.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityProcessingHandlerTrait.php"
+code = "duplicate-definition"
+message = 'Trait `Sentry\Monolog\CompatibilityProcessingHandlerTrait` is already defined elsewhere.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityProcessingHandlerTrait.php"
+code = "redundant-comparison"
+message = "Redundant `>=` comparison: left-hand side is always greater than or equal to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/Monolog/CompatibilityProcessingHandlerTrait.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\Event::setmessage`: expected `string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\Monolog\Handler::getmonologcontextdata`: expected `array<array-key, mixed>`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\Monolog\Handler::getmonologextradata`: expected `array<array-key, mixed>`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = '''Invalid argument type for argument #1 of `monolog\handler\abstracthandler::__construct`: expected `enum(Monolog\Level)|int(100)|int(200)|int(250)|int(300)|int(400)|int(500)|int(550)|int(600)|string('ALERT')|string('CRITICAL')|string('DEBUG')|string('EMERGENCY')|string('ERROR')|string('INFO')|string('NOTICE')|string('WARNING')|string('alert')|string('critical')|string('debug')|string('emergency')|string('error')|string('info')|string('notice')|string('warning')`, but found `mixed`.'''
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\monolog\compatibilityprocessinghandlertrait::getseverityfromlevel`: expected `int`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Monolog/Handler.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Monolog/LogsHandler.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `array_merge`: expected `array<string('sentry.origin'), string('auto.log.monolog')>`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Monolog/LogsHandler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\monolog\compatibilitylogleveltrait::getsentryloglevelfrommonologlevel`: expected `int`, but found `mixed`.'
+count = 2
+
+[[issues]]
+file = "src/Monolog/LogsHandler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #2 of `Sentry\Logs\LogsAggregator::add`: expected `string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Monolog/LogsHandler.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `array_merge`: expected `array<string('sentry.origin'), string('auto.log.monolog')>`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Monolog/LogsHandler.php"
+code = "mixed-operand"
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 2
+
+[[issues]]
+file = "src/Options.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\Options::getenabletracing`.'
+count = 3
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-operand"
+message = "Right operand in `||` operation has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforebreadcrumbcallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforesendcallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforesendcheckincallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforesendlogcallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforesendmetricscallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getbeforesendtransactioncallback`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getclassserializers`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getcontextlines`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getdsn`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getenablelogs`. Saw type `nonnull`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getenabletracing`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getenvironment`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::geterrortypes`. Saw type `nonnull`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpclient`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpconnecttimeout`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpproxy`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpproxyauthentication`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpsslnativeca`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttpsslverifypeer`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gethttptimeout`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getignoreexceptions`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getignoretransactions`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getinappexcludedpaths`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getinappincludedpaths`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getintegrations`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getlogger`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getmaxbreadcrumbs`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getmaxrequestbodysize`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getmaxvaluelength`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getorgid`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getprefixes`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getrelease`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getsamplerate`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getservername`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::getspotlighturl`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gettags`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gettracepropagationtargets`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gettracessampler`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gettracessamplerate`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::gettransport`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::hasdefaultintegrations`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::ishttpcompressionenabled`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::isstricttracepropagationenabled`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::shouldattachmetriccodelocations`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::shouldattachstacktrace`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::shouldcapturesilencederrors`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `sentry\options::shouldsenddefaultpii`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "property-type-coercion"
+message = "A value of a less specific type `array<array-key, mixed>` is being assigned to property `$$options` (array<string, mixed>)."
+count = 52
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerLog)`)."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "invalid-return-statement"
+message = '''Invalid return type for function `sentry\profiling\profile::getformatteddata`: expected `array{'device': array{'architecture': string}, 'environment': string, 'event_id': string, 'os': array{'build_number': string, 'name': string, 'version': string}, 'platform': string, 'profile': array{'frames': array<int, array{'abs_path': string, 'filename': string, 'function': string, 'lineno': int|null, 'module': null|string}>, 'samples': array<int, array{'elapsed_since_start_ns': int, 'stack_id': int, 'thread_id': string}>, 'stacks': array<int, array<int, int>>}, 'release': string, 'runtime': array{'name': string, 'version': string}, 'timestamp': string, 'transaction': array{'active_thread_id': string, 'id': string, 'name': string, 'trace_id': string}, 'version': string}|null`, but found `array{'device': array{'architecture': null|string}, 'environment': string, 'event_id': string, 'os': array{'build_number': string, 'name': string, 'version': null|string}, 'platform': string('php'), 'profile': array{'frames': array{}|non-empty-list<array{'abs_path': string, 'filename': string, 'function': string, 'lineno': int, 'module': null|string}>, 'samples': array{}|non-empty-list<array{'elapsed_since_start_ns': int, 'stack_id': non-negative-int, 'thread_id': string}>, 'stacks': array{}|non-empty-list<array<array-key, mixed>>}, 'release': string, 'runtime': array{'name': string, 'sapi': null|string, 'version': null|string}, 'timestamp': string, 'transaction': array{'active_thread_id': string, 'id': string, 'name': null|string, 'trace_id': null|string}, 'version': string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "less-specific-nested-return-statement"
+message = '''Returned type `array{}|non-empty-list<array{'timestamp': mixed, 'trace': mixed}>` is less specific than the declared return type `array<int, array{'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}>` for function `sentry\profiling\profile::preparestacks` due to nested 'mixed'.'''
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "mixed-operand"
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "non-existent-class-like"
+message = "Cannot find class, interface, enum, or type alias `ExcimerLog`."
+count = 2
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "non-existent-class-like"
+message = "Class, Interface, or Trait `ExcimerLogEntry` does not exist."
+count = 5
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "non-existent-method"
+message = "Method `gettimestamp` does not exist on type `ExcimerLogEntry`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "non-existent-method"
+message = "Method `gettrace` does not exist on type `ExcimerLogEntry`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profile.php"
+code = "possibly-invalid-iterator"
+message = "The expression provided to `foreach` (type `array<int, array{'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}>|unknown-ref(ExcimerLog)`) might not be iterable at runtime."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profiler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerProfiler)`)."
+count = 3
+
+[[issues]]
+file = "src/Profiling/Profiler.php"
+code = "mixed-argument"
+message = '''Invalid argument type for argument #1 of `Sentry\Profiling\Profile::setexcimerlog`: expected `array<int, array{'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}>|unknown-ref(ExcimerLog)`, but found `mixed`.'''
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profiler.php"
+code = "non-existent-class"
+message = "Class `ExcimerProfiler` not found."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profiler.php"
+code = "non-existent-class-like"
+message = "Cannot find class, interface, enum, or type alias `ExcimerProfiler`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/Profiler.php"
+code = "non-existent-constant"
+message = "Undefined constant: `EXCIMER_REAL`."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "generic-object-iteration"
+message = "Iterating over a generic `object`. This will iterate its public properties."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "impossible-type-comparison"
+message = "Impossible type assertion: `$callable` of type `(callable(...mixed): mixed)` can never be `object`."
+count = 2
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "invalid-operand"
+message = "Invalid type `scalar` for middle operand in string concatenation."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `sentry\serializer\abstractserializer::serializevalue`: expected `bool|float|int|null|string`, but found `bool|null|numeric`.'
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `method_exists`: expected `class-string|object`, but found `nonnull`."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 5
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "no-value"
+message = "Argument #1 passed to function `method_exists` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "no-value"
+message = "Argument #1 passed to method `reflectionmethod::__construct` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "null-operand"
+message = "Right operand in `!=` comparison is `null`."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "possibly-null-operand"
+message = "Left operand in `!=` comparison might be `null` (type `null|string`)."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "redundant-cast"
+message = "Redundant cast to `(string)`: the expression already has this type."
+count = 1
+
+[[issues]]
+file = "src/Serializer/AbstractSerializer.php"
+code = "redundant-logical-operation"
+message = "Redundant `&&` operation: left operand is always falsy and right operand is not evaluated."
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/CheckInItem.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/EventItem.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\UserDataBag::getsegment`.'
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/EventItem.php"
+code = "mixed-array-assignment"
+message = "Unsafe array assignment on type `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/EventItem.php"
+code = "possibly-null-argument"
+message = 'Argument #1 of method `sentry\util\str::vsprintfornull` is possibly `null`, but parameter type `string` does not accept it.'
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/ProfileItem.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/TransactionItem.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\UserDataBag::getsegment`.'
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/TransactionItem.php"
+code = "invalid-return-statement"
+message = '''Invalid return type for function `sentry\serializer\envelopitems\transactionitem::serializespan`: expected `array{'_metrics_summary'?: array<string, mixed>, 'data'?: array<string, mixed>, 'description'?: string, 'op'?: string, 'parent_span_id'?: string, 'span_id': string, 'start_timestamp': float, 'status'?: string, 'tags'?: array<string, string>, 'timestamp'?: float, 'trace_id': string}`, but found `array{'data'?: array<string, mixed>, 'description'?: null|string, 'op'?: null|string, 'origin': string, 'parent_span_id'?: string, 'span_id': string, 'start_timestamp': float, 'status'?: string, 'tags'?: array<string, string>, 'timestamp'?: float|null, 'trace_id': string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Serializer/EnvelopItems/TransactionItem.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Serializer/PayloadSerializer.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Serializer/RepresentationSerializer.php"
+code = "invalid-operand"
+message = "Invalid type `never` for left operand in string concatenation."
+count = 1
+
+[[issues]]
+file = "src/Serializer/Traits/BreadcrumbSeralizerTrait.php"
+code = "invalid-return-statement"
+message = '''Invalid return type for function `sentry\serializer\traits\breadcrumbseralizertrait::serializebreadcrumb`: expected `array{'category': string, 'data'?: object, 'level': string, 'message'?: string, 'timestamp': float, 'type': string}`, but found `array{'category': string, 'data'?: stdClass, 'level': string, 'message'?: null|string, 'timestamp': float, 'type': string}`.'''
+count = 1
+
+[[issues]]
+file = "src/Serializer/Traits/StacktraceFrameSeralizerTrait.php"
+code = "invalid-return-statement"
+message = '''Invalid return type for function `sentry\serializer\traits\stacktraceframeseralizertrait::serializestacktraceframe`: expected `array{'abs_path'?: string, 'context_line'?: string, 'filename': string, 'function'?: string, 'in_app': bool, 'lineno': int, 'post_context'?: array<array-key, string>, 'pre_context'?: array<array-key, string>, 'raw_function'?: string, 'vars'?: array<string, mixed>}`, but found `array{'abs_path'?: null|string, 'context_line'?: null|string, 'filename': string, 'function'?: null|string, 'in_app': bool, 'lineno': int, 'post_context'?: array<array-key, string>, 'pre_context'?: array<array-key, string>, 'raw_function'?: null|string, 'vars'?: array<string, mixed>}`.'''
+count = 1
+
+[[issues]]
+file = "src/Spotlight/SpotlightClient.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 2
+
+[[issues]]
+file = "src/Spotlight/SpotlightClient.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\httpclient\response::__construct`: expected `int`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Spotlight/SpotlightClient.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Spotlight/SpotlightClient.php"
+code = "redundant-comparison"
+message = "Redundant `<` comparison: left-hand side is never less than right-hand side."
+count = 2
+
+[[issues]]
+file = "src/Stacktrace.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/Stacktrace.php"
+code = "no-value"
+message = "Argument #1 passed to function `get_debug_type` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/StacktraceBuilder.php"
+code = "less-specific-nested-argument-type"
+message = 'Argument type mismatch for argument #1 of `sentry\stacktrace::__construct`: expected `array<array-key, Sentry\Frame>`, but provided type `non-empty-list<mixed>` is less specific.'
+count = 1
+
+[[issues]]
+file = "src/StacktraceBuilder.php"
+code = "possibly-invalid-argument"
+message = '''Possible argument type mismatch for argument #1 of `Sentry\StacktraceBuilder::buildfrombacktrace`: expected `list<array{'args'?: array<array-key, mixed>, 'class'?: class-string, 'file'?: string, 'function'?: string, 'line'?: int, 'type'?: string}>`, but possibly received `array<array-key, mixed>`.'''
+count = 1
+
+[[issues]]
+file = "src/State/Hub.php"
+code = "mixed-operand"
+message = "Right operand in `<` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/State/Hub.php"
+code = "possibly-null-operand"
+message = "Left operand in `<` comparison might be `null` (type `float|null`)."
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 2
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "mixed-property-type-coercion"
+message = 'A value with a less specific type `array<array-key, (callable(Sentry\Event, Sentry\EventHint): Sentry\Event|null)>|non-empty-list<(callable(...mixed): mixed)>` is being assigned to property `$$eventProcessors` (array<array-key, (callable(Sentry\Event, Sentry\EventHint): Sentry\Event|null)>).'
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "no-value"
+message = "Argument #1 passed to function `get_debug_type` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "redundant-comparison"
+message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "redundant-logical-operation"
+message = "Redundant `&&` operation: left operand is evaluated and right operand is always falsy."
+count = 1
+
+[[issues]]
+file = "src/Tracing/DynamicSamplingContext.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #2 of `Sentry\Tracing\DynamicSamplingContext::set`: expected `string`, but found `mixed`.'
+count = 2
+
+[[issues]]
+file = "src/Tracing/DynamicSamplingContext.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 8
+
+[[issues]]
+file = "src/Tracing/DynamicSamplingContext.php"
+code = "possibly-null-argument"
+message = 'Argument #2 of method `Sentry\Tracing\DynamicSamplingContext::set` is possibly `null`, but parameter type `string` does not accept it.'
+count = 4
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "implicit-to-string-cast"
+message = 'Implicit conversion to `string` for right operand via `Psr\Http\Message\UriInterface::__toString()`.'
+count = 1
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `sentry\tracing\spanstatus::createfromhttpstatuscode`: expected `int`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-method-access"
+message = "Attempting to access a method on a non-object type (`mixed`)."
+count = 2
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-method-access"
+message = "Attempting to access a method on a non-object type (`nonnull`)."
+count = 7
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-operand"
+message = "Left operand in `<` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "mixed-operand"
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 3
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "non-existent-class-like"
+message = 'Class, Interface, or Trait `GuzzleHttp\Exception\RequestException` does not exist.'
+count = 3
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "non-existent-method"
+message = 'Method `getresponse` does not exist on type `GuzzleHttp\Exception\RequestException`.'
+count = 1
+
+[[issues]]
+file = "src/Tracing/GuzzleTracingMiddleware.php"
+code = "possibly-null-argument"
+message = "Argument #2 of function `in_array` is possibly `null`, but parameter type `array<array-key, string>` does not accept it."
+count = 1
+
+[[issues]]
+file = "src/Tracing/PropagationContext.php"
+code = "redundant-comparison"
+message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/Tracing/PropagationContext.php"
+code = "redundant-condition"
+message = "This condition (type `true`) will always evaluate to true."
+count = 1
+
+[[issues]]
+file = "src/Tracing/PropagationContext.php"
+code = "write-only-property"
+message = "Property `$parentSampled` is written to but never read."
+count = 1
+
+[[issues]]
+file = "src/Tracing/Traits/TraceHeaderParserTrait.php"
+code = "invalid-type-cast"
+message = "Non numeric string of type `string` implicitly cast to `float`."
+count = 5
+
+[[issues]]
+file = "src/Tracing/Traits/TraceHeaderParserTrait.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/Tracing/Transaction.php"
+code = "incompatible-property-type"
+message = 'Property `Sentry\Tracing\Transaction::$transaction` has an incompatible type declaration from docblock.'
+count = 1
+
+[[issues]]
+file = "src/Tracing/Transaction.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `sentry\tracing\transaction::getdynamicsamplingcontext`: expected `Sentry\Tracing\DynamicSamplingContext`, but found `Sentry\Tracing\DynamicSamplingContext|null`.'
+count = 1
+
+[[issues]]
+file = "src/Tracing/Transaction.php"
+code = "nullable-return-statement"
+message = 'Function `sentry\tracing\transaction::getdynamicsamplingcontext` is declared to return `Sentry\Tracing\DynamicSamplingContext` but possibly returns a nullable value (inferred as `Sentry\Tracing\DynamicSamplingContext|null`).'
+count = 1
+
+[[issues]]
+file = "src/Transport/HttpTransport.php"
+code = "implicit-to-string-cast"
+message = 'Implicit conversion to `string` for left operand via `Sentry\Severity::__toString()`.'
+count = 2
+
+[[issues]]
+file = "src/Transport/HttpTransport.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Transport/HttpTransport.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #3 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Transport/HttpTransport.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 2
+
+[[issues]]
+file = "src/Transport/HttpTransport.php"
+code = "possibly-null-operand"
+message = 'Possibly null left operand used in string concatenation (type `Sentry\Severity|null`).'
+count = 2
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\UserDataBag::setsegment`.'
+count = 2
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setemail`: expected `null|string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setid`: expected `int|null|string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setipaddress`: expected `null|string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setsegment`: expected `null|string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #1 of `Sentry\UserDataBag::setusername`: expected `null|string`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "no-value"
+message = "Argument #1 passed to function `get_debug_type` has type `never`, meaning it cannot produce a value."
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "redundant-logical-operation"
+message = "Redundant `&&` operation: left operand is evaluated and right operand is always falsy."
+count = 1
+
+[[issues]]
+file = "src/UserDataBag.php"
+code = "redundant-type-comparison"
+message = "Redundant type assertion: `$id` of type `int` is always not `int`."
+count = 1
+
+[[issues]]
+file = "src/Util/Arr.php"
+code = "invalid-iterator"
+message = "The expression provided to `foreach` is not iterable. It resolved to type `mixed`, which is not iterable."
+count = 1
+
+[[issues]]
+file = "src/Util/Arr.php"
+code = "less-specific-argument"
+message = 'Argument type mismatch for argument #1 of `sentry\util\arr::islist`: expected `array<string, mixed>`, but provided type `non-empty-array<array-key, mixed>` is less specific.'
+count = 1
+
+[[issues]]
+file = "src/Util/Arr.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 3
+
+[[issues]]
+file = "src/Util/Arr.php"
+code = "mixed-operand"
+message = "Invalid left operand: type `mixed` cannot be reliably used in string concatenation."
+count = 1
+
+[[issues]]
+file = "src/Util/Arr.php"
+code = "mixed-operand"
+message = "Invalid right operand: type `mixed` cannot be reliably used in string concatenation."
+count = 1
+
+[[issues]]
+file = "src/Util/JSON.php"
+code = "falsable-return-statement"
+message = '''Function `sentry\util\json::encode` is declared to return `string` but possibly returns 'false' (inferred as `false|non-empty-string`).'''
+count = 1
+
+[[issues]]
+file = "src/Util/JSON.php"
+code = "invalid-return-statement"
+message = 'Invalid return type for function `sentry\util\json::encode`: expected `string`, but found `false|non-empty-string`.'
+count = 1
+
+[[issues]]
+file = "src/Util/JSON.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Util/Str.php"
+code = "avoid-catching-error"
+message = "Avoid catching 'Error' class instances."
+count = 1
+
+[[issues]]
+file = "src/Util/Str.php"
+code = "impossible-condition"
+message = "Redundant ternary operator: condition is always falsy."
+count = 1
+
+[[issues]]
+file = "src/Util/Str.php"
+code = "redundant-comparison"
+message = "Redundant `===` comparison: left-hand side is never identical to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/functions.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
