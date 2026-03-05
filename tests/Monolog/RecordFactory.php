@@ -19,11 +19,15 @@ final class RecordFactory
      *
      * @return array<string, mixed>|LogRecord
      */
-    public static function create(string $message, int $level, string $channel, array $context = [], array $extra = [])
+    public static function create(string $message, int $level, string $channel, array $context = [], array $extra = [], ?\DateTimeImmutable $datetime = null)
     {
+        if ($datetime === null) {
+            $datetime = new \DateTimeImmutable();
+        }
+
         if (Logger::API >= 3) {
             return new LogRecord(
-                new \DateTimeImmutable(),
+                $datetime,
                 $channel,
                 Logger::toMonologLevel($level),
                 $message,
@@ -39,7 +43,7 @@ final class RecordFactory
             'level_name' => Logger::getLevelName($level),
             'channel' => $channel,
             'extra' => $extra,
-            'datetime' => new \DateTimeImmutable(),
+            'datetime' => $datetime,
         ];
     }
 }
