@@ -15,6 +15,8 @@ final class BreadcrumbHandlerTest extends TestCase
 {
     /**
      * @dataProvider handleDataProvider
+     *
+     * @param LogRecord|array<string, mixed> $record
      */
     public function testHandle($record, Breadcrumb $expectedBreadcrumb): void
     {
@@ -37,7 +39,7 @@ final class BreadcrumbHandlerTest extends TestCase
     }
 
     /**
-     * @return iterable<LogRecord|array{array<string, mixed>, Breadcrumb}>
+     * @return iterable<array{LogRecord|array<string, mixed>, Breadcrumb}>
      */
     public static function handleDataProvider(): iterable
     {
