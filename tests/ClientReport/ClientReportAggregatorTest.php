@@ -66,6 +66,20 @@ class ClientReportAggregatorTest extends TestCase
         $this->assertSame(40, $report->getQuantity());
     }
 
+    public function testFlushDoesNotOverwriteLastEventId(): void
+    {
+        $hub = SentrySdk::getCurrentHub();
+        $eventId = $hub->captureMessage('foo');
+
+        $this->assertNotNull($eventId);
+        $this->assertSame($eventId, $hub->getLastEventId());
+
+        ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), 10);
+        ClientReportAggregator::getInstance()->flush();
+
+        $this->assertSame($eventId, $hub->getLastEventId());
+    }
+
     public function testNegativeQuantityDiscarded(): void
     {
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
