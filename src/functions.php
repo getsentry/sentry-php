@@ -62,7 +62,7 @@ use Sentry\Transport\TransportInterface;
  *     server_name?: string,
  *     spotlight?: bool,
  *     spotlight_url?: string,
- *     strict_trace_propagation?: bool,
+ *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
@@ -389,13 +389,32 @@ function getBaggage(): string
  */
 function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 {
+    // With the new `strict_trace_continuation`, it's possible that we start two new
+    // traces if we parse the TransactionContext and PropagationContext from the same
+    // headers. To make sure the trace is the same, we will create one transaction
+    // context from headers and copy relevant information over.
+    $transactionContext = TransactionContext::fromHeaders($sentryTrace, $baggage);
+    $propagationContext = PropagationContext::fromDefaults();
+    $metadata = $transactionContext->getMetadata();
+
+    $traceId = $transactionContext->getTraceId() ?? $propagationContext->getTraceId();
+    $transactionContext->setTraceId($traceId);
+    $propagationContext->setTraceId($traceId);
+
+    $propagationContext->setParentSpanId($transactionContext->getParentSpanId());
+    $propagationContext->setSampleRand($metadata->getSampleRand());
+
+    $dynamicSamplingContext = $metadata->getDynamicSamplingContext();
+    if ($dynamicSamplingContext !== null) {
+        $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
+    }
+
     $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(static function (Scope $scope) use ($sentryTrace, $baggage) {
-        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+    $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
         $scope->setPropagationContext($propagationContext);
     });
 
-    return TransactionContext::fromHeaders($sentryTrace, $baggage);
+    return $transactionContext;
 }
 
 /**
