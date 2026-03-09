@@ -92,9 +92,9 @@ class HttpTransport implements TransportInterface
 
         $eventType = $event->getType();
         if ($eventType->requiresRateLimiting()) {
-            if ($this->rateLimiter->isRateLimited((string)$eventType)) {
+            if ($this->rateLimiter->isRateLimited((string) $eventType)) {
                 $this->logger->warning(
-                    \sprintf('Rate limit exceeded for sending requests of type "%s".', (string)$eventType),
+                    \sprintf('Rate limit exceeded for sending requests of type "%s".', (string) $eventType),
                     ['event' => $event]
                 );
 
