@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
-use Sentry\ClientReport\ClientReport;
+use Sentry\ClientReport\DiscardedEvent;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
@@ -212,7 +212,7 @@ final class Event
     private $profile;
 
     /**
-     * @var ClientReport[]
+     * @var DiscardedEvent[]
      */
     private $clientReports = [];
 
@@ -991,7 +991,7 @@ final class Event
     }
 
     /**
-     * @param ClientReport[] $clientReports
+     * @param DiscardedEvent[] $clientReports
      */
     public function setClientReports(array $clientReports): self
     {
@@ -1001,7 +1001,7 @@ final class Event
     }
 
     /**
-     * @return ClientReport[]
+     * @return DiscardedEvent[]
      */
     public function getClientReports(): array
     {

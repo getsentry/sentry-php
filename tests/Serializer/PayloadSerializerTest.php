@@ -9,7 +9,7 @@ use Sentry\Breadcrumb;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
 use Sentry\Client;
-use Sentry\ClientReport\ClientReport;
+use Sentry\ClientReport\DiscardedEvent;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
@@ -488,8 +488,8 @@ TEXT
 
         $event = Event::createClientReport();
         $event->setClientReports([
-            new ClientReport('log_item', 'buffer_overflow', 1),
-            new ClientReport('log_byte', 'buffer_overflow', 256),
+            new DiscardedEvent('log_item', 'buffer_overflow', 1),
+            new DiscardedEvent('log_byte', 'buffer_overflow', 256),
         ]);
 
         yield [
@@ -504,8 +504,8 @@ TEXT
 
         $event = Event::createClientReport();
         $event->setClientReports([
-            new ClientReport('error', 'before_send', 10),
-            new ClientReport('profile', 'internal_sdk_error', 50),
+            new DiscardedEvent('error', 'before_send', 10),
+            new DiscardedEvent('profile', 'internal_sdk_error', 50),
         ]);
 
         yield [

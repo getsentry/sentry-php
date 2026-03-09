@@ -86,6 +86,16 @@ final class EventType implements \Stringable
         }
     }
 
+    /**
+     * Returns false if rate limiting should not be applied.
+     *
+     * @return bool
+     */
+    public function requiresRateLimiting(): bool
+    {
+        return $this !== self::clientReport();
+    }
+
     public function __toString(): string
     {
         return $this->value;

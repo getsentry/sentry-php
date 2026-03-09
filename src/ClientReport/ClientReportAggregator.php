@@ -58,7 +58,7 @@ class ClientReportAggregator
         $reports = [];
         foreach ($this->reports as $category => $reasons) {
             foreach ($reasons as $reason => $quantity) {
-                $reports[] = new ClientReport($category, $reason, $quantity);
+                $reports[] = new DiscardedEvent($category, $reason, $quantity);
             }
         }
         $event = Event::createClientReport();

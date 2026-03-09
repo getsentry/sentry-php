@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\ClientReport;
 
-class ClientReport
+class DiscardedEvent
 {
     /**
      * @var string
