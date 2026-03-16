@@ -1,5 +1,78 @@
 # CHANGELOG
 
+## 4.22.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.22.0.
+
+### Features
+
+- Add support for the client report protocol without collecting client reports yet. [(#1978)](https://github.com/getsentry/sentry-php/pull/1978)
+- Add `strict_trace_continuation` support to only continue incoming traces when the upstream baggage `org_id` matches the SDK org ID. [(#2016)](https://github.com/getsentry/sentry-php/pull/2016)
+
+Example:
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'strict_trace_continuation' => true,
+]);
+```
+
+### Bug Fixes
+
+- Preserve sub-second timestamps for Monolog breadcrumbs. [(#2018)](https://github.com/getsentry/sentry-php/pull/2018)
+
+## 4.21.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.21.0.
+
+### Features
+
+- Add `RuntimeContext` and context lifecycle helpers for long-lived runtimes such as FrankenPHP and RoadRunner. [(#2011)](https://github.com/getsentry/sentry-php/pull/2011)
+
+Long-lived worker runtimes keep process memory between requests, which can cause scope data to leak from one request to the next.
+`RuntimeContext` isolates SDK state per request and flushes buffered telemetry when the request context ends.
+Data configured before a runtime context is started is copied into each new context as baseline scope data.
+
+Example:
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+]);
+
+$handler = static function (): void {
+    \Sentry\withContext(static function (): void {
+        // Handle one request.
+    });
+};
+
+while (frankenphp_handle_request($handler)) {}
+```
+
+When using a runtime context, manual `\Sentry\flush()` calls are not needed for request teardown.
+It is still necessary to finish transactions explicitly.
+
+## 4.20.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.20.0.
+
+### Features
+
+- Add a high-level `flush()` helper that flushes all buffered telemetry resources (logs and trace metrics). [(#1989)](https://github.com/getsentry/sentry-php/pull/1989)
+- Add share handles to cURL (persistent for PHP >= 8.5, non-persistent otherwise). [(#1996)](https://github.com/getsentry/sentry-php/pull/1996)
+- Handle HTTP 413 responses explicitly with a dedicated `content_too_large` status. [(#2008)](https://github.com/getsentry/sentry-php/pull/2008)
+
+### Bug Fixes
+
+- Normalize Spotlight URLs to optionally allow trailing `/stream`. [(#1984)](https://github.com/getsentry/sentry-php/pull/1984)
+- Monolog messages are now filtered by their original Monolog level before being mapped to Sentry log levels. [(#1992)](https://github.com/getsentry/sentry-php/pull/1992)
+- Handle bracketed IPv6 addresses (such as `[::1]`). [(#2007)](https://github.com/getsentry/sentry-php/pull/2007)
+- Ignore propagated baggage `sample_rate` when no `sentry-trace` header is present. [(#2002)](https://github.com/getsentry/sentry-php/pull/2002)
+
+### Misc
+
+- Add the `traceMetrics()` helper and deprecate `trace_metrics()`. [(#1995)](https://github.com/getsentry/sentry-php/pull/1995)
+
 ## 4.19.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.19.1.

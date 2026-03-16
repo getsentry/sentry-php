@@ -586,19 +586,24 @@ final class Options
     }
 
     /**
-     * Returns whether strict trace propagation is enabled or not.
+     * Returns whether strict trace continuation is enabled or not.
      */
-    public function isStrictTracePropagationEnabled(): bool
+    public function isStrictTraceContinuationEnabled(): bool
     {
-        return $this->options['strict_trace_propagation'];
+        /**
+         * @var bool $result
+         */
+        $result = $this->options['strict_trace_continuation'];
+
+        return $result;
     }
 
     /**
-     * Sets if strict trace propagation should be enabled or not.
+     * Sets if strict trace continuation should be enabled or not.
      */
-    public function enableStrictTracePropagation(bool $strictTracePropagation): self
+    public function enableStrictTraceContinuation(bool $strictTraceContinuation): self
     {
-        return $this->updateOptions(['strict_trace_propagation' => $strictTracePropagation]);
+        return $this->updateOptions(['strict_trace_continuation' => $strictTraceContinuation]);
     }
 
     /**
@@ -864,6 +869,33 @@ final class Options
     }
 
     /**
+     * Returns whether a shared curl handle should be used or not.
+     *
+     * For PHP 8.5 and above, this will use the persistent curl handle. For previous PHP versions, it will use the
+     * regular share handle.
+     */
+    public function isShareHandleEnabled(): bool
+    {
+        /**
+         * @var bool $shareHandleEnabled
+         */
+        $shareHandleEnabled = $this->options['http_enable_curl_share_handle'];
+
+        return $shareHandleEnabled;
+    }
+
+    /**
+     * Sets whether the persistent curl handle should be used or not.
+     *
+     * For PHP 8.5 and above, this will use the persistent curl handle. For previous PHP versions, it will use the
+     * regular share handle.
+     */
+    public function setEnableShareHandle(bool $enabled): self
+    {
+        return $this->updateOptions(['http_enable_curl_share_handle' => $enabled]);
+    }
+
+    /**
      * Gets whether the silenced errors should be captured or not.
      *
      * @return bool If true, errors silenced through the @ operator will be reported,
@@ -995,6 +1027,7 @@ final class Options
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
+        $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
@@ -1012,6 +1045,7 @@ final class Options
         $resolver->setAllowedTypes('http_ssl_verify_peer', 'bool');
         $resolver->setAllowedTypes('http_ssl_native_ca', 'bool');
         $resolver->setAllowedTypes('http_compression', 'bool');
+        $resolver->setAllowedTypes('http_enable_curl_share_handle', 'bool');
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
@@ -1075,6 +1109,7 @@ final class Options
                 return $metric;
             },
             'trace_propagation_targets' => null,
+            'strict_trace_continuation' => false,
             'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
@@ -1094,6 +1129,7 @@ final class Options
             'http_ssl_verify_peer' => true,
             'http_ssl_native_ca' => false,
             'http_compression' => true,
+            'http_enable_curl_share_handle' => true,
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],

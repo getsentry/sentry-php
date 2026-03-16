@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Attachment\Attachment;
+use Sentry\ClientReport\DiscardedEvent;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Logs\Log;
@@ -217,6 +218,11 @@ final class Event
      */
     private $attachments = [];
 
+    /**
+     * @var DiscardedEvent[]
+     */
+    private $clientReports = [];
+
     private function __construct(?EventId $eventId, EventType $eventType)
     {
         $this->id = $eventId ?? EventId::generate();
@@ -257,6 +263,11 @@ final class Event
     public static function createMetrics(?EventId $eventId = null): self
     {
         return new self($eventId, EventType::metrics());
+    }
+
+    public static function createClientReport(?EventId $eventId = null): self
+    {
+        return new self($eventId, EventType::clientReport());
     }
 
     /**
@@ -984,5 +995,23 @@ final class Event
     public function setAttachments(array $attachments): void
     {
         $this->attachments = $attachments;
+    }
+
+    /**
+     * @param DiscardedEvent[] $clientReports
+     */
+    public function setClientReports(array $clientReports): self
+    {
+        $this->clientReports = $clientReports;
+
+        return $this;
+    }
+
+    /**
+     * @return DiscardedEvent[]
+     */
+    public function getClientReports(): array
+    {
+        return $this->clientReports;
     }
 }

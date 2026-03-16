@@ -54,13 +54,18 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
      */
     protected function write($record): void
     {
+        $datetime = $record['datetime'] ?? null;
+        $timestamp = $datetime instanceof \DateTimeInterface
+            ? $datetime->getTimestamp() + (int) $datetime->format('u') / 1000000
+            : null;
+
         $breadcrumb = new Breadcrumb(
             $this->getBreadcrumbLevel($record['level']),
             $this->getBreadcrumbType($record['level']),
             $record['channel'],
             $record['message'],
             ($record['context'] ?? []) + ($record['extra'] ?? []),
-            $record['datetime']->getTimestamp()
+            $timestamp
         );
 
         $this->hub->addBreadcrumb($breadcrumb);

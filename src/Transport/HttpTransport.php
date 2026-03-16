@@ -91,26 +91,28 @@ class HttpTransport implements TransportInterface
         $this->logger->info(\sprintf('Sending %s to %s.', $eventDescription, $targetDescription), ['event' => $event]);
 
         $eventType = $event->getType();
-        if ($this->rateLimiter->isRateLimited((string) $eventType)) {
-            $this->logger->warning(
-                \sprintf('Rate limit exceeded for sending requests of type "%s".', (string) $eventType),
-                ['event' => $event]
-            );
-
-            return new Result(ResultStatus::rateLimit());
-        }
-
-        // Since profiles are attached to transaction we have to check separately if they are rate limited.
-        // We can do this after transactions have been checked because if transactions are rate limited,
-        // so are profiles but not the other way around.
-        if ($event->getSdkMetadata('profile') !== null) {
-            if ($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_PROFILE)) {
-                // Just remove profiling data so the normal transaction can be sent.
-                $event->setSdkMetadata('profile', null);
+        if ($eventType->requiresRateLimiting()) {
+            if ($this->rateLimiter->isRateLimited((string) $eventType)) {
                 $this->logger->warning(
-                    'Rate limit exceeded for sending requests of type "profile". The profile has been dropped.',
+                    \sprintf('Rate limit exceeded for sending requests of type "%s".', (string) $eventType),
                     ['event' => $event]
                 );
+
+                return new Result(ResultStatus::rateLimit());
+            }
+
+            // Since profiles are attached to transaction we have to check separately if they are rate limited.
+            // We can do this after transactions have been checked because if transactions are rate limited,
+            // so are profiles but not the other way around.
+            if ($event->getSdkMetadata('profile') !== null) {
+                if ($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_PROFILE)) {
+                    // Just remove profiling data so the normal transaction can be sent.
+                    $event->setSdkMetadata('profile', null);
+                    $this->logger->warning(
+                        'Rate limit exceeded for sending requests of type "profile". The profile has been dropped.',
+                        ['event' => $event]
+                    );
+                }
             }
         }
 

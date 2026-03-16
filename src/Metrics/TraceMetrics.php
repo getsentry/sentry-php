@@ -8,6 +8,7 @@ use Sentry\EventId;
 use Sentry\Metrics\Types\CounterMetric;
 use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
+use Sentry\SentrySdk;
 use Sentry\Unit;
 
 class TraceMetrics
@@ -17,14 +18,8 @@ class TraceMetrics
      */
     private static $instance;
 
-    /**
-     * @var MetricsAggregator
-     */
-    private $aggregator;
-
     public function __construct()
     {
-        $this->aggregator = new MetricsAggregator();
     }
 
     public static function getInstance(): self
@@ -46,7 +41,7 @@ class TraceMetrics
         array $attributes = [],
         ?Unit $unit = null
     ): void {
-        $this->aggregator->add(
+        $this->aggregator()->add(
             CounterMetric::TYPE,
             $name,
             $value,
@@ -65,7 +60,7 @@ class TraceMetrics
         array $attributes = [],
         ?Unit $unit = null
     ): void {
-        $this->aggregator->add(
+        $this->aggregator()->add(
             DistributionMetric::TYPE,
             $name,
             $value,
@@ -84,7 +79,7 @@ class TraceMetrics
         array $attributes = [],
         ?Unit $unit = null
     ): void {
-        $this->aggregator->add(
+        $this->aggregator()->add(
             GaugeMetric::TYPE,
             $name,
             $value,
@@ -95,6 +90,11 @@ class TraceMetrics
 
     public function flush(): ?EventId
     {
-        return $this->aggregator->flush();
+        return $this->aggregator()->flush();
+    }
+
+    private function aggregator(): MetricsAggregator
+    {
+        return SentrySdk::getCurrentRuntimeContext()->getMetricsAggregator();
     }
 }
