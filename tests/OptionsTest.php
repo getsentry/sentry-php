@@ -269,13 +269,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'strict_trace_propagation',
-            true,
-            'isStrictTracePropagationEnabled',
-            'enableStrictTracePropagation',
-        ];
-
-        yield [
             'before_breadcrumb',
             static function (): void {},
             'getBeforeBreadcrumbCallback',

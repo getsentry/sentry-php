@@ -1022,6 +1022,7 @@ final class Options
         $resolver->setAllowedTypes('server_name', 'string');
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
+        $resolver->setAllowedTypes('before_send_check_in', ['callable']);
         $resolver->setAllowedTypes('before_send_log', 'callable');
         $resolver->setAllowedTypes('before_send_metric', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
