@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## 4.22.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.22.0.
+
+### Features
+
+- Add support for the client report protocol without collecting client reports yet. [(#1978)](https://github.com/getsentry/sentry-php/pull/1978)
+- Add `strict_trace_continuation` support to only continue incoming traces when the upstream baggage `org_id` matches the SDK org ID. [(#2016)](https://github.com/getsentry/sentry-php/pull/2016)
+
+Example:
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'strict_trace_continuation' => true,
+]);
+```
+
+### Bug Fixes
+
+- Preserve sub-second timestamps for Monolog breadcrumbs. [(#2018)](https://github.com/getsentry/sentry-php/pull/2018)
+
 ## 4.21.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.21.0.
