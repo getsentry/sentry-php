@@ -64,3 +64,21 @@ jobs:
 
       - name: Run script
         run: vendor/bin/psalm
+
+  mago:
+    name: Mago
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Install dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist
+
+      - name: Run script
+        run: composer mago

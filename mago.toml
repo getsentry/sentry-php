@@ -1,0 +1,11 @@
+[source]
+paths = ["src"]
+includes = ["vendor"]
+excludes = [
+    "tests/resources/**",
+    "tests/Fixtures/**",
+    "src/Util/ClockMock.php",
+]
+
+[analyzer]
+baseline = "analysis-baseline.toml"

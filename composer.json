@@ -32,6 +32,7 @@
         "symfony/options-resolver": "^4.4.30|^5.0.11|^6.0|^7.0|^8.0"
     },
     "require-dev": {
+        "carthage-software/mago": "^1.13.3",
         "friendsofphp/php-cs-fixer": "^3.4",
         "guzzlehttp/promises": "^2.0.3",
         "guzzlehttp/psr7": "^1.8.4|^2.1.1",
@@ -68,13 +69,15 @@
             "@cs-check",
             "@phpstan",
             "@psalm",
+            "@mago",
             "@tests"
         ],
         "tests": "vendor/bin/phpunit --verbose",
         "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
         "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
         "phpstan": "vendor/bin/phpstan analyse",
-        "psalm": "vendor/bin/psalm"
+        "psalm": "vendor/bin/psalm",
+        "mago": "vendor/bin/mago --config=mago.toml analyze"
     },
     "config": {
         "sort-packages": true
