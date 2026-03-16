@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\ClientReport\Reason;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
@@ -102,7 +103,7 @@ class ClientReportAggregatorTest extends TestCase
 
     public function testNegativeQuantityDiscardedWhenNoClientIsBound(): void
     {
-        SentrySdk::setCurrentHub(new Hub());
+        SentrySdk::setCurrentHub(new Hub(new NoOpClient()));
 
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
 

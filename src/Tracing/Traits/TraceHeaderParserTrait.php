@@ -117,10 +117,6 @@ trait TraceHeaderParserTrait
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
 
-        if ($client === null) {
-            return true;
-        }
-
         $options = $client->getOptions();
         $clientOrgId = $options->getOrgId();
         if ($clientOrgId === null && $options->getDsn() !== null) {

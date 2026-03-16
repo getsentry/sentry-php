@@ -71,7 +71,7 @@
         "tests": "vendor/bin/phpunit --verbose",
         "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
         "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
-        "phpstan": "vendor/bin/phpstan analyse",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit 1G",
         "psalm": "vendor/bin/psalm"
     },
     "config": {

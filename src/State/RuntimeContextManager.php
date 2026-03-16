@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Sentry\Tracing\PropagationContext;
 
 /**
@@ -187,10 +186,6 @@ final class RuntimeContextManager
 
         $client = $hub->getClient();
 
-        if ($client === null) {
-            return;
-        }
-
         // Custom transports may throw from close(); endContext must stay best-effort and non-fatal.
         try {
             $client->flush($timeout);
@@ -250,10 +245,6 @@ final class RuntimeContextManager
     private function getLoggerFromHub(HubInterface $hub): LoggerInterface
     {
         $client = $hub->getClient();
-
-        if ($client === null) {
-            return new NullLogger();
-        }
 
         return $client->getOptions()->getLoggerOrNullLogger();
     }

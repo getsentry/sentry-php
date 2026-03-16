@@ -6,9 +6,9 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Sentry\NoOpClient;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;

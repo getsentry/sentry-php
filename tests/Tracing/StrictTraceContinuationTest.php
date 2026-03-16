@@ -16,13 +16,6 @@ final class StrictTraceContinuationTest extends TestCase
 {
     private const SENTRY_TRACE_HEADER = '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1';
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        SentrySdk::setCurrentHub(new Hub());
-    }
-
     /**
      * @dataProvider strictTraceContinuationDataProvider
      */
