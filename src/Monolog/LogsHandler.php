@@ -30,15 +30,22 @@ class LogsHandler implements HandlerInterface
     private $bubble;
 
     /**
+     * Whether to include the channel name as an attribute in the Sentry logs.
+     */
+    private bool $includeChannel;
+
+    /**
      * Creates a new Monolog handler that converts Monolog logs to Sentry logs.
      *
      * @param LogLevel|\Monolog\Level|int|null $logLevel the minimum logging level at which this handler will be triggered and collects the logs
      * @param bool                             $bubble   whether the messages that are handled can bubble up the stack or not
+     * @param bool                             $includeChannel whether to include the channel name as an attribute in the Sentry logs
      */
-    public function __construct($logLevel = null, bool $bubble = true)
+    public function __construct($logLevel = null, bool $bubble = true, bool $includeChannel = false)
     {
         $this->logLevel = $logLevel ?? LogLevel::debug();
         $this->bubble = $bubble;
+        $this->includeChannel = $includeChannel;
     }
 
     /**
@@ -137,6 +144,11 @@ class LogsHandler implements HandlerInterface
      */
     protected function compileAttributes($record): array
     {
-        return array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog']);
+        return array_merge(
+            $this->includeChannel ? ['channel' => $record['channel']] : [],
+            $record['context'],
+            $record['extra'],
+            ['sentry.origin' => 'auto.log.monolog']
+        );
     }
 }
