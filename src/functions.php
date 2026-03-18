@@ -40,6 +40,7 @@ use Sentry\Transport\TransportInterface;
  *     http_proxy_authentication?: string|null,
  *     http_ssl_verify_peer?: bool,
  *     http_timeout?: int|float,
+ *     http_enable_curl_share_handle?: bool,
  *     ignore_exceptions?: array<class-string>,
  *     ignore_transactions?: array<string>,
  *     in_app_exclude?: array<string>,
@@ -57,7 +58,8 @@ use Sentry\Transport\TransportInterface;
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,
- *     strict_trace_propagation?: bool,
+ *     spotlight_url?: string,
+ *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
@@ -212,6 +214,37 @@ function withScope(callable $callback)
     return SentrySdk::getCurrentHub()->withScope($callback);
 }
 
+function startContext(): void
+{
+    SentrySdk::startContext();
+}
+
+function endContext(?int $timeout = null): void
+{
+    SentrySdk::endContext($timeout);
+}
+
+/**
+ * Executes the given callback within an isolated context.
+ *
+ * If a context is already active for the current execution key, it is reused.
+ *
+ * @param callable $callback The callback to execute
+ * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
+ *
+ * @psalm-template T
+ *
+ * @psalm-param callable(): T $callback
+ *
+ * @return mixed
+ *
+ * @psalm-return T
+ */
+function withContext(callable $callback, ?int $timeout = null)
+{
+    return SentrySdk::withContext($callback, $timeout);
+}
+
 /**
  * Starts a new `Transaction` and returns it. This is the entry point to manual
  * tracing instrumentation.
@@ -330,13 +363,32 @@ function getBaggage(): string
  */
 function continueTrace(string $sentryTrace, string $baggage): TransactionContext
 {
+    // With the new `strict_trace_continuation`, it's possible that we start two new
+    // traces if we parse the TransactionContext and PropagationContext from the same
+    // headers. To make sure the trace is the same, we will create one transaction
+    // context from headers and copy relevant information over.
+    $transactionContext = TransactionContext::fromHeaders($sentryTrace, $baggage);
+    $propagationContext = PropagationContext::fromDefaults();
+    $metadata = $transactionContext->getMetadata();
+
+    $traceId = $transactionContext->getTraceId() ?? $propagationContext->getTraceId();
+    $transactionContext->setTraceId($traceId);
+    $propagationContext->setTraceId($traceId);
+
+    $propagationContext->setParentSpanId($transactionContext->getParentSpanId());
+    $propagationContext->setSampleRand($metadata->getSampleRand());
+
+    $dynamicSamplingContext = $metadata->getDynamicSamplingContext();
+    if ($dynamicSamplingContext !== null) {
+        $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
+    }
+
     $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(static function (Scope $scope) use ($sentryTrace, $baggage) {
-        $propagationContext = PropagationContext::fromHeaders($sentryTrace, $baggage);
+    $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
         $scope->setPropagationContext($propagationContext);
     });
 
-    return TransactionContext::fromHeaders($sentryTrace, $baggage);
+    return $transactionContext;
 }
 
 /**
@@ -347,7 +399,7 @@ function logger(): Logs
     return Logs::getInstance();
 }
 
-function trace_metrics(): TraceMetrics
+function metrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
 }

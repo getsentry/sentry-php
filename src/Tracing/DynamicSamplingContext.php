@@ -166,22 +166,7 @@ final class DynamicSamplingContext
 
         $client = $hub->getClient();
 
-        $options = $client->getOptions();
-
-        if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
-            $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
-        }
-        if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
-            $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
-        }
-
-        if ($options->getRelease() !== null) {
-            $samplingContext->set('release', $options->getRelease());
-        }
-
-        if ($options->getEnvironment() !== null) {
-            $samplingContext->set('environment', $options->getEnvironment());
-        }
+        self::setOrgOptions($client->getOptions(), $samplingContext);
 
         if ($transaction->getSampled() !== null) {
             $samplingContext->set('sampled', $transaction->getSampled() ? 'true' : 'false');
@@ -206,11 +191,22 @@ final class DynamicSamplingContext
             $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());
         }
 
+        self::setOrgOptions($options, $samplingContext);
+
+        $samplingContext->freeze();
+
+        return $samplingContext;
+    }
+
+    private static function setOrgOptions(Options $options, DynamicSamplingContext $samplingContext): void
+    {
         if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
             $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
         }
 
-        if ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
+        if ($options->getOrgId() !== null) {
+            $samplingContext->set('org_id', (string) $options->getOrgId());
+        } elseif ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
             $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
         }
 
@@ -221,10 +217,6 @@ final class DynamicSamplingContext
         if ($options->getEnvironment() !== null) {
             $samplingContext->set('environment', $options->getEnvironment());
         }
-
-        $samplingContext->freeze();
-
-        return $samplingContext;
     }
 
     /**

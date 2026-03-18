@@ -262,10 +262,10 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'strict_trace_propagation',
+            'strict_trace_continuation',
             true,
-            'isStrictTracePropagationEnabled',
-            'enableStrictTracePropagation',
+            'isStrictTraceContinuationEnabled',
+            'enableStrictTraceContinuation',
         ];
 
         yield [
@@ -378,6 +378,13 @@ final class OptionsTest extends TestCase
             false,
             'isHttpCompressionEnabled',
             'setEnableHttpCompression',
+        ];
+
+        yield [
+            'http_enable_curl_share_handle',
+            false,
+            'isShareHandleEnabled',
+            'setEnableShareHandle',
         ];
 
         yield [
