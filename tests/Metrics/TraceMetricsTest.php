@@ -13,6 +13,7 @@ use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
 use Sentry\State\HubAdapter;
+use Sentry\State\Scope;
 
 use function Sentry\traceMetrics;
 
@@ -154,5 +155,25 @@ final class TraceMetricsTest extends TestCase
         traceMetrics()->flush();
 
         $this->assertEmpty(StubTransport::$events);
+    }
+
+    public function testMetricsUseExternalPropagationContextWhenNoLocalSpanExists(): void
+    {
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $metric = StubTransport::$events[0]->getMetrics()[0];
+        $this->assertSame('771a43a4192642f0b136d5159a501700', (string) $metric->getTraceId());
+        $this->assertSame('1234567890abcdef', (string) $metric->getSpanId());
+
+        Scope::clearExternalPropagationContext();
     }
 }

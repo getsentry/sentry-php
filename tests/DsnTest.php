@@ -246,6 +246,44 @@ final class DsnTest extends TestCase
     }
 
     /**
+     * @dataProvider getOtlpTracesEndpointUrlDataProvider
+     */
+    public function testGetOtlpTracesEndpointUrl(string $value, string $expectedUrl): void
+    {
+        $dsn = Dsn::createFromString($value);
+
+        $this->assertSame($expectedUrl, $dsn->getOtlpTracesEndpointUrl());
+    }
+
+    public static function getOtlpTracesEndpointUrlDataProvider(): \Generator
+    {
+        yield [
+            'http://public@example.com/sentry/1',
+            'http://example.com/sentry/api/1/integration/otlp/v1/traces/',
+        ];
+
+        yield [
+            'http://public@example.com/1',
+            'http://example.com/api/1/integration/otlp/v1/traces/',
+        ];
+
+        yield [
+            'http://public@example.com:8080/sentry/1',
+            'http://example.com:8080/sentry/api/1/integration/otlp/v1/traces/',
+        ];
+
+        yield [
+            'https://public@example.com/sentry/1',
+            'https://example.com/sentry/api/1/integration/otlp/v1/traces/',
+        ];
+
+        yield [
+            'https://public@example.com:4343/sentry/1',
+            'https://example.com:4343/sentry/api/1/integration/otlp/v1/traces/',
+        ];
+    }
+
+    /**
      * @dataProvider toStringDataProvider
      */
     public function testToString(string $value): void

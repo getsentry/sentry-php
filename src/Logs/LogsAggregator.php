@@ -72,11 +72,15 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
+        $traceContext = $this->getTraceContext($hub);
+        $traceId = $traceContext['trace_id'];
+        $parentSpanId = $traceContext['span_id'];
+
+        $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
+            ->setAttribute('sentry.trace.parent_span_id', $parentSpanId);
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
@@ -176,20 +180,19 @@ final class LogsAggregator
         return $this->logs;
     }
 
-    private function getTraceId(HubInterface $hub): string
+    /**
+     * @return array{trace_id: string, span_id: string}
+     */
+    private function getTraceContext(HubInterface $hub): array
     {
-        $span = $hub->getSpan();
+        $traceContext = null;
 
-        if ($span !== null) {
-            return (string) $span->getTraceId();
-        }
-
-        $traceId = '';
-
-        $hub->configureScope(static function (Scope $scope) use (&$traceId) {
-            $traceId = (string) $scope->getPropagationContext()->getTraceId();
+        $hub->configureScope(static function (Scope $scope) use (&$traceContext): void {
+            $traceContext = $scope->getTraceContext();
         });
 
-        return $traceId;
+        /** @var array{trace_id: string, span_id: string} $traceContext */
+        return $traceContext;
     }
+
 }
