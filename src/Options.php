@@ -1029,7 +1029,6 @@ final class Options
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
         $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
-        $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
         $resolver->setAllowedTypes('error_types', ['null', 'int']);
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
@@ -1111,7 +1110,6 @@ final class Options
             },
             'trace_propagation_targets' => null,
             'strict_trace_continuation' => false,
-            'strict_trace_propagation' => false,
             'tags' => [],
             'error_types' => null,
             'max_breadcrumbs' => self::DEFAULT_MAX_BREADCRUMBS,
