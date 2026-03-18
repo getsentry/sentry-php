@@ -194,5 +194,4 @@ final class LogsAggregator
         /** @var array{trace_id: string, span_id: string} $traceContext */
         return $traceContext;
     }
-
 }

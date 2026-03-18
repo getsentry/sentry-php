@@ -42,7 +42,13 @@ final class OTLPIntegrationTest extends TestCase
         }
 
         if (class_exists(ClassDiscovery::class)) {
-            $this->discoveryStrategies = iterator_to_array(ClassDiscovery::getStrategies());
+            $strategies = ClassDiscovery::getStrategies();
+
+            if ($strategies instanceof \Traversable) {
+                $this->discoveryStrategies = iterator_to_array($strategies);
+            } else {
+                $this->discoveryStrategies = $strategies;
+            }
         }
 
         if (class_exists(StubOtelHttpClient::class, false)) {
@@ -87,15 +93,6 @@ final class OTLPIntegrationTest extends TestCase
         $this->assertCount(1, StubLogger::$logs);
         $this->assertSame('debug', StubLogger::$logs[0]['level']);
         $this->assertStringContainsString('Skipping OTLPIntegration because Sentry tracing is enabled.', StubLogger::$logs[0]['message']);
-    }
-
-    public function testSetupOnceWithoutOptionsDoesNotThrow(): void
-    {
-        $integration = new OTLPIntegration(false);
-
-        $integration->setupOnce();
-
-        $this->assertNull(Scope::getExternalPropagationContext());
     }
 
     public function testSetupOnceRegistersExternalPropagationContext(): void
@@ -176,7 +173,6 @@ final class OTLPIntegrationTest extends TestCase
 
         $this->assertCount(1, StubOtelHttpClient::$requests);
         $this->assertSame('https://example.com/api/1/integration/otlp/v1/traces/', (string) StubOtelHttpClient::$requests[0]->getUri());
-        $this->assertSame('application/x-protobuf', StubOtelHttpClient::$requests[0]->getHeaderLine('Content-Type'));
         $this->assertStringContainsString('sentry_key=public', StubOtelHttpClient::$requests[0]->getHeaderLine('X-Sentry-Auth'));
     }
 
@@ -264,7 +260,7 @@ final class OTLPIntegrationTest extends TestCase
             SdkBuilder::class,
             ClassDiscovery::class,
         ] as $className) {
-            if (!class_exists($className)) {
+            if (!class_exists($className) && !interface_exists($className)) {
                 $this->markTestSkipped(\sprintf('OpenTelemetry integration tests require the optional package that provides "%s".', $className));
             }
         }

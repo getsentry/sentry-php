@@ -14,8 +14,6 @@ use Sentry\Util\Http;
 
 final class OTLPIntegration implements OptionAwareIntegrationInterface
 {
-    private const OTLP_HTTP_CONTENT_TYPE = 'application/x-protobuf';
-
     /**
      * @var bool
      */
@@ -124,7 +122,7 @@ final class OTLPIntegration implements OptionAwareIntegrationInterface
         try {
             $transport = (new \OpenTelemetry\Contrib\Otlp\OtlpHttpTransportFactory())->create(
                 $endpoint,
-                self::OTLP_HTTP_CONTENT_TYPE,
+                \OpenTelemetry\Contrib\Otlp\ContentTypes::PROTOBUF,
                 $headers
             );
             $spanExporter = new \OpenTelemetry\Contrib\Otlp\SpanExporter($transport);
@@ -141,9 +139,6 @@ final class OTLPIntegration implements OptionAwareIntegrationInterface
         }
     }
 
-    /**
-     * @return bool
-     */
     private function shouldConfigureOtlpTracesExporter(): bool
     {
         if (\PHP_VERSION_ID < 80100) {
