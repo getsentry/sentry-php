@@ -12,7 +12,7 @@ use Sentry\Util\PrefixStripper;
  *
  * @internal
  *
- * @psalm-type StacktraceFrame array{
+ * @phpstan-type StacktraceFrame array{
  *     function?: string,
  *     line?: int,
  *     file?: string,
@@ -54,7 +54,7 @@ final class FrameBuilder
      * @param int                  $line           The line at which the frame originated
      * @param array<string, mixed> $backtraceFrame The raw frame
      *
-     * @psalm-param StacktraceFrame $backtraceFrame
+     * @phpstan-param StacktraceFrame $backtraceFrame
      */
     public function buildFromBacktraceFrame(string $file, int $line, array $backtraceFrame): Frame
     {
@@ -158,7 +158,7 @@ final class FrameBuilder
      *
      * @param array<string, mixed> $backtraceFrame The frame data
      *
-     * @psalm-param StacktraceFrame $backtraceFrame
+     * @phpstan-param StacktraceFrame $backtraceFrame
      *
      * @return array<string, mixed>
      */

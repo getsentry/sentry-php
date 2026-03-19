@@ -204,13 +204,13 @@ function configureScope(callable $callback): void
  *
  * @param callable $callback The callback to be executed
  *
- * @psalm-template T
+ * @phpstan-template T
  *
- * @psalm-param callable(Scope): T $callback
+ * @phpstan-param callable(Scope): T $callback
  *
  * @return mixed|void The callback's return value, upon successful execution
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withScope(callable $callback)
 {
@@ -235,13 +235,13 @@ function endContext(?int $timeout = null): void
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
  *
- * @psalm-template T
+ * @phpstan-template T
  *
- * @psalm-param callable(): T $callback
+ * @phpstan-param callable(): T $callback
  *
  * @return mixed
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withContext(callable $callback, ?int $timeout = null)
 {

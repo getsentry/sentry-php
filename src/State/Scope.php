@@ -78,7 +78,7 @@ class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event, EventHint): ?Event>
+     * @phpstan-var array<callable(Event, EventHint): ?Event>
      */
     private $eventProcessors = [];
 
@@ -90,7 +90,7 @@ class Scope
     /**
      * @var callable[] List of event processors
      *
-     * @psalm-var array<callable(Event, EventHint): ?Event>
+     * @phpstan-var array<callable(Event, EventHint): ?Event>
      */
     private static $globalEventProcessors = [];
 

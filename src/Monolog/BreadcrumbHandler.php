@@ -42,8 +42,6 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     }
 
     /**
-     * @psalm-suppress MoreSpecificImplementedParamType
-     *
      * @param LogRecord|array{
      *      level: int,
      *      channel: string,
