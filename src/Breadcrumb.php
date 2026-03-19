@@ -323,7 +323,7 @@ final class Breadcrumb
      *
      * @param array $data Data used to populate the breadcrumb
      *
-     * @psalm-param array{
+     * @phpstan-param array{
      *     level: string,
      *     type?: string,
      *     category: string,

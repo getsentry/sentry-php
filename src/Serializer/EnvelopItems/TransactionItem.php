@@ -134,7 +134,7 @@ class TransactionItem implements EnvelopeItemInterface
     /**
      * @return array<string, mixed>
      *
-     * @psalm-return array{
+     * @phpstan-return array{
      *     span_id: string,
      *     trace_id: string,
      *     parent_span_id?: string,
@@ -143,9 +143,9 @@ class TransactionItem implements EnvelopeItemInterface
      *     status?: string,
      *     description?: string,
      *     op?: string,
+     *     origin: string,
      *     data?: array<string, mixed>,
      *     tags?: array<string, string>
-     *     _metrics_summary?: array<string, mixed>
      * }
      */
     protected static function serializeSpan(Span $span): array
