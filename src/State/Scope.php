@@ -94,6 +94,11 @@ class Scope
      */
     private static $globalEventProcessors = [];
 
+    /**
+     * @var callable|null
+     */
+    private static $externalPropagationContextCallback;
+
     public function __construct(?PropagationContext $propagationContext = null)
     {
         $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
@@ -359,6 +364,53 @@ class Scope
         self::$globalEventProcessors[] = $eventProcessor;
     }
 
+    public static function registerExternalPropagationContext(callable $callback): void
+    {
+        self::$externalPropagationContextCallback = $callback;
+    }
+
+    public static function clearExternalPropagationContext(): void
+    {
+        self::$externalPropagationContextCallback = null;
+    }
+
+    /**
+     * @return array{trace_id: string, span_id: string}|null
+     */
+    public static function getExternalPropagationContext(): ?array
+    {
+        $callback = self::$externalPropagationContextCallback;
+        if (!\is_callable($callback)) {
+            return null;
+        }
+
+        try {
+            $context = $callback();
+        } catch (\Throwable $exception) {
+            return null;
+        }
+
+        if (!\is_array($context)) {
+            return null;
+        }
+
+        $traceId = $context['trace_id'] ?? null;
+        $spanId = $context['span_id'] ?? null;
+
+        if (!\is_string($traceId) || preg_match('/^[0-9a-f]{32}$/i', $traceId) !== 1) {
+            return null;
+        }
+
+        if (!\is_string($spanId) || preg_match('/^[0-9a-f]{16}$/i', $spanId) !== 1) {
+            return null;
+        }
+
+        return [
+            'trace_id' => $traceId,
+            'span_id' => $spanId,
+        ];
+    }
+
     /**
      * Clears the scope and resets any data it contains.
      *
@@ -430,24 +482,30 @@ class Scope
 
         /**
          * Apply the trace context to errors if there is a Span on the Scope.
-         * Else fallback to the propagation context.
+         * Else fallback to the external propagation context or to the
+         * propagation context.
          * But do not override a trace context already present.
          */
-        if ($this->span !== null) {
-            if (!\array_key_exists('trace', $event->getContexts())) {
-                $event->setContext('trace', $this->span->getTraceContext());
-            }
+        $externalPropagationContext = null;
+        if ($this->span === null) {
+            $externalPropagationContext = self::getExternalPropagationContext();
+        }
 
+        $traceContext = $this->span !== null
+            ? $this->span->getTraceContext()
+            : ($externalPropagationContext ?? $this->propagationContext->getTraceContext());
+
+        if (!\array_key_exists('trace', $event->getContexts())) {
+            $event->setContext('trace', $traceContext);
+        }
+
+        if ($this->span !== null) {
             // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
             $transaction = $this->span->getTransaction();
             if ($transaction !== null) {
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
-        } else {
-            if (!\array_key_exists('trace', $event->getContexts())) {
-                $event->setContext('trace', $this->propagationContext->getTraceContext());
-            }
-
+        } elseif ($externalPropagationContext === null) {
             $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
             if ($dynamicSamplingContext === null && $options !== null) {
                 $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
@@ -511,6 +569,33 @@ class Scope
         }
 
         return null;
+    }
+
+    public function hasExternalPropagationContext(): bool
+    {
+        return $this->span === null && self::getExternalPropagationContext() !== null;
+    }
+
+    /**
+     * @return array{
+     *     trace_id: string,
+     *     span_id: string,
+     *     parent_span_id?: string,
+     *     data?: array<string, mixed>,
+     *     description?: string,
+     *     op?: string,
+     *     status?: string,
+     *     tags?: array<string, string>,
+     *     origin?: string
+     * }
+     */
+    public function getTraceContext(): array
+    {
+        if ($this->span !== null) {
+            return $this->span->getTraceContext();
+        }
+
+        return self::getExternalPropagationContext() ?? $this->propagationContext->getTraceContext();
     }
 
     public function getPropagationContext(): PropagationContext

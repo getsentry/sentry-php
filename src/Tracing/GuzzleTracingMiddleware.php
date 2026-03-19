@@ -63,9 +63,15 @@ final class GuzzleTracingMiddleware
                 }
 
                 if (self::shouldAttachTracingHeaders($client, $request)) {
-                    $request = $request
-                        ->withHeader('sentry-trace', getTraceparent())
-                        ->withHeader('baggage', getBaggage());
+                    $traceParent = getTraceparent();
+                    if ($traceParent !== '') {
+                        $request = $request->withHeader('sentry-trace', $traceParent);
+                    }
+
+                    $baggage = getBaggage();
+                    if ($baggage !== '') {
+                        $request = $request->withHeader('baggage', $baggage);
+                    }
                 }
 
                 $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {

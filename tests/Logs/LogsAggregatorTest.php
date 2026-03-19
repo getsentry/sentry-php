@@ -207,4 +207,31 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
+
+    public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+        $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
+        $this->assertSame('1234567890abcdef', $logs[0]->attributes()->get('sentry.trace.parent_span_id')->getValue());
+
+        Scope::clearExternalPropagationContext();
+    }
 }

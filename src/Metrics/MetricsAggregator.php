@@ -14,6 +14,8 @@ use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\Tracing\SpanId;
+use Sentry\Tracing\TraceId;
 use Sentry\Unit;
 use Sentry\Util\RingBuffer;
 
@@ -104,24 +106,12 @@ final class MetricsAggregator
             $attributes += $defaultAttributes;
         }
 
-        $spanId = null;
-        $traceId = null;
-
-        $span = $hub->getSpan();
-        if ($span !== null) {
-            $spanId = $span->getSpanId();
-            $traceId = $span->getTraceId();
-        } else {
-            $hub->configureScope(static function (Scope $scope) use (&$traceId, &$spanId) {
-                $propagationContext = $scope->getPropagationContext();
-                $traceId = $propagationContext->getTraceId();
-                $spanId = $propagationContext->getSpanId();
-            });
-        }
+        $traceContext = $this->getTraceContext($hub);
+        $traceId = new TraceId($traceContext['trace_id']);
+        $spanId = new SpanId($traceContext['span_id']);
 
         $metricTypeClass = self::METRIC_TYPES[$type];
         /** @var Metric $metric */
-        /** @phpstan-ignore-next-line */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         if ($client !== null) {
@@ -145,5 +135,20 @@ final class MetricsAggregator
         $event = Event::createMetrics()->setMetrics($this->metrics->drain());
 
         return $hub->captureEvent($event);
+    }
+
+    /**
+     * @return array{trace_id: string, span_id: string}
+     */
+    private function getTraceContext(HubInterface $hub): array
+    {
+        $traceContext = null;
+
+        $hub->configureScope(static function (Scope $scope) use (&$traceContext): void {
+            $traceContext = $scope->getTraceContext();
+        });
+
+        /** @var array{trace_id: string, span_id: string} $traceContext */
+        return $traceContext;
     }
 }

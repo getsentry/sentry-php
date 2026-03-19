@@ -15,6 +15,7 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\GuzzleTracingMiddleware;
@@ -33,6 +34,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ]));
 
         $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(TransactionContext::make());
 
@@ -77,6 +79,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                ]));
 
         $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(TransactionContext::make());
 
@@ -118,11 +121,12 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceHeaders(Request $request, Options $options, bool $headersShouldBePresent): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->atLeastOnce())
             ->method('getOptions')
             ->willReturn($options);
 
         $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $expectedPromiseResult = new Response();
 
@@ -154,6 +158,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ->willReturn($options);
 
         $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(new TransactionContext());
 
@@ -178,6 +183,39 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $function($request, []);
 
         $transaction->finish();
+    }
+
+    public function testTraceHeadersAreNotAddedWhenExternalPropagationContextIsActive(): void
+    {
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'trace_propagation_targets' => null,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+        $expectedPromiseResult = new Response();
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
+            $this->assertEmpty($request->getHeader('sentry-trace'));
+            $this->assertEmpty($request->getHeader('baggage'));
+
+            return new FulfilledPromise($expectedPromiseResult);
+        });
+
+        $function(new Request('GET', 'https://www.example.com'), []);
+
+        Scope::clearExternalPropagationContext();
     }
 
     public static function traceHeadersDataProvider(): iterable
@@ -282,7 +320,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData, array $expectedSpanData): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->exactly(4))
+        $client->expects($this->atLeast(4))
             ->method('getOptions')
             ->willReturn(new Options([
                 'traces_sample_rate' => 1,
@@ -292,6 +330,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ]));
 
         $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $client->expects($this->once())
             ->method('captureEvent')
@@ -341,6 +380,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $function = $middleware(function (Request $request) use ($expectedPromiseResult): PromiseInterface {
             $this->assertNotEmpty($request->getHeader('sentry-trace'));
             $this->assertNotEmpty($request->getHeader('baggage'));
+
             if ($expectedPromiseResult instanceof \Throwable) {
                 return new RejectedPromise($expectedPromiseResult);
             }
