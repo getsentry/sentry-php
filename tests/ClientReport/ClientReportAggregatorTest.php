@@ -11,7 +11,6 @@ use Sentry\ClientReport\Reason;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Transport\DataCategory;
@@ -23,7 +22,7 @@ class ClientReportAggregatorTest extends TestCase
         ini_set('zend.exception_ignore_args', '0');
         StubTransport::$events = [];
         StubLogger::$logs = [];
-        SentrySdk::init()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'logger' => StubLogger::getInstance(),
         ]), StubTransport::getInstance()));
     }
@@ -67,20 +66,6 @@ class ClientReportAggregatorTest extends TestCase
         $this->assertSame(40, $report->getQuantity());
     }
 
-    public function testFlushDoesNotOverwriteLastEventId(): void
-    {
-        $hub = SentrySdk::getCurrentHub();
-        $eventId = $hub->captureMessage('foo');
-
-        $this->assertNotNull($eventId);
-        $this->assertSame($eventId, $hub->getLastEventId());
-
-        ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), 10);
-        ClientReportAggregator::getInstance()->flush();
-
-        $this->assertSame($eventId, $hub->getLastEventId());
-    }
-
     public function testNegativeQuantityDiscarded(): void
     {
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
@@ -103,13 +88,13 @@ class ClientReportAggregatorTest extends TestCase
 
     public function testNegativeQuantityDiscardedWhenNoClientIsBound(): void
     {
-        SentrySdk::setCurrentHub(new Hub(new NoOpClient()));
+        SentrySdk::init(new NoOpClient());
 
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
 
-        SentrySdk::setCurrentHub(new Hub(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'logger' => StubLogger::getInstance(),
-        ]), StubTransport::getInstance())));
+        ]), StubTransport::getInstance()));
 
         ClientReportAggregator::getInstance()->flush();
 

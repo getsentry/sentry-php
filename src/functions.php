@@ -17,7 +17,7 @@ use Sentry\Tracing\TransactionContext;
 use Sentry\Transport\TransportInterface;
 
 /**
- * Creates a new Client and Hub which will be set as current.
+ * Creates a new Client and binds it to the global scope.
  *
  * @param array{
  *     attach_stacktrace?: bool,
@@ -71,7 +71,7 @@ function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init()->bindClient($client);
+    SentrySdk::init($client);
 }
 
 /**
@@ -83,7 +83,7 @@ function init(array $options = []): void
  */
 function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
+    return SentrySdk::getClient()->captureMessage($message, $level, SentrySdk::getMergedScope(), $hint);
 }
 
 /**
@@ -94,7 +94,7 @@ function captureMessage(string $message, ?Severity $level = null, ?EventHint $hi
  */
 function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureException($exception, $hint);
+    return SentrySdk::getClient()->captureException($exception, SentrySdk::getMergedScope(), $hint);
 }
 
 /**
@@ -105,7 +105,7 @@ function captureException(\Throwable $exception, ?EventHint $hint = null): ?Even
  */
 function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureEvent($event, $hint);
+    return SentrySdk::getClient()->captureEvent($event, $hint, SentrySdk::getMergedScope());
 }
 
 /**
@@ -115,7 +115,7 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
  */
 function captureLastError(?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureLastError($hint);
+    return SentrySdk::getClient()->captureLastError(SentrySdk::getMergedScope(), $hint);
 }
 
 /**
@@ -129,7 +129,7 @@ function captureLastError(?EventHint $hint = null): ?EventId
  */
 function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
 {
-    return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    return SentrySdk::getClient()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
 }
 
 /**
@@ -143,7 +143,7 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
  */
 function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorConfig = null)
 {
-    $checkInId = SentrySdk::getCurrentHub()->captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
+    $checkInId = captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig, null);
 
     $status = CheckInStatus::ok();
     $duration = 0;
@@ -159,7 +159,7 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
 
         throw $e;
     } finally {
-        SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+        captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
     }
 }
 
@@ -177,11 +177,11 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
  */
 function addBreadcrumb($category, ?string $message = null, array $metadata = [], string $level = Breadcrumb::LEVEL_INFO, string $type = Breadcrumb::TYPE_DEFAULT, ?float $timestamp = null): void
 {
-    SentrySdk::getCurrentHub()->addBreadcrumb(
-        $category instanceof Breadcrumb
-            ? $category
-            : new Breadcrumb($level, $type, $category, $message, $metadata, $timestamp)
-    );
+    $breadcrumb = $category instanceof Breadcrumb
+        ? $category
+        : new Breadcrumb($level, $type, $category, $message, $metadata, $timestamp);
+
+    SentrySdk::getIsolationScope()->addBreadcrumb($breadcrumb);
 }
 
 /**
@@ -192,7 +192,7 @@ function addBreadcrumb($category, ?string $message = null, array $metadata = [],
  */
 function configureScope(callable $callback): void
 {
-    SentrySdk::getCurrentHub()->configureScope($callback);
+    SentrySdk::configureScope($callback);
 }
 
 /**
@@ -211,7 +211,7 @@ function configureScope(callable $callback): void
  */
 function withScope(callable $callback)
 {
-    return SentrySdk::getCurrentHub()->withScope($callback);
+    return SentrySdk::withScope($callback);
 }
 
 function startContext(): void
@@ -265,7 +265,7 @@ function withContext(callable $callback, ?int $timeout = null)
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
-    return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
+    return SentrySdk::startTransaction($context, $customSamplingContext);
 }
 
 /**
@@ -281,7 +281,7 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
  */
 function trace(callable $trace, SpanContext $context)
 {
-    return SentrySdk::getCurrentHub()->withScope(static function (Scope $scope) use ($context, $trace) {
+    return SentrySdk::withScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
 
         // If there is a span set on the scope and it's sampled there is an active transaction.
@@ -313,19 +313,15 @@ function trace(callable $trace, SpanContext $context)
  */
 function getTraceparent(): string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $options = $hub->getClient()->getOptions();
+    $options = SentrySdk::getClient()->getOptions();
     if ($options->isTracingEnabled()) {
-        $span = SentrySdk::getCurrentHub()->getSpan();
+        $span = SentrySdk::getCurrentScope()->getSpan();
         if ($span !== null) {
             return $span->toTraceparent();
         }
     }
 
-    $traceParent = '';
-    $hub->configureScope(static function (Scope $scope) use (&$traceParent) {
-        $traceParent = $scope->getPropagationContext()->toTraceparent();
-    });
+    $traceParent = SentrySdk::getIsolationScope()->getPropagationContext()->toTraceparent();
 
     return $traceParent;
 }
@@ -338,19 +334,15 @@ function getTraceparent(): string
  */
 function getBaggage(): string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $options = $hub->getClient()->getOptions();
+    $options = SentrySdk::getClient()->getOptions();
     if ($options->isTracingEnabled()) {
-        $span = SentrySdk::getCurrentHub()->getSpan();
+        $span = SentrySdk::getCurrentScope()->getSpan();
         if ($span !== null) {
             return $span->toBaggage();
         }
     }
 
-    $baggage = '';
-    $hub->configureScope(static function (Scope $scope) use (&$baggage) {
-        $baggage = $scope->getPropagationContext()->toBaggage();
-    });
+    $baggage = SentrySdk::getIsolationScope()->getPropagationContext()->toBaggage();
 
     return $baggage;
 }
@@ -383,10 +375,7 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
         $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
     }
 
-    $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
-        $scope->setPropagationContext($propagationContext);
-    });
+    SentrySdk::getIsolationScope()->setPropagationContext($propagationContext);
 
     return $transactionContext;
 }
@@ -410,7 +399,7 @@ function metrics(): TraceMetrics
  */
 function addFeatureFlag(string $name, bool $result): void
 {
-    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
+    SentrySdk::configureScope(static function (Scope $scope) use ($name, $result): void {
         $scope->addFeatureFlag($name, $result);
     });
 }

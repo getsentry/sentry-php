@@ -12,8 +12,8 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\State\ScopeManager;
 use Sentry\Unit;
 use Sentry\Util\RingBuffer;
 
@@ -54,8 +54,7 @@ final class MetricsAggregator
         array $attributes,
         ?Unit $unit
     ): void {
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $client = SentrySdk::getClient();
 
         if (!\is_int($value) && !\is_float($value)) {
             if ($client !== null) {
@@ -64,6 +63,9 @@ final class MetricsAggregator
 
             return;
         }
+
+        $scope = SentrySdk::getMergedScope();
+        $scopeAttributes = $scope->getAttributes()->all();
 
         if ($client instanceof Client) {
             $options = $client->getOptions();
@@ -80,20 +82,18 @@ final class MetricsAggregator
             ];
 
             if ($options->shouldSendDefaultPii()) {
-                $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
-                    $user = $scope->getUser();
-                    if ($user !== null) {
-                        if ($user->getId() !== null) {
-                            $defaultAttributes['user.id'] = $user->getId();
-                        }
-                        if ($user->getEmail() !== null) {
-                            $defaultAttributes['user.email'] = $user->getEmail();
-                        }
-                        if ($user->getUsername() !== null) {
-                            $defaultAttributes['user.name'] = $user->getUsername();
-                        }
+                $user = $scope->getUser();
+                if ($user !== null) {
+                    if ($user->getId() !== null && !isset($scopeAttributes['user.id'])) {
+                        $scopeAttributes['user.id'] = $user->getId();
                     }
-                });
+                    if ($user->getEmail() !== null && !isset($scopeAttributes['user.email'])) {
+                        $scopeAttributes['user.email'] = $user->getEmail();
+                    }
+                    if ($user->getUsername() !== null && !isset($scopeAttributes['user.name'])) {
+                        $scopeAttributes['user.name'] = $user->getUsername();
+                    }
+                }
             }
 
             $release = $options->getRelease();
@@ -101,22 +101,23 @@ final class MetricsAggregator
                 $defaultAttributes['sentry.release'] = $release;
             }
 
+            $attributes = array_merge($scopeAttributes, $attributes);
             $attributes += $defaultAttributes;
+        } else {
+            $attributes = array_merge($scopeAttributes, $attributes);
         }
 
         $spanId = null;
         $traceId = null;
 
-        $span = $hub->getSpan();
+        $span = SentrySdk::getCurrentScope()->getSpan();
         if ($span !== null) {
             $spanId = $span->getSpanId();
             $traceId = $span->getTraceId();
         } else {
-            $hub->configureScope(static function (Scope $scope) use (&$traceId, &$spanId) {
-                $propagationContext = $scope->getPropagationContext();
-                $traceId = $propagationContext->getTraceId();
-                $spanId = $propagationContext->getSpanId();
-            });
+            $propagationContext = SentrySdk::getIsolationScope()->getPropagationContext();
+            $traceId = $propagationContext->getTraceId();
+            $spanId = $propagationContext->getSpanId();
         }
 
         $metricTypeClass = self::METRIC_TYPES[$type];
@@ -135,15 +136,26 @@ final class MetricsAggregator
         $this->metrics->push($metric);
     }
 
-    public function flush(?HubInterface $hub = null): ?EventId
+    public function flush(?ScopeManager $scopeManager = null): ?EventId
     {
         if ($this->metrics->isEmpty()) {
             return null;
         }
 
-        $hub = $hub ?? SentrySdk::getCurrentHub();
+        $scopeManager = $scopeManager ?? SentrySdk::getCurrentRuntimeContext()->getScopeManager();
         $event = Event::createMetrics()->setMetrics($this->metrics->drain());
 
-        return $hub->captureEvent($event);
+        $mergedScope = Scope::mergeScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+        $client = Scope::getClientFromScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+
+        return $client->captureEvent($event, null, $mergedScope);
     }
 }

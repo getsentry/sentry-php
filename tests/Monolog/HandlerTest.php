@@ -11,8 +11,9 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Monolog\Handler;
+use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 
 final class HandlerTest extends TestCase
@@ -24,6 +25,8 @@ final class HandlerTest extends TestCase
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->once())
             ->method('captureEvent')
             ->with(
@@ -45,7 +48,8 @@ final class HandlerTest extends TestCase
                 })
             );
 
-        $handler = new Handler(new Hub($client, new Scope()), Logger::DEBUG, true, $fillExtraContext);
+        SentrySdk::init($client);
+        $handler = new Handler(Logger::DEBUG, true, $fillExtraContext);
         $handler->handle($record);
     }
 

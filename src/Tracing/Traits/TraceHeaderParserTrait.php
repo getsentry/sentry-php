@@ -114,10 +114,7 @@ trait TraceHeaderParserTrait
 
     private static function shouldContinueTrace(DynamicSamplingContext $samplingContext): bool
     {
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
-
-        $options = $client->getOptions();
+        $options = SentrySdk::getClient()->getOptions();
         $clientOrgId = $options->getOrgId();
         if ($clientOrgId === null && $options->getDsn() !== null) {
             $clientOrgId = $options->getDsn()->getOrgId();

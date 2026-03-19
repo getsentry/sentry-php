@@ -7,10 +7,14 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\NoOpClient;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\State\ScopeType;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -23,6 +27,221 @@ use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
+    private function createClientWithOptions(array $options = []): ClientInterface
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options($options));
+
+        return $client;
+    }
+
+    public function testScopeTypeAssignmentAndClone(): void
+    {
+        $scope = new Scope(null, ScopeType::global());
+        $this->assertSame(ScopeType::global(), $scope->getType());
+
+        $scope->setType(ScopeType::current());
+        $this->assertSame(ScopeType::current(), $scope->getType());
+
+        $clone = clone $scope;
+        $this->assertSame(ScopeType::current(), $clone->getType());
+    }
+
+    public function testScopeReturnsNoOpClientByDefault(): void
+    {
+        $scope = new Scope();
+
+        $this->assertInstanceOf(NoOpClient::class, $scope->getClient());
+    }
+
+    public function testGetClientFromScopesPrefersCurrentThenIsolationThenGlobal(): void
+    {
+        $globalClient = $this->createMock(ClientInterface::class);
+        $isolationClient = $this->createMock(ClientInterface::class);
+        $currentClient = $this->createMock(ClientInterface::class);
+
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->bindClient($globalClient);
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->bindClient($isolationClient);
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->bindClient($currentClient);
+
+        // If all scopes have clients then this will give us the current scope client
+        $this->assertSame($currentClient, Scope::getClientFromScopes($globalScope, $isolationScope, $currentScope));
+
+        // If the current scope has no client then we will get the isolation scope client
+        $currentScope->setClient(null);
+        $this->assertSame($isolationClient, Scope::getClientFromScopes($globalScope, $isolationScope, $currentScope));
+
+        // If no current or isolation scope client exists, we will get the global scope client
+        $isolationScope->setClient(null);
+        $this->assertSame($globalClient, Scope::getClientFromScopes($globalScope, $isolationScope, $currentScope));
+    }
+
+    public function testMergeOrderPrefersCurrentScope(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->setTag('global', 'foo');
+        $globalScope->setTag('scope', 'global');
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->setTag('isolation', 'foo');
+        $isolationScope->setTag('scope', 'isolation');
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->setTag('current', 'foo');
+        $currentScope->setTag('scope', 'current');
+
+        $mergedScope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+        $event = Event::createEvent();
+        $event = $mergedScope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertEquals([
+            'global' => 'foo',
+            'isolation' => 'foo',
+            'current' => 'foo',
+            'scope' => 'current',
+        ], $event->getTags());
+    }
+
+    public function testBreadcrumbsAreMergedAndSorted(): void
+    {
+        $client = $this->createClientWithOptions();
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->bindClient($client);
+        $globalScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'global', null, [], 2000.0));
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->bindClient($client);
+        $isolationScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'isolation', null, [], 1500.0));
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->bindClient($client);
+        $currentScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'current', null, [], 1000.0));
+
+        $mergedScope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+        $event = Event::createEvent();
+        $event = $mergedScope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $breadcrumbs = $event->getBreadcrumbs();
+
+        $this->assertSame('current', $breadcrumbs[0]->getCategory());
+        $this->assertSame('isolation', $breadcrumbs[1]->getCategory());
+        $this->assertSame('global', $breadcrumbs[2]->getCategory());
+    }
+
+    public function testMergeScopesSortsAndCapsBreadcrumbs(): void
+    {
+        $client = $this->createClientWithOptions(['max_breadcrumbs' => 2]);
+
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->bindClient($client);
+        $globalScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, '100', null, [], 100.0));
+        $globalScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, '400', null, [], 400.0));
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->bindClient($client);
+        $isolationScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, '200', null, [], 200.0));
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->bindClient($client);
+        $currentScope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, '300', null, [], 300.0));
+
+        $mergedScope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+        $event = Event::createEvent();
+        $event = $mergedScope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $breadcrumbs = $event->getBreadcrumbs();
+        $this->assertCount(2, $breadcrumbs);
+        $this->assertSame('300', $breadcrumbs[0]->getCategory());
+        $this->assertSame('400', $breadcrumbs[1]->getCategory());
+    }
+
+    public function testEventProcessorsRunInScopeOrder(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->addEventProcessor(static function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'global';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->addEventProcessor(static function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'isolation';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->addEventProcessor(static function (Event $event) {
+            $order = $event->getExtra()['order'] ?? [];
+            $order[] = 'current';
+            $event->setExtra(['order' => $order]);
+
+            return $event;
+        });
+
+        $mergedScope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+        $event = Event::createEvent();
+        $event = $mergedScope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertSame(['global', 'isolation', 'current'], $event->getExtra()['order']);
+    }
+
+    public function testScopeAttributesApplyToScope(): void
+    {
+        $scope = new Scope();
+        $scope->setAttribute('app.feature', true);
+        $scope->setAttributes([
+            'app.session' => 42,
+        ]);
+
+        $this->assertTrue($scope->getAttributes()->get('app.feature')->getValue());
+        $this->assertSame(42, $scope->getAttributes()->get('app.session')->getValue());
+    }
+
+    public function testAttributesAreMergedWithPrecedence(): void
+    {
+        $globalScope = new Scope(null, ScopeType::global());
+        $globalScope->setAttribute('global.attribute', 'global');
+        $globalScope->setAttribute('overwritten.attribute', 'global');
+
+        $isolationScope = new Scope(null, ScopeType::isolation());
+        $isolationScope->setAttribute('isolation.attribute', 'isolation');
+        $isolationScope->setAttribute('overwritten.attribute', 'isolation');
+
+        $currentScope = new Scope(null, ScopeType::current());
+        $currentScope->setAttribute('current.attribute', 'current');
+        $currentScope->setAttribute('overwritten.attribute', 'current');
+
+        $scope = Scope::mergeScopes($globalScope, $isolationScope, $currentScope);
+
+        $this->assertSame('global', $scope->getAttributes()->get('global.attribute')->getValue());
+        $this->assertSame('isolation', $scope->getAttributes()->get('isolation.attribute')->getValue());
+        $this->assertSame('current', $scope->getAttributes()->get('current.attribute')->getValue());
+        $this->assertSame('current', $scope->getAttributes()->get('overwritten.attribute')->getValue());
+    }
+
+    public function testRemoveAttribute(): void
+    {
+        $scope = new Scope();
+        $scope->setAttribute('app.feature', true);
+        $scope->removeAttribute('app.feature');
+
+        $this->assertNull($scope->getAttributes()->get('app.feature'));
+    }
+
     public function testSetTag(): void
     {
         $scope = new Scope();
@@ -331,6 +550,7 @@ final class ScopeTest extends TestCase
     public function testAddBreadcrumb(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
@@ -359,6 +579,7 @@ final class ScopeTest extends TestCase
     public function testClearBreadcrumbs(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
 
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
@@ -441,6 +662,7 @@ final class ScopeTest extends TestCase
     public function testClear(): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
         $scope->setLevel(Severity::info());
@@ -481,6 +703,7 @@ final class ScopeTest extends TestCase
         $span->setSpanId(new SpanId('566e3688a61d4bc8'));
 
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $scope->setLevel(Severity::warning());
         $scope->setFingerprint(['foo']);
         $scope->addBreadcrumb($breadcrumb);
@@ -536,6 +759,7 @@ final class ScopeTest extends TestCase
     public function testAttachmentsAppliedForType(Event $event, int $attachmentCount): void
     {
         $scope = new Scope();
+        $scope->bindClient($this->createClientWithOptions());
         $scope->addAttachment(Attachment::fromBytes('test', 'abcde'));
         $scope->applyToEvent($event);
         $this->assertCount($attachmentCount, $event->getAttachments());

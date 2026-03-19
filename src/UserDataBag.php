@@ -195,7 +195,7 @@ final class UserDataBag
             }
 
             if (filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
-                $client = SentrySdk::getCurrentHub()->getClient();
+                $client = SentrySdk::getClient();
 
                 if ($client !== null) {
                     $client->getOptions()->getLoggerOrNullLogger()->debug(

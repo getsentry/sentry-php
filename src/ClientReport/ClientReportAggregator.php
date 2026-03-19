@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry\ClientReport;
 
 use Sentry\Event;
-use Sentry\State\HubAdapter;
+use Sentry\SentrySdk;
 use Sentry\Transport\DataCategory;
 
 class ClientReportAggregator
@@ -35,15 +35,12 @@ class ClientReportAggregator
         $category = $category->getValue();
         $reason = $reason->getValue();
         if ($quantity <= 0) {
-            $client = HubAdapter::getInstance()->getClient();
-            if ($client !== null) {
-                $logger = $client->getOptions()->getLoggerOrNullLogger();
-                $logger->debug('Dropping Client report with category={category} and reason={reason} because quantity is zero or negative ({quantity})', [
-                    'category' => $category,
-                    'reason' => $reason,
-                    'quantity' => $quantity,
-                ]);
-            }
+            $logger = SentrySdk::getClient()->getOptions()->getLoggerOrNullLogger();
+            $logger->debug('Dropping Client report with category={category} and reason={reason} because quantity is zero or negative ({quantity})', [
+                'category' => $category,
+                'reason' => $reason,
+                'quantity' => $quantity,
+            ]);
 
             return;
         }
@@ -64,11 +61,11 @@ class ClientReportAggregator
         $event = Event::createClientReport();
         $event->setClientReports($reports);
 
-        $client = HubAdapter::getInstance()->getClient();
+        $client = SentrySdk::getClient();
 
         // Reset the client reports only if we successfully sent an event. If it fails it
         // can be sent on the next flush, or it gets discarded anyway.
-        if ($client !== null && $client->captureEvent($event) !== null) {
+        if ($client->captureEvent($event) !== null) {
             $this->reports = [];
         }
     }

@@ -35,7 +35,7 @@ final class TransactionIntegrationTest extends TestCase
             ->method('getIntegration')
             ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         withScope(function (Scope $scope) use ($event, $hint, $expectedTransaction): void {
             $event = $scope->applyToEvent($event, $hint);

@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\TransactionContext;
 
@@ -26,7 +25,7 @@ final class StrictTraceContinuationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::init($client);
 
         $contexts = [
             PropagationContext::fromHeaders(self::SENTRY_TRACE_HEADER, $baggage),
@@ -56,7 +55,7 @@ final class StrictTraceContinuationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::init($client);
 
         $contexts = [
             TransactionContext::fromHeaders(self::SENTRY_TRACE_HEADER, $baggage),

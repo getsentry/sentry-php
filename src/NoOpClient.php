@@ -74,6 +74,11 @@ class NoOpClient implements ClientInterface
         return null;
     }
 
+    public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
+    {
+        return null;
+    }
+
     public function getIntegration(string $className): ?IntegrationInterface
     {
         return null;

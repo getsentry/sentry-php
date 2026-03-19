@@ -9,8 +9,8 @@ use Sentry\Client;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
+use Sentry\State\ScopeManager;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
 
@@ -37,8 +37,7 @@ final class LogsAggregator
     ): void {
         $timestamp = microtime(true);
 
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $client = SentrySdk::getClient();
 
         $options = $client->getOptions();
         $sdkLogger = $options->getLogger();
@@ -67,31 +66,34 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
+        $span = SentrySdk::getCurrentScope()->getSpan();
+
+        $log = (new Log($timestamp, $this->getTraceId(), $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
+            ->setAttribute('sentry.trace.parent_span_id', $span !== null ? $span->getSpanId() : null);
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
             $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
         }
 
-        $hub->configureScope(static function (Scope $scope) use ($log) {
-            $user = $scope->getUser();
-            if ($user !== null) {
-                if ($user->getId() !== null) {
-                    $log->setAttribute('user.id', $user->getId());
-                }
-                if ($user->getEmail() !== null) {
-                    $log->setAttribute('user.email', $user->getEmail());
-                }
-                if ($user->getUsername() !== null) {
-                    $log->setAttribute('user.name', $user->getUsername());
-                }
+        $scope = SentrySdk::getMergedScope();
+        $this->applyScopeAttributes($log, $scope);
+
+        $user = $scope->getUser();
+        if ($user !== null) {
+            if ($user->getId() !== null) {
+                $log->setAttribute('user.id', $user->getId());
             }
-        });
+            if ($user->getEmail() !== null) {
+                $log->setAttribute('user.email', $user->getEmail());
+            }
+            if ($user->getUsername() !== null) {
+                $log->setAttribute('user.name', $user->getUsername());
+            }
+        }
 
         if (\count($values)) {
             $log->setAttribute('sentry.message.template', $message);
@@ -149,18 +151,29 @@ final class LogsAggregator
         $this->logs[] = $log;
     }
 
-    public function flush(?HubInterface $hub = null): ?EventId
+    public function flush(?ScopeManager $scopeManager = null): ?EventId
     {
         if (empty($this->logs)) {
             return null;
         }
 
-        $hub = $hub ?? SentrySdk::getCurrentHub();
+        $scopeManager = $scopeManager ?? SentrySdk::getCurrentRuntimeContext()->getScopeManager();
         $event = Event::createLogs()->setLogs($this->logs);
 
         $this->logs = [];
 
-        return $hub->captureEvent($event);
+        $mergedScope = Scope::mergeScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+        $client = Scope::getClientFromScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+
+        return $client->captureEvent($event, null, $mergedScope);
     }
 
     /**
@@ -171,20 +184,23 @@ final class LogsAggregator
         return $this->logs;
     }
 
-    private function getTraceId(HubInterface $hub): string
+    private function getTraceId(): string
     {
-        $span = $hub->getSpan();
+        $span = SentrySdk::getCurrentScope()->getSpan();
 
         if ($span !== null) {
             return (string) $span->getTraceId();
         }
 
-        $traceId = '';
+        return (string) SentrySdk::getIsolationScope()->getPropagationContext()->getTraceId();
+    }
 
-        $hub->configureScope(static function (Scope $scope) use (&$traceId) {
-            $traceId = (string) $scope->getPropagationContext()->getTraceId();
-        });
-
-        return $traceId;
+    private function applyScopeAttributes(Log $log, Scope $scope): void
+    {
+        foreach ($scope->getAttributes()->all() as $key => $attribute) {
+            if ($log->attributes()->get($key) === null) {
+                $log->setAttribute($key, $attribute);
+            }
+        }
     }
 }

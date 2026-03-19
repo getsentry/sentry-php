@@ -92,14 +92,12 @@ final class RequestIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(function (Event $event): Event {
-            $currentHub = SentrySdk::getCurrentHub();
-            $integration = $currentHub->getIntegration(self::class);
+            $client = SentrySdk::getClient();
+            $integration = $client->getIntegration(self::class);
 
             if ($integration === null) {
                 return $event;
             }
-
-            $client = $currentHub->getClient();
 
             $this->processEvent($event, $client->getOptions());
 

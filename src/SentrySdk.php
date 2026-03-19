@@ -6,10 +6,13 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
-use Sentry\State\Hub;
-use Sentry\State\HubInterface;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
+use Sentry\State\Scope;
+use Sentry\State\ScopeManager;
+use Sentry\Tracing\SamplingContext;
+use Sentry\Tracing\Transaction;
+use Sentry\Tracing\TransactionContext;
 
 /**
  * This class is the main entry point for all the most common SDK features.
@@ -19,9 +22,9 @@ use Sentry\State\RuntimeContextManager;
 final class SentrySdk
 {
     /**
-     * @var HubInterface|null The baseline hub
+     * @var ScopeManager|null The baseline scope manager
      */
-    private static $currentHub;
+    private static $scopeManager;
 
     /**
      * @var RuntimeContextManager|null
@@ -36,47 +39,193 @@ final class SentrySdk
     }
 
     /**
-     * Initializes the SDK by creating a new hub instance each time this method
-     * gets called.
+     * Initializes the SDK by binding a client to the baseline global scope.
      */
-    public static function init(?ClientInterface $client = null): HubInterface
+    public static function init(?ClientInterface $client = null): void
     {
         if ($client === null) {
             $client = new NoOpClient();
         }
-        self::$currentHub = new Hub($client);
-        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
 
-        return self::$currentHub;
+        $scopeManager = self::getBaseScopeManager();
+        $scopeManager->resetScopes();
+        $scopeManager->getGlobalScope()->bindClient($client);
+    }
+
+    public static function getGlobalScope(): Scope
+    {
+        return self::getCurrentScopeManager()->getGlobalScope();
+    }
+
+    public static function getIsolationScope(): Scope
+    {
+        return self::getCurrentScopeManager()->getIsolationScope();
+    }
+
+    public static function getCurrentScope(): Scope
+    {
+        return self::getCurrentScopeManager()->getCurrentScope();
     }
 
     /**
-     * Gets the current hub. If it's not initialized then creates a new instance
-     * and sets it as current hub.
+     * Forks the current scope and executes the given callback within it.
+     *
+     * @psalm-template T
+     *
+     * @psalm-param callable(Scope): T $callback
+     *
+     * @return mixed|void
+     *
+     * @psalm-return T
      */
-    public static function getCurrentHub(): HubInterface
+    public static function withScope(callable $callback)
     {
-        return self::getRuntimeContextManager()->getCurrentHub();
+        return self::getCurrentScopeManager()->withScope($callback);
     }
 
     /**
-     * Sets the current hub.
+     * Forks the isolation and current scope and executes the callback within it.
      *
-     * If called while an explicit runtime context is active, the hub update is
-     * scoped to that active context only. Otherwise, it updates the baseline
-     * hub used by the global fallback context and future contexts.
+     * @psalm-template T
      *
-     * @param HubInterface $hub The hub to set
+     * @psalm-param callable(Scope): T $callback
+     *
+     * @return mixed|void
+     *
+     * @psalm-return T
      */
-    public static function setCurrentHub(HubInterface $hub): HubInterface
+    public static function withIsolationScope(callable $callback)
     {
-        $wasSetOnActiveRuntimeContext = self::getRuntimeContextManager()->setCurrentHub($hub);
+        return self::getCurrentScopeManager()->withIsolationScope($callback);
+    }
 
-        if (!$wasSetOnActiveRuntimeContext) {
-            self::$currentHub = $hub;
+    /**
+     * Configures the isolation scope by invoking the callback with it.
+     */
+    public static function configureScope(callable $callback): void
+    {
+        $callback(self::getIsolationScope());
+    }
+
+    /**
+     * Starts a new `Transaction` and returns it. This is the entry point to manual
+     * tracing instrumentation.
+     *
+     * @param TransactionContext   $context               Properties of the new transaction
+     * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
+     */
+    public static function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
+    {
+        $client = self::getClient();
+        $transaction = new Transaction($context, $client);
+        $options = $client->getOptions();
+        $logger = $options->getLoggerOrNullLogger();
+
+        if (!$options->isTracingEnabled()) {
+            $transaction->setSampled(false);
+
+            $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
+
+            return $transaction;
         }
 
-        return $hub;
+        $samplingContext = SamplingContext::getDefault($context);
+        $samplingContext->setAdditionalContext($customSamplingContext);
+
+        $sampleSource = 'context';
+        $sampleRand = $context->getMetadata()->getSampleRand();
+
+        if ($transaction->getSampled() === null) {
+            $tracesSampler = $options->getTracesSampler();
+
+            if ($tracesSampler !== null) {
+                $sampleRate = $tracesSampler($samplingContext);
+                $sampleSource = 'config:traces_sampler';
+            } else {
+                $parentSampleRate = $context->getMetadata()->getParentSamplingRate();
+                if ($parentSampleRate !== null) {
+                    $sampleRate = $parentSampleRate;
+                    $sampleSource = 'parent:sample_rate';
+                } else {
+                    $sampleRate = self::getSampleRate(
+                        $samplingContext->getParentSampled(),
+                        $options->getTracesSampleRate() ?? 0
+                    );
+                    $sampleSource = $samplingContext->getParentSampled() !== null ? 'parent:sampling_decision' : 'config:traces_sample_rate';
+                }
+            }
+
+            if (!self::isValidSampleRate($sampleRate)) {
+                $transaction->setSampled(false);
+
+                $logger->warning(\sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+
+                return $transaction;
+            }
+
+            $transaction->getMetadata()->setSamplingRate($sampleRate);
+
+            // Always overwrite the sample_rate in the DSC
+            $dynamicSamplingContext = $context->getMetadata()->getDynamicSamplingContext();
+            if ($dynamicSamplingContext !== null) {
+                $dynamicSamplingContext->set('sample_rate', (string) $sampleRate, true);
+            }
+
+            if ($sampleRate === 0.0) {
+                $transaction->setSampled(false);
+
+                $logger->info(\sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is %s.', (string) $transaction->getTraceId(), $sampleSource, $sampleRate), ['context' => $context]);
+
+                return $transaction;
+            }
+
+            $transaction->setSampled($sampleRand < $sampleRate);
+        }
+
+        if (!$transaction->getSampled()) {
+            $logger->info(\sprintf('Transaction [%s] was started but not sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+
+            return $transaction;
+        }
+
+        $logger->info(\sprintf('Transaction [%s] was started and sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
+
+        $transaction->initSpanRecorder();
+
+        $profilesSampleRate = $options->getProfilesSampleRate();
+        if ($profilesSampleRate === null) {
+            $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
+        } elseif (self::sample($profilesSampleRate)) {
+            $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
+
+            $transaction->initProfiler()->start();
+        } else {
+            $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
+        }
+
+        return $transaction;
+    }
+
+    public static function getMergedScope(): Scope
+    {
+        $scopeManager = self::getCurrentScopeManager();
+
+        return Scope::mergeScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+    }
+
+    public static function getClient(): ClientInterface
+    {
+        $scopeManager = self::getCurrentScopeManager();
+
+        return Scope::getClientFromScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
     }
 
     public static function startContext(): void
@@ -133,6 +282,74 @@ final class SentrySdk
         return self::getRuntimeContextManager()->getCurrentContext();
     }
 
+    private static function getBaseScopeManager(): ScopeManager
+    {
+        if (self::$scopeManager === null) {
+            self::$scopeManager = new ScopeManager();
+        }
+
+        return self::$scopeManager;
+    }
+
+    private static function getCurrentScopeManager(): ScopeManager
+    {
+        return self::getRuntimeContextManager()->getCurrentScopeManager();
+    }
+
+    private static function getRuntimeContextManager(): RuntimeContextManager
+    {
+        if (self::$runtimeContextManager === null) {
+            self::$runtimeContextManager = new RuntimeContextManager(self::getBaseScopeManager());
+        }
+
+        return self::$runtimeContextManager;
+    }
+
+    private static function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
+    {
+        if ($hasParentBeenSampled === true) {
+            return 1.0;
+        }
+
+        if ($hasParentBeenSampled === false) {
+            return 0.0;
+        }
+
+        return $fallbackSampleRate;
+    }
+
+    /**
+     * @param mixed $sampleRate
+     */
+    private static function sample($sampleRate): bool
+    {
+        if ($sampleRate === 0.0 || $sampleRate === null) {
+            return false;
+        }
+
+        if ($sampleRate === 1.0) {
+            return true;
+        }
+
+        return mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate;
+    }
+
+    /**
+     * @param mixed $sampleRate
+     */
+    private static function isValidSampleRate($sampleRate): bool
+    {
+        if (!\is_float($sampleRate) && !\is_int($sampleRate)) {
+            return false;
+        }
+
+        if ($sampleRate < 0 || $sampleRate > 1) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Flushes all buffered telemetry data.
      *
@@ -147,24 +364,6 @@ final class SentrySdk
     {
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
-
-        $client = self::getCurrentHub()->getClient();
-
-        if ($client !== null) {
-            $client->flush();
-        }
-    }
-
-    private static function getRuntimeContextManager(): RuntimeContextManager
-    {
-        if (self::$currentHub === null) {
-            self::$currentHub = new Hub(new NoOpClient());
-        }
-
-        if (self::$runtimeContextManager === null) {
-            self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
-        }
-
-        return self::$runtimeContextManager;
+        self::getClient()->flush();
     }
 }

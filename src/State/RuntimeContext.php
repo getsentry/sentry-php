@@ -23,9 +23,9 @@ final class RuntimeContext
     private $id;
 
     /**
-     * @var HubInterface
+     * @var ScopeManager
      */
-    private $hub;
+    private $scopeManager;
 
     /**
      * @var LogsAggregator
@@ -37,10 +37,10 @@ final class RuntimeContext
      */
     private $metricsAggregator;
 
-    public function __construct(string $id, HubInterface $hub)
+    public function __construct(string $id, ScopeManager $scopeManager)
     {
         $this->id = $id;
-        $this->hub = $hub;
+        $this->scopeManager = $scopeManager;
         $this->logsAggregator = new LogsAggregator();
         $this->metricsAggregator = new MetricsAggregator();
     }
@@ -50,14 +50,9 @@ final class RuntimeContext
         return $this->id;
     }
 
-    public function getHub(): HubInterface
+    public function getScopeManager(): ScopeManager
     {
-        return $this->hub;
-    }
-
-    public function setHub(HubInterface $hub): void
-    {
-        $this->hub = $hub;
+        return $this->scopeManager;
     }
 
     public function getLogsAggregator(): LogsAggregator
