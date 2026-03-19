@@ -12,6 +12,8 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
+use Sentry\State\Scope;
+use Sentry\State\ScopeManager;
 use Sentry\Unit;
 use Sentry\Util\RingBuffer;
 
@@ -134,14 +136,26 @@ final class MetricsAggregator
         $this->metrics->push($metric);
     }
 
-    public function flush(): ?EventId
+    public function flush(?ScopeManager $scopeManager = null): ?EventId
     {
         if ($this->metrics->isEmpty()) {
             return null;
         }
 
+        $scopeManager = $scopeManager ?? SentrySdk::getCurrentRuntimeContext()->getScopeManager();
         $event = Event::createMetrics()->setMetrics($this->metrics->drain());
 
-        return SentrySdk::getClient()->captureEvent($event, null, SentrySdk::getMergedScope());
+        $mergedScope = Scope::mergeScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+        $client = Scope::getClientFromScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+
+        return $client->captureEvent($event, null, $mergedScope);
     }
 }

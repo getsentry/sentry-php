@@ -10,6 +10,7 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\State\ScopeManager;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
 
@@ -150,17 +151,29 @@ final class LogsAggregator
         $this->logs[] = $log;
     }
 
-    public function flush(): ?EventId
+    public function flush(?ScopeManager $scopeManager = null): ?EventId
     {
         if (empty($this->logs)) {
             return null;
         }
 
+        $scopeManager = $scopeManager ?? SentrySdk::getCurrentRuntimeContext()->getScopeManager();
         $event = Event::createLogs()->setLogs($this->logs);
 
         $this->logs = [];
 
-        return SentrySdk::getClient()->captureEvent($event, null, SentrySdk::getMergedScope());
+        $mergedScope = Scope::mergeScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+        $client = Scope::getClientFromScopes(
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
+        );
+
+        return $client->captureEvent($event, null, $mergedScope);
     }
 
     /**

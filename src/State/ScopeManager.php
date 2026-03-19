@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Sentry\NoOpClient;
+use Sentry\Tracing\PropagationContext;
 
 /**
  * Manages global, isolation, and current scopes.
@@ -104,6 +105,31 @@ final class ScopeManager
     {
         $this->isolationScope = null;
         $this->currentScopeStack = [];
+    }
+
+    /**
+     * Creates a copy suitable for a fresh runtime context.
+     *
+     * The global scope is preserved while the isolation scope is inherited as a
+     * new baseline for the runtime context. Current scope state is intentionally
+     * not carried over.
+     */
+    public function forkForRuntimeContext(): self
+    {
+        $globalScope = clone $this->globalScope;
+        $globalScope->setType(ScopeType::global());
+        $globalScope->setSpan(null);
+
+        $scopeManager = new self($globalScope);
+
+        if ($this->isolationScope !== null) {
+            $scopeManager->isolationScope = clone $this->isolationScope;
+            $scopeManager->isolationScope->setType(ScopeType::isolation());
+            $scopeManager->isolationScope->setSpan(null);
+            $scopeManager->isolationScope->setPropagationContext(PropagationContext::fromDefaults());
+        }
+
+        return $scopeManager;
     }
 
     private function pushCurrentScope(): Scope

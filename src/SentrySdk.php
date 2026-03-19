@@ -6,6 +6,8 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\RuntimeContext;
+use Sentry\State\RuntimeContextManager;
 use Sentry\State\Scope;
 use Sentry\State\ScopeManager;
 use Sentry\Tracing\SamplingContext;
@@ -20,9 +22,14 @@ use Sentry\Tracing\TransactionContext;
 final class SentrySdk
 {
     /**
-     * @var ScopeManager|null The scope manager
+     * @var ScopeManager|null The baseline scope manager
      */
     private static $scopeManager;
+
+    /**
+     * @var RuntimeContextManager|null
+     */
+    private static $runtimeContextManager;
 
     /**
      * Constructor.
@@ -32,7 +39,7 @@ final class SentrySdk
     }
 
     /**
-     * Initializes the SDK by binding a client to the global scope.
+     * Initializes the SDK by binding a client to the baseline global scope.
      */
     public static function init(?ClientInterface $client = null): void
     {
@@ -40,24 +47,24 @@ final class SentrySdk
             $client = new NoOpClient();
         }
 
-        $scopeManager = self::getScopeManager();
+        $scopeManager = self::getBaseScopeManager();
         $scopeManager->resetScopes();
         $scopeManager->getGlobalScope()->bindClient($client);
     }
 
     public static function getGlobalScope(): Scope
     {
-        return self::getScopeManager()->getGlobalScope();
+        return self::getCurrentScopeManager()->getGlobalScope();
     }
 
     public static function getIsolationScope(): Scope
     {
-        return self::getScopeManager()->getIsolationScope();
+        return self::getCurrentScopeManager()->getIsolationScope();
     }
 
     public static function getCurrentScope(): Scope
     {
-        return self::getScopeManager()->getCurrentScope();
+        return self::getCurrentScopeManager()->getCurrentScope();
     }
 
     /**
@@ -73,7 +80,7 @@ final class SentrySdk
      */
     public static function withScope(callable $callback)
     {
-        return self::getScopeManager()->withScope($callback);
+        return self::getCurrentScopeManager()->withScope($callback);
     }
 
     /**
@@ -89,7 +96,7 @@ final class SentrySdk
      */
     public static function withIsolationScope(callable $callback)
     {
-        return self::getScopeManager()->withIsolationScope($callback);
+        return self::getCurrentScopeManager()->withIsolationScope($callback);
     }
 
     /**
@@ -201,29 +208,101 @@ final class SentrySdk
 
     public static function getMergedScope(): Scope
     {
+        $scopeManager = self::getCurrentScopeManager();
+
         return Scope::mergeScopes(
-            self::getGlobalScope(),
-            self::getIsolationScope(),
-            self::getCurrentScope()
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
         );
     }
 
     public static function getClient(): ClientInterface
     {
+        $scopeManager = self::getCurrentScopeManager();
+
         return Scope::getClientFromScopes(
-            self::getGlobalScope(),
-            self::getIsolationScope(),
-            self::getCurrentScope()
+            $scopeManager->getGlobalScope(),
+            $scopeManager->getIsolationScope(),
+            $scopeManager->getCurrentScope()
         );
     }
 
-    private static function getScopeManager(): ScopeManager
+    public static function startContext(): void
+    {
+        self::getRuntimeContextManager()->startContext();
+    }
+
+    public static function endContext(?int $timeout = null): void
+    {
+        self::getRuntimeContextManager()->endContext($timeout);
+    }
+
+    /**
+     * Executes the given callback within an isolated context.
+     *
+     * If a context is already active for the current execution key, this method
+     * reuses it and only executes the callback.
+     *
+     * @param callable $callback The callback to execute
+     *
+     * @psalm-template T
+     *
+     * @psalm-param callable(): T $callback
+     *
+     * @return mixed
+     *
+     * @psalm-return T
+     */
+    public static function withContext(callable $callback, ?int $timeout = null)
+    {
+        $runtimeContextManager = self::getRuntimeContextManager();
+        $startedNewContext = !$runtimeContextManager->hasActiveContext();
+
+        if ($startedNewContext) {
+            $runtimeContextManager->startContext();
+        }
+
+        try {
+            return $callback();
+        } finally {
+            if ($startedNewContext) {
+                $runtimeContextManager->endContext($timeout);
+            }
+        }
+    }
+
+    /**
+     * Gets the current runtime-local context.
+     *
+     * @internal
+     */
+    public static function getCurrentRuntimeContext(): RuntimeContext
+    {
+        return self::getRuntimeContextManager()->getCurrentContext();
+    }
+
+    private static function getBaseScopeManager(): ScopeManager
     {
         if (self::$scopeManager === null) {
             self::$scopeManager = new ScopeManager();
         }
 
         return self::$scopeManager;
+    }
+
+    private static function getCurrentScopeManager(): ScopeManager
+    {
+        return self::getRuntimeContextManager()->getCurrentScopeManager();
+    }
+
+    private static function getRuntimeContextManager(): RuntimeContextManager
+    {
+        if (self::$runtimeContextManager === null) {
+            self::$runtimeContextManager = new RuntimeContextManager(self::getBaseScopeManager());
+        }
+
+        return self::$runtimeContextManager;
     }
 
     private static function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
@@ -285,5 +364,6 @@ final class SentrySdk
     {
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
+        self::getClient()->flush();
     }
 }

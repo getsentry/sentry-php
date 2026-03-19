@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Sentry\Tests\State;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Event;
 use Sentry\State\Scope;
 use Sentry\State\ScopeManager;
 use Sentry\State\ScopeType;
+use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanContext;
 
 final class ScopeManagerTest extends TestCase
 {
@@ -68,5 +71,32 @@ final class ScopeManagerTest extends TestCase
         $this->assertNotSame($originalIsolation, $manager->getIsolationScope());
         $this->assertNotSame($originalCurrent, $manager->getCurrentScope());
         $this->assertSame(ScopeType::global(), $manager->getGlobalScope()->getType());
+    }
+
+    public function testForkForRuntimeContextInheritsGlobalAndIsolationOnly(): void
+    {
+        $manager = new ScopeManager();
+        $manager->getGlobalScope()->setTag('global', 'yes');
+        $manager->getIsolationScope()->setTag('isolation', 'yes');
+        $manager->getIsolationScope()->setSpan(new Span(new SpanContext()));
+        $manager->getCurrentScope()->setTag('current', 'yes');
+
+        $forkedManager = $manager->forkForRuntimeContext();
+
+        $this->assertNotSame($manager->getGlobalScope(), $forkedManager->getGlobalScope());
+        $this->assertNotSame($manager->getIsolationScope(), $forkedManager->getIsolationScope());
+        $this->assertNull($forkedManager->getIsolationScope()->getSpan());
+
+        $event = Event::createEvent();
+        $event = Scope::mergeScopes(
+            $forkedManager->getGlobalScope(),
+            $forkedManager->getIsolationScope(),
+            $forkedManager->getCurrentScope()
+        )->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertSame('yes', $event->getTags()['global'] ?? null);
+        $this->assertSame('yes', $event->getTags()['isolation'] ?? null);
+        $this->assertArrayNotHasKey('current', $event->getTags());
     }
 }

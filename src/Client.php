@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.19.1';
+    public const SDK_VERSION = '4.22.0';
 
     /**
      * Regex pattern to detect if a string is a regex pattern (starts and ends with / optionally followed by flags).
@@ -178,7 +178,10 @@ class Client implements ClientInterface
      */
     public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId
     {
-        $event = $this->prepareEvent($event, $hint, $scope);
+        // Client reports don't need to be augmented in the prepareEvent pipeline.
+        if ($event->getType() !== EventType::clientReport()) {
+            $event = $this->prepareEvent($event, $hint, $scope);
+        }
 
         if ($event === null) {
             return null;

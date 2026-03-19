@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
@@ -25,6 +26,8 @@ use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\Result;
+use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
 use function Sentry\addBreadcrumb;
@@ -35,11 +38,14 @@ use function Sentry\captureLastError;
 use function Sentry\captureMessage;
 use function Sentry\configureScope;
 use function Sentry\continueTrace;
+use function Sentry\endContext;
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
 use function Sentry\init;
+use function Sentry\startContext;
 use function Sentry\startTransaction;
 use function Sentry\trace;
+use function Sentry\withContext;
 use function Sentry\withMonitor;
 use function Sentry\withScope;
 
@@ -401,6 +407,99 @@ final class FunctionsTest extends TestCase
         $this->assertArrayNotHasKey('current', $event->getTags());
     }
 
+    public function testStartAndEndContext(): void
+    {
+        SentrySdk::init();
+
+        $globalContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+
+        startContext();
+
+        $requestContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+
+        $this->assertNotSame($globalContextId, $requestContextId);
+
+        endContext();
+
+        $this->assertSame($globalContextId, SentrySdk::getCurrentRuntimeContext()->getId());
+    }
+
+    public function testWithContext(): void
+    {
+        SentrySdk::init();
+
+        $globalContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+
+        $result = withContext(function () use ($globalContextId): string {
+            $this->assertNotSame($globalContextId, SentrySdk::getCurrentRuntimeContext()->getId());
+
+            return 'ok';
+        });
+
+        $this->assertSame('ok', $result);
+        $this->assertSame($globalContextId, SentrySdk::getCurrentRuntimeContext()->getId());
+    }
+
+    public function testNestedWithContextReusesOuterContext(): void
+    {
+        SentrySdk::init();
+
+        $globalContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+        $outerContextId = null;
+        $innerContextId = null;
+
+        withContext(function () use (&$outerContextId, &$innerContextId, $globalContextId): void {
+            $outerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+
+            configureScope(static function (Scope $scope): void {
+                $scope->setTag('outer', 'yes');
+            });
+
+            withContext(static function () use (&$innerContextId): void {
+                $innerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
+            });
+
+            $event = Event::createEvent();
+
+            configureScope(static function (Scope $scope) use (&$event): void {
+                $event = $scope->applyToEvent($event);
+            });
+
+            $this->assertNotSame($globalContextId, SentrySdk::getCurrentRuntimeContext()->getId());
+            $this->assertSame('yes', $event->getTags()['outer'] ?? null);
+        });
+
+        $this->assertNotNull($outerContextId);
+        $this->assertNotNull($innerContextId);
+        $this->assertSame($outerContextId, $innerContextId);
+        $this->assertSame($globalContextId, SentrySdk::getCurrentRuntimeContext()->getId());
+    }
+
+    public function testWithContextAlwaysEndsContextWithOptionalTimeout(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->once())
+            ->method('flush')
+            ->with(13)
+            ->willReturn(new Result(ResultStatus::success()));
+
+        SentrySdk::init($client);
+
+        try {
+            withContext(static function (): void {
+                throw new \RuntimeException('callback failed');
+            }, 13);
+
+            $this->fail('The callback exception should be rethrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('callback failed', $exception->getMessage());
+        }
+    }
+
     public function testStartTransaction(): void
     {
         $transactionContext = new TransactionContext('foo');
@@ -586,5 +685,76 @@ final class FunctionsTest extends TestCase
 
         $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
         $this->assertTrue($dynamicSamplingContext->isFrozen());
+    }
+
+    public function testContinueTraceWhenOrgMismatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        SentrySdk::init($client);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=2'
+        );
+
+        $newTraceId = (string) $transactionContext->getTraceId();
+        $newSampleRand = $transactionContext->getMetadata()->getSampleRand();
+
+        $this->assertNotSame('566e3688a61d4bc888951642d6f14a19', $newTraceId);
+        $this->assertNotEmpty($newTraceId);
+        $this->assertNull($transactionContext->getParentSpanId());
+        $this->assertNull($transactionContext->getParentSampled());
+        $this->assertNull($transactionContext->getMetadata()->getDynamicSamplingContext());
+        $this->assertNotNull($newSampleRand);
+
+        configureScope(function (Scope $scope) use ($newTraceId, $newSampleRand): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame($newTraceId, (string) $propagationContext->getTraceId());
+            $this->assertNull($propagationContext->getParentSpanId());
+            $this->assertNull($propagationContext->getDynamicSamplingContext());
+            $this->assertSame($newSampleRand, $propagationContext->getSampleRand());
+        });
+    }
+
+    public function testContinueTraceWhenOrgMatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        SentrySdk::init($client);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=1'
+        );
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $transactionContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
+        $this->assertTrue($transactionContext->getParentSampled());
+
+        configureScope(function (Scope $scope): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+
+            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+
+            $this->assertNotNull($dynamicSamplingContext);
+            $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
+        });
     }
 }

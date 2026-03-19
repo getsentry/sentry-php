@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing\Traits;
 
+use Sentry\SentrySdk;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -65,22 +66,29 @@ trait TraceHeaderParserTrait
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
-        if ($hasSentryTrace && !$samplingContext->hasEntries()) {
-            // The request comes from an old SDK which does not support Dynamic Sampling.
-            // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
-            $samplingContext->freeze();
-            $result['dynamicSamplingContext'] = $samplingContext;
+        if ($hasSentryTrace && !self::shouldContinueTrace($samplingContext)) {
+            $result['traceId'] = null;
+            $result['parentSpanId'] = null;
+            $result['parentSampled'] = null;
+
+            return $result;
         }
 
-        if ($hasSentryTrace && $samplingContext->hasEntries()) {
+        if ($hasSentryTrace) {
+            // The request comes from an old SDK which does not support Dynamic Sampling.
+            // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
+            if (!$samplingContext->hasEntries()) {
+                $samplingContext->freeze();
+            }
+
             // The baggage header contains Dynamic Sampling Context data from an upstream SDK.
             // Propagate this Dynamic Sampling Context.
             $result['dynamicSamplingContext'] = $samplingContext;
-        }
 
-        // Store the propagated traces sample rate
-        if ($samplingContext->has('sample_rate')) {
-            $result['parentSamplingRate'] = (float) $samplingContext->get('sample_rate');
+            // Store the propagated traces sample rate
+            if ($samplingContext->has('sample_rate')) {
+                $result['parentSamplingRate'] = (float) $samplingContext->get('sample_rate');
+            }
         }
 
         // Store the propagated trace sample rand or generate a new one
@@ -102,5 +110,45 @@ trait TraceHeaderParserTrait
         }
 
         return $result;
+    }
+
+    private static function shouldContinueTrace(DynamicSamplingContext $samplingContext): bool
+    {
+        $options = SentrySdk::getClient()->getOptions();
+        $clientOrgId = $options->getOrgId();
+        if ($clientOrgId === null && $options->getDsn() !== null) {
+            $clientOrgId = $options->getDsn()->getOrgId();
+        }
+
+        $baggageOrgId = $samplingContext->get('org_id');
+        $logger = $options->getLoggerOrNullLogger();
+
+        // both org IDs are set but are not equals
+        if ($clientOrgId !== null && $baggageOrgId !== null && ((string) $clientOrgId !== $baggageOrgId)) {
+            $logger->debug(
+                \sprintf(
+                    "Starting a new trace because org IDs don't match (incoming baggage org_id: %s, SDK org_id: %s)",
+                    $baggageOrgId,
+                    $clientOrgId
+                )
+            );
+
+            return false;
+        }
+
+        // One org ID is not set and strict trace continuation is enabled
+        if ($options->isStrictTraceContinuationEnabled() && ($clientOrgId === null) !== ($baggageOrgId === null)) {
+            $logger->debug(
+                \sprintf(
+                    'Starting a new trace because strict trace continuation is enabled and one org ID is missing (incoming baggage org_id: %s, SDK org_id: %s)',
+                    $baggageOrgId !== null ? $baggageOrgId : 'none',
+                    $clientOrgId !== null ? (string) $clientOrgId : 'none'
+                )
+            );
+
+            return false;
+        }
+
+        return true;
     }
 }

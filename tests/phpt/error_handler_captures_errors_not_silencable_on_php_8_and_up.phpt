@@ -45,7 +45,7 @@ $transport = new class implements TransportInterface {
     }
 };
 
-error_reporting(E_ALL & ~E_USER_ERROR);
+error_reporting(E_ALL & ~E_USER_ERROR & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $options = [
     'dsn' => 'http://public@example.com/sentry/1',
