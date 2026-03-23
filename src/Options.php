@@ -185,6 +185,32 @@ final class Options
     }
 
     /**
+     * Gets the number of buffered logs that trigger an immediate flush.
+     */
+    public function getLogFlushThreshold(): ?int
+    {
+        /**
+         * @var int|null $logFlushThreshold
+         */
+        $logFlushThreshold = $this->options['log_flush_threshold'];
+
+        return $logFlushThreshold;
+    }
+
+    /**
+     * Sets the number of buffered logs that trigger an immediate flush.
+     * null will never trigger an immediate flush.
+     */
+    public function setLogFlushThreshold(?int $logFlushThreshold): self
+    {
+        $options = array_merge($this->options, ['log_flush_threshold' => $logFlushThreshold]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Sets if metrics should be enabled or not.
      */
     public function setEnableMetrics(bool $enableTracing): self
@@ -1337,6 +1363,7 @@ final class Options
             'sample_rate' => 1,
             'enable_tracing' => null,
             'enable_logs' => false,
+            'log_flush_threshold' => null,
             'enable_metrics' => true,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
@@ -1414,6 +1441,7 @@ final class Options
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('enable_tracing', ['null', 'bool']);
         $resolver->setAllowedTypes('enable_logs', 'bool');
+        $resolver->setAllowedTypes('log_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('enable_metrics', 'bool');
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
@@ -1467,6 +1495,7 @@ final class Options
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
+        $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
 
@@ -1631,5 +1660,15 @@ final class Options
     private function validateContextLinesOption(?int $contextLines): bool
     {
         return $contextLines === null || $contextLines >= 0;
+    }
+
+    /**
+     * Validates that the value passed to the "log_flush_threshold" option is valid.
+     *
+     * @param int|null $logFlushThreshold The value to validate
+     */
+    private function validateLogFlushThresholdOption(?int $logFlushThreshold): bool
+    {
+        return $logFlushThreshold === null || $logFlushThreshold > 0;
     }
 }

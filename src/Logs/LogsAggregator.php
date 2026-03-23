@@ -156,6 +156,12 @@ final class LogsAggregator
         }
 
         $this->logs[] = $log;
+
+        $logFlushThreshold = $options->getLogFlushThreshold();
+
+        if ($logFlushThreshold !== null && \count($this->logs) >= $logFlushThreshold) {
+            $this->flush($hub);
+        }
     }
 
     public function flush(?HubInterface $hub = null): ?EventId
