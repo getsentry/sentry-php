@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -527,5 +528,85 @@ final class ScopeTest extends TestCase
         $this->assertInstanceOf(DynamicSamplingContext::class, $dynamicSamplingContext);
         $this->assertSame('foo', $dynamicSamplingContext->get('transaction'));
         $this->assertSame('566e3688a61d4bc888951642d6f14a19', $dynamicSamplingContext->get('trace_id'));
+    }
+
+    public function testGetTraceContextPrefersExternalPropagationContextOverPropagationContext(): void
+    {
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $scope = new Scope($propagationContext);
+
+        $this->assertSame([
+            'trace_id' => '771a43a4192642f0b136d5159a501700',
+            'span_id' => '1234567890abcdef',
+        ], $scope->getTraceContext());
+
+        Scope::clearExternalPropagationContext();
+    }
+
+    public function testGetTraceContextPrefersLocalSpanOverExternalPropagationContext(): void
+    {
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $transaction = new Transaction(new TransactionContext('foo'));
+        $transaction->setSpanId(new SpanId('8c2df92a922b4efe'));
+        $transaction->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $span = $transaction->startChild(new SpanContext());
+        $span->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        $scope = new Scope();
+        $scope->setSpan($span);
+
+        $this->assertSame([
+            'span_id' => '566e3688a61d4bc8',
+            'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+            'origin' => 'manual',
+            'parent_span_id' => '8c2df92a922b4efe',
+        ], $scope->getTraceContext());
+
+        Scope::clearExternalPropagationContext();
+    }
+
+    public function testApplyToEventSkipsDynamicSamplingContextWhenUsingExternalPropagationContext(): void
+    {
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $scope = new Scope();
+        $event = $scope->applyToEvent(Event::createEvent(), null, new Options([
+            'dsn' => 'http://public@example.com/1',
+            'release' => '1.0.0',
+            'environment' => 'test',
+            'traces_sample_rate' => 1.0,
+        ]));
+
+        $this->assertNotNull($event);
+        $this->assertSame([
+            'trace' => [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ],
+        ], $event->getContexts());
+        $this->assertNull($event->getSdkMetadata('dynamic_sampling_context'));
+
+        Scope::clearExternalPropagationContext();
     }
 }

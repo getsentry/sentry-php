@@ -72,11 +72,15 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
+        $traceData = $this->getTraceData($hub);
+        $traceId = $traceData['trace_id'];
+        $parentSpanId = $traceData['parent_span_id'];
+
+        $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
             ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
+            ->setAttribute('sentry.trace.parent_span_id', $parentSpanId);
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
@@ -182,20 +186,41 @@ final class LogsAggregator
         return $this->logs;
     }
 
-    private function getTraceId(HubInterface $hub): string
+    /**
+     * @return array{trace_id: string, parent_span_id: string|null}
+     */
+    private function getTraceData(HubInterface $hub): array
     {
         $span = $hub->getSpan();
 
         if ($span !== null) {
-            return (string) $span->getTraceId();
+            return [
+                'trace_id' => (string) $span->getTraceId(),
+                'parent_span_id' => (string) $span->getSpanId(),
+            ];
         }
 
-        $traceId = '';
+        $traceData = null;
 
-        $hub->configureScope(static function (Scope $scope) use (&$traceId) {
-            $traceId = (string) $scope->getPropagationContext()->getTraceId();
+        $hub->configureScope(static function (Scope $scope) use (&$traceData): void {
+            $externalPropagationContext = Scope::getExternalPropagationContext();
+
+            if ($externalPropagationContext !== null) {
+                $traceData = [
+                    'trace_id' => $externalPropagationContext['trace_id'],
+                    'parent_span_id' => $externalPropagationContext['span_id'],
+                ];
+
+                return;
+            }
+
+            $traceData = [
+                'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
+                'parent_span_id' => null,
+            ];
         });
 
-        return $traceId;
+        /** @var array{trace_id: string, parent_span_id: string|null} $traceData */
+        return $traceData;
     }
 }

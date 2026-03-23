@@ -13,6 +13,7 @@ use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\StubTransport;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -258,5 +259,58 @@ final class LogsAggregatorTest extends TestCase
 
         $this->assertCount(2, $aggregator->all());
         $this->assertCount(0, StubTransport::$events);
+    }
+
+    public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
+        $propagationContext->setSpanId(new SpanId('1234567890abcdef'));
+
+        $hub = new Hub($client, new Scope($propagationContext));
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+        $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
+
+        $parentSpanId = $logs[0]->attributes()->get('sentry.trace.parent_span_id');
+        $this->assertNotNull($parentSpanId);
+        // Log attributes normalize null values to the string "null".
+        $this->assertSame('null', $parentSpanId->getValue());
+    }
+
+    public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+        $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
+        $this->assertSame('1234567890abcdef', $logs[0]->attributes()->get('sentry.trace.parent_span_id')->getValue());
+
+        Scope::clearExternalPropagationContext();
     }
 }

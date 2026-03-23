@@ -7,6 +7,7 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
@@ -310,6 +311,31 @@ function trace(callable $trace, SpanContext $context)
 }
 
 /**
+ * Returns the OTLP traces endpoint configured for the current client.
+ */
+function getOtlpTracesEndpointUrl(): ?string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    if ($client === null) {
+        return null;
+    }
+
+    $integration = $hub->getIntegration(OTLPIntegration::class);
+    if ($integration instanceof OTLPIntegration && $integration->getCollectorUrl() !== null) {
+        return $integration->getCollectorUrl();
+    }
+
+    $dsn = $client->getOptions()->getDsn();
+    if ($dsn === null) {
+        return null;
+    }
+
+    return $dsn->getOtlpTracesEndpointUrl();
+}
+
+/**
  * Creates the current Sentry traceparent string, to be used as a HTTP header value
  * or HTML meta tag value.
  * This function is context aware, as in it either returns the traceparent based
@@ -333,6 +359,10 @@ function getTraceparent(): string
 
     $traceParent = '';
     $hub->configureScope(static function (Scope $scope) use (&$traceParent) {
+        if ($scope->hasExternalPropagationContext()) {
+            return;
+        }
+
         $traceParent = $scope->getPropagationContext()->toTraceparent();
     });
 
@@ -376,6 +406,10 @@ function getBaggage(): string
 
     $baggage = '';
     $hub->configureScope(static function (Scope $scope) use (&$baggage) {
+        if ($scope->hasExternalPropagationContext()) {
+            return;
+        }
+
         $baggage = $scope->getPropagationContext()->toBaggage();
     });
 
