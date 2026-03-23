@@ -72,9 +72,9 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $traceContext = $this->getTraceContext($hub);
-        $traceId = $traceContext['trace_id'];
-        $parentSpanId = $traceContext['span_id'];
+        $traceData = $this->getTraceData($hub);
+        $traceId = $traceData['trace_id'];
+        $parentSpanId = $traceData['parent_span_id'];
 
         $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
@@ -187,17 +187,40 @@ final class LogsAggregator
     }
 
     /**
-     * @return array{trace_id: string, span_id: string}
+     * @return array{trace_id: string, parent_span_id: string|null}
      */
-    private function getTraceContext(HubInterface $hub): array
+    private function getTraceData(HubInterface $hub): array
     {
-        $traceContext = null;
+        $span = $hub->getSpan();
 
-        $hub->configureScope(static function (Scope $scope) use (&$traceContext): void {
-            $traceContext = $scope->getTraceContext();
+        if ($span !== null) {
+            return [
+                'trace_id' => (string) $span->getTraceId(),
+                'parent_span_id' => (string) $span->getSpanId(),
+            ];
+        }
+
+        $traceData = null;
+
+        $hub->configureScope(static function (Scope $scope) use (&$traceData): void {
+            $externalPropagationContext = Scope::getExternalPropagationContext();
+
+            if ($externalPropagationContext !== null) {
+                $traceData = [
+                    'trace_id' => $externalPropagationContext['trace_id'],
+                    'parent_span_id' => $externalPropagationContext['span_id'],
+                ];
+
+                return;
+            }
+
+            $traceData = [
+                'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
+                'parent_span_id' => null,
+            ];
         });
 
-        /** @var array{trace_id: string, span_id: string} $traceContext */
-        return $traceContext;
+        /** @var array{trace_id: string, parent_span_id: string|null} $traceData */
+        return $traceData;
     }
 }
