@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## 4.23.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.23.0.
+
+### Features
+
+- Add `OTLPIntegration` support to interoperate with OpenTelemetry traces. [(#2030)](https://github.com/getsentry/sentry-php/pull/2030)
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'integrations' => [
+        new \Sentry\Integration\OTLPIntegration(),
+    ],
+]);
+```
+
+- Add `log_flush_threshold` to automatically flush buffered logs after a configured number of log records. [(#2032)](https://github.com/getsentry/sentry-php/pull/2032)
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'enable_logs' => true,
+    'log_flush_threshold' => 20,
+]);
+```
+
+
 ## 4.22.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.22.0.
