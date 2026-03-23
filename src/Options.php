@@ -199,7 +199,7 @@ final class Options
 
     /**
      * Sets the number of buffered logs that trigger an immediate flush.
-     * null will never trigger an immediate flush
+     * null will never trigger an immediate flush.
      */
     public function setLogFlushThreshold(?int $logFlushThreshold): self
     {
