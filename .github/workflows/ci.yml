@@ -46,12 +46,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
         with:
           php-version: ${{ matrix.php.version }}
           coverage: xdebug
@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php.version }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
@@ -101,7 +101,7 @@ jobs:
         run: vendor/bin/phpunit --testsuite oom --no-coverage
 
       - name: Upload code coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -115,12 +115,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -131,7 +131,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
@@ -180,12 +180,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -196,7 +196,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
