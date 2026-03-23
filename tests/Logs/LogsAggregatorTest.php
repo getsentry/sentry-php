@@ -12,6 +12,7 @@ use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\StubTransport;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -206,5 +207,56 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
         $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
+    }
+
+    public function testFlushesImmediatelyWhenThresholdIsReached(): void
+    {
+        StubTransport::$events = [];
+
+        $transport = new StubTransport();
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'log_flush_threshold' => 2,
+        ])->setTransport($transport)->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'First message');
+
+        $this->assertCount(1, $aggregator->all());
+        $this->assertCount(0, StubTransport::$events);
+
+        $aggregator->add(LogLevel::warn(), 'Second message');
+
+        $this->assertCount(0, $aggregator->all());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertCount(2, StubTransport::$events[0]->getLogs());
+        $this->assertSame('First message', StubTransport::$events[0]->getLogs()[0]->getBody());
+        $this->assertSame('Second message', StubTransport::$events[0]->getLogs()[1]->getBody());
+    }
+
+    public function testDoesNotFlushImmediatelyWhenThresholdIsNull(): void
+    {
+        StubTransport::$events = [];
+
+        $transport = new StubTransport();
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'log_flush_threshold' => null,
+        ])->setTransport($transport)->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'First message');
+        $aggregator->add(LogLevel::warn(), 'Second message');
+
+        $this->assertCount(2, $aggregator->all());
+        $this->assertCount(0, StubTransport::$events);
     }
 }

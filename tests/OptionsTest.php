@@ -101,6 +101,20 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'log_flush_threshold',
+            10,
+            'getLogFlushThreshold',
+            'setLogFlushThreshold',
+        ];
+
+        yield [
+            'log_flush_threshold',
+            null,
+            'getLogFlushThreshold',
+            'setLogFlushThreshold',
+        ];
+
+        yield [
             'traces_sample_rate',
             0.5,
             'getTracesSampleRate',
@@ -638,6 +652,33 @@ final class OptionsTest extends TestCase
         yield [
             null,
             null,
+        ];
+    }
+
+    /**
+     * @dataProvider logFlushThresholdOptionIsValidatedCorrectlyDataProvider
+     */
+    public function testLogFlushThresholdOptionIsValidatedCorrectly(bool $isValid, $value): void
+    {
+        if (!$isValid) {
+            $this->expectException(InvalidOptionsException::class);
+        }
+
+        $options = new Options(['log_flush_threshold' => $value]);
+
+        $this->assertSame($value, $options->getLogFlushThreshold());
+    }
+
+    public static function logFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
+    {
+        return [
+            [false, -1],
+            [false, 0],
+            [true, 1],
+            [true, 10],
+            [true, null],
+            [false, 'string'],
+            [false, '1'],
         ];
     }
 
