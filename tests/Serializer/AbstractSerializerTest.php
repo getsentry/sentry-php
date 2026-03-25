@@ -80,6 +80,7 @@ abstract class AbstractSerializerTest extends TestCase
 
     /**
      * @requires PHP >= 8.1
+     *
      * @dataProvider serializeAllObjectsDataProvider
      */
     public function testEnumsAreNotSerializedAsObjects(bool $serializeAllObjects): void
@@ -98,6 +99,7 @@ abstract class AbstractSerializerTest extends TestCase
 
     /**
      * @requires PHP >= 8.1
+     *
      * @dataProvider serializeAllObjectsDataProvider
      */
     public function testBackedEnumsAreNotSerializedAsObjects(bool $serializeAllObjects): void
