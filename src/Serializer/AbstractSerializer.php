@@ -116,10 +116,6 @@ abstract class AbstractSerializer
                 return $serializedArray;
             }
 
-            if ($value instanceof \UnitEnum) {
-                return $this->serializeValue($value);
-            }
-
             if (\is_object($value)) {
                 $classSerializers = $this->resolveClassSerializers($value);
 
@@ -141,6 +137,10 @@ abstract class AbstractSerializer
 
                 if ($value instanceof \DateTimeInterface) {
                     return $this->formatDate($value);
+                }
+
+                if ($value instanceof \UnitEnum) {
+                    return $this->serializeValue($value);
                 }
 
                 if ($this->serializeAllObjects || ($value instanceof \stdClass)) {
