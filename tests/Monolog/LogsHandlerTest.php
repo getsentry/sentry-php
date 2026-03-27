@@ -135,6 +135,29 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('auto.log.monolog', $log->attributes()->toSimpleArray()['sentry.origin']);
     }
 
+    public function testChannelNotIncludedByDefault(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create('without channel', Logger::WARNING, 'channel.foo', [], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+        $log = $logs[0];
+        $this->assertArrayNotHasKey('channel', $log->attributes()->toSimpleArray());
+    }
+
+    public function testChannelIncludedWhenEnabled(): void
+    {
+        $handler = new LogsHandler(LogLevel::warn(), true, true);
+        $handler->handle(RecordFactory::create('with channel', Logger::WARNING, 'channel.foo', [], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+        $log = $logs[0];
+        $this->assertArrayHasKey('channel', $log->attributes()->toSimpleArray());
+        $this->assertSame('channel.foo', $log->attributes()->toSimpleArray()['channel']);
+    }
+
     public function testOriginTagNotAppliedWhenUsingDirectly()
     {
         \Sentry\logger()->info('No origin attribute');
