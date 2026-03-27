@@ -200,7 +200,7 @@ final class LogsAggregatorTest extends TestCase
 
         $this->assertSame('1.0.0', $attributes->get('sentry.release')->getValue());
         $this->assertSame('production', $attributes->get('sentry.environment')->getValue());
-        $this->assertSame('web-server-01', $attributes->get('sentry.server.address')->getValue());
+        $this->assertSame('web-server-01', $attributes->get('server.address')->getValue());
         $this->assertSame('User %s performed action %s', $attributes->get('sentry.message.template')->getValue());
         $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
         $this->assertSame('sentry.php', $attributes->get('sentry.sdk.name')->getValue());
