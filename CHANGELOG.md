@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.23.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.23.1.
+
+### Bug Fixes
+
+- Use `server.address` log attribute instead of `sentry.server.address`. [(#2040)](https://github.com/getsentry/sentry-php/pull/2040)
+
 ## 4.23.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.23.0.
