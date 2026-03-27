@@ -54,7 +54,7 @@ final class LogsHandlerTest extends TestCase
                 $log->attributes()->toSimpleArray(),
                 static function (string $key) {
                     // We are not testing Sentry's own attributes here, only the ones the user supplied so filter them out of the expected attributes
-                    return !str_starts_with($key, 'sentry.') || $key === 'server.address';
+                    return !str_starts_with($key, 'sentry.') && $key !== 'server.address';
                 },
                 \ARRAY_FILTER_USE_KEY
             )
