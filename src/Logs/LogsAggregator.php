@@ -79,7 +79,7 @@ final class LogsAggregator
         $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
-            ->setAttribute('sentry.server.address', $options->getServerName())
+            ->setAttribute('server.address', $options->getServerName())
             ->setAttribute('sentry.trace.parent_span_id', $parentSpanId);
 
         if ($client instanceof Client) {
