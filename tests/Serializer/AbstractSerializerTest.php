@@ -66,6 +66,68 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Enum Sentry\Tests\Serializer\SerializerTestEnum::CASE_NAME', $result);
     }
 
+    /**
+     * @requires PHP >= 8.1
+     */
+    public function testBackedEnumsIncludeValue(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = SerializerTestBackedEnum::CASE_NAME;
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Enum Sentry\Tests\Serializer\SerializerTestBackedEnum::CASE_NAME(case_value)', $result);
+    }
+
+    /**
+     * @requires PHP >= 8.1
+     */
+    public function testUnitEnumsShowName(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = SerializerTestEnum::CASE_NAME;
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Enum Sentry\Tests\Serializer\SerializerTestEnum::CASE_NAME', $result);
+    }
+
+    /**
+     * @requires PHP >= 8.1
+     *
+     * @dataProvider serializeAllObjectsDataProvider
+     */
+    public function testEnumsAreNotSerializedAsObjects(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $input = SerializerTestEnum::CASE_NAME;
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Enum Sentry\Tests\Serializer\SerializerTestEnum::CASE_NAME', $result);
+    }
+
+    /**
+     * @requires PHP >= 8.1
+     *
+     * @dataProvider serializeAllObjectsDataProvider
+     */
+    public function testBackedEnumsAreNotSerializedAsObjects(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $input = SerializerTestBackedEnum::CASE_NAME;
+        $result = $this->invokeSerialization($serializer, $input);
+
+        $this->assertSame('Enum Sentry\Tests\Serializer\SerializerTestBackedEnum::CASE_NAME(case_value)', $result);
+    }
+
     public static function objectsWithIdPropertyDataProvider(): array
     {
         return [
