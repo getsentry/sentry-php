@@ -51,7 +51,7 @@ jobs:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ matrix.php.version }}
           coverage: xdebug
@@ -120,7 +120,7 @@ jobs:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -185,7 +185,7 @@ jobs:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@728c6c6b8cf02c2e48117716a91ee48313958a19 # v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: '8.4'
           coverage: none
