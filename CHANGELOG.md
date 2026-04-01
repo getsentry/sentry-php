@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 4.24.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.24.0.
+
+### Bug Fixes
+
+- Serialize native PHP enums as readable enum strings, including backed enum values, instead of opaque `Object` strings. [(#2038)](https://github.com/getsentry/sentry-php/pull/2038)
+- Exclude `AGENTS.md` and `CLAUDE.md` from distribution archives. [(#2046)](https://github.com/getsentry/sentry-php/pull/2046)
+
+### Misc
+
+- Deprecate `Sentry\Monolog\Handler` in favor of `Sentry\Monolog\LogsHandler` with the `enable_logs` SDK option. [(#2051)](https://github.com/getsentry/sentry-php/pull/2051)
+
 ## 4.23.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.23.1.
