@@ -51,6 +51,7 @@ use Sentry\Transport\TransportInterface;
  *     integrations?: IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[],
  *     logger?: LoggerInterface|null,
  *     log_flush_threshold?: int|null,
+ *     metric_flush_threshold?: int|null,
  *     max_breadcrumbs?: int,
  *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
  *     max_value_length?: int,

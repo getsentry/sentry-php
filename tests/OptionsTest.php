@@ -115,6 +115,20 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'metric_flush_threshold',
+            10,
+            'getMetricFlushThreshold',
+            'setMetricFlushThreshold',
+        ];
+
+        yield [
+            'metric_flush_threshold',
+            null,
+            'getMetricFlushThreshold',
+            'setMetricFlushThreshold',
+        ];
+
+        yield [
             'traces_sample_rate',
             0.5,
             'getTracesSampleRate',
@@ -670,6 +684,33 @@ final class OptionsTest extends TestCase
     }
 
     public static function logFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
+    {
+        return [
+            [false, -1],
+            [false, 0],
+            [true, 1],
+            [true, 10],
+            [true, null],
+            [false, 'string'],
+            [false, '1'],
+        ];
+    }
+
+    /**
+     * @dataProvider metricFlushThresholdOptionIsValidatedCorrectlyDataProvider
+     */
+    public function testMetricFlushThresholdOptionIsValidatedCorrectly(bool $isValid, $value): void
+    {
+        if (!$isValid) {
+            $this->expectException(InvalidOptionsException::class);
+        }
+
+        $options = new Options(['metric_flush_threshold' => $value]);
+
+        $this->assertSame($value, $options->getMetricFlushThreshold());
+    }
+
+    public static function metricFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
             [false, -1],
