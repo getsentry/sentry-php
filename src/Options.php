@@ -211,6 +211,32 @@ final class Options
     }
 
     /**
+     * Gets the number of buffered metrics that trigger an immediate flush.
+     */
+    public function getMetricFlushThreshold(): ?int
+    {
+        /**
+         * @var int|null $metricFlushThreshold
+         */
+        $metricFlushThreshold = $this->options['metric_flush_threshold'];
+
+        return $metricFlushThreshold;
+    }
+
+    /**
+     * Sets the number of buffered metrics that trigger an immediate flush.
+     * null will never trigger an immediate flush.
+     */
+    public function setMetricFlushThreshold(?int $metricFlushThreshold): self
+    {
+        $options = array_merge($this->options, ['metric_flush_threshold' => $metricFlushThreshold]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Sets if metrics should be enabled or not.
      */
     public function setEnableMetrics(bool $enableTracing): self
@@ -1365,6 +1391,7 @@ final class Options
             'enable_logs' => false,
             'log_flush_threshold' => null,
             'enable_metrics' => true,
+            'metric_flush_threshold' => null,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
@@ -1443,6 +1470,7 @@ final class Options
         $resolver->setAllowedTypes('enable_logs', 'bool');
         $resolver->setAllowedTypes('log_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('enable_metrics', 'bool');
+        $resolver->setAllowedTypes('metric_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
@@ -1496,6 +1524,7 @@ final class Options
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
         $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
+        $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
 
@@ -1670,5 +1699,15 @@ final class Options
     private function validateLogFlushThresholdOption(?int $logFlushThreshold): bool
     {
         return $logFlushThreshold === null || $logFlushThreshold > 0;
+    }
+
+    /**
+     * Validates that the value passed to the "metric_flush_threshold" option is valid.
+     *
+     * @param int|null $metricFlushThreshold The value to validate
+     */
+    private function validateMetricFlushThresholdOption(?int $metricFlushThreshold): bool
+    {
+        return $metricFlushThreshold === null || $metricFlushThreshold > 0;
     }
 }
