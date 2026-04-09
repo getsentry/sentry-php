@@ -111,8 +111,22 @@ final class SentryExceptionHandlerTest extends TestCase
 
         $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
 
-        $this->assertFalse($handler->isHandling($record));
+        $this->assertTrue($handler->isHandling($record));
         $this->assertFalse($handler->handle($record));
+    }
+
+    public function testIsHandlingInMonolog2SupportsMinimalLevelRecord(): void
+    {
+        if (Logger::API >= 3) {
+            $this->markTestSkipped('Monolog 3 always passes full records to isHandling.');
+        }
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::WARNING, false);
+
+        $this->assertTrue($handler->isHandling(['level' => Logger::ERROR]));
+        $this->assertFalse($handler->isHandling(['level' => Logger::INFO]));
     }
 
     public function testHandleIgnoresRecordsBelowThreshold(): void

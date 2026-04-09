@@ -37,10 +37,6 @@ class SentryExceptionHandler extends AbstractHandler
      */
     public function isHandling($record): bool
     {
-        if ($this->getExceptionFromRecord($record) === null) {
-            return false;
-        }
-
         /** @var LogRecord $record */
         return parent::isHandling($record);
     }
