@@ -35,23 +35,11 @@ class SentryExceptionHandler extends AbstractHandler
     /**
      * @param array<string, mixed>|LogRecord $record
      */
-    public function isHandling($record): bool
-    {
-        if ($this->getExceptionFromRecord($record) === null) {
-            return false;
-        }
-
-        /** @var LogRecord $record */
-        return parent::isHandling($record);
-    }
-
-    /**
-     * @param array<string, mixed>|LogRecord $record
-     */
     public function handle($record): bool
     {
         $exception = $this->getExceptionFromRecord($record);
 
+        /** @phpstan-ignore-next-line */
         if ($exception === null || !$this->isHandling($record)) {
             return false;
         }
