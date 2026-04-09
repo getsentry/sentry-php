@@ -32,7 +32,7 @@ final class AgentClientTest extends TestCase
         $request->setStringBody($envelope);
 
         $client = new AgentClient('127.0.0.1', $this->agentPort);
-        $response = $client->sendRequest($request, new \Sentry\Options());
+        $response = $client->sendRequest($request, new Options());
 
         $this->waitForEnvelopeCount(1);
         $agentOutput = $this->stopTestAgent();
@@ -58,7 +58,7 @@ final class AgentClientTest extends TestCase
         });
 
         try {
-            $response = $client->sendRequest($request, new \Sentry\Options());
+            $response = $client->sendRequest($request, new Options());
         } finally {
             restore_error_handler();
         }
@@ -70,7 +70,7 @@ final class AgentClientTest extends TestCase
     public function testClientReturnsErrorWhenBodyIsEmpty(): void
     {
         $client = new AgentClient();
-        $response = $client->sendRequest(new Request(), new \Sentry\Options());
+        $response = $client->sendRequest(new Request(), new Options());
 
         $this->assertSame(400, $response->getStatusCode());
         $this->assertTrue($response->hasError());

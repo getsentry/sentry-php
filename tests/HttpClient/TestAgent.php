@@ -134,13 +134,7 @@ trait TestAgent
             }
 
             if (microtime(true) - $startTime > $timeout) {
-                throw new \RuntimeException(
-                    \sprintf(
-                        'Timeout waiting for %d envelope(s), got %d.',
-                        $expectedCount,
-                        \count($output['messages'])
-                    )
-                );
+                throw new \RuntimeException(\sprintf('Timeout waiting for %d envelope(s), got %d.', $expectedCount, \count($output['messages'])));
             }
 
             usleep(10000);

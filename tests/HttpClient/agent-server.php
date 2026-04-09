@@ -55,7 +55,7 @@ while ($connection = @stream_socket_accept($server, -1)) {
 
         $buffer .= $chunk;
 
-        while (\strlen($buffer) >= 4) {
+        while (strlen($buffer) >= 4) {
             if ($messageLength === 0) {
                 $unpackedHeader = unpack('N', substr($buffer, 0, 4));
 
@@ -66,7 +66,7 @@ while ($connection = @stream_socket_accept($server, -1)) {
                 $messageLength = $unpackedHeader[1];
             }
 
-            if (\strlen($buffer) < $messageLength) {
+            if (strlen($buffer) < $messageLength) {
                 break;
             }
 
