@@ -34,7 +34,7 @@ trait TestServer
     /**
      * @var int the port on which the server is listening, this default value was randomly chosen
      */
-    protected $serverPort = 44884;
+    protected $serverPort = 45884;
 
     public function startTestServer(): string
     {
@@ -50,9 +50,9 @@ trait TestServer
 
         $this->serverProcess = proc_open(
             $command = \sprintf(
-                'php -S localhost:%d -t %s',
+                'php -S localhost:%d %s',
                 $this->serverPort,
-                realpath(__DIR__ . '/../testserver')
+                realpath(__DIR__ . '/../testserver/index.php')
             ),
             [2 => ['pipe', 'w']],
             $pipes
