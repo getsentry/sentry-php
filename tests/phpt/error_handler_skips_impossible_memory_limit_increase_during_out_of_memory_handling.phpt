@@ -29,10 +29,7 @@ namespace Sentry {
 }
 
 namespace Sentry\Tests {
-    use Sentry\Event;
-    use Sentry\Transport\Result;
-    use Sentry\Transport\ResultStatus;
-    use Sentry\Transport\TransportInterface;
+    use Sentry\ErrorHandler;
 
     $vendor = __DIR__;
 
@@ -56,28 +53,12 @@ namespace Sentry\Tests {
         return true;
     });
 
-    $transport = new class implements TransportInterface {
-        public function send(Event $event): Result
-        {
-            $GLOBALS['sentry_test_transport_calls'] = ($GLOBALS['sentry_test_transport_calls'] ?? 0) + 1;
-
-            return new Result(ResultStatus::success());
-        }
-
-        public function close(?int $timeout = null): Result
-        {
-            return new Result(ResultStatus::success());
-        }
-    };
-
-    \Sentry\init([
-        'dsn' => 'http://public@example.com/sentry/1',
-        'transport' => $transport,
-        'capture_silenced_errors' => true,
-    ]);
+    $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
+    $errorHandler->addFatalErrorHandlerListener(static function (): void {
+        echo 'Fatal error listener called' . \PHP_EOL;
+    });
 
     register_shutdown_function(static function (): void {
-        echo 'Transport calls: ' . ($GLOBALS['sentry_test_transport_calls'] ?? 0) . \PHP_EOL;
         echo 'Memory limit increase attempts: ' . ($GLOBALS['sentry_test_ini_set_calls'] ?? 0) . \PHP_EOL;
         echo 'Warning handler calls: ' . ($GLOBALS['sentry_test_warning_handler_calls'] ?? 0) . \PHP_EOL;
     });
@@ -87,6 +68,6 @@ namespace Sentry\Tests {
 ?>
 --EXPECTF--
 %A
-Transport calls: 1
+Fatal error listener called
 Memory limit increase attempts: 0
 Warning handler calls: 0
