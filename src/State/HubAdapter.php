@@ -206,7 +206,7 @@ final class HubAdapter implements HubInterface
     /**
      * @see https://www.php.net/manual/en/language.oop5.magic.php#object.wakeup
      */
-    public function __wakeup()
+    public function __wakeup(): void
     {
         throw new \BadMethodCallException('Unserializing instances of this class is forbidden.');
     }
