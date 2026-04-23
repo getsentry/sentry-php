@@ -400,7 +400,7 @@ final class ErrorHandler
                 // the memory that is currently being used. This produces warnings
                 // that may end up in Sentry. To prevent this, we can check the real
                 // usage before.
-                if ($newMemoryLimit > memory_get_usage()) {
+                if ($newMemoryLimit > memory_get_usage(true)) {
                     $this->setMemoryLimitWithoutHandlingWarnings($newMemoryLimit);
                 }
 
