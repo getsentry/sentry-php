@@ -14,7 +14,7 @@ use Sentry\Tracing\TraceId;
 
 final class PropagationContextTest extends TestCase
 {
-    public function testFromDefaults()
+    public function testFromDefaults(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
 
@@ -27,7 +27,7 @@ final class PropagationContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $propagationContext = PropagationContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
@@ -49,7 +49,7 @@ final class PropagationContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromEnvironment(string $sentryTrace, string $baggage, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $propagationContext = PropagationContext::fromEnvironment($sentryTrace, $baggage);
 
@@ -95,7 +95,7 @@ final class PropagationContextTest extends TestCase
         ];
     }
 
-    public function testToTraceparent()
+    public function testToTraceparent(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
@@ -104,7 +104,7 @@ final class PropagationContextTest extends TestCase
         $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $propagationContext->toTraceparent());
     }
 
-    public function testToBaggage()
+    public function testToBaggage(): void
     {
         $dynamicSamplingContext = DynamicSamplingContext::fromHeader('sentry-trace_id=566e3688a61d4bc888951642d6f14a19');
         $propagationContext = PropagationContext::fromDefaults();
@@ -113,7 +113,7 @@ final class PropagationContextTest extends TestCase
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19', $propagationContext->toBaggage());
     }
 
-    public function testGetTraceContext()
+    public function testGetTraceContext(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
