@@ -73,15 +73,59 @@ final class TraceMetricsTest extends TestCase
         $this->assertArrayHasKey('foo', $metric->getAttributes()->toSimpleArray());
     }
 
-    public function testMetricsBufferFull(): void
+    public function testFlushesImmediatelyWhenMetricFlushThresholdIsReached(): void
     {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'metric_flush_threshold' => 2,
+        ]), StubTransport::getInstance()));
+
+        traceMetrics()->count('first-metric', 1, ['foo' => 'bar']);
+
+        $this->assertCount(0, StubTransport::$events);
+
+        traceMetrics()->count('second-metric', 2, ['foo' => 'bar']);
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(2, $event->getMetrics());
+        $this->assertSame('first-metric', $event->getMetrics()[0]->getName());
+        $this->assertSame('second-metric', $event->getMetrics()[1]->getName());
+    }
+
+    public function testDoesNotFlushImmediatelyWhenMetricFlushThresholdIsNull(): void
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'metric_flush_threshold' => null,
+        ]), StubTransport::getInstance()));
+
+        traceMetrics()->count('first-metric', 1, ['foo' => 'bar']);
+        traceMetrics()->count('second-metric', 2, ['foo' => 'bar']);
+
+        $this->assertCount(0, StubTransport::$events);
+
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertCount(2, StubTransport::$events[0]->getMetrics());
+    }
+
+    public function testMetricsBufferFullWhenMetricFlushThresholdIsNull(): void
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'metric_flush_threshold' => null,
+        ]), StubTransport::getInstance()));
+
         for ($i = 0; $i < MetricsAggregator::METRICS_BUFFER_SIZE + 100; ++$i) {
             traceMetrics()->count('test', 1, ['foo' => 'bar']);
         }
+
         traceMetrics()->flush();
+
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
         $metrics = $event->getMetrics();
+
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, $metrics);
     }
 
