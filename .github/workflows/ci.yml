@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php.version }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
@@ -131,7 +131,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
@@ -196,7 +196,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
