@@ -76,7 +76,7 @@ final class ErrorHandler
     /**
      * @var callable|null The previous exception handler, if any
      *
-     * @phpstan-var null|callable(\Throwable): void
+     * @phpstan-var (callable(\Throwable): void)|null
      */
     private $previousExceptionHandler;
 
