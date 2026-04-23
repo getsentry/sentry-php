@@ -10,11 +10,11 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
-use Sentry\Monolog\SentryExceptionHandler;
+use Sentry\Monolog\ExceptionToSentryIssueHandler;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
 
-final class SentryExceptionHandlerTest extends TestCase
+final class ExceptionToSentryIssueHandlerTest extends TestCase
 {
     /**
      * @dataProvider capturedRecordsDataProvider
@@ -41,7 +41,7 @@ final class SentryExceptionHandlerTest extends TestCase
                 null
             );
 
-        $handler = new SentryExceptionHandler(new Hub($client, new Scope()));
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()));
 
         $this->assertTrue($handler->isHandling($record));
         $handler->handle($record);
@@ -57,7 +57,7 @@ final class SentryExceptionHandlerTest extends TestCase
             ->method('captureException')
             ->with($this->identicalTo($exception), $this->isInstanceOf(Scope::class), null);
 
-        $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::WARNING);
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()), Logger::WARNING);
         $record = RecordFactory::create(
             'foo bar',
             Logger::WARNING,
@@ -82,7 +82,7 @@ final class SentryExceptionHandlerTest extends TestCase
             ->method('captureException')
             ->with($this->identicalTo($exception), $this->isInstanceOf(Scope::class), null);
 
-        $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::WARNING, false);
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()), Logger::WARNING, false);
         $record = RecordFactory::create(
             'foo bar',
             Logger::WARNING,
@@ -109,7 +109,7 @@ final class SentryExceptionHandlerTest extends TestCase
         $client->expects($this->never())
             ->method('captureException');
 
-        $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
 
         $this->assertTrue($handler->isHandling($record));
         $this->assertFalse($handler->handle($record));
@@ -124,7 +124,7 @@ final class SentryExceptionHandlerTest extends TestCase
         $client->expects($this->never())
             ->method('captureException');
 
-        $handler = new SentryExceptionHandler(new Hub($client, new Scope()), Logger::ERROR, false);
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()), Logger::ERROR, false);
         $record = RecordFactory::create(
             'foo bar',
             Logger::WARNING,
@@ -145,7 +145,7 @@ final class SentryExceptionHandlerTest extends TestCase
             $this->markTestSkipped('Test only works for Monolog < 3');
         }
 
-        $handler = new SentryExceptionHandler(new Hub($this->createMock(ClientInterface::class), new Scope()), Logger::WARNING);
+        $handler = new ExceptionToSentryIssueHandler(new Hub($this->createMock(ClientInterface::class), new Scope()), Logger::WARNING);
 
         $this->assertTrue($handler->isHandling(['level' => Logger::WARNING]));
         $this->assertFalse($handler->isHandling(['level' => Logger::INFO]));

@@ -15,7 +15,7 @@ use Sentry\State\Scope;
 /**
  * This Monolog handler will collect monolog events and send them to sentry.
  */
-class SentryExceptionHandler extends AbstractHandler
+class ExceptionToSentryIssueHandler extends AbstractHandler
 {
     /**
      * @var HubInterface
