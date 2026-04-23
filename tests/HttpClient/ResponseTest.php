@@ -9,7 +9,7 @@ use Sentry\HttpClient\Response;
 
 final class ResponseTest extends TestCase
 {
-    public function testResponseSuccess()
+    public function testResponseSuccess(): void
     {
         $response = new Response(
             200,
@@ -32,7 +32,7 @@ final class ResponseTest extends TestCase
         $this->assertFalse($response->hasError());
     }
 
-    public function testResponseFailure()
+    public function testResponseFailure(): void
     {
         $response = new Response(
             500,
@@ -51,7 +51,7 @@ final class ResponseTest extends TestCase
         $this->assertTrue($response->hasError());
     }
 
-    public function testResponseMultiValueHeader()
+    public function testResponseMultiValueHeader(): void
     {
         $response = new Response(
             200,
