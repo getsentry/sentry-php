@@ -270,7 +270,7 @@ final class HubAdapterTest extends TestCase
         ];
     }
 
-    public function testCaptureCheckIn()
+    public function testCaptureCheckIn(): void
     {
         $hub = new Hub();
 
