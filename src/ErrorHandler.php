@@ -76,7 +76,7 @@ final class ErrorHandler
     /**
      * @var callable|null The previous exception handler, if any
      *
-     * @phpstan-var null|callable(\Throwable): void
+     * @phpstan-var (callable(\Throwable): void)|null
      */
     private $previousExceptionHandler;
 
@@ -394,8 +394,15 @@ final class ErrorHandler
                 && preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches) === 1
             ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
+                $newMemoryLimit = $currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue;
 
-                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue));
+                // It can happen that the memory limit + increase is still lower than
+                // the memory that is currently being used. This produces warnings
+                // that may end up in Sentry. To prevent this, we can check the real
+                // usage before.
+                if ($newMemoryLimit > memory_get_usage(true)) {
+                    $this->setMemoryLimitWithoutHandlingWarnings($newMemoryLimit);
+                }
 
                 self::$didIncreaseMemoryLimit = true;
             }
@@ -450,6 +457,23 @@ final class ErrorHandler
         }
 
         $this->handleException($previousExceptionHandlerException);
+    }
+
+    /**
+     * Set the memory_limit while having no real error handler so that a warning emitted
+     * will not get reported.
+     */
+    private function setMemoryLimitWithoutHandlingWarnings(int $memoryLimit): void
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        }, \E_WARNING);
+
+        try {
+            ini_set('memory_limit', (string) $memoryLimit);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /**

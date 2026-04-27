@@ -100,7 +100,7 @@ final class LogsHandlerTest extends TestCase
         }
     }
 
-    public function testLogsHandlerDestructor()
+    public function testLogsHandlerDestructor(): void
     {
         $transport = new StubTransport();
         $client = ClientBuilder::create([
@@ -135,7 +135,7 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('auto.log.monolog', $log->attributes()->toSimpleArray()['sentry.origin']);
     }
 
-    public function testOriginTagNotAppliedWhenUsingDirectly()
+    public function testOriginTagNotAppliedWhenUsingDirectly(): void
     {
         \Sentry\logger()->info('No origin attribute');
 

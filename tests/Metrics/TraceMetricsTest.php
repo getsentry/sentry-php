@@ -141,7 +141,7 @@ final class TraceMetricsTest extends TestCase
         $this->assertEmpty(StubTransport::$events);
     }
 
-    public function testBeforeSendMetricAltersContent()
+    public function testBeforeSendMetricAltersContent(): void
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options([
             'before_send_metric' => static function (Metric $metric) {
@@ -162,7 +162,7 @@ final class TraceMetricsTest extends TestCase
         $this->assertEquals(99999, $metric->getValue());
     }
 
-    public function testIntType()
+    public function testIntType(): void
     {
         traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
         traceMetrics()->flush();

@@ -587,7 +587,7 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider includedPathProviders
      */
-    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected)
+    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected): void
     {
         $configuration = new Options(['in_app_include' => [$value]]);
 

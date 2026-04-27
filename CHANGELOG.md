@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## 4.25.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.25.0.
+
+### Features
+
+- Add `ExceptionToSentryIssueHandler` Monolog handler that only captures exceptions as Sentry issues without converting log messages to errors. [(#2061)](https://github.com/getsentry/sentry-php/pull/2061)
+- Add `metric_flush_threshold` option to automatically flush buffered metrics after a configured number of metric records. [(#2059)](https://github.com/getsentry/sentry-php/pull/2059)
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'metric_flush_threshold' => 50,
+]);
+```
+
+### Bug Fixes
+
+- Prevent PHP warnings when trying to increase the memory limit for out-of-memory error handling. [(#2063)](https://github.com/getsentry/sentry-php/pull/2063)
+
+### Misc
+
+- Use a `RingBuffer` for log storage when `log_flush_threshold` is not set to prevent unbounded memory growth, with a hard cap of 1000 records. [(#2058)](https://github.com/getsentry/sentry-php/pull/2058)
+- Add `ext-excimer` as a Composer suggestion to surface its requirement for profiling. [(#2057)](https://github.com/getsentry/sentry-php/pull/2057)
+
 ## 4.24.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.24.0.

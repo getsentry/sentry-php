@@ -37,7 +37,7 @@ final class TransactionContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $spanContext = TransactionContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
@@ -51,7 +51,7 @@ final class TransactionContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromEnvironment(string $sentryTrace, string $baggage, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $spanContext = TransactionContext::fromEnvironment($sentryTrace, $baggage);
 
