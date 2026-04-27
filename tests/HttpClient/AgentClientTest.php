@@ -246,6 +246,30 @@ final class AgentClientTest extends TestCase
         $this->assertTrue($this->hasLogMessageContaining('Failed to initialize fallback HTTP client.'));
     }
 
+    public function testClientLogsFallbackFactoryErrorOnlyOnce(): void
+    {
+        $envelope = $this->createEnvelope('http://public@example.com/1', 'Hello from repeated throwing fallback factory test!');
+
+        $request = new Request();
+        $request->setStringBody($envelope);
+
+        $logger = StubLogger::getInstance();
+        $options = new Options(['logger' => $logger]);
+
+        $client = new AgentClient(
+            self::UNAVAILABLE_AGENT_HOST,
+            self::UNAVAILABLE_AGENT_PORT,
+            static function (): HttpClientInterface {
+                throw new \RuntimeException('factory boom');
+            }
+        );
+
+        $client->sendRequest($request, $options);
+        $client->sendRequest($request, $options);
+
+        $this->assertSame(1, $this->countLogMessagesContaining('Failed to initialize fallback HTTP client.'));
+    }
+
     public function testClientDoesNotThrowWhenFallbackFactoryReturnsUnexpectedValue(): void
     {
         $envelope = $this->createEnvelope('http://public@example.com/1', 'Hello from invalid fallback factory test!');
@@ -293,14 +317,17 @@ final class AgentClientTest extends TestCase
         return false;
     }
 
+    private function countLogMessagesContaining(string $message): int
+    {
+        $result = array_filter(StubLogger::$logs, static function (array $log) use ($message): bool {
+            return strpos($log['message'], $message) !== false;
+        });
+
+        return \count($result);
+    }
+
     private function hasLogMessageContaining(string $message): bool
     {
-        foreach (StubLogger::$logs as $log) {
-            if (strpos($log['message'], $message) !== false) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->countLogMessagesContaining($message) > 0;
     }
 }

@@ -155,7 +155,7 @@ class AgentClient implements HttpClientInterface
 
             $bytesWritten = @fwrite($socket, (string) substr($payload, $totalWrittenBytes));
 
-            if ($bytesWritten === false || $bytesWritten === 0) {
+            if ($bytesWritten === false) {
                 return false;
             }
 
@@ -269,6 +269,7 @@ class AgentClient implements HttpClientInterface
 
         if ($this->fallbackClientError !== null) {
             $options->getLoggerOrNullLogger()->debug($this->fallbackClientError, $logContext);
+            $this->fallbackClientError = null;
         }
 
         return new Response(502, [], 'Failed to send envelope to the local Sentry agent and no fallback client is available.');
