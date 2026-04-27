@@ -11,6 +11,8 @@ use Sentry\Options;
 
 class AgentClient implements HttpClientInterface
 {
+    private const SOCKET_TIMEOUT_SECONDS = 0.01;
+
     /**
      * @var string
      */
@@ -73,7 +75,7 @@ class AgentClient implements HttpClientInterface
         // 10ms connect timeout to avoid blocking the request if the agent is not running
         $errorNo = 0;
         $errorMsg = '';
-        $socket = @fsockopen($this->host, $this->port, $errorNo, $errorMsg, 0.01);
+        $socket = @fsockopen($this->host, $this->port, $errorNo, $errorMsg, self::SOCKET_TIMEOUT_SECONDS);
 
         if ($socket === false) {
             $this->lastSendError = \sprintf(
@@ -87,8 +89,8 @@ class AgentClient implements HttpClientInterface
             return false;
         }
 
-        // Cap read/write timeout to 10ms so a hung agent does not block the caller indefinitely
-        stream_set_timeout($socket, 0, 10000);
+        // Use non-blocking writes with stream_select() so a hung agent cannot block the caller indefinitely.
+        stream_set_blocking($socket, false);
 
         $this->socket = $socket;
 
@@ -144,8 +146,13 @@ class AgentClient implements HttpClientInterface
         $socket = $this->socket;
         $payloadLength = \strlen($payload);
         $totalWrittenBytes = 0;
+        $writeDeadline = microtime(true) + self::SOCKET_TIMEOUT_SECONDS;
 
         while ($totalWrittenBytes < $payloadLength) {
+            if (!$this->waitUntilSocketIsWritable($socket, $writeDeadline)) {
+                return false;
+            }
+
             $bytesWritten = @fwrite($socket, (string) substr($payload, $totalWrittenBytes));
 
             if ($bytesWritten === false || $bytesWritten === 0) {
@@ -156,6 +163,31 @@ class AgentClient implements HttpClientInterface
         }
 
         return true;
+    }
+
+    /**
+     * @param resource $socket
+     */
+    private function waitUntilSocketIsWritable($socket, float $deadline): bool
+    {
+        $remainingSeconds = $deadline - microtime(true);
+
+        if ($remainingSeconds <= 0) {
+            return false;
+        }
+
+        $readSockets = null;
+        $writeSockets = [$socket];
+        $exceptSockets = null;
+        $selectedSockets = @stream_select(
+            $readSockets,
+            $writeSockets,
+            $exceptSockets,
+            0,
+            (int) ceil($remainingSeconds * 1000000)
+        );
+
+        return $selectedSockets !== false && $selectedSockets > 0;
     }
 
     private function getFallbackClient(): ?HttpClientInterface
@@ -220,7 +252,19 @@ class AgentClient implements HttpClientInterface
         if ($fallbackClient !== null) {
             $options->getLoggerOrNullLogger()->debug('Using fallback HTTP client because local Sentry agent handoff failed.', $logContext);
 
-            return $fallbackClient->sendRequest($request, $options);
+            try {
+                return $fallbackClient->sendRequest($request, $options);
+            } catch (\Throwable $exception) {
+                $options->getLoggerOrNullLogger()->debug(
+                    'Fallback HTTP client failed while sending envelope.',
+                    array_merge($logContext, ['exception' => $exception])
+                );
+
+                return new Response(502, [], \sprintf(
+                    'Failed to send envelope using fallback HTTP client. Reason: "%s".',
+                    $exception->getMessage()
+                ));
+            }
         }
 
         if ($this->fallbackClientError !== null) {

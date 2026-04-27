@@ -184,6 +184,34 @@ final class AgentClientTest extends TestCase
         $this->assertSame(1, $factoryCallCount);
     }
 
+    public function testClientDoesNotThrowWhenFallbackClientThrows(): void
+    {
+        $envelope = $this->createEnvelope('http://public@example.com/1', 'Hello from throwing fallback client test!');
+
+        $request = new Request();
+        $request->setStringBody($envelope);
+
+        $logger = StubLogger::getInstance();
+        $options = new Options(['logger' => $logger]);
+
+        /** @var HttpClientInterface&\PHPUnit\Framework\MockObject\MockObject $fallbackClient */
+        $fallbackClient = $this->createMock(HttpClientInterface::class);
+        $fallbackClient->expects($this->once())
+            ->method('sendRequest')
+            ->with($request, $options)
+            ->willThrowException(new \RuntimeException('fallback boom'));
+
+        $client = new AgentClient(self::UNAVAILABLE_AGENT_HOST, self::UNAVAILABLE_AGENT_PORT, static function () use ($fallbackClient): HttpClientInterface {
+            return $fallbackClient;
+        });
+        $response = $client->sendRequest($request, $options);
+
+        $this->assertSame(502, $response->getStatusCode());
+        $this->assertTrue($response->hasError());
+        $this->assertSame('Failed to send envelope using fallback HTTP client. Reason: "fallback boom".', $response->getError());
+        $this->assertTrue($this->hasLogMessage('Fallback HTTP client failed while sending envelope.'));
+    }
+
     public function testClientReturnsErrorWhenBodyIsEmpty(): void
     {
         $client = new AgentClient();
