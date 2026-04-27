@@ -116,10 +116,7 @@ class AgentClient implements HttpClientInterface
     {
         $this->lastSendError = '';
 
-        // Length prefix is a 32-bit unsigned int (4 GB limit). Relay already enforces
-        // a much smaller envelope size limit (~1 MB), so this is not a practical concern.
         $payload = pack('N', \strlen($message) + 4) . $message;
-        $payloadLength = \strlen($payload);
 
         // Attempt to send the payload, retrying once on write failure to handle
         // stale sockets (e.g. agent restarts in long-running workers).
@@ -128,21 +125,7 @@ class AgentClient implements HttpClientInterface
                 return false;
             }
 
-            $totalWrittenBytes = 0;
-            $writeFailed = false;
-
-            while ($totalWrittenBytes < $payloadLength) {
-                $bytesWritten = @fwrite($this->socket, (string) substr($payload, $totalWrittenBytes));
-
-                if ($bytesWritten === false || $bytesWritten === 0) {
-                    $writeFailed = true;
-                    break;
-                }
-
-                $totalWrittenBytes += $bytesWritten;
-            }
-
-            if (!$writeFailed) {
+            if ($this->writePayload($payload)) {
                 return true;
             }
 
@@ -156,6 +139,29 @@ class AgentClient implements HttpClientInterface
         );
 
         return false;
+    }
+
+    private function writePayload(string $payload): bool
+    {
+        if ($this->socket === null) {
+            return false;
+        }
+
+        $socket = $this->socket;
+        $payloadLength = \strlen($payload);
+        $totalWrittenBytes = 0;
+
+        while ($totalWrittenBytes < $payloadLength) {
+            $bytesWritten = @fwrite($socket, (string) substr($payload, $totalWrittenBytes));
+
+            if ($bytesWritten === false || $bytesWritten === 0) {
+                return false;
+            }
+
+            $totalWrittenBytes += $bytesWritten;
+        }
+
+        return true;
     }
 
     private function getFallbackClient(): ?HttpClientInterface
