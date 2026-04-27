@@ -47,12 +47,6 @@ class AgentClient implements HttpClientInterface
     private $lastSendError = '';
 
     /**
-     * @param callable|null $fallbackClientFactory A factory that returns an HttpClientInterface to use
-     *                                             when the local agent is unavailable.
-     *                                             Pass null to disable fallback delivery; agent handoff
-     *                                             failures then return a 502 response.
-     *                                             Use AgentClientBuilder for default fallback behavior.
-     *
      * @phpstan-param (callable(): HttpClientInterface)|null $fallbackClientFactory
      */
     public function __construct(string $host = '127.0.0.1', int $port = 5148, ?callable $fallbackClientFactory = null)
