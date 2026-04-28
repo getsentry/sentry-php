@@ -80,7 +80,7 @@ final class LogToSentryIssueHandlerTest extends TestCase
         $this->assertTrue($handler->handle($record));
     }
 
-    public function testHandleIgnoresRecordsWithExceptionContext(): void
+    public function testHandleIgnoresRecordsWithThrowableExceptionContext(): void
     {
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -93,13 +93,53 @@ final class LogToSentryIssueHandlerTest extends TestCase
             Logger::WARNING,
             'channel.foo',
             [
-                'exception' => 'not an exception',
+                'exception' => new \RuntimeException('boom'),
             ],
             []
         );
 
         $this->assertTrue($handler->isHandling($record));
         $this->assertFalse($handler->handle($record));
+    }
+
+    public function testHandleCapturesRecordsWithNonThrowableExceptionContext(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(
+                $this->isInstanceOf(Event::class),
+                $this->isInstanceOf(EventHint::class),
+                $this->callback(function (Scope $scopeArg): bool {
+                    $event = $scopeArg->applyToEvent(Event::createEvent());
+
+                    $this->assertNotNull($event);
+                    $this->assertSame([
+                        'monolog.channel' => 'channel.foo',
+                        'monolog.level' => Logger::getLevelName(Logger::WARNING),
+                        'monolog.context' => [
+                            'exception' => 'not an exception',
+                        ],
+                    ], $event->getExtra());
+
+                    return true;
+                })
+            );
+
+        $handler = new LogToSentryIssueHandler(new Hub($client, new Scope()), Logger::DEBUG, false, true);
+        $record = RecordFactory::create(
+            'foo bar',
+            Logger::WARNING,
+            'channel.foo',
+            [
+                'exception' => 'not an exception',
+            ],
+            []
+        );
+
+        $this->assertTrue($handler->isHandling($record));
+        $this->assertTrue($handler->handle($record));
     }
 
     public function testHandleIgnoresRecordsBelowThreshold(): void

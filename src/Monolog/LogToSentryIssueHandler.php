@@ -50,7 +50,7 @@ class LogToSentryIssueHandler extends AbstractProcessingHandler
     public function handle($record): bool
     {
         /** @phpstan-ignore-next-line */
-        if (!$this->isHandling($record) || $this->hasExceptionContext($record)) {
+        if (!$this->isHandling($record) || $this->hasThrowable($record)) {
             return false;
         }
 
@@ -95,9 +95,11 @@ class LogToSentryIssueHandler extends AbstractProcessingHandler
     /**
      * @param array<string, mixed>|LogRecord $record
      */
-    private function hasExceptionContext($record): bool
+    private function hasThrowable($record): bool
     {
-        return \array_key_exists(self::CONTEXT_EXCEPTION_KEY, $this->getArrayFieldFromRecord($record, 'context'));
+        $exception = $this->getArrayFieldFromRecord($record, 'context')[self::CONTEXT_EXCEPTION_KEY] ?? null;
+
+        return $exception instanceof \Throwable;
     }
 
     /**
