@@ -164,6 +164,7 @@ final class LogsAggregatorTest extends TestCase
     {
         $client = ClientBuilder::create([
             'enable_logs' => true,
+            'send_default_pii' => true,
             'release' => '1.0.0',
             'environment' => 'production',
             'server_name' => 'web-server-01',
@@ -208,6 +209,37 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
         $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
+    }
+
+    public function testUserAttributesAreNotAddedToLogMessageWhenSendDefaultPiiIsDisabled(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'send_default_pii' => false,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $hub->configureScope(static function (Scope $scope) {
+            $userDataBag = new UserDataBag();
+            $userDataBag->setId('unique_id');
+            $userDataBag->setEmail('foo@example.com');
+            $userDataBag->setUsername('my_user');
+            $scope->setUser($userDataBag);
+        });
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'User performed action');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes();
+
+        $this->assertNull($attributes->get('user.id'));
+        $this->assertNull($attributes->get('user.email'));
+        $this->assertNull($attributes->get('user.name'));
     }
 
     public function testFlushesImmediatelyWhenThresholdIsReached(): void

@@ -90,20 +90,22 @@ final class LogsAggregator
             $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
         }
 
-        $hub->configureScope(static function (Scope $scope) use ($log) {
-            $user = $scope->getUser();
-            if ($user !== null) {
-                if ($user->getId() !== null) {
-                    $log->setAttribute('user.id', $user->getId());
+        if ($options->shouldSendDefaultPii()) {
+            $hub->configureScope(static function (Scope $scope) use ($log) {
+                $user = $scope->getUser();
+                if ($user !== null) {
+                    if ($user->getId() !== null) {
+                        $log->setAttribute('user.id', $user->getId());
+                    }
+                    if ($user->getEmail() !== null) {
+                        $log->setAttribute('user.email', $user->getEmail());
+                    }
+                    if ($user->getUsername() !== null) {
+                        $log->setAttribute('user.name', $user->getUsername());
+                    }
                 }
-                if ($user->getEmail() !== null) {
-                    $log->setAttribute('user.email', $user->getEmail());
-                }
-                if ($user->getUsername() !== null) {
-                    $log->setAttribute('user.name', $user->getUsername());
-                }
-            }
-        });
+            });
+        }
 
         if (\count($values)) {
             $log->setAttribute('sentry.message.template', $message);
