@@ -63,7 +63,7 @@ class LogsHandler implements HandlerInterface
         if (!$this->isHandling($record)) {
             return false;
         }
-        // Do not collect logs for exceptions, they should be handled seperately by the `Handler` or `captureException`
+        // Do not collect logs for exceptions, they should be handled separately by `ExceptionToSentryIssueHandler` or `captureException`
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
             return false;
         }
