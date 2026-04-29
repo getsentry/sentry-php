@@ -17,8 +17,9 @@ use Sentry\State\Scope;
  * hub instance.
  *
  * @deprecated since version 4.24. To be removed in version 5.0. Use {@see LogsHandler}
- *             with the `enable_logs` SDK option instead for logging. {@see ExceptionToSentryIssueHandler}
- *             to send monolog exceptions to Sentry.
+ *             with the `enable_logs` SDK option for Sentry logs, {@see ExceptionToSentryIssueHandler}
+ *             to send Monolog exceptions to Sentry issues, and {@see LogToSentryIssueHandler}
+ *             to send Monolog log messages to Sentry issues.
  *
  * @author Stefano Arlandini <sarlandini@alice.it>
  */
