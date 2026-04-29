@@ -136,6 +136,41 @@ final class PropagationContextTest extends TestCase
         ], $propagationContext->getTraceContext());
     }
 
+    /**
+     * @dataProvider invalidSampleRandDataProvider
+     */
+    public function testInvalidSampleRandIsIgnored(string $sampleRand): void
+    {
+        $propagationContext = PropagationContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-sample_rate=0.4,sentry-sample_rand=' . rawurlencode($sampleRand)
+        );
+
+        $generatedSampleRand = $propagationContext->getSampleRand();
+
+        $this->assertNotNull($generatedSampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $generatedSampleRand);
+        $this->assertLessThan(0.4, $generatedSampleRand);
+    }
+
+    public function testSampleRandIsIgnoredWithoutSentryTraceHeader(): void
+    {
+        $propagationContext = PropagationContext::fromHeaders('', 'sentry-sample_rand=-1.0');
+        $sampleRand = $propagationContext->getSampleRand();
+
+        $this->assertNotNull($sampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $sampleRand);
+        $this->assertLessThanOrEqual(1.0, $sampleRand);
+    }
+
+    public static function invalidSampleRandDataProvider(): iterable
+    {
+        yield ['-1.0'];
+        yield ['1'];
+        yield ['2.0'];
+        yield ['foo'];
+    }
+
     public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void
     {
         $propagationContext = PropagationContext::fromHeaders(
