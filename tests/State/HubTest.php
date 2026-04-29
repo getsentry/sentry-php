@@ -760,6 +760,17 @@ final class HubTest extends TestCase
             false,
         ];
 
+        yield 'Invalid incoming sample_rand is ignored' => [
+            new Options([
+                'traces_sample_rate' => 1.0,
+            ]),
+            TransactionContext::fromHeaders(
+                '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8',
+                'sentry-sample_rand=2.0'
+            ),
+            true,
+        ];
+
         yield 'Out of range sample rate returned from traces_sampler (lower than minimum)' => [
             new Options([
                 'traces_sampler' => static function (): float {
