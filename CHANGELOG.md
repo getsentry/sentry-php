@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## 4.26.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.26.0.
+
+### Features
+
+- Add `AgentClient` and `AgentClientBuilder` to hand off envelopes to a local Sentry agent. [(#2062)](https://github.com/getsentry/sentry-php/pull/2062)
+- Add fallback HTTP delivery for `AgentClient` when the local Sentry agent is unavailable. [(#2072)](https://github.com/getsentry/sentry-php/pull/2072)
+- Add `LogToSentryIssueHandler` Monolog handler to capture log messages as Sentry issues. [(#2075)](https://github.com/getsentry/sentry-php/pull/2075)
+
+### Bug Fixes
+
+- Respect `send_default_pii` before attaching user attributes to Sentry logs. [(#2076)](https://github.com/getsentry/sentry-php/pull/2076)
+- Ignore invalid propagated `sentry-sample_rand` baggage values and generate a valid sample random value instead. [(#2077)](https://github.com/getsentry/sentry-php/pull/2077)
+
 ## 4.25.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.25.0.
