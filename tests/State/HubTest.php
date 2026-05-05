@@ -837,7 +837,7 @@ final class HubTest extends TestCase
     public function testStartTransactionStartsProfilerWithProfilesSampler(): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
+        $client->expects($this->exactly(2))
             ->method('getOptions')
             ->willReturn(new Options([
                 'traces_sample_rate' => 1.0,
