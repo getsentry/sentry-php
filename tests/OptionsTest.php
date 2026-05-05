@@ -164,6 +164,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'profiles_sampler',
+            static function (): void {},
+            'getProfilesSampler',
+            'setProfilesSampler',
+        ];
+
+        yield [
             'attach_stacktrace',
             false,
             'shouldAttachStacktrace',

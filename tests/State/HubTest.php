@@ -834,6 +834,127 @@ final class HubTest extends TestCase
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
     }
 
+    public function testStartTransactionStartsProfilerWithProfilesSampler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->exactly(2))
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNotNull($transaction->getProfiler());
+    }
+
+    public function testStartTransactionDoesNotStartProfilerWhenProfilesSamplerReturnsZero(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 0.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+    }
+
+    public function testStartTransactionPrefersProfilesSamplerOverProfilesSampleRate(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 0.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+    }
+
+    public function testStartTransactionWithProfilesSamplerReceivesCustomSamplingContext(): void
+    {
+        $customSamplingContext = ['a' => 'b'];
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
+                    $this->assertSame($samplingContext->getAdditionalContext(), $customSamplingContext);
+
+                    return 0.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $hub->startTransaction(new TransactionContext(), $customSamplingContext);
+    }
+
+    public function testStartTransactionDoesNotStartProfilerWhenProfilesSamplerReturnsInvalidValue(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): string {
+                    return 'foo';
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+    }
+
+    public function testStartTransactionDoesNotCallProfilesSamplerWhenTransactionIsNotSampled(): void
+    {
+        $profilesSamplerInvoked = false;
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0.0,
+                'profiles_sampler' => static function () use (&$profilesSamplerInvoked): float {
+                    $profilesSamplerInvoked = true;
+
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+
+        $this->assertFalse($transaction->getSampled());
+        $this->assertFalse($profilesSamplerInvoked);
+        $this->assertNull($transaction->getProfiler());
+    }
+
     public function testStartTransactionUpdatesTheDscSampleRate(): void
     {
         $client = $this->createMock(ClientInterface::class);
