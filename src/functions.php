@@ -58,6 +58,7 @@ use Sentry\Transport\TransportInterface;
  *     org_id?: int|null,
  *     prefixes?: array<string>,
  *     profiles_sample_rate?: int|float|null,
+ *     profiles_sampler?: callable|null,
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,

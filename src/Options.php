@@ -294,6 +294,36 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked when we sample a profile.
+     *
+     * @phpstan-return null|callable(Tracing\SamplingContext): float
+     */
+    public function getProfilesSampler(): ?callable
+    {
+        /** @var callable(Tracing\SamplingContext): float|null $value */
+        $value = $this->options['profiles_sampler'];
+
+        return $value;
+    }
+
+    /**
+     * Sets a callback that will be invoked when we take the profiling sampling decision.
+     * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
+     *
+     * @param ?callable $sampler The sampler
+     *
+     * @phpstan-param null|callable(Tracing\SamplingContext): float $sampler
+     */
+    public function setProfilesSampler(?callable $sampler): self
+    {
+        $options = array_merge($this->options, ['profiles_sampler' => $sampler]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
      * set and `enable_tracing` is set and not false.
@@ -1395,6 +1425,7 @@ final class Options
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
+            'profiles_sampler' => null,
             'attach_stacktrace' => false,
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
@@ -1474,6 +1505,7 @@ final class Options
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
+        $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
