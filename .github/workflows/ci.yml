@@ -46,12 +46,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: ${{ matrix.php.version }}
           coverage: xdebug
@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php.version }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
@@ -73,11 +73,15 @@ jobs:
 
       # These dependencies are not used running the tests but can cause deprecation warnings so we remove them before running the tests
       - name: Remove unused dependencies
-        run: composer remove vimeo/psalm carthage-software/mago phpstan/phpstan friendsofphp/php-cs-fixer --dev --no-interaction --no-update
+        run: composer remove carthage-software/mago phpstan/phpstan friendsofphp/php-cs-fixer --dev --no-interaction --no-update
 
       - name: Remove RoadRunner dependencies on unsupported PHP versions
         if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
         run: composer remove spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
+
+      - name: Remove OpenTelemetry dependencies on unsupported PHP versions
+        if: ${{ matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
+        run: composer remove open-telemetry/api open-telemetry/exporter-otlp open-telemetry/sdk --dev --no-interaction --no-update
 
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
@@ -97,7 +101,7 @@ jobs:
         run: vendor/bin/phpunit --testsuite oom --no-coverage
 
       - name: Upload code coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -111,12 +115,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -127,7 +131,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
@@ -176,12 +180,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -192,7 +196,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
@@ -238,4 +242,3 @@ jobs:
 
       - name: Run PHPUnit tests (excluding PHPT)
         run: vendor/bin/phpunit tests --test-suffix Test.php --verbose
-

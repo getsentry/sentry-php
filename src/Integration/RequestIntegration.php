@@ -69,7 +69,7 @@ final class RequestIntegration implements IntegrationInterface
     /**
      * @var array<string, mixed> The options
      *
-     * @psalm-var array{
+     * @phpstan-var array{
      *     pii_sanitize_headers: string[]
      * }
      */
@@ -81,7 +81,7 @@ final class RequestIntegration implements IntegrationInterface
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      * @param array<string, mixed>         $options        The options
      *
-     * @psalm-param array{
+     * @phpstan-param array{
      *     pii_sanitize_headers?: string[]
      * } $options
      */

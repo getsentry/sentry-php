@@ -10,6 +10,16 @@ use Sentry\Util\Http;
 
 final class HttpTest extends TestCase
 {
+    public function testGetSentryAuthHeader(): void
+    {
+        $dsn = Dsn::createFromString('http://public@example.com/1');
+
+        $this->assertSame(
+            'Sentry sentry_version=7, sentry_client=sentry.sdk.identifier/1.2.3, sentry_key=public',
+            Http::getSentryAuthHeader($dsn, 'sentry.sdk.identifier', '1.2.3')
+        );
+    }
+
     /**
      * @dataProvider getRequestHeadersDataProvider
      */
@@ -26,7 +36,11 @@ final class HttpTest extends TestCase
             '1.2.3',
             [
                 'Content-Type: application/x-sentry-envelope',
-                'X-Sentry-Auth: Sentry sentry_version=7, sentry_client=sentry.sdk.identifier/1.2.3, sentry_key=public',
+                'X-Sentry-Auth: ' . Http::getSentryAuthHeader(
+                    Dsn::createFromString('http://public@example.com/1'),
+                    'sentry.sdk.identifier',
+                    '1.2.3'
+                ),
             ],
         ];
     }

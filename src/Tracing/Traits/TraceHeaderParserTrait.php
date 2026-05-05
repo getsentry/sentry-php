@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing\Traits;
 
+use Sentry\SentrySdk;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -65,6 +66,14 @@ trait TraceHeaderParserTrait
 
         $samplingContext = DynamicSamplingContext::fromHeader($baggage);
 
+        if ($hasSentryTrace && !self::shouldContinueTrace($samplingContext)) {
+            $result['traceId'] = null;
+            $result['parentSpanId'] = null;
+            $result['parentSampled'] = null;
+
+            return $result;
+        }
+
         if ($hasSentryTrace) {
             // The request comes from an old SDK which does not support Dynamic Sampling.
             // Propagate the Dynamic Sampling Context as is, but frozen, even without sentry-* entries.
@@ -83,10 +92,11 @@ trait TraceHeaderParserTrait
         }
 
         // Store the propagated trace sample rand or generate a new one
-        if ($samplingContext->has('sample_rand')) {
-            $result['sampleRand'] = (float) $samplingContext->get('sample_rand');
-        } else {
-            if ($samplingContext->has('sample_rate') && $result['parentSampled'] !== null) {
+        if ($hasSentryTrace) {
+            $incomingSampleRand = self::parseSampleRand($samplingContext);
+            if ($incomingSampleRand !== null) {
+                $result['sampleRand'] = $incomingSampleRand;
+            } elseif ($samplingContext->has('sample_rate') && $result['parentSampled'] !== null) {
                 if ($result['parentSampled'] === true) {
                     // [0, rate)
                     $result['sampleRand'] = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6);
@@ -101,5 +111,78 @@ trait TraceHeaderParserTrait
         }
 
         return $result;
+    }
+
+    private static function parseSampleRand(DynamicSamplingContext $samplingContext): ?float
+    {
+        $sampleRand = $samplingContext->get('sample_rand');
+        if ($sampleRand === null) {
+            return null;
+        }
+
+        if (is_numeric($sampleRand)) {
+            $sampleRandAsFloat = (float) $sampleRand;
+            if ($sampleRandAsFloat >= 0.0 && $sampleRandAsFloat < 1.0) {
+                return $sampleRandAsFloat;
+            }
+        }
+
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+        if ($client !== null) {
+            $client->getOptions()->getLoggerOrNullLogger()->debug(
+                'Ignoring invalid sentry-sample_rand baggage value because it must be a numeric value in the range [0, 1).',
+                ['sample_rand' => $sampleRand]
+            );
+        }
+
+        return null;
+    }
+
+    private static function shouldContinueTrace(DynamicSamplingContext $samplingContext): bool
+    {
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+
+        if ($client === null) {
+            return true;
+        }
+
+        $options = $client->getOptions();
+        $clientOrgId = $options->getOrgId();
+        if ($clientOrgId === null && $options->getDsn() !== null) {
+            $clientOrgId = $options->getDsn()->getOrgId();
+        }
+
+        $baggageOrgId = $samplingContext->get('org_id');
+        $logger = $options->getLoggerOrNullLogger();
+
+        // both org IDs are set but are not equals
+        if ($clientOrgId !== null && $baggageOrgId !== null && ((string) $clientOrgId !== $baggageOrgId)) {
+            $logger->debug(
+                \sprintf(
+                    "Starting a new trace because org IDs don't match (incoming baggage org_id: %s, SDK org_id: %s)",
+                    $baggageOrgId,
+                    $clientOrgId
+                )
+            );
+
+            return false;
+        }
+
+        // One org ID is not set and strict trace continuation is enabled
+        if ($options->isStrictTraceContinuationEnabled() && ($clientOrgId === null) !== ($baggageOrgId === null)) {
+            $logger->debug(
+                \sprintf(
+                    'Starting a new trace because strict trace continuation is enabled and one org ID is missing (incoming baggage org_id: %s, SDK org_id: %s)',
+                    $baggageOrgId !== null ? $baggageOrgId : 'none',
+                    $clientOrgId !== null ? (string) $clientOrgId : 'none'
+                )
+            );
+
+            return false;
+        }
+
+        return true;
     }
 }

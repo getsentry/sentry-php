@@ -139,6 +139,10 @@ abstract class AbstractSerializer
                     return $this->formatDate($value);
                 }
 
+                if ($value instanceof \UnitEnum) {
+                    return $this->serializeValue($value);
+                }
+
                 if ($this->serializeAllObjects || ($value instanceof \stdClass)) {
                     return $this->serializeObject($value, $_depth);
                 }
@@ -247,8 +251,13 @@ abstract class AbstractSerializer
 
         if ($value instanceof \UnitEnum) {
             $reflection = new \ReflectionObject($value);
+            $enumValue = $reflection->getName() . '::' . $value->name;
 
-            return 'Enum ' . $reflection->getName() . '::' . $value->name;
+            if ($value instanceof \BackedEnum) {
+                return 'Enum ' . $enumValue . '(' . $value->value . ')';
+            }
+
+            return 'Enum ' . $enumValue;
         }
 
         if (\is_object($value)) {

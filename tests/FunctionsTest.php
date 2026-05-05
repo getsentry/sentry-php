@@ -12,6 +12,7 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
+use Sentry\Integration\OTLPIntegration;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
@@ -41,6 +42,7 @@ use function Sentry\configureScope;
 use function Sentry\continueTrace;
 use function Sentry\endContext;
 use function Sentry\getBaggage;
+use function Sentry\getOtlpTracesEndpointUrl;
 use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\startContext;
@@ -552,6 +554,27 @@ final class FunctionsTest extends TestCase
         $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $traceParent);
     }
 
+    public function testTraceHeadersAreEmptyWhenExternalPropagationContextIsActive(): void
+    {
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        SentrySdk::setCurrentHub(new Hub(null, new Scope($propagationContext)));
+
+        $this->assertSame('', getTraceparent());
+        $this->assertSame('', getBaggage());
+
+        Scope::clearExternalPropagationContext();
+    }
+
     public function testBaggageWithTracingDisabled(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
@@ -610,6 +633,43 @@ final class FunctionsTest extends TestCase
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true,sentry-sample_rand=0.25', $baggage);
     }
 
+    public function testGetOtlpTracesEndpointUrlFallsBackToDsn(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getIntegration')
+            ->with(OTLPIntegration::class)
+            ->willReturn(null);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'dsn' => 'https://public@example.com/1',
+            ]));
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $this->assertSame('https://example.com/api/1/integration/otlp/v1/traces/', getOtlpTracesEndpointUrl());
+    }
+
+    public function testGetOtlpTracesEndpointUrlPrefersCollectorUrl(): void
+    {
+        $integration = new OTLPIntegration(false, 'http://collector:4318/v1/traces');
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getIntegration')
+            ->with(OTLPIntegration::class)
+            ->willReturn($integration);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'dsn' => 'https://public@example.com/1',
+            ]));
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $this->assertSame('http://collector:4318/v1/traces', getOtlpTracesEndpointUrl());
+    }
+
     public function testContinueTrace(): void
     {
         $hub = new Hub();
@@ -635,6 +695,79 @@ final class FunctionsTest extends TestCase
 
             $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
             $this->assertTrue($dynamicSamplingContext->isFrozen());
+        });
+    }
+
+    public function testContinueTraceWhenOrgMismatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=2'
+        );
+
+        $newTraceId = (string) $transactionContext->getTraceId();
+        $newSampleRand = $transactionContext->getMetadata()->getSampleRand();
+
+        $this->assertNotSame('566e3688a61d4bc888951642d6f14a19', $newTraceId);
+        $this->assertNotEmpty($newTraceId);
+        $this->assertNull($transactionContext->getParentSpanId());
+        $this->assertNull($transactionContext->getParentSampled());
+        $this->assertNull($transactionContext->getMetadata()->getDynamicSamplingContext());
+        $this->assertNotNull($newSampleRand);
+
+        configureScope(function (Scope $scope) use ($newTraceId, $newSampleRand): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame($newTraceId, (string) $propagationContext->getTraceId());
+            $this->assertNull($propagationContext->getParentSpanId());
+            $this->assertNull($propagationContext->getDynamicSamplingContext());
+            $this->assertSame($newSampleRand, $propagationContext->getSampleRand());
+        });
+    }
+
+    public function testContinueTraceWhenOrgMatch(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'strict_trace_continuation' => true,
+                'org_id' => 1,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $transactionContext = continueTrace(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-org_id=1'
+        );
+
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $transactionContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
+        $this->assertTrue($transactionContext->getParentSampled());
+
+        configureScope(function (Scope $scope): void {
+            $propagationContext = $scope->getPropagationContext();
+
+            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+
+            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+
+            $this->assertNotNull($dynamicSamplingContext);
+            $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
         });
     }
 }
