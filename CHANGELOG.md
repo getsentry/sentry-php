@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## 4.27.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.27.0.
+
+### Features
+
+- Add `profiles_sampler` option. [(#2082)](https://github.com/getsentry/sentry-php/pull/2082)
+
+### Bug Fixes
+
+- Preserve manually configured user attributes on logs and metrics when `send_default_pii` is disabled. [(#2083)](https://github.com/getsentry/sentry-php/pull/2083)
+
+### Misc
+
+- Add Mago static analysis to CI. [(#2020)](https://github.com/getsentry/sentry-php/pull/2020)
+
 ## 4.26.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.26.0.
