@@ -81,22 +81,20 @@ final class MetricsAggregator
                 $defaultAttributes['sentry.sdk.version'] = $client->getSdkVersion();
             }
 
-            if ($options->shouldSendDefaultPii()) {
-                $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
-                    $user = $scope->getUser();
-                    if ($user !== null) {
-                        if ($user->getId() !== null) {
-                            $defaultAttributes['user.id'] = $user->getId();
-                        }
-                        if ($user->getEmail() !== null) {
-                            $defaultAttributes['user.email'] = $user->getEmail();
-                        }
-                        if ($user->getUsername() !== null) {
-                            $defaultAttributes['user.name'] = $user->getUsername();
-                        }
+            $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
+                $user = $scope->getUser();
+                if ($user !== null) {
+                    if ($user->getId() !== null) {
+                        $defaultAttributes['user.id'] = $user->getId();
                     }
-                });
-            }
+                    if ($user->getEmail() !== null) {
+                        $defaultAttributes['user.email'] = $user->getEmail();
+                    }
+                    if ($user->getUsername() !== null) {
+                        $defaultAttributes['user.name'] = $user->getUsername();
+                    }
+                }
+            });
 
             $release = $options->getRelease();
             if ($release !== null) {
