@@ -211,7 +211,7 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
-    public function testUserAttributesAreNotAddedToLogMessageWhenSendDefaultPiiIsDisabled(): void
+    public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
     {
         $client = ClientBuilder::create([
             'enable_logs' => true,
@@ -237,9 +237,9 @@ final class LogsAggregatorTest extends TestCase
 
         $attributes = $logs[0]->attributes();
 
-        $this->assertNull($attributes->get('user.id'));
-        $this->assertNull($attributes->get('user.email'));
-        $this->assertNull($attributes->get('user.name'));
+        $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
+        $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
+        $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
     public function testFlushesImmediatelyWhenThresholdIsReached(): void
