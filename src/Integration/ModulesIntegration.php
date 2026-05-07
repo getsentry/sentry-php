@@ -6,7 +6,6 @@ namespace Sentry\Integration;
 
 use Composer\InstalledVersions;
 use Jean85\PrettyVersions;
-use PackageVersions\Versions;
 use Sentry\Event;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -67,12 +66,19 @@ final class ModulesIntegration implements IntegrationInterface
             return InstalledVersions::getInstalledPackages();
         }
 
-        if (class_exists(Versions::class)) {
-            // BC layer for Composer 1, using a transient dependency
-            /** @var string[] $packages */
-            $packages = array_keys(Versions::VERSIONS);
+        $versionsClass = 'PackageVersions\\Versions';
 
-            return $packages;
+        if (class_exists($versionsClass)) {
+            // BC layer for Composer 1, using a transient dependency
+            /** @var mixed $versions */
+            $versions = \constant($versionsClass . '::VERSIONS');
+
+            if (\is_array($versions)) {
+                /** @var string[] $packages */
+                $packages = array_keys($versions);
+
+                return $packages;
+            }
         }
 
         // this should not happen
