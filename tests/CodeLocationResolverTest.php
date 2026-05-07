@@ -37,7 +37,7 @@ final class CodeLocationResolverTest extends TestCase
         $location = $resolver->resolveFromBacktrace($this->createQueryBacktrace($expectedLine));
 
         $this->assertNotNull($location);
-        $this->assertSame('/tests/CodeLocationResolverTest.php', $location['code.filepath']);
+        $this->assertSame(\DIRECTORY_SEPARATOR . 'tests' . \DIRECTORY_SEPARATOR . 'CodeLocationResolverTest.php', $location['code.filepath']);
         $this->assertSame('App\\Repository\\UserRepository::findActiveUsers', $location['code.function']);
         $this->assertSame($expectedLine, $location['code.lineno']);
     }
