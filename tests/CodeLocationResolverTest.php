@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\CodeLocationResolver;
 use Sentry\Frame;
 use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializer;
+use Sentry\Util\CodeLocationResolver;
 
 final class CodeLocationResolverTest extends TestCase
 {

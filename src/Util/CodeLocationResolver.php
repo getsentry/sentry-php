@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Sentry;
+namespace Sentry\Util;
 
+use Sentry\Frame;
+use Sentry\FrameBuilder;
+use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
 
 /**
