@@ -439,18 +439,6 @@ message = "Unreachable else clause"
 count = 1
 
 [[issues]]
-file = "src/Integration/ModulesIntegration.php"
-code = "no-value"
-message = "Argument #1 passed to function `array_keys` has type `never`, meaning it cannot produce a value."
-count = 1
-
-[[issues]]
-file = "src/Integration/ModulesIntegration.php"
-code = "non-existent-class-like"
-message = 'Class, interface, enum, or trait `PackageVersions\Versions` not found.'
-count = 1
-
-[[issues]]
 file = "src/Integration/RequestIntegration.php"
 code = "invalid-property-assignment-value"
 message = "Invalid type for property `$options`: expected `array{'pii_sanitize_headers': array<array-key, string>}`, but got `array<array-key, mixed>`."
