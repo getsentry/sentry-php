@@ -296,12 +296,6 @@ count = 2
 
 [[issues]]
 file = "src/HttpClient/HttpClient.php"
-code = "less-specific-argument"
-message = "Argument type mismatch for argument #1 of `curl_share_setopt`: expected `CurlShareHandle`, but provided type `null|object|resource` is less specific."
-count = 2
-
-[[issues]]
-file = "src/HttpClient/HttpClient.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #1 of `Sentry\HttpClient\Response::__construct`: expected `int`, but found `mixed`.'
 count = 1
@@ -332,33 +326,23 @@ count = 1
 
 [[issues]]
 file = "src/HttpClient/HttpClient.php"
-code = "mixed-property-type-coercion"
-message = "A value with a less specific type `mixed` is being assigned to property `$$shareHandle` (null|object|resource)."
-count = 1
-
-[[issues]]
-file = "src/HttpClient/HttpClient.php"
-code = "non-existent-function"
-message = 'Could not find definition for function `Sentry\HttpClient\curl_share_init_persistent` (also tried as `curl_share_init_persistent` in a broader scope).'
-count = 1
-
-[[issues]]
-file = "src/HttpClient/HttpClient.php"
 code = "possibly-false-array-access"
 message = "Cannot perform array access on possibly `false` value."
 count = 1
 
 [[issues]]
 file = "src/HttpClient/HttpClient.php"
-code = "possibly-null-argument"
-message = "Argument #1 of function `curl_share_setopt` is possibly `null`, but parameter type `CurlShareHandle` does not accept it."
-count = 2
-
-[[issues]]
-file = "src/HttpClient/HttpClient.php"
 code = "redundant-comparison"
 message = "Redundant `<` comparison: left-hand side is never less than right-hand side."
 count = 2
+
+[[issues]]
+# false positive: function curl_share_init_persistent(array $share_options): CurlSharePersistentHandle
+# https://www.php.net/manual/en/function.curl-share-init-persistent.php
+file = "src/HttpClient/HttpClient.php"
+code = "too-many-arguments"
+message = "Too many arguments provided for function `curl_share_init_persistent`."
+count = 1
 
 [[issues]]
 file = "src/HttpClient/Request.php"
@@ -1240,12 +1224,6 @@ count = 1
 file = "src/Serializer/AbstractSerializer.php"
 code = "null-operand"
 message = "Right operand in `!=` comparison is `null`."
-count = 1
-
-[[issues]]
-file = "src/Serializer/AbstractSerializer.php"
-code = "possibly-invalid-argument"
-message = "Possible argument type mismatch for argument #1 of `ReflectionFunction::__construct`: expected `(closure(...mixed=): mixed)|string`, but possibly received `Closure`."
 count = 1
 
 [[issues]]
