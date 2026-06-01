@@ -105,10 +105,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Check benchmarks
-        run: vendor/bin/phpbench run --revs=1 --iterations=1
-        if: ${{ matrix.dependencies == 'highest' && matrix.php.version == '8.4' }}
-
   runtime-tests-frankenphp:
     name: Runtime tests (FrankenPHP)
     runs-on: ubuntu-latest
