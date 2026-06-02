@@ -23,8 +23,14 @@ jobs:
         with:
           php-version: '8.4'
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=summary
+
       - name: Install dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Run script
         run: vendor/bin/php-cs-fixer fix --verbose --diff --dry-run
@@ -41,8 +47,14 @@ jobs:
         with:
           php-version: '8.4'
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=summary
+
       - name: Install dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Run script
         run: vendor/bin/phpstan analyse
@@ -59,8 +71,14 @@ jobs:
         with:
           php-version: '8.4'
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=summary
+
       - name: Install dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Run script
         run: composer mago
