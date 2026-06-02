@@ -27,7 +27,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
 
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction --format=summary
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
@@ -51,7 +51,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
 
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction --format=summary
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
@@ -75,7 +75,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
 
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction --format=summary
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
