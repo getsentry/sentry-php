@@ -35,7 +35,6 @@
         "carthage-software/mago": "^1.13.3",
         "friendsofphp/php-cs-fixer": "^3.4",
         "guzzlehttp/promises": "^2.0.3",
-        "guzzlehttp/psr7": "^1.8.4|^2.1.1",
         "monolog/monolog": "^1.6|^2.0|^3.0",
         "nyholm/psr7": "^1.8",
         "open-telemetry/api": "^1.0",

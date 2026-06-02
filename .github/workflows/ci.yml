@@ -86,13 +86,24 @@ jobs:
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
 
-      - name: Install highest dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist
+      - name: Resolve highest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
         if: ${{ matrix.dependencies == 'highest' }}
 
-      - name: Install lowest dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
+      - name: Resolve lowest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --no-install --no-plugins --no-scripts --no-audit
         if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Audit highest dependencies
+        run: composer audit --locked --no-interaction --format=table
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Audit lowest dependencies
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
+        if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Run unit tests
         run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
@@ -133,8 +144,14 @@ jobs:
           key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-runtime-frankenphp-composer-
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=table
+
       - name: Install dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Install FrankenPHP
         env:
@@ -198,8 +215,14 @@ jobs:
           key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-runtime-roadrunner-composer-
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=table
+
       - name: Install dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Install RoadRunner
         env:
