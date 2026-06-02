@@ -94,8 +94,13 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --no-install --no-plugins --no-scripts --no-audit
         if: ${{ matrix.dependencies == 'lowest' }}
 
-      - name: Audit dependencies
+      - name: Audit highest dependencies
+        run: composer audit --locked --no-interaction --format=table
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Audit lowest dependencies
         run: composer audit --locked --no-interaction --format=table --abandoned=report
+        if: ${{ matrix.dependencies == 'lowest' }}
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
@@ -143,7 +148,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
 
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction --format=table --abandoned=report
+        run: composer audit --locked --no-interaction --format=table
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
@@ -214,7 +219,7 @@ jobs:
         run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
 
       - name: Audit dependencies
-        run: composer audit --locked --no-interaction --format=table --abandoned=report
+        run: composer audit --locked --no-interaction --format=table
 
       - name: Install dependencies
         run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
