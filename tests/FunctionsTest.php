@@ -497,10 +497,10 @@ final class FunctionsTest extends TestCase
         $transaction->setSampled(false);
 
         $scope->expects($this->never())
-              ->method('setSpan');
+            ->method('setSpan');
         $scope->expects($this->exactly(3))
-              ->method('getSpan')
-              ->willReturn($transaction);
+            ->method('getSpan')
+            ->willReturn($transaction);
 
         SentrySdk::setCurrentHub($hub);
 

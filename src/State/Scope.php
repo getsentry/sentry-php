@@ -460,7 +460,7 @@ class Scope
                         'flag' => key($flag),
                         'result' => current($flag),
                     ];
-                }, $this->flags),
+                }, array_values($this->flags)),
             ]);
         }
 
