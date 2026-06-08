@@ -54,7 +54,8 @@
     },
     "autoload": {
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/OpenTelemetry/Propagation/_register.php"
         ],
         "psr-4": {
             "Sentry\\": "src/"
