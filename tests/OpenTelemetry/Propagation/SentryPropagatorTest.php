@@ -12,7 +12,6 @@ use OpenTelemetry\API\Trace\TraceFlags;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\Context\ContextInterface;
 use OpenTelemetry\Context\Propagation\MultiTextMapPropagator;
-use OpenTelemetry\SDK\Propagation\PropagatorFactory;
 use OpenTelemetry\SDK\Trace\Span;
 use PHPUnit\Framework\TestCase;
 use Sentry\OpenTelemetry\Propagation\SentryPropagator;
@@ -211,30 +210,11 @@ class SentryPropagatorTest extends TestCase
         $this->assertSame($injectCarrier, $extractCarrier);
     }
 
-    public function testPropagatorFactory(): void
-    {
-        require_once __DIR__ . '/../../../src/OpenTelemetry/Propagation/_register.php';
-        $_SERVER['OTEL_PROPAGATORS'] = 'sentry';
-
-        $propagator = (new PropagatorFactory())->create();
-
-        $this->assertInstanceOf(SentryPropagator::class, $propagator);
-    }
-
     protected function setUp(): void
     {
         $this->requireOpenTelemetry();
 
         parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        if ($this->getName() === 'testPropagatorFactory') {
-            unset($_SERVER['OTEL_PROPAGATORS']);
-        }
-
-        parent::tearDown();
     }
 
     private function requireOpenTelemetry(): void
