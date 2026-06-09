@@ -96,28 +96,31 @@ class SentryPropagatorTest extends TestCase
         );
     }
 
-    public function testExtractEmptyHeader(): void
+    /**
+     * @dataProvider extractInvalidHeaderDataProvider
+     */
+    public function testExtractInvalidHeader(string $headerValue): void
     {
         $propagator = new SentryPropagator();
 
         $this->assertEquals(
             Context::getCurrent(),
             $propagator->extract([
-                SentryPropagator::SENTRY_TRACE => '',
+                SentryPropagator::SENTRY_TRACE => $headerValue,
             ])
         );
     }
 
-    public function testExtractInvalidHeader(): void
+    public function extractInvalidHeaderDataProvider(): array
     {
-        $propagator = new SentryPropagator();
-
-        $this->assertEquals(
-            Context::getCurrent(),
-            $propagator->extract([
-                SentryPropagator::SENTRY_TRACE => 'invalid',
-            ])
-        );
+        return [
+            'empty string' => [''],
+            'single segment' => ['invalid'],
+            'invalid trace id' => ['invalid-' . self::SPAN_ID_BASE16 . '-1'],
+            'invalid span id' => [self::TRACE_ID_BASE16 . '-invalid-1'],
+            'only dashes' => ['---'],
+            'whitespace' => ['   '],
+        ];
     }
 
     /**
@@ -144,10 +147,6 @@ class SentryPropagatorTest extends TestCase
             [self::SENTRY_TRACE_HEADER_OPTIONAL_SAMPLING, TraceFlags::DEFAULT],
         ];
     }
-
-    // sam traceparent + tylko sentry propagator: current context
-    // traceparent oraz sentry-trace + tylko sentry propagator: trace z sentry-trace
-    // traceparent oraz sentry-trace + trace context oraz sentry propagator: trace z traceparent
 
     public function testExtractInvalidOnlyTraceparent(): void
     {
@@ -212,10 +211,31 @@ class SentryPropagatorTest extends TestCase
 
     public function testPropagatorFactory(): void
     {
+        require_once __DIR__ . '/../../../src/OpenTelemetry/Propagation/_register.php';
         $_SERVER['OTEL_PROPAGATORS'] = 'sentry';
+
         $propagator = (new PropagatorFactory())->create();
 
         $this->assertInstanceOf(SentryPropagator::class, $propagator);
+    }
+
+    protected function setUp(): void
+    {
+        if (\PHP_VERSION_ID < 80100) {
+            $this->markTestSkipped('OpenTelemetry integration tests require PHP 8.1 or newer.');
+        }
+
+        foreach ([
+            TraceContextPropagator::class,
+            MultiTextMapPropagator::class,
+            Span::class,
+        ] as $className) {
+            if (!class_exists($className) && !interface_exists($className)) {
+                $this->markTestSkipped(\sprintf('OpenTelemetry integration tests require the optional package that provides "%s".', $className));
+            }
+        }
+
+        parent::setUp();
     }
 
     protected function tearDown(): void

@@ -78,7 +78,7 @@ class SentryPropagator implements TextMapPropagatorInterface
         }
 
         // Traceparent header has higher precedence over sentry-trace header if traceparent propagator is enabled.
-        if ($getter->get($carrier, TraceContextPropagator::TRACEPARENT) !== null && $this->isTraceparentPropagatorEnabled()) {
+        if (!empty($getter->get($carrier, TraceContextPropagator::TRACEPARENT)) && $this->isTraceparentPropagatorEnabled()) {
             return $context;
         }
 
@@ -98,6 +98,10 @@ class SentryPropagator implements TextMapPropagatorInterface
         [$traceId, $spanId] = $parts;
         $traceFlags = isset($parts[2]) && $parts[2] === '1' ? TraceFlags::SAMPLED : TraceFlags::DEFAULT;
         $spanContext = SpanContext::createFromRemoteParent($traceId, $spanId, $traceFlags);
+
+        if (!$spanContext->isValid()) {
+            return $context;
+        }
 
         return $context->withContextValue(Span::wrap($spanContext));
     }
