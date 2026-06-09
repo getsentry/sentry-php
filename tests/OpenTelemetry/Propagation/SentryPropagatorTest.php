@@ -141,6 +141,8 @@ class SentryPropagatorTest extends TestCase
 
     public function extractDataProvider(): array
     {
+        $this->requireOpenTelemetry();
+
         return [
             [self::SENTRY_TRACE_HEADER_SAMPLED, TraceFlags::SAMPLED],
             [self::SENTRY_TRACE_HEADER_NOT_SAMPLED, TraceFlags::DEFAULT],
@@ -221,6 +223,22 @@ class SentryPropagatorTest extends TestCase
 
     protected function setUp(): void
     {
+        $this->requireOpenTelemetry();
+
+        parent::setUp();
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->getName() === 'testPropagatorFactory') {
+            unset($_SERVER['OTEL_PROPAGATORS']);
+        }
+
+        parent::tearDown();
+    }
+
+    private function requireOpenTelemetry(): void
+    {
         if (\PHP_VERSION_ID < 80100) {
             $this->markTestSkipped('OpenTelemetry integration tests require PHP 8.1 or newer.');
         }
@@ -235,17 +253,6 @@ class SentryPropagatorTest extends TestCase
                 $this->markTestSkipped(\sprintf('OpenTelemetry integration tests require the optional package that provides "%s".', $className));
             }
         }
-
-        parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        if ($this->getName() === 'testPropagatorFactory') {
-            unset($_SERVER['OTEL_PROPAGATORS']);
-        }
-
-        parent::tearDown();
     }
 
     private function withSpanContext(SpanContextInterface $spanContext, ContextInterface $context): ContextInterface
