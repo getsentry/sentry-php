@@ -226,6 +226,7 @@ class SentryPropagatorTest extends TestCase
         }
 
         foreach ([
+            TraceFlags::class,
             TraceContextPropagator::class,
             MultiTextMapPropagator::class,
             Span::class,
