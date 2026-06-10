@@ -18,8 +18,6 @@ class LogsHandler implements HandlerInterface
     /**
      * The minimum logging level at which this handler will be triggered.
      *
-     * @psalm-suppress UndefinedDocblockClass
-     *
      * @var LogLevel|\Monolog\Level|int
      */
     private $logLevel;
@@ -34,8 +32,6 @@ class LogsHandler implements HandlerInterface
     /**
      * Creates a new Monolog handler that converts Monolog logs to Sentry logs.
      *
-     * @psalm-suppress UndefinedDocblockClass
-     *
      * @param LogLevel|\Monolog\Level|int|null $logLevel the minimum logging level at which this handler will be triggered and collects the logs
      * @param bool                             $bubble   whether the messages that are handled can bubble up the stack or not
      */
@@ -46,9 +42,6 @@ class LogsHandler implements HandlerInterface
     }
 
     /**
-     * @psalm-suppress UndefinedDocblockClass
-     * @psalm-suppress UndefinedClass
-     *
      * @param array<string, mixed>|LogRecord $record
      */
     public function isHandling($record): bool
@@ -70,7 +63,7 @@ class LogsHandler implements HandlerInterface
         if (!$this->isHandling($record)) {
             return false;
         }
-        // Do not collect logs for exceptions, they should be handled seperately by the `Handler` or `captureException`
+        // Do not collect logs for exceptions, they should be handled separately by `ExceptionToSentryIssueHandler` or `captureException`
         if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Throwable) {
             return false;
         }

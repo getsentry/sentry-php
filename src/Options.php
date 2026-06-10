@@ -132,6 +132,50 @@ final class Options
     }
 
     /**
+     * Gets the number of buffered logs that trigger an immediate flush.
+     */
+    public function getLogFlushThreshold(): ?int
+    {
+        /**
+         * @var int|null $logFlushThreshold
+         */
+        $logFlushThreshold = $this->options['log_flush_threshold'];
+
+        return $logFlushThreshold;
+    }
+
+    /**
+     * Sets the number of buffered logs that trigger an immediate flush.
+     * null will never trigger an immediate flush.
+     */
+    public function setLogFlushThreshold(?int $logFlushThreshold): self
+    {
+        return $this->updateOptions(['log_flush_threshold' => $logFlushThreshold]);
+    }
+
+    /**
+     * Gets the number of buffered metrics that trigger an immediate flush.
+     */
+    public function getMetricFlushThreshold(): ?int
+    {
+        /**
+         * @var int|null $metricFlushThreshold
+         */
+        $metricFlushThreshold = $this->options['metric_flush_threshold'];
+
+        return $metricFlushThreshold;
+    }
+
+    /**
+     * Sets the number of buffered metrics that trigger an immediate flush.
+     * null will never trigger an immediate flush.
+     */
+    public function setMetricFlushThreshold(?int $metricFlushThreshold): self
+    {
+        return $this->updateOptions(['metric_flush_threshold' => $metricFlushThreshold]);
+    }
+
+    /**
      * Sets if metrics should be enabled or not.
      */
     public function setEnableMetrics(bool $enableTracing): self
@@ -174,6 +218,32 @@ final class Options
     public function setProfilesSampleRate(?float $sampleRate): self
     {
         return $this->updateOptions(['profiles_sample_rate' => $sampleRate]);
+    }
+
+    /**
+     * Gets a callback that will be invoked when we sample a profile.
+     *
+     * @phpstan-return null|callable(Tracing\SamplingContext): float
+     */
+    public function getProfilesSampler(): ?callable
+    {
+        /** @var callable(Tracing\SamplingContext): float|null $value */
+        $value = $this->options['profiles_sampler'];
+
+        return $value;
+    }
+
+    /**
+     * Sets a callback that will be invoked when we take the profiling sampling decision.
+     * Return a number between 0 and 1 to define the sample rate for the provided SamplingContext.
+     *
+     * @param ?callable $sampler The sampler
+     *
+     * @phpstan-param null|callable(Tracing\SamplingContext): float $sampler
+     */
+    public function setProfilesSampler(?callable $sampler): self
+    {
+        return $this->updateOptions(['profiles_sampler' => $sampler]);
     }
 
     /**
@@ -403,7 +473,7 @@ final class Options
      *
      * @return string[]
      *
-     * @psalm-return list<class-string<\Throwable>>
+     * @phpstan-return list<class-string<\Throwable>>
      */
     public function getIgnoreExceptions(): array
     {
@@ -444,7 +514,7 @@ final class Options
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCallback(): callable
     {
@@ -457,7 +527,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCallback(callable $callback): self
     {
@@ -468,7 +538,7 @@ final class Options
      * Gets a callback that will be invoked before an transaction is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendTransactionCallback(): callable
     {
@@ -481,7 +551,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendTransactionCallback(callable $callback): self
     {
@@ -492,7 +562,7 @@ final class Options
      * Gets a callback that will be invoked before a check-in is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Event, ?EventHint): ?Event
+     * @phpstan-return callable(Event, ?EventHint): ?Event
      */
     public function getBeforeSendCheckInCallback(): callable
     {
@@ -505,7 +575,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Event, ?EventHint): ?Event $callback
+     * @phpstan-param callable(Event, ?EventHint): ?Event $callback
      */
     public function setBeforeSendCheckInCallback(callable $callback): self
     {
@@ -516,7 +586,7 @@ final class Options
      * Gets a callback that will be invoked before an log is sent to the server.
      * If `null` is returned it won't be sent.
      *
-     * @psalm-return callable(Log): ?Log
+     * @phpstan-return callable(Log): ?Log
      */
     public function getBeforeSendLogCallback(): callable
     {
@@ -529,7 +599,7 @@ final class Options
      *
      * @param callable $callback The callable
      *
-     * @psalm-param callable(Log): ?Log $callback
+     * @phpstan-param callable(Log): ?Log $callback
      */
     public function setBeforeSendLogCallback(callable $callback): self
     {
@@ -558,9 +628,7 @@ final class Options
      */
     public function setBeforeSendMetricCallback(callable $callback): self
     {
-        $options = array_merge($this->options, ['before_send_metric' => $callback]);
-
-        $this->options = $this->resolver->resolve($options);
+        $this->updateOptions(['before_send_metric' => $callback]);
 
         return $this;
     }
@@ -665,7 +733,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when adding a breadcrumb.
      *
-     * @psalm-return callable(Breadcrumb): ?Breadcrumb
+     * @phpstan-return callable(Breadcrumb): ?Breadcrumb
      */
     public function getBeforeBreadcrumbCallback(): callable
     {
@@ -681,7 +749,7 @@ final class Options
      *
      * @param callable $callback The callback
      *
-     * @psalm-param callable(Breadcrumb): ?Breadcrumb $callback
+     * @phpstan-param callable(Breadcrumb): ?Breadcrumb $callback
      */
     public function setBeforeBreadcrumbCallback(callable $callback): self
     {
@@ -975,7 +1043,7 @@ final class Options
     /**
      * Gets a callback that will be invoked when we sample a Transaction.
      *
-     * @psalm-return null|callable(Tracing\SamplingContext): float
+     * @phpstan-return null|callable(Tracing\SamplingContext): float
      */
     public function getTracesSampler(): ?callable
     {
@@ -988,7 +1056,7 @@ final class Options
      *
      * @param ?callable $sampler The sampler
      *
-     * @psalm-param null|callable(Tracing\SamplingContext): float $sampler
+     * @phpstan-param null|callable(Tracing\SamplingContext): float $sampler
      */
     public function setTracesSampler(?callable $sampler): self
     {
@@ -1005,10 +1073,13 @@ final class Options
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
         $resolver->setAllowedTypes('enable_logs', 'bool');
+        $resolver->setAllowedTypes('log_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('enable_metrics', 'bool');
+        $resolver->setAllowedTypes('metric_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
+        $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
@@ -1055,6 +1126,8 @@ final class Options
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
+        $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
+        $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
 
@@ -1078,10 +1151,13 @@ final class Options
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
             'enable_logs' => false,
+            'log_flush_threshold' => null,
             'enable_metrics' => true,
+            'metric_flush_threshold' => null,
             'traces_sample_rate' => null,
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
+            'profiles_sampler' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
@@ -1281,6 +1357,26 @@ final class Options
     private function validateContextLinesOption(?int $contextLines): bool
     {
         return $contextLines === null || $contextLines >= 0;
+    }
+
+    /**
+     * Validates that the value passed to the "log_flush_threshold" option is valid.
+     *
+     * @param int|null $logFlushThreshold The value to validate
+     */
+    private function validateLogFlushThresholdOption(?int $logFlushThreshold): bool
+    {
+        return $logFlushThreshold === null || $logFlushThreshold > 0;
+    }
+
+    /**
+     * Validates that the value passed to the "metric_flush_threshold" option is valid.
+     *
+     * @param int|null $metricFlushThreshold The value to validate
+     */
+    private function validateMetricFlushThresholdOption(?int $metricFlushThreshold): bool
+    {
+        return $metricFlushThreshold === null || $metricFlushThreshold > 0;
     }
 
     /**

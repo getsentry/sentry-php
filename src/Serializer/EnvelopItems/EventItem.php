@@ -147,7 +147,7 @@ class EventItem implements EnvelopeItemInterface
     /**
      * @return array<string, mixed>
      *
-     * @psalm-return array{
+     * @phpstan-return array{
      *     type: string,
      *     value: string,
      *     stacktrace?: array{

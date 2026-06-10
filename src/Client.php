@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.22.0';
+    public const SDK_VERSION = '4.27.0';
 
     /**
      * Regex pattern to detect if a string is a regex pattern (starts and ends with / optionally followed by flags).
@@ -58,7 +58,7 @@ class Client implements ClientInterface
     /**
      * @var array<string, IntegrationInterface> The stack of integrations
      *
-     * @psalm-var array<class-string<IntegrationInterface>, IntegrationInterface>
+     * @phpstan-var array<class-string<IntegrationInterface>, IntegrationInterface>
      */
     private $integrations;
 
@@ -224,11 +224,11 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      *
-     * @psalm-template T of IntegrationInterface
+     * @phpstan-template T of IntegrationInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        /** @psalm-var T|null */
+        /** @phpstan-var T|null */
         return $this->integrations[$className] ?? null;
     }
 

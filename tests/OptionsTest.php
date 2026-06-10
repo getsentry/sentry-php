@@ -101,6 +101,34 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'log_flush_threshold',
+            10,
+            'getLogFlushThreshold',
+            'setLogFlushThreshold',
+        ];
+
+        yield [
+            'log_flush_threshold',
+            null,
+            'getLogFlushThreshold',
+            'setLogFlushThreshold',
+        ];
+
+        yield [
+            'metric_flush_threshold',
+            10,
+            'getMetricFlushThreshold',
+            'setMetricFlushThreshold',
+        ];
+
+        yield [
+            'metric_flush_threshold',
+            null,
+            'getMetricFlushThreshold',
+            'setMetricFlushThreshold',
+        ];
+
+        yield [
             'traces_sample_rate',
             0.5,
             'getTracesSampleRate',
@@ -126,6 +154,13 @@ final class OptionsTest extends TestCase
             0.5,
             'getProfilesSampleRate',
             'setProfilesSampleRate',
+        ];
+
+        yield [
+            'profiles_sampler',
+            static function (): void {},
+            'getProfilesSampler',
+            'setProfilesSampler',
         ];
 
         yield [
@@ -512,7 +547,7 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider includedPathProviders
      */
-    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected)
+    public function testIncludedAppPathsOverrideExcludedAppPaths(string $value, string $expected): void
     {
         $configuration = new Options(['in_app_include' => [$value]]);
 
@@ -582,6 +617,52 @@ final class OptionsTest extends TestCase
         yield [
             null,
             null,
+        ];
+    }
+
+    /**
+     * @dataProvider logFlushThresholdOptionIsValidatedCorrectlyDataProvider
+     */
+    public function testLogFlushThresholdOptionIsValidatedCorrectly($value, ?int $expectedValue): void
+    {
+        $options = new Options(['log_flush_threshold' => $value]);
+
+        $this->assertSame($expectedValue, $options->getLogFlushThreshold());
+    }
+
+    public static function logFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
+    {
+        return [
+            [-1, null],
+            [0, null],
+            [1, 1],
+            [10, 10],
+            [null, null],
+            ['string', null],
+            ['1', null],
+        ];
+    }
+
+    /**
+     * @dataProvider metricFlushThresholdOptionIsValidatedCorrectlyDataProvider
+     */
+    public function testMetricFlushThresholdOptionIsValidatedCorrectly($value, ?int $expectedValue): void
+    {
+        $options = new Options(['metric_flush_threshold' => $value]);
+
+        $this->assertSame($expectedValue, $options->getMetricFlushThreshold());
+    }
+
+    public static function metricFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
+    {
+        return [
+            [-1, null],
+            [0, null],
+            [1, 1],
+            [10, 10],
+            [null, null],
+            ['string', null],
+            ['1', null],
         ];
     }
 

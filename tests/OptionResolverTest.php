@@ -109,7 +109,7 @@ class OptionResolverTest extends TestCase
         $this->assertEquals($expectedResult, $result);
     }
 
-    public function testNormalizerReturnsInvalidType()
+    public function testNormalizerReturnsInvalidType(): void
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'bar']);
@@ -121,7 +121,7 @@ class OptionResolverTest extends TestCase
         $this->assertEquals(['foo' => 'bar'], $result);
     }
 
-    public function testNormalizerReturnsInvalidValue()
+    public function testNormalizerReturnsInvalidValue(): void
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);
@@ -133,7 +133,7 @@ class OptionResolverTest extends TestCase
         $this->assertEquals(['foo' => 'b'], $result);
     }
 
-    public function testNormalizerResultFailsValidation()
+    public function testNormalizerResultFailsValidation(): void
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults(['foo' => 'b']);

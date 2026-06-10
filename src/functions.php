@@ -7,6 +7,7 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
+use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\State\Scope;
@@ -47,18 +48,20 @@ use Sentry\Transport\TransportInterface;
  *     in_app_include?: array<string>,
  *     integrations?: IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[],
  *     logger?: LoggerInterface|null,
+ *     log_flush_threshold?: int|null,
+ *     metric_flush_threshold?: int|null,
  *     max_breadcrumbs?: int,
- *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
+ *     max_request_body_size?: "never"|"small"|"medium"|"always",
  *     org_id?: int|null,
  *     prefixes?: array<string>,
  *     profiles_sample_rate?: int|float|null,
+ *     profiles_sampler?: callable|null,
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,
- *     spotlight_url?: string,
  *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
  *     trace_propagation_targets?: array<string>|null,
@@ -201,13 +204,13 @@ function configureScope(callable $callback): void
  *
  * @param callable $callback The callback to be executed
  *
- * @psalm-template T
+ * @phpstan-template T
  *
- * @psalm-param callable(Scope): T $callback
+ * @phpstan-param callable(Scope): T $callback
  *
  * @return mixed|void The callback's return value, upon successful execution
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withScope(callable $callback)
 {
@@ -232,13 +235,13 @@ function endContext(?int $timeout = null): void
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
  *
- * @psalm-template T
+ * @phpstan-template T
  *
- * @psalm-param callable(): T $callback
+ * @phpstan-param callable(): T $callback
  *
  * @return mixed
  *
- * @psalm-return T
+ * @phpstan-return T
  */
 function withContext(callable $callback, ?int $timeout = null)
 {
@@ -283,6 +286,7 @@ function trace(callable $trace, SpanContext $context)
 {
     return SentrySdk::getCurrentHub()->withScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
+        $span = null;
 
         // If there is a span set on the scope and it's sampled there is an active transaction.
         // If that is the case we create the child span and set it on the scope.
@@ -296,13 +300,34 @@ function trace(callable $trace, SpanContext $context)
         try {
             return $trace($scope);
         } finally {
-            if (isset($span)) {
+            if ($span !== null) {
                 $span->finish();
 
                 $scope->setSpan($parentSpan);
             }
         }
     });
+}
+
+/**
+ * Returns the OTLP traces endpoint configured for the current client.
+ */
+function getOtlpTracesEndpointUrl(): ?string
+{
+    $hub = SentrySdk::getCurrentHub();
+    $client = $hub->getClient();
+
+    $integration = $hub->getIntegration(OTLPIntegration::class);
+    if ($integration instanceof OTLPIntegration && $integration->getCollectorUrl() !== null) {
+        return $integration->getCollectorUrl();
+    }
+
+    $dsn = $client->getOptions()->getDsn();
+    if ($dsn === null) {
+        return null;
+    }
+
+    return $dsn->getOtlpTracesEndpointUrl();
 }
 
 /**
@@ -314,7 +339,9 @@ function trace(callable $trace, SpanContext $context)
 function getTraceparent(): string
 {
     $hub = SentrySdk::getCurrentHub();
-    $options = $hub->getClient()->getOptions();
+    $client = $hub->getClient();
+    $options = $client->getOptions();
+
     if ($options->isTracingEnabled()) {
         $span = SentrySdk::getCurrentHub()->getSpan();
         if ($span !== null) {
@@ -324,6 +351,10 @@ function getTraceparent(): string
 
     $traceParent = '';
     $hub->configureScope(static function (Scope $scope) use (&$traceParent) {
+        if ($scope->hasExternalPropagationContext()) {
+            return;
+        }
+
         $traceParent = $scope->getPropagationContext()->toTraceparent();
     });
 
@@ -339,7 +370,9 @@ function getTraceparent(): string
 function getBaggage(): string
 {
     $hub = SentrySdk::getCurrentHub();
-    $options = $hub->getClient()->getOptions();
+    $client = $hub->getClient();
+    $options = $client->getOptions();
+
     if ($options->isTracingEnabled()) {
         $span = SentrySdk::getCurrentHub()->getSpan();
         if ($span !== null) {
@@ -349,6 +382,10 @@ function getBaggage(): string
 
     $baggage = '';
     $hub->configureScope(static function (Scope $scope) use (&$baggage) {
+        if ($scope->hasExternalPropagationContext()) {
+            return;
+        }
+
         $baggage = $scope->getPropagationContext()->toBaggage();
     });
 
@@ -400,6 +437,11 @@ function logger(): Logs
 }
 
 function metrics(): TraceMetrics
+{
+    return TraceMetrics::getInstance();
+}
+
+function traceMetrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
 }

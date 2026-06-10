@@ -13,7 +13,7 @@ use Sentry\Exception\SilencedErrorException;
  * error handler more than once is not supported and will lead to nasty
  * problems. The code is based on the Symfony ErrorHandler component.
  *
- * @psalm-import-type StacktraceFrame from FrameBuilder
+ * @phpstan-import-type StacktraceFrame from FrameBuilder
  */
 final class ErrorHandler
 {
@@ -44,21 +44,21 @@ final class ErrorHandler
     /**
      * @var callable[] List of listeners that will act on each captured error
      *
-     * @psalm-var (callable(\ErrorException): void)[]
+     * @phpstan-var (callable(\ErrorException): void)[]
      */
     private $errorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act of each captured fatal error
      *
-     * @psalm-var (callable(FatalErrorException): void)[]
+     * @phpstan-var (callable(FatalErrorException): void)[]
      */
     private $fatalErrorListeners = [];
 
     /**
      * @var callable[] List of listeners that will act on each captured exception
      *
-     * @psalm-var (callable(\Throwable): void)[]
+     * @phpstan-var (callable(\Throwable): void)[]
      */
     private $exceptionListeners = [];
 
@@ -76,7 +76,7 @@ final class ErrorHandler
     /**
      * @var callable|null The previous exception handler, if any
      *
-     * @psalm-var null|callable(\Throwable): void
+     * @phpstan-var (callable(\Throwable): void)|null
      */
     private $previousExceptionHandler;
 
@@ -250,7 +250,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \ErrorException
      *
-     * @psalm-param callable(\ErrorException): void $listener
+     * @phpstan-param callable(\ErrorException): void $listener
      */
     public function addErrorHandlerListener(callable $listener): void
     {
@@ -265,7 +265,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \Sentry\Exception\FatalErrorException
      *
-     * @psalm-param callable(FatalErrorException): void $listener
+     * @phpstan-param callable(FatalErrorException): void $listener
      */
     public function addFatalErrorHandlerListener(callable $listener): void
     {
@@ -280,7 +280,7 @@ final class ErrorHandler
      *                           and that must accept a single argument
      *                           of type \Throwable
      *
-     * @psalm-param callable(\Throwable): void $listener
+     * @phpstan-param callable(\Throwable): void $listener
      */
     public function addExceptionHandlerListener(callable $listener): void
     {
@@ -394,8 +394,15 @@ final class ErrorHandler
                 && preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches) === 1
             ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
+                $newMemoryLimit = $currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue;
 
-                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue));
+                // It can happen that the memory limit + increase is still lower than
+                // the memory that is currently being used. This produces warnings
+                // that may end up in Sentry. To prevent this, we can check the real
+                // usage before.
+                if ($newMemoryLimit > memory_get_usage(true)) {
+                    $this->setMemoryLimitWithoutHandlingWarnings($newMemoryLimit);
+                }
 
                 self::$didIncreaseMemoryLimit = true;
             }
@@ -453,6 +460,23 @@ final class ErrorHandler
     }
 
     /**
+     * Set the memory_limit while having no real error handler so that a warning emitted
+     * will not get reported.
+     */
+    private function setMemoryLimitWithoutHandlingWarnings(int $memoryLimit): void
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        }, \E_WARNING);
+
+        try {
+            ini_set('memory_limit', (string) $memoryLimit);
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
      * Cleans and returns the backtrace without the first frames that belong to
      * this error handler.
      *
@@ -460,7 +484,7 @@ final class ErrorHandler
      * @param string                           $file      The filename the backtrace was raised in
      * @param int                              $line      The line number the backtrace was raised at
      *
-     * @psalm-param list<StacktraceFrame> $backtrace
+     * @phpstan-param list<StacktraceFrame> $backtrace
      *
      * @return array<int, mixed>
      */

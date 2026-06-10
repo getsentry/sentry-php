@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use Sentry\ClientInterface;
+use Sentry\NoOpClient;
+use Sentry\Options;
+use Sentry\SentrySdk;
+use Sentry\State\Hub;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -37,7 +43,7 @@ final class TransactionContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $spanContext = TransactionContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
@@ -51,7 +57,7 @@ final class TransactionContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromEnvironment(string $sentryTrace, string $baggage, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?SpanId $expectedSpanId, ?TraceId $expectedTraceId, ?bool $expectedParentSampled, ?string $expectedDynamicSamplingContextClass, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $spanContext = TransactionContext::fromEnvironment($sentryTrace, $baggage);
 
@@ -133,6 +139,67 @@ final class TransactionContextTest extends TestCase
             DynamicSamplingContext::class,
             true,
         ];
+    }
+
+    /**
+     * @dataProvider invalidSampleRandDataProvider
+     */
+    public function testInvalidSampleRandIsIgnored(string $sampleRand): void
+    {
+        $context = TransactionContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-sample_rate=0.4,sentry-sample_rand=' . rawurlencode($sampleRand)
+        );
+
+        $generatedSampleRand = $context->getMetadata()->getSampleRand();
+
+        $this->assertNotNull($generatedSampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $generatedSampleRand);
+        $this->assertLessThan(0.4, $generatedSampleRand);
+    }
+
+    public function testSampleRandIsIgnoredWithoutSentryTraceHeader(): void
+    {
+        $context = TransactionContext::fromHeaders('', 'sentry-sample_rand=-1.0');
+        $sampleRand = $context->getMetadata()->getSampleRand();
+
+        $this->assertNotNull($sampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $sampleRand);
+        $this->assertLessThanOrEqual(1.0, $sampleRand);
+    }
+
+    public function testInvalidSampleRandIsLogged(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('debug')
+            ->with(
+                $this->stringContains('Ignoring invalid sentry-sample_rand baggage value'),
+                ['sample_rand' => '-1.0']
+            );
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['logger' => $logger]));
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        try {
+            TransactionContext::fromHeaders(
+                '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8',
+                'sentry-sample_rand=-1.0'
+            );
+        } finally {
+            SentrySdk::setCurrentHub(new Hub(new NoOpClient()));
+        }
+    }
+
+    public static function invalidSampleRandDataProvider(): iterable
+    {
+        yield ['-1.0'];
+        yield ['1'];
+        yield ['2.0'];
+        yield ['foo'];
     }
 
     public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void
