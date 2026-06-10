@@ -6,9 +6,12 @@ namespace Sentry\State;
 
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventId;
 use Sentry\EventType;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -35,6 +38,16 @@ class Scope
      * @var PropagationContext
      */
     private $propagationContext;
+
+    /**
+     * @var ClientInterface The client bound to this scope
+     */
+    private $client;
+
+    /**
+     * @var EventId|null The ID of the last captured event
+     */
+    private $lastEventId;
 
     /**
      * @var Breadcrumb[] The list of breadcrumbs recorded in this scope
@@ -110,6 +123,7 @@ class Scope
     public function __construct(?PropagationContext $propagationContext = null)
     {
         $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
+        $this->client = new NoOpClient();
     }
 
     /**
@@ -144,6 +158,42 @@ class Scope
     }
 
     /**
+     * Returns the client bound to this scope.
+     */
+    public function getClient(): ClientInterface
+    {
+        return $this->client;
+    }
+
+    /**
+     * Sets the client bound to this scope.
+     *
+     * @return $this
+     */
+    public function setClient(ClientInterface $client): self
+    {
+        $this->client = $client;
+
+        return $this;
+    }
+
+    /**
+     * Returns the ID of the last captured event.
+     */
+    public function getLastEventId(): ?EventId
+    {
+        return $this->lastEventId;
+    }
+
+    /**
+     * @internal
+     */
+    public function setLastEventId(?EventId $lastEventId): void
+    {
+        $this->lastEventId = $lastEventId;
+    }
+
+    /**
      * @param array<int, array<string, bool>> $globalFlags
      * @param array<int, array<string, bool>> $isolationFlags
      *
@@ -161,7 +211,7 @@ class Scope
             }
 
             unset($flagsByKey[$flagKey]);
-            $flagsByKey[$flagKey] = (bool) current($flag);
+            $flagsByKey[$flagKey] = current($flag);
         }
 
         $flagsByKey = \array_slice($flagsByKey, -self::MAX_FLAGS, self::MAX_FLAGS, true);
@@ -483,7 +533,8 @@ class Scope
     }
 
     /**
-     * Clears the scope and resets any data it contains.
+     * Clears event payload data from the scope. The client binding and last
+     * event ID are preserved.
      *
      * @return $this
      */
