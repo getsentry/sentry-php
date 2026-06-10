@@ -43,6 +43,7 @@ use function Sentry\configureScope;
 use function Sentry\continueTrace;
 use function Sentry\endContext;
 use function Sentry\getBaggage;
+use function Sentry\getClient;
 use function Sentry\getOtlpTracesEndpointUrl;
 use function Sentry\getTraceparent;
 use function Sentry\init;
@@ -60,6 +61,23 @@ final class FunctionsTest extends TestCase
         init(['default_integrations' => false]);
 
         $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
+        $this->assertSame(SentrySdk::getCurrentHub()->getClient(), getClient());
+    }
+
+    public function testInitPreservesGlobalScope(): void
+    {
+        $globalScope = SentrySdk::getGlobalScope();
+        $globalScope->setTag('baseline', 'yes');
+
+        init(['default_integrations' => false]);
+
+        $this->assertSame($globalScope, SentrySdk::getGlobalScope());
+        $this->assertSame(SentrySdk::getCurrentHub()->getClient(), $globalScope->getClient());
+
+        $event = $globalScope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['baseline' => 'yes'], $event->getTags());
     }
 
     /**
