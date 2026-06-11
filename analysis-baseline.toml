@@ -458,8 +458,50 @@ count = 2
 
 [[issues]]
 file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugFileLogger::log()` expects type `string` but parent `Psr\Log\LoggerInterface::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugFileLogger::log()` expects type `string` but parent `Psr\Log\LoggerTrait::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugLogger::log()` expects type `string` but parent `Psr\Log\LoggerInterface::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugLogger::log()` expects type `string` but parent `Psr\Log\LoggerTrait::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugStdOutLogger::log()` expects type `string` but parent `Psr\Log\LoggerInterface::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "incompatible-parameter-type"
+message = 'Parameter `$message` of `Sentry\Logger\DebugStdOutLogger::log()` expects type `string` but parent `Psr\Log\LoggerTrait::log()` expects type `Stringable|string`'
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
 code = "mixed-argument"
 message = "Invalid argument type for argument #2 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Logger/DebugLogger.php"
+code = "redundant-cast"
+message = "Redundant cast to `(string)`: the expression already has this type."
 count = 1
 
 [[issues]]
