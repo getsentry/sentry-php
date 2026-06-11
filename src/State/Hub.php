@@ -236,9 +236,7 @@ class Hub implements HubInterface
      */
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $transaction = new Transaction($context, $this);
-
-        return (new TransactionSampler($this->getClient()->getOptions()))->startTransaction($transaction, $context, $customSamplingContext);
+        return TransactionSampler::startTransaction($this->getClient()->getOptions(), $context, $customSamplingContext);
     }
 
     /**
