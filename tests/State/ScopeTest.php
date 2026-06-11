@@ -108,6 +108,31 @@ final class ScopeTest extends TestCase
         ], $event->getContexts()['flags']);
     }
 
+    public function testSetFlagKeepsDuplicateFlagUpdatesSerializedAsList(): void
+    {
+        $scope = new Scope();
+
+        $scope->addFeatureFlag('feature-flag-1', true);
+        $scope->addFeatureFlag('feature-flag-2', false);
+        $scope->addFeatureFlag('feature-flag-1', false);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayHasKey('flags', $event->getContexts());
+        $this->assertSame([
+            [
+                'flag' => 'feature-flag-2',
+                'result' => false,
+            ],
+            [
+                'flag' => 'feature-flag-1',
+                'result' => false,
+            ],
+        ], $event->getContexts()['flags']['values']);
+        $this->assertSame('[{"flag":"feature-flag-2","result":false},{"flag":"feature-flag-1","result":false}]', json_encode($event->getContexts()['flags']['values']));
+    }
+
     public function testSetFlagLimit(): void
     {
         $scope = new Scope();
