@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 4.28.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.28.0.
+
+### Features
+
+- Add `SentryPropagator` to inject and extract `sentry-trace` headers in OpenTelemetry contexts. [(#2105)](https://github.com/getsentry/sentry-php/pull/2105)
+
+### Bug Fixes
+
+- Keep feature flag values serialized as a JSON list when a flag is updated multiple times. [(#2104)](https://github.com/getsentry/sentry-php/pull/2104)
+
 ## 4.27.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.27.0.
