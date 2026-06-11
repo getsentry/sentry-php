@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Options;
+use Sentry\State\Hub;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Transaction;
@@ -318,6 +320,11 @@ final class TransactionSamplerTest extends TestCase
      */
     private function sampleTransaction(Options $options, TransactionContext $transactionContext, array $customSamplingContext = []): Transaction
     {
-        return TransactionSampler::startTransaction($options, $transactionContext, $customSamplingContext);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+
+        $transaction = new Transaction($transactionContext, new Hub($client));
+
+        return (new TransactionSampler($options))->startTransaction($transaction, $transactionContext, $customSamplingContext);
     }
 }

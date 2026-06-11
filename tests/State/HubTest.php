@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
-use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -19,11 +18,9 @@ use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\NoOpClient;
 use Sentry\Options;
-use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
-use Sentry\Tests\StubTransport;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
@@ -629,7 +626,12 @@ final class HubTest extends TestCase
      */
     public function testStartTransactionWithTracesSampler(Options $options, TransactionContext $transactionContext, bool $expectedSampled): void
     {
-        $hub = SentrySdk::init(new Client($options, StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction($transactionContext);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
@@ -637,9 +639,14 @@ final class HubTest extends TestCase
 
     public function testStartTransactionIgnoresBaggageSampleRateWithoutSentryTrace(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 0.0,
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0.0,
+            ]));
+
+        $hub = new Hub($client);
         $transactionContext = TransactionContext::fromHeaders('', 'sentry-sample_rate=1');
         $transaction = $hub->startTransaction($transactionContext);
 
@@ -798,7 +805,12 @@ final class HubTest extends TestCase
 
     public function testStartTransactionDoesNothingIfTracingIsNotEnabled(): void
     {
-        $hub = SentrySdk::init(new Client(new Options(), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertFalse($transaction->getSampled());
@@ -808,25 +820,34 @@ final class HubTest extends TestCase
     {
         $customSamplingContext = ['a' => 'b'];
 
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
-                $this->assertSame($samplingContext->getAdditionalContext(), $customSamplingContext);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
+                    $this->assertSame($samplingContext->getAdditionalContext(), $customSamplingContext);
 
-                return 1.0;
-            },
-        ]), StubTransport::getInstance()));
+                    return 1.0;
+                },
+            ]));
 
+        $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
     }
 
     public function testStartTransactionStartsProfilerWithProfilesSampler(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 1.0,
-            'profiles_sampler' => static function (): float {
-                return 1.0;
-            },
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->exactly(2))
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertTrue($transaction->getSampled());
@@ -835,12 +856,17 @@ final class HubTest extends TestCase
 
     public function testStartTransactionDoesNotStartProfilerWhenProfilesSamplerReturnsZero(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 1.0,
-            'profiles_sampler' => static function (): float {
-                return 0.0;
-            },
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 0.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertTrue($transaction->getSampled());
@@ -849,13 +875,18 @@ final class HubTest extends TestCase
 
     public function testStartTransactionPrefersProfilesSamplerOverProfilesSampleRate(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 1.0,
-            'profiles_sample_rate' => 1.0,
-            'profiles_sampler' => static function (): float {
-                return 0.0;
-            },
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): float {
+                    return 0.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertTrue($transaction->getSampled());
@@ -866,26 +897,35 @@ final class HubTest extends TestCase
     {
         $customSamplingContext = ['a' => 'b'];
 
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 1.0,
-            'profiles_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
-                $this->assertSame($samplingContext->getAdditionalContext(), $customSamplingContext);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext): float {
+                    $this->assertSame($samplingContext->getAdditionalContext(), $customSamplingContext);
 
-                return 0.0;
-            },
-        ]), StubTransport::getInstance()));
+                    return 0.0;
+                },
+            ]));
 
+        $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
     }
 
     public function testStartTransactionDoesNotStartProfilerWhenProfilesSamplerReturnsInvalidValue(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 1.0,
-            'profiles_sampler' => static function (): string {
-                return 'foo';
-            },
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1.0,
+                'profiles_sampler' => static function (): string {
+                    return 'foo';
+                },
+            ]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertTrue($transaction->getSampled());
@@ -896,15 +936,19 @@ final class HubTest extends TestCase
     {
         $profilesSamplerInvoked = false;
 
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sample_rate' => 0.0,
-            'profiles_sampler' => static function () use (&$profilesSamplerInvoked): float {
-                $profilesSamplerInvoked = true;
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0.0,
+                'profiles_sampler' => static function () use (&$profilesSamplerInvoked): float {
+                    $profilesSamplerInvoked = true;
 
-                return 1.0;
-            },
-        ]), StubTransport::getInstance()));
+                    return 1.0;
+                },
+            ]));
 
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext());
 
         $this->assertFalse($transaction->getSampled());
@@ -914,11 +958,16 @@ final class HubTest extends TestCase
 
     public function testStartTransactionUpdatesTheDscSampleRate(): void
     {
-        $hub = SentrySdk::init(new Client(new Options([
-            'traces_sampler' => static function (SamplingContext $samplingContext): float {
-                return 1.0;
-            },
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => static function (SamplingContext $samplingContext): float {
+                    return 1.0;
+                },
+            ]));
+
+        $hub = new Hub($client);
 
         $dsc = DynamicSamplingContext::fromHeader('sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-public_key=public');
         $transactionMetaData = new TransactionMetadata(null, $dsc);
@@ -930,7 +979,12 @@ final class HubTest extends TestCase
 
     public function testGetTransactionReturnsInstanceSetOnTheScopeIfTransactionIsNotSampled(): void
     {
-        $hub = SentrySdk::init(new Client(new Options(['traces_sample_rate' => 1]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, false));
 
         $hub->configureScope(static function (Scope $scope) use ($transaction): void {
@@ -942,7 +996,12 @@ final class HubTest extends TestCase
 
     public function testGetTransactionReturnsInstanceSetOnTheScopeIfTransactionIsSampled(): void
     {
-        $hub = SentrySdk::init(new Client(new Options(['traces_sample_rate' => 1]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
         $transaction = $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, true));
 
         $hub->configureScope(static function (Scope $scope) use ($transaction): void {
@@ -954,7 +1013,12 @@ final class HubTest extends TestCase
 
     public function testGetTransactionReturnsNullIfNoTransactionIsSetOnTheScope(): void
     {
-        $hub = SentrySdk::init(new Client(new Options(['traces_sample_rate' => 1]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['traces_sample_rate' => 1]));
+
+        $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(TransactionContext::DEFAULT_NAME, true));
 
         $this->assertNull($hub->getTransaction());

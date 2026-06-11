@@ -11,13 +11,13 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\State\Hub;
 use Sentry\State\Scope;
-use Sentry\Tests\StubTransport;
 use Sentry\Tracing\GuzzleTracingMiddleware;
 use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TransactionContext;
@@ -26,11 +26,15 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 {
     public function testTraceCreatesBreadcrumbIfSpanIsNotSet(): void
     {
-        $client = new Client(new Options([
-            'traces_sample_rate' => 0,
-        ]), StubTransport::getInstance());
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeast(2))
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 0,
+            ]));
 
-        $hub = SentrySdk::init($client);
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(TransactionContext::make());
 
@@ -67,11 +71,15 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
     public function testTraceCreatesBreadcrumbIfSpanIsRecorded(): void
     {
-        $client = new Client(new Options([
-            'traces_sample_rate' => 1,
-        ]), StubTransport::getInstance());
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeast(2))
+               ->method('getOptions')
+               ->willReturn(new Options([
+                   'traces_sample_rate' => 1,
+               ]));
 
-        $hub = SentrySdk::init($client);
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(TransactionContext::make());
 
@@ -112,7 +120,13 @@ final class GuzzleTracingMiddlewareTest extends TestCase
      */
     public function testTraceHeaders(Request $request, Options $options, bool $headersShouldBePresent): void
     {
-        $hub = SentrySdk::init(new Client($options, StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $expectedPromiseResult = new Response();
 
@@ -138,7 +152,13 @@ final class GuzzleTracingMiddlewareTest extends TestCase
      */
     public function testTraceHeadersWithTransaction(Request $request, Options $options, bool $headersShouldBePresent): void
     {
-        $hub = SentrySdk::init(new Client($options, StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeast(2))
+            ->method('getOptions')
+            ->willReturn($options);
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $transaction = $hub->startTransaction(new TransactionContext());
 
@@ -174,9 +194,15 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ];
         });
 
-        $hub = SentrySdk::init(new Client(new Options([
-            'trace_propagation_targets' => null,
-        ]), StubTransport::getInstance()));
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'trace_propagation_targets' => null,
+            ]));
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
         $expectedPromiseResult = new Response();
 
         $middleware = GuzzleTracingMiddleware::trace($hub);
@@ -293,20 +319,18 @@ final class GuzzleTracingMiddlewareTest extends TestCase
      */
     public function testTrace(Request $request, $expectedPromiseResult, array $expectedBreadcrumbData, array $expectedSpanData): void
     {
-        $client = $this->getMockBuilder(Client::class)
-            ->setConstructorArgs([
-                new Options([
-                    'traces_sample_rate' => 1,
-                    'trace_propagation_targets' => [
-                        'www.example.com',
-                    ],
-                ]),
-                StubTransport::getInstance(),
-            ])
-            ->onlyMethods(['captureEvent'])
-            ->getMock();
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeast(4))
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sample_rate' => 1,
+                'trace_propagation_targets' => [
+                    'www.example.com',
+                ],
+            ]));
 
-        $hub = SentrySdk::init($client);
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
 
         $client->expects($this->once())
             ->method('captureEvent')

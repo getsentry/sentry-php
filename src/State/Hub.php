@@ -19,6 +19,7 @@ use Sentry\Severity;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionSampler;
 
 /**
  * This class is a basic implementation of the {@see HubInterface} interface.
@@ -235,7 +236,9 @@ class Hub implements HubInterface
      */
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        return \Sentry\startTransaction($context, $customSamplingContext);
+        $transaction = new Transaction($context, $this);
+
+        return (new TransactionSampler($this->getClient()->getOptions()))->startTransaction($transaction, $context, $customSamplingContext);
     }
 
     /**
