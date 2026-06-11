@@ -5,13 +5,15 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
-use Sentry\State\Hub;
+use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
+use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -102,17 +104,12 @@ final class TransactionTest extends TestCase
      */
     public function testTransactionIsSampledCorrectlyWhenTracingIsSetToZeroInOptions(TransactionContext $context, bool $expectedSampled): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(
-                new Options([
-                    'traces_sampler' => null,
-                    'traces_sample_rate' => 0,
-                ])
-            );
+        $client = new Client(new Options([
+            'traces_sampler' => null,
+            'traces_sample_rate' => 0,
+        ]), StubTransport::getInstance());
 
-        $transaction = (new Hub($client))->startTransaction($context);
+        $transaction = SentrySdk::init($client)->startTransaction($context);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
@@ -145,17 +142,12 @@ final class TransactionTest extends TestCase
      */
     public function testTransactionIsNotSampledWhenTracingIsDisabledInOptions(TransactionContext $context, bool $expectedSampled): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(
-                new Options([
-                    'traces_sampler' => null,
-                    'traces_sample_rate' => null,
-                ])
-            );
+        $client = new Client(new Options([
+            'traces_sampler' => null,
+            'traces_sample_rate' => null,
+        ]), StubTransport::getInstance());
 
-        $transaction = (new Hub($client))->startTransaction($context);
+        $transaction = SentrySdk::init($client)->startTransaction($context);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }

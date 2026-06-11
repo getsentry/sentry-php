@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -23,6 +24,7 @@ use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
+use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -452,18 +454,28 @@ final class FunctionsTest extends TestCase
     public function testStartTransaction(): void
     {
         $transactionContext = new TransactionContext('foo');
-        $transaction = new Transaction($transactionContext);
         $customSamplingContext = ['foo' => 'bar'];
+        $samplerInvoked = false;
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('startTransaction')
-            ->with($transactionContext, $customSamplingContext)
-            ->willReturn($transaction);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'traces_sampler' => function (SamplingContext $samplingContext) use ($customSamplingContext, &$samplerInvoked): float {
+                    $this->assertSame($customSamplingContext, $samplingContext->getAdditionalContext());
+                    $samplerInvoked = true;
 
-        SentrySdk::setCurrentHub($hub);
+                    return 1.0;
+                },
+            ]));
 
-        $this->assertSame($transaction, startTransaction($transactionContext, $customSamplingContext));
+        SentrySdk::init($client);
+
+        $transaction = startTransaction($transactionContext, $customSamplingContext);
+
+        $this->assertSame('foo', $transaction->getName());
+        $this->assertTrue($transaction->getSampled());
+        $this->assertTrue($samplerInvoked);
     }
 
     public function testTraceReturnsClosureResult(): void
@@ -620,17 +632,15 @@ final class FunctionsTest extends TestCase
 
     public function testBaggageWithTracingEnabled(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1.0,
-                'release' => '1.0.0',
-                'environment' => 'development',
-            ]));
+        $client = new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'release' => '1.0.0',
+            'environment' => 'development',
+        ]), StubTransport::getInstance());
 
         $hub = new Hub($client);
 
+        SentrySdk::getGlobalScope()->setClient($client);
         SentrySdk::setCurrentHub($hub);
 
         $transactionContext = new TransactionContext();

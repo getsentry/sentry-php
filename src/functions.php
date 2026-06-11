@@ -15,6 +15,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionSampler;
 use Sentry\Transport\TransportInterface;
 
 /**
@@ -268,7 +269,7 @@ function withContext(callable $callback, ?int $timeout = null)
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
-    return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
+    return TransactionSampler::startTransaction(SentrySdk::getClient()->getOptions(), $context, $customSamplingContext);
 }
 
 /**
