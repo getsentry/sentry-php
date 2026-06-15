@@ -11,7 +11,7 @@ use Sentry\Util\PHPConfiguration;
  * This class builds {@see Stacktrace} objects from an instance of an exception
  * or from a backtrace.
  *
- * @psalm-import-type StacktraceFrame from FrameBuilder
+ * @phpstan-import-type StacktraceFrame from FrameBuilder
  */
 final class StacktraceBuilder
 {
@@ -52,7 +52,7 @@ final class StacktraceBuilder
      * @param string                           $file      The file where the backtrace originated from
      * @param int                              $line      The line from which the backtrace originated from
      *
-     * @psalm-param list<StacktraceFrame> $backtrace
+     * @phpstan-param list<StacktraceFrame> $backtrace
      */
     public function buildFromBacktrace(array $backtrace, string $file, int $line): Stacktrace
     {

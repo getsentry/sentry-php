@@ -47,7 +47,7 @@ final class SentrySdk
         self::$currentHub = new Hub($client);
         self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
 
-        return self::$currentHub;
+        return self::getCurrentHub();
     }
 
     /**
@@ -97,13 +97,13 @@ final class SentrySdk
      *
      * @param callable $callback The callback to execute
      *
-     * @psalm-template T
+     * @phpstan-template T
      *
-     * @psalm-param callable(): T $callback
+     * @phpstan-param callable(): T $callback
      *
      * @return mixed
      *
-     * @psalm-return T
+     * @phpstan-return T
      */
     public static function withContext(callable $callback, ?int $timeout = null)
     {
@@ -149,10 +149,7 @@ final class SentrySdk
         TraceMetrics::getInstance()->flush();
 
         $client = self::getCurrentHub()->getClient();
-
-        if ($client !== null) {
-            $client->flush();
-        }
+        $client->flush();
     }
 
     private static function getRuntimeContextManager(): RuntimeContextManager

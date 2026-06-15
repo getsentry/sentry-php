@@ -54,7 +54,7 @@ final class LogsHandlerTest extends TestCase
                 $log->attributes()->toSimpleArray(),
                 static function (string $key) {
                     // We are not testing Sentry's own attributes here, only the ones the user supplied so filter them out of the expected attributes
-                    return strpos($key, 'sentry.') !== 0;
+                    return strpos($key, 'sentry.') !== 0 && $key !== 'server.address';
                 },
                 \ARRAY_FILTER_USE_KEY
             )
@@ -100,7 +100,7 @@ final class LogsHandlerTest extends TestCase
         }
     }
 
-    public function testLogsHandlerDestructor()
+    public function testLogsHandlerDestructor(): void
     {
         $transport = new StubTransport();
         $client = ClientBuilder::create([
@@ -135,7 +135,7 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('auto.log.monolog', $log->attributes()->toSimpleArray()['sentry.origin']);
     }
 
-    public function testOriginTagNotAppliedWhenUsingDirectly()
+    public function testOriginTagNotAppliedWhenUsingDirectly(): void
     {
         \Sentry\logger()->info('No origin attribute');
 

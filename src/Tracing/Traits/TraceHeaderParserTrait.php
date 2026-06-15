@@ -92,10 +92,11 @@ trait TraceHeaderParserTrait
         }
 
         // Store the propagated trace sample rand or generate a new one
-        if ($samplingContext->has('sample_rand')) {
-            $result['sampleRand'] = (float) $samplingContext->get('sample_rand');
-        } else {
-            if ($samplingContext->has('sample_rate') && $result['parentSampled'] !== null) {
+        if ($hasSentryTrace) {
+            $incomingSampleRand = self::parseSampleRand($samplingContext);
+            if ($incomingSampleRand !== null) {
+                $result['sampleRand'] = $incomingSampleRand;
+            } elseif ($samplingContext->has('sample_rate') && $result['parentSampled'] !== null) {
                 if ($result['parentSampled'] === true) {
                     // [0, rate)
                     $result['sampleRand'] = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6);
@@ -110,6 +111,30 @@ trait TraceHeaderParserTrait
         }
 
         return $result;
+    }
+
+    private static function parseSampleRand(DynamicSamplingContext $samplingContext): ?float
+    {
+        $sampleRand = $samplingContext->get('sample_rand');
+        if ($sampleRand === null) {
+            return null;
+        }
+
+        if (is_numeric($sampleRand)) {
+            $sampleRandAsFloat = (float) $sampleRand;
+            if ($sampleRandAsFloat >= 0.0 && $sampleRandAsFloat < 1.0) {
+                return $sampleRandAsFloat;
+            }
+        }
+
+        $hub = SentrySdk::getCurrentHub();
+        $client = $hub->getClient();
+        $client->getOptions()->getLoggerOrNullLogger()->debug(
+            'Ignoring invalid sentry-sample_rand baggage value because it must be a numeric value in the range [0, 1).',
+            ['sample_rand' => $sampleRand]
+        );
+
+        return null;
     }
 
     private static function shouldContinueTrace(DynamicSamplingContext $samplingContext): bool

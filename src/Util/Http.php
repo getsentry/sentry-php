@@ -12,10 +12,7 @@ use Sentry\Dsn;
  */
 final class Http
 {
-    /**
-     * @return string[]
-     */
-    public static function getRequestHeaders(Dsn $dsn, string $sdkIdentifier, string $sdkVersion): array
+    public static function getSentryAuthHeader(Dsn $dsn, string $sdkIdentifier, string $sdkVersion): string
     {
         $authHeader = [
             'sentry_version=' . Client::PROTOCOL_VERSION,
@@ -23,9 +20,17 @@ final class Http
             'sentry_key=' . $dsn->getPublicKey(),
         ];
 
+        return 'Sentry ' . implode(', ', $authHeader);
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getRequestHeaders(Dsn $dsn, string $sdkIdentifier, string $sdkVersion): array
+    {
         return [
             'Content-Type: application/x-sentry-envelope',
-            'X-Sentry-Auth: Sentry ' . implode(', ', $authHeader),
+            'X-Sentry-Auth: ' . self::getSentryAuthHeader($dsn, $sdkIdentifier, $sdkVersion),
         ];
     }
 

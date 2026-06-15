@@ -13,16 +13,19 @@ use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
+use Sentry\Util\TelemetryStorage;
 
 /**
  * @internal
  */
 final class LogsAggregator
 {
+    private const LOGS_BUFFER_SIZE = 1000;
+
     /**
-     * @var Log[]
+     * @var TelemetryStorage<Log>|null
      */
-    private $logs = [];
+    private $logs;
 
     /**
      * @param string                       $message    see sprintf for a description of format
@@ -67,11 +70,15 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $log = (new Log($timestamp, $this->getTraceId($hub), $level, $formattedMessage))
+        $traceData = $this->getTraceData($hub);
+        $traceId = $traceData['trace_id'];
+        $parentSpanId = $traceData['parent_span_id'];
+
+        $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
-            ->setAttribute('sentry.server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', $hub->getSpan() ? $hub->getSpan()->getSpanId() : null);
+            ->setAttribute('server.address', $options->getServerName())
+            ->setAttribute('sentry.trace.parent_span_id', $parentSpanId);
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
@@ -146,19 +153,24 @@ final class LogsAggregator
             $sdkLogger->log($log->getPsrLevel(), "Logs item: {$log->getBody()}", $log->attributes()->toSimpleArray());
         }
 
-        $this->logs[] = $log;
+        $logFlushThreshold = $options->getLogFlushThreshold();
+        $logs = $this->getStorage($logFlushThreshold);
+
+        $logs->push($log);
+
+        if ($logFlushThreshold !== null && \count($logs) >= $logFlushThreshold) {
+            $this->flush($hub);
+        }
     }
 
     public function flush(?HubInterface $hub = null): ?EventId
     {
-        if (empty($this->logs)) {
+        if ($this->logs === null || $this->logs->isEmpty()) {
             return null;
         }
 
         $hub = $hub ?? SentrySdk::getCurrentHub();
-        $event = Event::createLogs()->setLogs($this->logs);
-
-        $this->logs = [];
+        $event = Event::createLogs()->setLogs($this->logs->drain());
 
         return $hub->captureEvent($event);
     }
@@ -168,23 +180,61 @@ final class LogsAggregator
      */
     public function all(): array
     {
-        return $this->logs;
+        return $this->logs !== null ? $this->logs->toArray() : [];
     }
 
-    private function getTraceId(HubInterface $hub): string
+    /**
+     * @return array{trace_id: string, parent_span_id: string|null}
+     */
+    private function getTraceData(HubInterface $hub): array
     {
         $span = $hub->getSpan();
 
         if ($span !== null) {
-            return (string) $span->getTraceId();
+            return [
+                'trace_id' => (string) $span->getTraceId(),
+                'parent_span_id' => (string) $span->getSpanId(),
+            ];
         }
 
-        $traceId = '';
+        $traceData = null;
 
-        $hub->configureScope(static function (Scope $scope) use (&$traceId) {
-            $traceId = (string) $scope->getPropagationContext()->getTraceId();
+        $hub->configureScope(static function (Scope $scope) use (&$traceData): void {
+            $externalPropagationContext = Scope::getExternalPropagationContext();
+
+            if ($externalPropagationContext !== null) {
+                $traceData = [
+                    'trace_id' => $externalPropagationContext['trace_id'],
+                    'parent_span_id' => $externalPropagationContext['span_id'],
+                ];
+
+                return;
+            }
+
+            $traceData = [
+                'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
+                'parent_span_id' => null,
+            ];
         });
 
-        return $traceId;
+        /** @var array{trace_id: string, parent_span_id: string|null} $traceData */
+        return $traceData;
+    }
+
+    /**
+     * @return TelemetryStorage<Log>
+     */
+    private function getStorage(?int $logFlushThreshold = null): TelemetryStorage
+    {
+        if ($this->logs === null) {
+            /** @var TelemetryStorage<Log> $logs */
+            $logs = $logFlushThreshold !== null
+                ? TelemetryStorage::unbounded()
+                : TelemetryStorage::bounded(self::LOGS_BUFFER_SIZE);
+
+            $this->logs = $logs;
+        }
+
+        return $this->logs;
     }
 }

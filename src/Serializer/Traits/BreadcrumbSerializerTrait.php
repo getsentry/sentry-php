@@ -14,7 +14,7 @@ trait BreadcrumbSerializerTrait
     /**
      * @return array<string, mixed>
      *
-     * @psalm-return array{
+     * @phpstan-return array{
      *     type: string,
      *     category: string,
      *     level: string,

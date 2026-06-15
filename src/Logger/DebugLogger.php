@@ -9,9 +9,9 @@ use Psr\Log\AbstractLogger;
 abstract class DebugLogger extends AbstractLogger
 {
     /**
-     * @param mixed              $level
-     * @param string|\Stringable $message
-     * @param mixed[]            $context
+     * @param mixed   $level
+     * @param string  $message
+     * @param mixed[] $context
      */
     public function log($level, $message, array $context = []): void
     {

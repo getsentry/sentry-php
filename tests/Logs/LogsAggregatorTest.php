@@ -12,6 +12,8 @@ use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\StubTransport;
+use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
@@ -52,7 +54,7 @@ final class LogsAggregatorTest extends TestCase
                 $log->attributes()->toSimpleArray(),
                 static function (string $key) {
                     // We are not testing internal Sentry attributes here, only the ones the user supplied
-                    return strpos($key, 'sentry.') !== 0;
+                    return strpos($key, 'sentry.') !== 0 && $key !== 'server.address';
                 },
                 \ARRAY_FILTER_USE_KEY
             )
@@ -162,6 +164,7 @@ final class LogsAggregatorTest extends TestCase
     {
         $client = ClientBuilder::create([
             'enable_logs' => true,
+            'send_default_pii' => true,
             'release' => '1.0.0',
             'environment' => 'production',
             'server_name' => 'web-server-01',
@@ -198,7 +201,7 @@ final class LogsAggregatorTest extends TestCase
 
         $this->assertSame('1.0.0', $attributes->get('sentry.release')->getValue());
         $this->assertSame('production', $attributes->get('sentry.environment')->getValue());
-        $this->assertSame('web-server-01', $attributes->get('sentry.server.address')->getValue());
+        $this->assertSame('web-server-01', $attributes->get('server.address')->getValue());
         $this->assertSame('User %s performed action %s', $attributes->get('sentry.message.template')->getValue());
         $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
         $this->assertSame('sentry.php', $attributes->get('sentry.sdk.name')->getValue());
@@ -206,5 +209,140 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
         $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
+    }
+
+    public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'send_default_pii' => false,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $hub->configureScope(static function (Scope $scope) {
+            $userDataBag = new UserDataBag();
+            $userDataBag->setId('unique_id');
+            $userDataBag->setEmail('foo@example.com');
+            $userDataBag->setUsername('my_user');
+            $scope->setUser($userDataBag);
+        });
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'User performed action');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes();
+
+        $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
+        $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
+        $this->assertSame('my_user', $attributes->get('user.name')->getValue());
+    }
+
+    public function testFlushesImmediatelyWhenThresholdIsReached(): void
+    {
+        StubTransport::$events = [];
+
+        $transport = new StubTransport();
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'log_flush_threshold' => 2,
+        ])->setTransport($transport)->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'First message');
+
+        $this->assertCount(1, $aggregator->all());
+        $this->assertCount(0, StubTransport::$events);
+
+        $aggregator->add(LogLevel::warn(), 'Second message');
+
+        $this->assertCount(0, $aggregator->all());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertCount(2, StubTransport::$events[0]->getLogs());
+        $this->assertSame('First message', StubTransport::$events[0]->getLogs()[0]->getBody());
+        $this->assertSame('Second message', StubTransport::$events[0]->getLogs()[1]->getBody());
+    }
+
+    public function testDoesNotFlushImmediatelyWhenThresholdIsNull(): void
+    {
+        StubTransport::$events = [];
+
+        $transport = new StubTransport();
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+            'log_flush_threshold' => null,
+        ])->setTransport($transport)->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'First message');
+        $aggregator->add(LogLevel::warn(), 'Second message');
+
+        $this->assertCount(2, $aggregator->all());
+        $this->assertCount(0, StubTransport::$events);
+    }
+
+    public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
+        $propagationContext->setSpanId(new SpanId('1234567890abcdef'));
+
+        $hub = new Hub($client, new Scope($propagationContext));
+        SentrySdk::setCurrentHub($hub);
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+        $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
+
+        $parentSpanId = $logs[0]->attributes()->get('sentry.trace.parent_span_id');
+        $this->assertNotNull($parentSpanId);
+        // Log attributes normalize null values to the string "null".
+        $this->assertSame('null', $parentSpanId->getValue());
+    }
+
+    public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+
+        Scope::registerExternalPropagationContext(static function (): array {
+            return [
+                'trace_id' => '771a43a4192642f0b136d5159a501700',
+                'span_id' => '1234567890abcdef',
+            ];
+        });
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+        $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
+        $this->assertSame('1234567890abcdef', $logs[0]->attributes()->get('sentry.trace.parent_span_id')->getValue());
+
+        Scope::clearExternalPropagationContext();
     }
 }

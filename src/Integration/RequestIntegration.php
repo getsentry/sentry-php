@@ -67,6 +67,10 @@ final class RequestIntegration implements IntegrationInterface
 
     /**
      * @var array<string, mixed> The options
+     *
+     * @phpstan-var array{
+     *     pii_sanitize_headers: string[]
+     * }
      */
     private $options;
 
@@ -75,6 +79,10 @@ final class RequestIntegration implements IntegrationInterface
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
      * @param array<string, mixed>         $options        The options
+     *
+     * @phpstan-param array{
+     *     pii_sanitize_headers?: string[]
+     * } $options
      */
     public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
     {
@@ -83,7 +91,10 @@ final class RequestIntegration implements IntegrationInterface
         $this->configureOptions($resolver);
 
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
-        $this->options = $resolver->resolve($options);
+
+        /** @var array{pii_sanitize_headers: string[]} $resolvedOptions */
+        $resolvedOptions = $resolver->resolve($options);
+        $this->options = $resolvedOptions;
     }
 
     /**

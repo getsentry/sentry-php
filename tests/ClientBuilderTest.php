@@ -23,7 +23,7 @@ use Sentry\Transport\TransportInterface;
 
 final class ClientBuilderTest extends TestCase
 {
-    public function testGetOptions()
+    public function testGetOptions(): void
     {
         $options = new Options();
         $clientBuilder = new ClientBuilder($options);

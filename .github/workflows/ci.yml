@@ -46,12 +46,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ matrix.php.version }}
           coverage: xdebug
@@ -65,7 +65,7 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-${{ matrix.php.version }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
@@ -73,22 +73,37 @@ jobs:
 
       # These dependencies are not used running the tests but can cause deprecation warnings so we remove them before running the tests
       - name: Remove unused dependencies
-        run: composer remove vimeo/psalm phpstan/phpstan friendsofphp/php-cs-fixer  --dev --no-interaction --no-update
+        run: composer remove carthage-software/mago phpstan/phpstan friendsofphp/php-cs-fixer --dev --no-interaction --no-update
 
       - name: Remove RoadRunner dependencies on unsupported PHP versions
         if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
         run: composer remove spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
 
+      - name: Remove OpenTelemetry dependencies on unsupported PHP versions
+        if: ${{ matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
+        run: composer remove open-telemetry/api open-telemetry/exporter-otlp open-telemetry/sdk --dev --no-interaction --no-update
+
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
 
-      - name: Install highest dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist
+      - name: Resolve highest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
         if: ${{ matrix.dependencies == 'highest' }}
 
-      - name: Install lowest dependencies
-        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest
+      - name: Resolve lowest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --no-install --no-plugins --no-scripts --no-audit
         if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Audit highest dependencies
+        run: composer audit --locked --no-interaction --format=table
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Audit lowest dependencies
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
+        if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Run unit tests
         run: vendor/bin/phpunit --testsuite unit --coverage-clover=coverage.xml
@@ -97,13 +112,9 @@ jobs:
         run: vendor/bin/phpunit --testsuite oom --no-coverage
 
       - name: Upload code coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@e79a6962e0d4c0c17b229090214935d2e33f8354 # v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Check benchmarks
-        run: vendor/bin/phpbench run --revs=1 --iterations=1
-        if: ${{ matrix.dependencies == 'highest' && matrix.php.version == '8.4' }}
 
   runtime-tests-frankenphp:
     name: Runtime tests (FrankenPHP)
@@ -111,12 +122,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -127,14 +138,20 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-frankenphp-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-runtime-frankenphp-composer-
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=table
+
       - name: Install dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Install FrankenPHP
         env:
@@ -176,12 +193,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 2
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: '8.4'
           coverage: none
@@ -192,14 +209,20 @@ jobs:
         shell: bash
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
           path: ${{ steps.composer-cache.outputs.directory }}
           key: ${{ runner.os }}-runtime-roadrunner-composer-${{ hashFiles('**/composer.lock') }}
           restore-keys: ${{ runner.os }}-runtime-roadrunner-composer-
 
+      - name: Resolve dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction --format=table
+
       - name: Install dependencies
-        run: composer install --no-progress --no-interaction --prefer-dist
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
 
       - name: Install RoadRunner
         env:
@@ -238,4 +261,3 @@ jobs:
 
       - name: Run PHPUnit tests (excluding PHPT)
         run: vendor/bin/phpunit tests --test-suffix Test.php --verbose
-
