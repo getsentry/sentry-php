@@ -631,6 +631,7 @@ final class FunctionsTest extends TestCase
 
         $hub = new Hub($client);
 
+        SentrySdk::getGlobalScope()->setClient($client);
         SentrySdk::setCurrentHub($hub);
 
         $transactionContext = new TransactionContext();
