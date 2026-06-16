@@ -12,6 +12,7 @@ use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\FunctionTracingCallbacks;
+use Sentry\Tracing\FunctionTracingState;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -28,13 +29,12 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ]);
 
-        $this->assertIsArray($callbackState);
-        $this->assertInstanceOf(Span::class, $callbackState[0]);
-        $this->assertSame($transaction, $callbackState[1]);
-        $this->assertSame($transaction->getSpanId(), $callbackState[0]->getParentSpanId());
-        $this->assertSame($transaction->getTraceId(), $callbackState[0]->getTraceId());
-        $this->assertSame(123.456, $callbackState[0]->getStartTimestamp());
-        $this->assertSame($callbackState[0], SentrySdk::getCurrentHub()->getSpan());
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+        $this->assertSame($transaction, $callbackState->getParentSpan());
+        $this->assertSame($transaction->getSpanId(), $callbackState->getCurrentSpan()->getParentSpanId());
+        $this->assertSame($transaction->getTraceId(), $callbackState->getCurrentSpan()->getTraceId());
+        $this->assertSame(123.456, $callbackState->getCurrentSpan()->getStartTimestamp());
+        $this->assertSame($callbackState->getCurrentSpan(), SentrySdk::getCurrentHub()->getSpan());
     }
 
     public function testHandleEndFinishesSpanWithEndTimeAndRestoresParent(): void
@@ -47,7 +47,7 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ]);
 
-        $this->assertIsArray($callbackState);
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
 
         FunctionTracingCallbacks::handleEnd([
             'name' => 'foo',
@@ -57,7 +57,7 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ], $callbackState);
 
-        $this->assertSame(234.567, $callbackState[0]->getEndTimestamp());
+        $this->assertSame(234.567, $callbackState->getCurrentSpan()->getEndTimestamp());
         $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
     }
 
@@ -71,7 +71,7 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ]);
 
-        $this->assertIsArray($outerState);
+        $this->assertInstanceOf(FunctionTracingState::class, $outerState);
 
         $innerState = FunctionTracingCallbacks::handleStart([
             'name' => 'inner',
@@ -79,9 +79,9 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ]);
 
-        $this->assertIsArray($innerState);
-        $this->assertSame($outerState[0]->getSpanId(), $innerState[0]->getParentSpanId());
-        $this->assertSame($innerState[0], SentrySdk::getCurrentHub()->getSpan());
+        $this->assertInstanceOf(FunctionTracingState::class, $innerState);
+        $this->assertSame($outerState->getCurrentSpan()->getSpanId(), $innerState->getCurrentSpan()->getParentSpanId());
+        $this->assertSame($innerState->getCurrentSpan(), SentrySdk::getCurrentHub()->getSpan());
 
         FunctionTracingCallbacks::handleEnd([
             'name' => 'inner',
@@ -91,7 +91,7 @@ final class FunctionTracingCallbacksTest extends TestCase
             'metadata' => [],
         ], $innerState);
 
-        $this->assertSame($outerState[0], SentrySdk::getCurrentHub()->getSpan());
+        $this->assertSame($outerState->getCurrentSpan(), SentrySdk::getCurrentHub()->getSpan());
 
         FunctionTracingCallbacks::handleEnd([
             'name' => 'outer',
@@ -169,15 +169,15 @@ final class FunctionTracingCallbacksTest extends TestCase
             'name' => 'foo',
             'start_time' => 123.456,
             'metadata' => [
-                'sentry.description' => 'custom description',
-                'sentry.op' => 'custom.op',
-                'sentry.origin' => 'auto.custom',
+                'description' => 'custom description',
+                'op' => 'custom.op',
+                'origin' => 'auto.custom',
                 'custom' => 'value',
             ],
         ]);
 
-        $this->assertIsArray($callbackState);
-        $span = $callbackState[0];
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+        $span = $callbackState->getCurrentSpan();
 
         $this->assertSame('custom description', $span->getDescription());
         $this->assertSame('custom.op', $span->getOp());
@@ -197,12 +197,12 @@ final class FunctionTracingCallbacksTest extends TestCase
             ],
         ]);
 
-        $this->assertIsArray($callbackState);
-        $span = $callbackState[0];
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+        $span = $callbackState->getCurrentSpan();
 
         $this->assertSame('foo', $span->getDescription());
         $this->assertSame('function', $span->getOp());
-        $this->assertSame('auto.function.sentry_php_tracer', $span->getOrigin());
+        $this->assertSame('auto.php.tracer', $span->getOrigin());
         $this->assertSame(['custom' => 'value'], $span->getData());
     }
 

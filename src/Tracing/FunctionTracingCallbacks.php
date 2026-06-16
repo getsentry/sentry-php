@@ -64,14 +64,15 @@ final class FunctionTracingCallbacks
      */
     private static function createSpanContext(array $data): SpanContext
     {
-        $description = self::extractAndUnset($data, 'description');
+        $metadata = $data['metadata'];
+        $description = self::extractAndUnset($metadata, 'description');
         if ($description === null) {
             /** @var string $name */
             $name = $data['name'];
             $description = $name;
         }
-        $op = self::extractAndUnset($data, 'op') ?? 'function';
-        $origin = self::extractAndUnset($data, 'origin') ?? 'auto.php.tracer';
+        $op = self::extractAndUnset($metadata, 'op') ?? 'function';
+        $origin = self::extractAndUnset($metadata, 'origin') ?? 'auto.php.tracer';
         /** @var float $startTime */
         $startTime = $data['start_time'];
 
@@ -79,7 +80,7 @@ final class FunctionTracingCallbacks
             ->setDescription($description)
             ->setOp($op)
             ->setOrigin($origin)
-            ->setData($data)
+            ->setData($metadata)
             ->setStartTimestamp($startTime);
     }
 
