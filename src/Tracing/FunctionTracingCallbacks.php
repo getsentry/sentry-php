@@ -50,7 +50,12 @@ final class FunctionTracingCallbacks
             return;
         }
 
-        $callbackState->getCurrentSpan()->finish($data['end_time']);
+        /**
+         * @var float $endTime
+         */
+        $endTime = $data['end_time'];
+
+        $callbackState->getCurrentSpan()->finish($endTime);
         SentrySdk::getCurrentHub()->setSpan($callbackState->getParentSpan());
     }
 
@@ -59,16 +64,23 @@ final class FunctionTracingCallbacks
      */
     private static function createSpanContext(array $data): SpanContext
     {
-        $description = self::extractAndUnset($data, 'description') ?? $data['name'] ?? null;
+        $description = self::extractAndUnset($data, 'description');
+        if ($description === null) {
+            /** @var string $name */
+            $name = $data['name'];
+            $description = $name;
+        }
         $op = self::extractAndUnset($data, 'op') ?? 'function';
         $origin = self::extractAndUnset($data, 'origin') ?? 'auto.php.tracer';
+        /** @var float $startTime */
+        $startTime = $data['start_time'];
 
         return SpanContext::make()
             ->setDescription($description)
             ->setOp($op)
             ->setOrigin($origin)
             ->setData($data)
-            ->setStartTimestamp($data['start_time']);
+            ->setStartTimestamp($startTime);
     }
 
     /**
@@ -77,11 +89,14 @@ final class FunctionTracingCallbacks
      * It will only perform extraction if the value is a string or can be converted
      * to a string (using __toString).
      *
-     * @return null on failed extraction
+     * @param array<string, mixed> $data
+     *
+     * @return string|null Returns null on failed extraction
      */
-    private static function extractAndUnset(&$data, string $key): ?string
+    private static function extractAndUnset(array &$data, string $key): ?string
     {
         if (isset($data[$key])) {
+            /** @var object|string $value */
             $value = $data[$key];
             if (\is_string($value)) {
                 unset($data[$key]);
