@@ -64,6 +64,7 @@ final class FunctionTracingCallbacks
      */
     private static function createSpanContext(array $data): SpanContext
     {
+        /** @var array<string, mixed> $metadata */
         $metadata = $data['metadata'];
         $description = self::extractAndUnset($metadata, 'description');
         if ($description === null) {
