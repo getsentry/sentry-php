@@ -161,12 +161,12 @@ final class RuntimeContextManager
 
     private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ?int $timeout, LoggerInterface $logger): void
     {
-        $hub = $runtimeContext->getHub();
+        $client = $runtimeContext->getHub()->getClient();
 
         // captureEvent can throw before transport send (for example from scope event processors
         // or before_send callbacks), so we isolate failures and continue flushing other resources.
         try {
-            $runtimeContext->getLogsAggregator()->flush($hub);
+            $runtimeContext->getLogsAggregator()->flush($client);
         } catch (\Throwable $exception) {
             $logger->error('Failed to flush logs while ending a runtime context.', [
                 'exception' => $exception,
@@ -176,15 +176,13 @@ final class RuntimeContextManager
 
         // Keep metrics flush independent from logs flush so one bad callback does not block the rest.
         try {
-            $runtimeContext->getMetricsAggregator()->flush($hub);
+            $runtimeContext->getMetricsAggregator()->flush($client);
         } catch (\Throwable $exception) {
             $logger->error('Failed to flush trace metrics while ending a runtime context.', [
                 'exception' => $exception,
                 'runtime_context_id' => $runtimeContext->getId(),
             ]);
         }
-
-        $client = $hub->getClient();
 
         // Custom transports may throw from close(); endContext must stay best-effort and non-fatal.
         try {
