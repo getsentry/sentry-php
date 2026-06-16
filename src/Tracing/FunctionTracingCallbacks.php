@@ -18,10 +18,8 @@ final class FunctionTracingCallbacks
 
     /**
      * @param array<string, mixed> $data
-     *
-     * @return array{Span, Span}|null
      */
-    public static function handleStart(array $data): ?array
+    public static function handleStart(array $data): ?FunctionTracingState
     {
         $hub = SentrySdk::getCurrentHub();
 
@@ -34,16 +32,12 @@ final class FunctionTracingCallbacks
             return null;
         }
 
-        if (!isset($data['name']) || !\is_string($data['name'])) {
-            return null;
-        }
-
-        $context = self::createSpanContext($data['name'], $data);
+        $context = self::createSpanContext($data);
         $childSpan = $parentSpan->startChild($context);
 
         $hub->setSpan($childSpan);
 
-        return [$childSpan, $parentSpan];
+        return new FunctionTracingState($parentSpan, $childSpan);
     }
 
     /**
@@ -52,66 +46,50 @@ final class FunctionTracingCallbacks
      */
     public static function handleEnd(array $data, $callbackState = null): void
     {
-        if (!\is_array($callbackState)
-            || !\array_key_exists(0, $callbackState)
-            || !\array_key_exists(1, $callbackState)
-            || !$callbackState[0] instanceof Span
-            || !$callbackState[1] instanceof Span
-        ) {
+        if (!$callbackState instanceof FunctionTracingState) {
             return;
         }
 
-        if (!isset($data['end_time']) || (!\is_int($data['end_time']) && !\is_float($data['end_time']))) {
-            return;
-        }
-
-        $callbackState[0]->finish((float) $data['end_time']);
-        SentrySdk::getCurrentHub()->setSpan($callbackState[1]);
+        $callbackState->getCurrentSpan()->finish($data['end_time']);
+        SentrySdk::getCurrentHub()->setSpan($callbackState->getParentSpan());
     }
 
     /**
      * @param array<string, mixed> $data
      */
-    private static function createSpanContext(string $name, array $data): SpanContext
+    private static function createSpanContext(array $data): SpanContext
     {
-        $metadata = [];
-        if (isset($data['metadata']) && \is_array($data['metadata'])) {
-            foreach (array_keys($data['metadata']) as $key) {
-                if (\is_string($key)) {
-                    $metadata[$key] = $data['metadata'][$key];
-                }
-            }
-        }
+        $description = self::extractAndUnset($data, 'description') ?? $data['name'] ?? null;
+        $op = self::extractAndUnset($data, 'op') ?? 'function';
+        $origin = self::extractAndUnset($data, 'origin') ?? 'auto.php.tracer';
 
-        $description = $name;
-        $op = 'function';
-        $origin = 'auto.function.sentry_php_tracer';
-
-        if (isset($metadata['sentry.description']) && \is_string($metadata['sentry.description'])) {
-            $description = $metadata['sentry.description'];
-            unset($metadata['sentry.description']);
-        }
-
-        if (isset($metadata['sentry.op']) && \is_string($metadata['sentry.op'])) {
-            $op = $metadata['sentry.op'];
-            unset($metadata['sentry.op']);
-        }
-
-        if (isset($metadata['sentry.origin']) && \is_string($metadata['sentry.origin'])) {
-            $origin = $metadata['sentry.origin'];
-            unset($metadata['sentry.origin']);
-        }
-
-        $context = SpanContext::make()
+        return SpanContext::make()
             ->setDescription($description)
             ->setOp($op)
             ->setOrigin($origin)
-            ->setData($metadata);
+            ->setData($data)
+            ->setStartTimestamp($data['start_time']);
+    }
 
-        if (isset($data['start_time']) && (\is_int($data['start_time']) || \is_float($data['start_time']))) {
-            $context->setStartTimestamp((float) $data['start_time']);
+    /**
+     * Attempts to extract the value using the specified key and unsets it from
+     * the source array.
+     * It will only perform extraction if the value is a string or can be converted
+     * to a string (using __toString).
+     *
+     * @return null on failed extraction
+     */
+    private static function extractAndUnset(&$data, string $key): ?string {
+        if (isset($data[$key])) {
+            $value = $data[$key];
+            if (\is_string($value)) {
+                unset($data[$key]);
+                return $value;
+            } else if (method_exists($value, '__toString')) {
+                unset($data[$key]);
+                return (string) $value;
+            }
         }
-
-        return $context;
+        return null;
     }
 }
