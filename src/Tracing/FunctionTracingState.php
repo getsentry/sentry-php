@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sentry\Tracing;
 
 /**
@@ -24,17 +26,11 @@ final class FunctionTracingState
         $this->currentSpan = $currentSpan;
     }
 
-    /**
-     * @return Span
-     */
     public function getParentSpan(): Span
     {
         return $this->parentSpan;
     }
 
-    /**
-     * @return Span
-     */
     public function getCurrentSpan(): Span
     {
         return $this->currentSpan;

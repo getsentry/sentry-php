@@ -79,17 +79,21 @@ final class FunctionTracingCallbacks
      *
      * @return null on failed extraction
      */
-    private static function extractAndUnset(&$data, string $key): ?string {
+    private static function extractAndUnset(&$data, string $key): ?string
+    {
         if (isset($data[$key])) {
             $value = $data[$key];
             if (\is_string($value)) {
                 unset($data[$key]);
+
                 return $value;
-            } else if (method_exists($value, '__toString')) {
+            } elseif (method_exists($value, '__toString')) {
                 unset($data[$key]);
+
                 return (string) $value;
             }
         }
+
         return null;
     }
 }
