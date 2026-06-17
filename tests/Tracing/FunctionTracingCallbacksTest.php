@@ -206,6 +206,53 @@ final class FunctionTracingCallbacksTest extends TestCase
         $this->assertSame(['custom' => 'value'], $span->getData());
     }
 
+    public function testScalarReservedMetadataIsKeptAsSpanData(): void
+    {
+        $this->createActiveTransaction(true, true);
+
+        $callbackState = FunctionTracingCallbacks::handleStart([
+            'name' => 'foo',
+            'start_time' => 123.456,
+            'metadata' => [
+                'description' => 123,
+                'op' => 45.67,
+                'origin' => true,
+            ],
+        ]);
+
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+        $span = $callbackState->getCurrentSpan();
+
+        $this->assertSame('foo', $span->getDescription());
+        $this->assertSame('function', $span->getOp());
+        $this->assertSame('auto.php.tracer', $span->getOrigin());
+        $this->assertSame([
+            'description' => 123,
+            'op' => 45.67,
+            'origin' => true,
+        ], $span->getData());
+    }
+
+    public function testArbitraryObjectMetadataIsKeptAsSpanData(): void
+    {
+        $this->createActiveTransaction(true, true);
+
+        $metadataValue = new \stdClass();
+        $metadataValue->foo = 'bar';
+
+        $callbackState = FunctionTracingCallbacks::handleStart([
+            'name' => 'foo',
+            'start_time' => 123.456,
+            'metadata' => [
+                'custom' => $metadataValue,
+            ],
+        ]);
+
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+
+        $this->assertSame(['custom' => $metadataValue], $callbackState->getCurrentSpan()->getData());
+    }
+
     private function createActiveTransaction(bool $withIntegration, bool $sampled): Transaction
     {
         $hub = $this->createHub($withIntegration);

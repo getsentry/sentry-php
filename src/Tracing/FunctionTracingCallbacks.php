@@ -89,7 +89,7 @@ final class FunctionTracingCallbacks
      * Attempts to extract the value using the specified key and unsets it from
      * the source array.
      * It will only perform extraction if the value is a string or can be converted
-     * to a string (using __toString).
+     * to a string using __toString.
      *
      * @param array<string, mixed> $data
      *
@@ -98,16 +98,12 @@ final class FunctionTracingCallbacks
     private static function extractAndUnset(array &$data, string $key): ?string
     {
         if (isset($data[$key])) {
-            /** @var object|string $value */
+            /** @var mixed|null $value */
             $value = $data[$key];
             if (\is_string($value)) {
                 unset($data[$key]);
 
                 return $value;
-            } elseif (method_exists($value, '__toString')) {
-                unset($data[$key]);
-
-                return (string) $value;
             }
         }
 
