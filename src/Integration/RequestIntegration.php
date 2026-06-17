@@ -55,6 +55,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     private const DEFAULT_SENSITIVE_HEADERS = [
         'Authorization',
+        'Proxy-Authorization',
         'Cookie',
         'Set-Cookie',
         'X-Forwarded-For',
