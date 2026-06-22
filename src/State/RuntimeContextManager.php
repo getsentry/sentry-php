@@ -26,7 +26,7 @@ final class RuntimeContextManager
     /**
      * @var RuntimeContext|null
      */
-    private $globalContext = null;
+    private $globalContext;
 
     /**
      * @var array<string, RuntimeContext>
