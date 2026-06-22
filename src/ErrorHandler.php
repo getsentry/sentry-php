@@ -302,6 +302,14 @@ final class ErrorHandler
     }
 
     /**
+     * @internal
+     */
+    public static function resetFatalErrorHandlerState(): void
+    {
+        self::$disableFatalErrorHandler = false;
+    }
+
+    /**
      * Handles errors by capturing them through the client according to the
      * configured bit field.
      *
