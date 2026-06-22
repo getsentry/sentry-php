@@ -173,10 +173,9 @@ final class LogsAggregatorTest extends TestCase
             'server_name' => 'web-server-01',
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::setCurrentHub(new Hub($client));
 
-        $hub->configureScope(static function (Scope $scope) {
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) {
             $userDataBag = new UserDataBag();
             $userDataBag->setId('unique_id');
             $userDataBag->setEmail('foo@example.com');
@@ -188,7 +187,7 @@ final class LogsAggregatorTest extends TestCase
         $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
         $span = new Span($spanContext);
-        $hub->setSpan($span);
+        SentrySdk::getCurrentHub()->setSpan($span);
 
         $aggregator = new LogsAggregator();
 
@@ -221,10 +220,9 @@ final class LogsAggregatorTest extends TestCase
             'send_default_pii' => false,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::setCurrentHub(new Hub($client));
 
-        $hub->configureScope(static function (Scope $scope) {
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) {
             $userDataBag = new UserDataBag();
             $userDataBag->setId('unique_id');
             $userDataBag->setEmail('foo@example.com');
@@ -339,8 +337,8 @@ final class LogsAggregatorTest extends TestCase
         $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
         $propagationContext->setSpanId(new SpanId('1234567890abcdef'));
 
-        $hub = new Hub($client, new Scope($propagationContext));
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
 
         $aggregator = new LogsAggregator();
         $aggregator->add(LogLevel::info(), 'Test message');

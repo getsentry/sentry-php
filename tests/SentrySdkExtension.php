@@ -13,15 +13,6 @@ final class SentrySdkExtension implements BeforeTestHookInterface
 {
     public function executeBeforeTest(string $test): void
     {
-        $reflectionProperty = new \ReflectionProperty(SentrySdk::class, 'currentHub');
-        if (\PHP_VERSION_ID < 80100) {
-            $reflectionProperty->setAccessible(true);
-        }
-        $reflectionProperty->setValue(null, null);
-        if (\PHP_VERSION_ID < 80100) {
-            $reflectionProperty->setAccessible(false);
-        }
-
         $reflectionProperty = new \ReflectionProperty(SentrySdk::class, 'globalScope');
         if (\PHP_VERSION_ID < 80100) {
             $reflectionProperty->setAccessible(true);
