@@ -142,6 +142,7 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withHeader('Host', 'www.example.com')
                 ->withHeader('Authorization', 'foo')
+                ->withHeader('Proxy-Authorization', 'Basic dXNlcjpwYXNz')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
             [
@@ -155,6 +156,7 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Authorization' => ['foo'],
+                    'Proxy-Authorization' => ['Basic dXNlcjpwYXNz'],
                     'Cookie' => ['bar'],
                     'Set-Cookie' => ['baz'],
                 ],
@@ -188,6 +190,7 @@ final class RequestIntegrationTest extends TestCase
             (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withHeader('Host', 'www.example.com')
                 ->withHeader('Authorization', 'foo')
+                ->withHeader('Proxy-Authorization', 'Basic dXNlcjpwYXNz')
                 ->withHeader('Cookie', 'bar')
                 ->withHeader('Set-Cookie', 'baz'),
             [
@@ -197,6 +200,7 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Authorization' => ['[Filtered]'],
+                    'Proxy-Authorization' => ['[Filtered]'],
                     'Cookie' => ['[Filtered]'],
                     'Set-Cookie' => ['[Filtered]'],
                 ],
