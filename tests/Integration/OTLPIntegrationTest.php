@@ -280,9 +280,9 @@ final class OTLPIntegrationTest extends TestCase
 
         if (method_exists(HttpClientDiscovery::class, 'setDiscoverers')) {
             HttpClientDiscovery::setDiscoverers([new TestClientDiscoverer()]);
-        } else {
-            ClassDiscovery::prependStrategy(TestDiscoveryStrategy::class);
         }
+
+        ClassDiscovery::prependStrategy(TestDiscoveryStrategy::class);
 
         StubOtelHttpClient::reset();
     }
