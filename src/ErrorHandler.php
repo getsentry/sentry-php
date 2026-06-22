@@ -118,6 +118,11 @@ final class ErrorHandler
     private static $reservedMemory;
 
     /**
+     * @var int The amount of memory to reserve for the fatal error handler
+     */
+    private static $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE;
+
+    /**
      * @var bool Whether the fatal error handler should be disabled
      */
     private static $disableFatalErrorHandler = false;
@@ -214,6 +219,7 @@ final class ErrorHandler
         }
 
         self::$handlerInstance->isFatalErrorHandlerRegistered = true;
+        self::$reservedMemorySize = $reservedMemorySize;
         self::$reservedMemory = str_repeat('x', $reservedMemorySize);
 
         register_shutdown_function(\Closure::fromCallable([self::$handlerInstance, 'handleFatalError']));
@@ -307,6 +313,11 @@ final class ErrorHandler
     public static function resetFatalErrorHandlerState(): void
     {
         self::$disableFatalErrorHandler = false;
+        self::$didIncreaseMemoryLimit = false;
+
+        if (self::$handlerInstance !== null && self::$handlerInstance->isFatalErrorHandlerRegistered) {
+            self::$reservedMemory = str_repeat('x', self::$reservedMemorySize);
+        }
     }
 
     /**
