@@ -10,7 +10,6 @@ use Sentry\ClientInterface;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -182,7 +181,7 @@ final class TransactionContextTest extends TestCase
         $client->method('getOptions')
             ->willReturn(new Options(['logger' => $logger]));
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::init($client);
 
         try {
             TransactionContext::fromHeaders(
@@ -190,7 +189,7 @@ final class TransactionContextTest extends TestCase
                 'sentry-sample_rand=-1.0'
             );
         } finally {
-            SentrySdk::setCurrentHub(new Hub(new NoOpClient()));
+            SentrySdk::init(new NoOpClient());
         }
     }
 

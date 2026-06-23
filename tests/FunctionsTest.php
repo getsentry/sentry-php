@@ -58,8 +58,10 @@ final class FunctionsTest extends TestCase
     {
         init(['default_integrations' => false]);
 
-        $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
-        $this->assertSame(SentrySdk::getCurrentHub()->getClient(), SentrySdk::getClient());
+        $client = SentrySdk::getClient();
+
+        $this->assertNotInstanceOf(NoOpClient::class, $client);
+        $this->assertSame($client, SentrySdk::getGlobalScope()->getClient());
     }
 
     public function testInitPreservesGlobalScope(): void
@@ -70,7 +72,7 @@ final class FunctionsTest extends TestCase
         init(['default_integrations' => false]);
 
         $this->assertSame($globalScope, SentrySdk::getGlobalScope());
-        $this->assertSame(SentrySdk::getCurrentHub()->getClient(), $globalScope->getClient());
+        $this->assertSame(SentrySdk::getClient(), $globalScope->getClient());
 
         $event = $globalScope->applyToEvent(Event::createEvent());
 
@@ -655,7 +657,7 @@ final class FunctionsTest extends TestCase
             ->with(13)
             ->willReturn(new Result(ResultStatus::success()));
 
-        SentrySdk::init()->bindClient($client);
+        SentrySdk::init($client);
 
         try {
             withContext(static function (): void {
