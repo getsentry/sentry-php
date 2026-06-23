@@ -195,13 +195,9 @@ final class UserDataBag
             }
 
             if (filter_var($ipAddress, \FILTER_VALIDATE_IP) === false) {
-                $client = SentrySdk::getCurrentHub()->getClient();
-
-                if ($client !== null) {
-                    $client->getOptions()->getLoggerOrNullLogger()->debug(
-                        \sprintf('The "%s" value is not a valid IP address.', $ipAddress)
-                    );
-                }
+                SentrySdk::getClient()->getOptions()->getLoggerOrNullLogger()->debug(
+                    \sprintf('The "%s" value is not a valid IP address.', $ipAddress)
+                );
 
                 return $this;
             }

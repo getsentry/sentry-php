@@ -24,7 +24,7 @@ final class EnvironmentIntegration implements IntegrationInterface
     public function setupOnce(): void
     {
         Scope::addGlobalEventProcessor(static function (Event $event): Event {
-            $integration = SentrySdk::getCurrentHub()->getIntegration(self::class);
+            $integration = SentrySdk::getClient()->getIntegration(self::class);
 
             if ($integration !== null) {
                 $event->setRuntimeContext($integration->updateRuntimeContext($event->getRuntimeContext()));

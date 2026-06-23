@@ -56,8 +56,7 @@ final class OTLPIntegration implements OptionAwareIntegrationInterface
         }
 
         Scope::registerExternalPropagationContext(static function (): ?array {
-            $currentHub = SentrySdk::getCurrentHub();
-            $integration = $currentHub->getIntegration(self::class);
+            $integration = SentrySdk::getClient()->getIntegration(self::class);
 
             if (!$integration instanceof self) {
                 return null;
@@ -193,9 +192,6 @@ final class OTLPIntegration implements OptionAwareIntegrationInterface
             return $this->options->getLoggerOrNullLogger();
         }
 
-        $currentHub = SentrySdk::getCurrentHub();
-        $client = $currentHub->getClient();
-
-        return $client->getOptions()->getLoggerOrNullLogger();
+        return SentrySdk::getClient()->getOptions()->getLoggerOrNullLogger();
     }
 }
