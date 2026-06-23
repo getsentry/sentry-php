@@ -11,10 +11,11 @@ use Sentry\ClientReport\Reason;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Transport\DataCategory;
+
+use function Sentry\captureMessage;
 
 class ClientReportAggregatorTest extends TestCase
 {
@@ -23,7 +24,7 @@ class ClientReportAggregatorTest extends TestCase
         ini_set('zend.exception_ignore_args', '0');
         StubTransport::$events = [];
         StubLogger::$logs = [];
-        SentrySdk::init()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'logger' => StubLogger::getInstance(),
         ]), StubTransport::getInstance()));
     }
@@ -69,16 +70,15 @@ class ClientReportAggregatorTest extends TestCase
 
     public function testFlushDoesNotOverwriteLastEventId(): void
     {
-        $hub = SentrySdk::getCurrentHub();
-        $eventId = $hub->captureMessage('foo');
+        $eventId = captureMessage('foo');
 
         $this->assertNotNull($eventId);
-        $this->assertSame($eventId, $hub->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
 
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), 10);
         ClientReportAggregator::getInstance()->flush();
 
-        $this->assertSame($eventId, $hub->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
     }
 
     public function testNegativeQuantityDiscarded(): void
@@ -103,13 +103,13 @@ class ClientReportAggregatorTest extends TestCase
 
     public function testNegativeQuantityDiscardedWhenNoClientIsBound(): void
     {
-        SentrySdk::setCurrentHub(new Hub(new NoOpClient()));
+        SentrySdk::init(new NoOpClient());
 
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), -10);
 
-        SentrySdk::setCurrentHub(new Hub(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'logger' => StubLogger::getInstance(),
-        ]), StubTransport::getInstance())));
+        ]), StubTransport::getInstance()));
 
         ClientReportAggregator::getInstance()->flush();
 
