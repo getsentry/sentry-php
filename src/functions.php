@@ -10,6 +10,8 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\BreadcrumbRecorder;
+use Sentry\State\EventCapturer;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -101,7 +103,7 @@ function getClient(): ClientInterface
  */
 function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
+    return EventCapturer::captureMessage($message, $level, $hint);
 }
 
 /**
@@ -112,7 +114,7 @@ function captureMessage(string $message, ?Severity $level = null, ?EventHint $hi
  */
 function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureException($exception, $hint);
+    return EventCapturer::captureException($exception, $hint);
 }
 
 /**
@@ -123,7 +125,7 @@ function captureException(\Throwable $exception, ?EventHint $hint = null): ?Even
  */
 function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureEvent($event, $hint);
+    return EventCapturer::captureEvent($event, $hint);
 }
 
 /**
@@ -133,7 +135,7 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
  */
 function captureLastError(?EventHint $hint = null): ?EventId
 {
-    return SentrySdk::getCurrentHub()->captureLastError($hint);
+    return EventCapturer::captureLastError($hint);
 }
 
 /**
@@ -147,7 +149,7 @@ function captureLastError(?EventHint $hint = null): ?EventId
  */
 function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
 {
-    return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    return EventCapturer::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
 }
 
 /**
@@ -161,7 +163,7 @@ function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?
  */
 function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorConfig = null)
 {
-    $checkInId = SentrySdk::getCurrentHub()->captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
+    $checkInId = captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
 
     $status = CheckInStatus::ok();
     $duration = 0;
@@ -177,7 +179,7 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
 
         throw $e;
     } finally {
-        SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+        captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
     }
 }
 
@@ -195,11 +197,12 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
  */
 function addBreadcrumb($category, ?string $message = null, array $metadata = [], string $level = Breadcrumb::LEVEL_INFO, string $type = Breadcrumb::TYPE_DEFAULT, ?float $timestamp = null): void
 {
-    SentrySdk::getCurrentHub()->addBreadcrumb(
-        $category instanceof Breadcrumb
-            ? $category
-            : new Breadcrumb($level, $type, $category, $message, $metadata, $timestamp)
-    );
+    $scope = SentrySdk::getIsolationScope();
+    $breadcrumb = $category instanceof Breadcrumb
+        ? $category
+        : new Breadcrumb($level, $type, $category, $message, $metadata, $timestamp);
+
+    BreadcrumbRecorder::record(SentrySdk::getClient($scope), $scope, $breadcrumb);
 }
 
 /**
