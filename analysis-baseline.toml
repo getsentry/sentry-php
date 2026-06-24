@@ -703,48 +703,6 @@ message = 'Possible argument type mismatch for argument #1 of `Monolog\Handler\A
 count = 1
 
 [[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = '''Invalid argument type for argument #1 of `Monolog\Handler\AbstractHandler::__construct`: expected `enum(Monolog\Level)|int(100)|int(200)|int(250)|int(300)|int(400)|int(500)|int(550)|int(600)|string('ALERT')|string('CRITICAL')|string('DEBUG')|string('EMERGENCY')|string('ERROR')|string('INFO')|string('NOTICE')|string('WARNING')|string('alert')|string('critical')|string('debug')|string('emergency')|string('error')|string('info')|string('notice')|string('warning')`, but found `mixed`.'''
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = 'Invalid argument type for argument #1 of `Sentry\Event::setMessage`: expected `string`, but found `mixed`.'
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = 'Invalid argument type for argument #1 of `Sentry\Monolog\CompatibilityProcessingHandlerTrait::getSeverityFromLevel`: expected `int`, but found `mixed`.'
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = 'Invalid argument type for argument #1 of `Sentry\Monolog\Handler::getMonologContextData`: expected `array<array-key, mixed>`, but found `mixed`.'
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = 'Invalid argument type for argument #1 of `Sentry\Monolog\Handler::getMonologExtraData`: expected `array<array-key, mixed>`, but found `mixed`.'
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-argument"
-message = "Invalid argument type for argument #2 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
-count = 1
-
-[[issues]]
-file = "src/Monolog/Handler.php"
-code = "mixed-assignment"
-message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
-count = 2
-
-[[issues]]
 file = "src/Monolog/LogToSentryIssueHandler.php"
 code = "less-specific-return-statement"
 message = 'Returned type `array<array-key, mixed>` is less specific than the declared return type `array<string, mixed>` for function `Sentry\Monolog\LogToSentryIssueHandler::getArrayFieldFromRecord`.'
