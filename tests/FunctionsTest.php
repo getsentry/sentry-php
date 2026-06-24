@@ -86,18 +86,18 @@ final class FunctionsTest extends TestCase
         $eventId = EventId::generate();
         $message = $expectedFunctionCallArgs[0];
         $level = $expectedFunctionCallArgs[1];
-        $scope = $this->isInstanceOf(Scope::class);
         $hint = $expectedFunctionCallArgs[2];
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with($message, $level, $scope, $hint)
+            ->with($message, $level, $this->captureScopeConstraint($scope), $hint)
             ->willReturn($eventId);
 
-        SentrySdk::getGlobalScope()->setClient($client);
-
         $this->assertSame($eventId, captureMessage(...$functionCallArgs));
+        $this->assertSame($eventId, $scope->getLastEventId());
     }
 
     public static function captureMessageDataProvider(): \Generator
@@ -136,14 +136,15 @@ final class FunctionsTest extends TestCase
         $eventId = EventId::generate();
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('captureException')
-            ->with($expectedFunctionCallArgs[0], $this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[1])
+            ->with($expectedFunctionCallArgs[0], $this->captureScopeConstraint($scope), $expectedFunctionCallArgs[1])
             ->willReturn($eventId);
 
-        SentrySdk::getGlobalScope()->setClient($client);
-
         $this->assertSame($eventId, captureException(...$functionCallArgs));
+        $this->assertSame($eventId, $scope->getLastEventId());
     }
 
     public static function captureExceptionDataProvider(): \Generator
@@ -176,14 +177,15 @@ final class FunctionsTest extends TestCase
         $hint = new EventHint();
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($event, $hint, $this->isInstanceOf(Scope::class))
+            ->with($event, $hint, $this->captureScopeConstraint($scope))
             ->willReturn($event->getId());
 
-        SentrySdk::getGlobalScope()->setClient($client);
-
         $this->assertSame($event->getId(), captureEvent($event, $hint));
+        $this->assertSame($event->getId(), $scope->getLastEventId());
     }
 
     /**
@@ -194,16 +196,17 @@ final class FunctionsTest extends TestCase
         $eventId = EventId::generate();
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('captureLastError')
-            ->with($this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[0])
+            ->with($this->captureScopeConstraint($scope), $expectedFunctionCallArgs[0])
             ->willReturn($eventId);
-
-        SentrySdk::getGlobalScope()->setClient($client);
 
         @trigger_error('foo', \E_USER_NOTICE);
 
         $this->assertSame($eventId, captureLastError(...$functionCallArgs));
+        $this->assertSame($eventId, $scope->getLastEventId());
     }
 
     public static function captureLastErrorDataProvider(): \Generator
@@ -219,9 +222,72 @@ final class FunctionsTest extends TestCase
         ];
     }
 
+    public function testCaptureMessageClearsLastEventIdWhenClientReturnsNull(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+        $scope->setLastEventId(EventId::generate());
+
+        $client->expects($this->once())
+            ->method('captureMessage')
+            ->with('foo', null, $this->captureScopeConstraint($scope), null)
+            ->willReturn(null);
+
+        $this->assertNull(captureMessage('foo'));
+        $this->assertNull($scope->getLastEventId());
+    }
+
+    public function testCaptureExceptionClearsLastEventIdWhenClientReturnsNull(): void
+    {
+        $exception = new \RuntimeException('foo');
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+        $scope->setLastEventId(EventId::generate());
+
+        $client->expects($this->once())
+            ->method('captureException')
+            ->with($exception, $this->captureScopeConstraint($scope), null)
+            ->willReturn(null);
+
+        $this->assertNull(captureException($exception));
+        $this->assertNull($scope->getLastEventId());
+    }
+
+    public function testCaptureEventClearsLastEventIdWhenClientReturnsNull(): void
+    {
+        $event = Event::createEvent();
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+        $scope->setLastEventId(EventId::generate());
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($event, null, $this->captureScopeConstraint($scope))
+            ->willReturn(null);
+
+        $this->assertNull(captureEvent($event));
+        $this->assertNull($scope->getLastEventId());
+    }
+
+    public function testCaptureLastErrorClearsLastEventIdWhenClientReturnsNull(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+        $scope->setLastEventId(EventId::generate());
+
+        $client->expects($this->once())
+            ->method('captureLastError')
+            ->with($this->captureScopeConstraint($scope), null)
+            ->willReturn(null);
+
+        $this->assertNull(captureLastError());
+        $this->assertNull($scope->getLastEventId());
+    }
+
     public function testCaptureCheckIn(): void
     {
         $checkInId = SentryUid::generate();
+        $eventId = EventId::generate();
         $monitorConfig = new MonitorConfig(
             MonitorSchedule::crontab('*/5 * * * *'),
             5,
@@ -230,19 +296,29 @@ final class FunctionsTest extends TestCase
         );
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn(new Options());
+            ->willReturn(new Options([
+                'environment' => Event::DEFAULT_ENVIRONMENT,
+                'release' => '1.0.0',
+            ]));
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->callback(static function (Event $event) use ($checkInId): bool {
+            ->with($this->callback(static function (Event $event) use ($checkInId, $monitorConfig): bool {
                 $checkIn = $event->getCheckIn();
 
-                return $checkIn !== null && $checkIn->getId() === $checkInId;
-            }), null, $this->isInstanceOf(Scope::class))
-            ->willReturn(EventId::generate());
-
-        SentrySdk::getGlobalScope()->setClient($client);
+                return $checkIn !== null
+                    && $checkIn->getId() === $checkInId
+                    && $checkIn->getMonitorSlug() === 'test-crontab'
+                    && $checkIn->getStatus() == CheckInStatus::ok()
+                    && $checkIn->getRelease() === '1.0.0'
+                    && $checkIn->getEnvironment() === Event::DEFAULT_ENVIRONMENT
+                    && $checkIn->getDuration() === 10
+                    && $checkIn->getMonitorConfig() === $monitorConfig;
+            }), null, $this->captureScopeConstraint($scope))
+            ->willReturn($eventId);
 
         $this->assertSame($checkInId, captureCheckIn(
             'test-crontab',
@@ -251,11 +327,29 @@ final class FunctionsTest extends TestCase
             $monitorConfig,
             $checkInId
         ));
+        $this->assertSame($eventId, $scope->getLastEventId());
+    }
+
+    public function testCaptureCheckInReturnsNullForNoOpClient(): void
+    {
+        SentrySdk::init(new NoOpClient());
+
+        $this->assertNull(captureCheckIn('test-crontab', CheckInStatus::ok()));
     }
 
     public function testWithMonitor(): void
     {
+        $events = [];
+        $monitorConfig = new MonitorConfig(
+            new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
+            5,
+            30,
+            'UTC'
+        );
+
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->exactly(2))
             ->method('getOptions')
             ->willReturn(new Options());
@@ -268,63 +362,149 @@ final class FunctionsTest extends TestCase
                     && $checkIn->getMonitorSlug() === 'test-crontab'
                     && $checkIn->getMonitorConfig() !== null
                     && $checkIn->getMonitorConfig()->getSchedule()->getValue() === '*/5 * * * *';
-            }), null, $this->isInstanceOf(Scope::class));
+            }), null, $this->captureScopeConstraint($scope))
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?Scope $scope = null) use (&$events): EventId {
+                $events[] = $event;
 
-        SentrySdk::getGlobalScope()->setClient($client);
+                return EventId::generate();
+            });
 
-        withMonitor('test-crontab', static function () {
+        $result = withMonitor('test-crontab', static function (): string {
             // Do something...
-        }, new MonitorConfig(
-            new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
-            5,
-            30,
-            'UTC'
-        ));
+            return 'done';
+        }, $monitorConfig);
+
+        $this->assertSame('done', $result);
+        $this->assertCount(2, $events);
+        $this->assertSame(CheckInStatus::inProgress(), $events[0]->getCheckIn()->getStatus());
+        $this->assertSame(CheckInStatus::ok(), $events[1]->getCheckIn()->getStatus());
+        $this->assertSame($events[0]->getCheckIn()->getId(), $events[1]->getCheckIn()->getId());
     }
 
     public function testWithMonitorCallableThrows(): void
     {
-        $this->expectException(\Exception::class);
+        $events = [];
 
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->exactly(2))
             ->method('getOptions')
             ->willReturn(new Options());
         $client->expects($this->exactly(2))
             ->method('captureEvent')
-            ->with($this->isInstanceOf(Event::class), null, $this->isInstanceOf(Scope::class));
+            ->with($this->isInstanceOf(Event::class), null, $this->captureScopeConstraint($scope))
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?Scope $scope = null) use (&$events): EventId {
+                $events[] = $event;
 
-        SentrySdk::getGlobalScope()->setClient($client);
+                return EventId::generate();
+            });
 
-        withMonitor('test-crontab', static function () {
-            throw new \Exception();
-        }, new MonitorConfig(
-            new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
-            5,
-            30,
-            'UTC'
-        ));
+        try {
+            withMonitor('test-crontab', static function (): void {
+                throw new \Exception('monitor failed');
+            }, new MonitorConfig(
+                new MonitorSchedule(MonitorSchedule::TYPE_CRONTAB, '*/5 * * * *'),
+                5,
+                30,
+                'UTC'
+            ));
+
+            $this->fail('The callback exception should be rethrown.');
+        } catch (\Exception $exception) {
+            $this->assertSame('monitor failed', $exception->getMessage());
+        }
+
+        $this->assertCount(2, $events);
+        $this->assertSame(CheckInStatus::inProgress(), $events[0]->getCheckIn()->getStatus());
+        $this->assertSame(CheckInStatus::error(), $events[1]->getCheckIn()->getStatus());
+        $this->assertSame($events[0]->getCheckIn()->getId(), $events[1]->getCheckIn()->getId());
     }
 
     public function testAddBreadcrumb(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $otherScope = new Scope();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
         $client->expects($this->once())
             ->method('getOptions')
             ->willReturn(new Options(['default_integrations' => false]));
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        addBreadcrumb($breadcrumb);
+
+        $this->assertScopeBreadcrumbs($scope, [$breadcrumb]);
+        $this->assertScopeBreadcrumbs($otherScope, []);
+    }
+
+    public function testAddBreadcrumbDoesNothingIfMaxBreadcrumbsLimitIsZero(): void
+    {
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options(['max_breadcrumbs' => 0]));
 
         addBreadcrumb($breadcrumb);
-        configureScope(function (Scope $scope) use ($breadcrumb): void {
-            $event = $scope->applyToEvent(Event::createEvent());
 
-            $this->assertNotNull($event);
-            $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
-        });
+        $this->assertScopeBreadcrumbs($scope, []);
+    }
+
+    public function testAddBreadcrumbDoesNothingForNoOpClient(): void
+    {
+        SentrySdk::init(new NoOpClient());
+        $scope = SentrySdk::getIsolationScope();
+
+        addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
+
+        $this->assertScopeBreadcrumbs($scope, []);
+    }
+
+    public function testAddBreadcrumbDoesNothingWhenBeforeBreadcrumbCallbackReturnsNull(): void
+    {
+        $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'before_breadcrumb' => static function () {
+                    return null;
+                },
+            ]));
+
+        addBreadcrumb($breadcrumb);
+
+        $this->assertScopeBreadcrumbs($scope, []);
+    }
+
+    public function testAddBreadcrumbStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void
+    {
+        $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_DEFAULT, 'custom');
+
+        $client = $this->createMock(ClientInterface::class);
+        $scope = $this->setClientAndIsolationScope($client);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'before_breadcrumb' => static function () use ($breadcrumb2): Breadcrumb {
+                    return $breadcrumb2;
+                },
+            ]));
+
+        addBreadcrumb($breadcrumb1);
+
+        $this->assertScopeBreadcrumbs($scope, [$breadcrumb2]);
     }
 
     public function testWithScope(): void
@@ -762,5 +942,51 @@ final class FunctionsTest extends TestCase
             $this->assertNotNull($dynamicSamplingContext);
             $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
         });
+    }
+
+    private function setClientAndIsolationScope(ClientInterface $client): Scope
+    {
+        SentrySdk::init();
+
+        SentrySdk::getGlobalScope()->clear();
+        SentrySdk::getGlobalScope()->setTag('scope', 'global');
+        SentrySdk::getGlobalScope()->setTag('global', 'yes');
+        SentrySdk::getGlobalScope()->setClient($client);
+
+        $scope = new Scope();
+        $scope->setTag('scope', 'isolation');
+        $scope->setTag('isolation', 'yes');
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
+
+        return $scope;
+    }
+
+    private function captureScopeConstraint(Scope $isolationScope)
+    {
+        return $this->callback(function (Scope $captureScope) use ($isolationScope): bool {
+            $this->assertNotSame($isolationScope, $captureScope);
+
+            $event = $captureScope->applyToEvent(Event::createEvent());
+
+            $this->assertNotNull($event);
+            $this->assertSame([
+                'scope' => 'isolation',
+                'global' => 'yes',
+                'isolation' => 'yes',
+            ], $event->getTags());
+
+            return true;
+        });
+    }
+
+    /**
+     * @param Breadcrumb[] $expectedBreadcrumbs
+     */
+    private function assertScopeBreadcrumbs(Scope $scope, array $expectedBreadcrumbs): void
+    {
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame($expectedBreadcrumbs, $event->getBreadcrumbs());
     }
 }
