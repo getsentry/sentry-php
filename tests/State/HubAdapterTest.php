@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\State;
 
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
@@ -15,16 +14,12 @@ use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
-use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\Hub;
 use Sentry\State\HubAdapter;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\Span;
-use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Util\SentryUid;
 
@@ -63,94 +58,55 @@ final class HubAdapterTest extends TestCase
     {
         $client = $this->createMock(ClientInterface::class);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        HubAdapter::getInstance()->bindClient($client);
 
         $this->assertSame($client, HubAdapter::getInstance()->getClient());
     }
 
     public function testGetLastEventId(): void
     {
-        $eventId = EventId::generate();
+        $event = Event::createEvent();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('getLastEventId')
-            ->willReturn($eventId);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->willReturn($event->getId());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
-        $this->assertSame($eventId, HubAdapter::getInstance()->getLastEventId());
-    }
+        HubAdapter::getInstance()->captureEvent($event);
 
-    public function testPushScope(): void
-    {
-        $scope = new Scope();
-
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('pushScope')
-            ->willReturn($scope);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $this->assertSame($scope, HubAdapter::getInstance()->pushScope());
-    }
-
-    public function testPopScope(): void
-    {
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('popScope')
-            ->willReturn(true);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $this->assertTrue(HubAdapter::getInstance()->popScope());
+        $this->assertSame($event->getId(), HubAdapter::getInstance()->getLastEventId());
     }
 
     public function testWithScope(): void
     {
-        $callback = static function (): string {
+        $baseScope = SentrySdk::getIsolationScope();
+
+        $returnValue = HubAdapter::getInstance()->withScope(static function (Scope $scope): string {
+            $scope->setTag('nested', 'yes');
+
             return 'foobarbaz';
-        };
-
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('withScope')
-            ->with($callback)
-            ->willReturnCallback($callback);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $returnValue = HubAdapter::getInstance()->withScope($callback);
+        });
 
         $this->assertSame('foobarbaz', $returnValue);
+        $this->assertSame($baseScope, SentrySdk::getIsolationScope());
+
+        $event = $baseScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($event);
+        $this->assertArrayNotHasKey('nested', $event->getTags());
     }
 
     public function testConfigureScope(): void
     {
-        $callback = static function () {};
+        HubAdapter::getInstance()->configureScope(static function (Scope $scope): void {
+            $scope->setTag('foo', 'bar');
+        });
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('configureScope')
-            ->with($callback);
+        $event = SentrySdk::getIsolationScope()->applyToEvent(Event::createEvent());
 
-        SentrySdk::setCurrentHub($hub);
-        HubAdapter::getInstance()->configureScope($callback);
-    }
-
-    public function testBindClient(): void
-    {
-        $client = $this->createMock(ClientInterface::class);
-
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('bindClient')
-            ->with($client);
-
-        SentrySdk::setCurrentHub($hub);
-        HubAdapter::getInstance()->bindClient($client);
+        $this->assertNotNull($event);
+        $this->assertSame(['foo' => 'bar'], $event->getTags());
     }
 
     /**
@@ -160,33 +116,21 @@ final class HubAdapterTest extends TestCase
     {
         $eventId = EventId::generate();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureMessage')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($expectedFunctionCallArgs[0], $expectedFunctionCallArgs[1], $this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[2] ?? null)
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($eventId, HubAdapter::getInstance()->captureMessage(...$expectedFunctionCallArgs));
     }
 
     public static function captureMessageDataProvider(): \Generator
     {
-        yield [
-            [
-                'foo',
-                Severity::debug(),
-            ],
-        ];
-
-        yield [
-            [
-                'foo',
-                Severity::debug(),
-                new EventHint(),
-            ],
-        ];
+        yield [['foo', Severity::debug()]];
+        yield [['foo', Severity::debug(), new EventHint()]];
     }
 
     /**
@@ -195,33 +139,22 @@ final class HubAdapterTest extends TestCase
     public function testCaptureException(array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
-        $exception = new \Exception();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureException')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($expectedFunctionCallArgs[0], $this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[1] ?? null)
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($eventId, HubAdapter::getInstance()->captureException(...$expectedFunctionCallArgs));
     }
 
     public static function captureExceptionDataProvider(): \Generator
     {
-        yield [
-            [
-                new \Exception('foo'),
-            ],
-        ];
-
-        yield [
-            [
-                new \Exception('foo'),
-                new EventHint(),
-            ],
-        ];
+        yield [[new \Exception('foo')]];
+        yield [[new \Exception('foo'), new EventHint()]];
     }
 
     public function testCaptureEvent(): void
@@ -229,13 +162,13 @@ final class HubAdapterTest extends TestCase
         $event = Event::createEvent();
         $hint = EventHint::fromArray([]);
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureEvent')
-            ->with($event, $hint)
+            ->with($event, $hint, $this->isInstanceOf(Scope::class))
             ->willReturn($event->getId());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($event->getId(), HubAdapter::getInstance()->captureEvent($event, $hint));
     }
@@ -247,48 +180,43 @@ final class HubAdapterTest extends TestCase
     {
         $eventId = EventId::generate();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureLastError')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[0] ?? null)
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($eventId, HubAdapter::getInstance()->captureLastError(...$expectedFunctionCallArgs));
     }
 
     public static function captureLastErrorDataProvider(): \Generator
     {
-        yield [
-            [],
-        ];
-
-        yield [
-            [
-                new EventHint(),
-            ],
-        ];
+        yield [[]];
+        yield [[new EventHint()]];
     }
 
     public function testCaptureCheckIn(): void
     {
-        $hub = new Hub(new NoOpClient());
+        $checkInId = SentryUid::generate();
 
-        $options = new Options([
-            'environment' => Event::DEFAULT_ENVIRONMENT,
-            'release' => '1.1.8',
-        ]);
-        /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('getOptions')
-            ->willReturn($options);
+            ->willReturn(new Options([
+                'environment' => Event::DEFAULT_ENVIRONMENT,
+                'release' => '1.1.8',
+            ]));
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($checkInId): bool {
+                $checkIn = $event->getCheckIn();
 
-        $hub->bindClient($client);
-        SentrySdk::setCurrentHub($hub);
+                return $checkIn !== null && $checkIn->getId() === $checkInId;
+            }), null, $this->isInstanceOf(Scope::class));
 
-        $checkInId = SentryUid::generate();
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($checkInId, HubAdapter::getInstance()->captureCheckIn(
             'test-crontab',
@@ -308,12 +236,12 @@ final class HubAdapterTest extends TestCase
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_DEBUG, Breadcrumb::TYPE_ERROR, 'user');
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('addBreadcrumb')
-            ->willReturn(true);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertTrue(HubAdapter::getInstance()->addBreadcrumb($breadcrumb));
     }
@@ -322,43 +250,37 @@ final class HubAdapterTest extends TestCase
     {
         $integration = $this->createMock(IntegrationInterface::class);
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('getIntegration')
             ->with(\get_class($integration))
             ->willReturn($integration);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($integration, HubAdapter::getInstance()->getIntegration(\get_class($integration)));
     }
 
     public function testStartTransaction(): void
     {
-        $transactionContext = new TransactionContext();
-        $transaction = new Transaction($transactionContext);
+        $transactionContext = new TransactionContext('test-transaction');
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('startTransaction')
-            ->with($transactionContext)
-            ->willReturn($transaction);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
-        $this->assertSame($transaction, HubAdapter::getInstance()->startTransaction($transactionContext));
+        $transaction = HubAdapter::getInstance()->startTransaction($transactionContext);
+
+        $this->assertSame('test-transaction', $transaction->getName());
     }
 
     public function testGetTransaction(): void
     {
-        $transaction = new Transaction(new TransactionContext());
-
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('getTransaction')
-            ->willReturn($transaction);
-
-        SentrySdk::setCurrentHub($hub);
+        $transaction = HubAdapter::getInstance()->startTransaction(new TransactionContext());
+        SentrySdk::getIsolationScope()->setSpan($transaction);
 
         $this->assertSame($transaction, HubAdapter::getInstance()->getTransaction());
     }
@@ -366,13 +288,7 @@ final class HubAdapterTest extends TestCase
     public function testGetSpan(): void
     {
         $span = new Span();
-
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('getSpan')
-            ->willReturn($span);
-
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getIsolationScope()->setSpan($span);
 
         $this->assertSame($span, HubAdapter::getInstance()->getSpan());
     }
@@ -381,14 +297,7 @@ final class HubAdapterTest extends TestCase
     {
         $span = new Span();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('setSpan')
-            ->with($span)
-            ->willReturn($hub);
-
-        SentrySdk::setCurrentHub($hub);
-
-        $this->assertSame($hub, HubAdapter::getInstance()->setSpan($span));
+        $this->assertSame(HubAdapter::getInstance(), HubAdapter::getInstance()->setSpan($span));
+        $this->assertSame($span, SentrySdk::getIsolationScope()->getSpan());
     }
 }

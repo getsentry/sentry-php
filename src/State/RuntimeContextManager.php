@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
-use Sentry\Tracing\PropagationContext;
+use Sentry\ClientInterface;
+use Sentry\SentrySdk;
 
 /**
  * Manages runtime-local SDK state across different execution models.
@@ -23,11 +24,6 @@ final class RuntimeContextManager
     private const PROCESS_EXECUTION_CONTEXT_KEY = 'process';
 
     /**
-     * @var HubInterface
-     */
-    private $baseHub;
-
-    /**
      * @var RuntimeContext|null
      */
     private $globalContext;
@@ -41,46 +37,6 @@ final class RuntimeContextManager
      * @var array<string, string>
      */
     private $executionContextToRuntimeContext = [];
-
-    public function __construct(HubInterface $baseHub)
-    {
-        $this->baseHub = $baseHub;
-        $this->globalContext = null;
-    }
-
-    /**
-     * Sets the current hub with context-aware behavior.
-     *
-     * If a runtime context is active for the current execution key, the hub is
-     * updated only for that active context. Otherwise, the baseline/global hub
-     * template is updated.
-     *
-     * @return bool Whether the hub was set on an active runtime context
-     */
-    public function setCurrentHub(HubInterface $hub): bool
-    {
-        $executionContextKey = $this->getExecutionContextKey();
-
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-            $this->activeContexts[$runtimeContextId]->setHub($hub);
-
-            return true;
-        }
-
-        $this->baseHub = $hub;
-
-        if ($this->globalContext !== null) {
-            $this->globalContext->setHub($hub);
-        }
-
-        return false;
-    }
-
-    public function getCurrentHub(): HubInterface
-    {
-        return $this->getCurrentContext()->getHub();
-    }
 
     public function getCurrentContext(): RuntimeContext
     {
@@ -137,7 +93,7 @@ final class RuntimeContextManager
     private function createContextForExecutionContextKey(string $executionContextKey): void
     {
         $runtimeContextId = $this->generateRuntimeContextId();
-        $runtimeContext = new RuntimeContext($runtimeContextId, $this->createHubFromBaseHub());
+        $runtimeContext = new RuntimeContext($runtimeContextId);
 
         $this->activeContexts[$runtimeContextId] = $runtimeContext;
         $this->executionContextToRuntimeContext[$executionContextKey] = $runtimeContextId;
@@ -154,19 +110,18 @@ final class RuntimeContextManager
         // Remove any key mappings that may still reference this context.
         $this->removeExecutionContextMappingsForRuntimeContext($runtimeContextId);
 
-        $logger = $this->getLoggerFromHub($runtimeContext->getHub());
+        $client = SentrySdk::getClient($runtimeContext->getIsolationScope());
+        $logger = $client->getOptions()->getLoggerOrNullLogger();
 
-        $this->flushRuntimeContextResources($runtimeContext, $timeout, $logger);
+        $this->flushRuntimeContextResources($runtimeContext, $client, $timeout, $logger);
     }
 
-    private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ?int $timeout, LoggerInterface $logger): void
+    private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ClientInterface $client, ?int $timeout, LoggerInterface $logger): void
     {
-        $client = $runtimeContext->getHub()->getClient();
-
         // captureEvent can throw before transport send (for example from scope event processors
         // or before_send callbacks), so we isolate failures and continue flushing other resources.
         try {
-            $runtimeContext->getLogsAggregator()->flush($client);
+            $runtimeContext->getLogsAggregator()->flush($client, $runtimeContext->getIsolationScope());
         } catch (\Throwable $exception) {
             $logger->error('Failed to flush logs while ending a runtime context.', [
                 'exception' => $exception,
@@ -176,7 +131,7 @@ final class RuntimeContextManager
 
         // Keep metrics flush independent from logs flush so one bad callback does not block the rest.
         try {
-            $runtimeContext->getMetricsAggregator()->flush($client);
+            $runtimeContext->getMetricsAggregator()->flush($client, $runtimeContext->getIsolationScope());
         } catch (\Throwable $exception) {
             $logger->error('Failed to flush trace metrics while ending a runtime context.', [
                 'exception' => $exception,
@@ -222,31 +177,6 @@ final class RuntimeContextManager
         return true;
     }
 
-    private function createHubFromBaseHub(): HubInterface
-    {
-        if (!$this->baseHub instanceof Hub) {
-            return new Hub($this->baseHub->getClient());
-        }
-
-        $clonedScope = null;
-
-        $this->baseHub->configureScope(static function (Scope $scope) use (&$clonedScope): void {
-            $clonedScope = clone $scope;
-            // Do not inherit active traces into a new runtime context.
-            $clonedScope->setSpan(null);
-            $clonedScope->setPropagationContext(PropagationContext::fromDefaults());
-        });
-
-        return new Hub($this->baseHub->getClient(), $clonedScope ?? new Scope());
-    }
-
-    private function getLoggerFromHub(HubInterface $hub): LoggerInterface
-    {
-        $client = $hub->getClient();
-
-        return $client->getOptions()->getLoggerOrNullLogger();
-    }
-
     private function generateRuntimeContextId(): string
     {
         return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
@@ -262,7 +192,7 @@ final class RuntimeContextManager
     {
         if ($this->globalContext === null) {
             // Lazy fallback keeps baseline behavior when users do not opt into explicit context lifecycle.
-            $this->globalContext = new RuntimeContext('global', $this->baseHub);
+            $this->globalContext = new RuntimeContext('global');
         }
 
         return $this->globalContext;
