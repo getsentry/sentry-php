@@ -113,6 +113,69 @@ class Scope
     }
 
     /**
+     * Merges the process-global scope underneath the current isolation scope.
+     *
+     * The returned scope is transient and should be used for one event capture.
+     *
+     * @internal
+     */
+    public static function mergeScopes(self $globalScope, self $isolationScope): self
+    {
+        $mergedScope = clone $isolationScope;
+
+        $mergedScope->tags = array_merge($globalScope->tags, $isolationScope->tags);
+        $mergedScope->extra = array_merge($globalScope->extra, $isolationScope->extra);
+        $mergedScope->contexts = array_merge($globalScope->contexts, $isolationScope->contexts);
+
+        if ($globalScope->user !== null && $isolationScope->user !== null) {
+            $mergedScope->user = (clone $globalScope->user)->merge($isolationScope->user);
+        } elseif ($globalScope->user !== null) {
+            $mergedScope->user = clone $globalScope->user;
+        }
+
+        $mergedScope->level = $isolationScope->level ?? $globalScope->level;
+        $mergedScope->fingerprint = array_merge($globalScope->fingerprint, $isolationScope->fingerprint);
+        $mergedScope->breadcrumbs = \array_slice(array_merge($globalScope->breadcrumbs, $isolationScope->breadcrumbs), -100);
+        $mergedScope->flags = self::mergeFlags($globalScope->flags, $isolationScope->flags);
+        $mergedScope->attachments = array_merge($globalScope->attachments, $isolationScope->attachments);
+        $mergedScope->eventProcessors = array_merge($globalScope->eventProcessors, $isolationScope->eventProcessors);
+
+        return $mergedScope;
+    }
+
+    /**
+     * @param array<int, array<string, bool>> $globalFlags
+     * @param array<int, array<string, bool>> $isolationFlags
+     *
+     * @return array<int, array<string, bool>>
+     */
+    private static function mergeFlags(array $globalFlags, array $isolationFlags): array
+    {
+        $flagsByKey = [];
+
+        foreach (array_merge($globalFlags, $isolationFlags) as $flag) {
+            $flagKey = key($flag);
+
+            if ($flagKey === null) {
+                continue;
+            }
+
+            unset($flagsByKey[$flagKey]);
+            $flagsByKey[$flagKey] = (bool) current($flag);
+        }
+
+        $flagsByKey = \array_slice($flagsByKey, -self::MAX_FLAGS, self::MAX_FLAGS, true);
+
+        $flags = [];
+
+        foreach ($flagsByKey as $flagKey => $flagResult) {
+            $flags[] = [$flagKey => $flagResult];
+        }
+
+        return $flags;
+    }
+
+    /**
      * Sets a new tag in the tags context.
      *
      * @param string $key   The key that uniquely identifies the tag
