@@ -8,6 +8,7 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\NoOpClient;
+use Sentry\UserDataBag;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
@@ -53,6 +54,14 @@ abstract class Scope
     public function getClient(): ClientInterface
     {
         return $this->scopeData->getClient();
+    }
+
+    /**
+     * Get the user context.
+     */
+    public function getUser(): ?UserDataBag
+    {
+        return $this->scopeData->getUser();
     }
 
     /**

@@ -6,7 +6,8 @@ namespace Sentry\Tracing;
 
 use Sentry\ClientInterface;
 use Sentry\Options;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
+use Sentry\State\MergedScope;
 
 /**
  * This class represents the Dynamic Sampling Context (dsc).
@@ -179,7 +180,10 @@ final class DynamicSamplingContext
         return $samplingContext;
     }
 
-    public static function fromOptions(Options $options, Scope $scope): self
+    /**
+     * @param IsolationScope|MergedScope $scope
+     */
+    public static function fromOptions(Options $options, $scope): self
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());

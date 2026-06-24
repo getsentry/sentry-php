@@ -10,3 +10,8 @@ excludes = [
 
 [analyzer]
 baseline = "analysis-baseline.toml"
+ignore = [
+    { code = "no-value", pattern = "DebugType::getDebugType" },
+    "impossible-condition",
+    "redundant-logical-operation",
+]

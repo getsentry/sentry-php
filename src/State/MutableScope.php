@@ -8,6 +8,7 @@ use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\Severity;
 use Sentry\UserDataBag;
 
@@ -141,14 +142,6 @@ abstract class MutableScope extends Scope
     }
 
     /**
-     * Get the user context.
-     */
-    public function getUser(): ?UserDataBag
-    {
-        return $this->scopeData->getUser();
-    }
-
-    /**
      * Merges the given data in the user context.
      *
      * @param array<string, mixed>|UserDataBag $user The user data
@@ -233,7 +226,7 @@ abstract class MutableScope extends Scope
      * Adds a new event processor that will be called after {@see MutableScope::applyToEvent}
      * finished its work.
      *
-     * @param callable $eventProcessor The event processor
+     * @param callable(Event, EventHint): ?Event $eventProcessor The event processor
      *
      * @return $this
      */

@@ -76,13 +76,14 @@ class MergedScope extends Scope
             $event->setExtra(array_merge($this->scopeData->getExtra(), $event->getExtra()));
         }
 
-        if ($this->scopeData->getUser() !== null) {
+        $scopeUser = $this->scopeData->getUser();
+        if ($scopeUser !== null) {
             $user = $event->getUser();
 
             if ($user === null) {
-                $user = $this->scopeData->getUser();
+                $user = $scopeUser;
             } else {
-                $user = (clone $this->scopeData->getUser())->merge($user);
+                $user = (clone $scopeUser)->merge($user);
             }
 
             $event->setUser($user);

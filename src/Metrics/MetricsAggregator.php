@@ -13,7 +13,8 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
+use Sentry\State\MergedScope;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Unit;
@@ -53,7 +54,7 @@ final class MetricsAggregator
     ): void {
         $isolationScope = SentrySdk::getIsolationScope();
         $client = SentrySdk::getClient($isolationScope);
-        $scope = Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope);
+        $scope = SentrySdk::getGlobalScope()->merge($isolationScope);
         $options = $client->getOptions();
         $metricFlushThreshold = $options->getMetricFlushThreshold();
 
@@ -119,7 +120,7 @@ final class MetricsAggregator
         }
     }
 
-    public function flush(?ClientInterface $client = null, ?Scope $isolationScope = null): ?EventId
+    public function flush(?ClientInterface $client = null, ?IsolationScope $isolationScope = null): ?EventId
     {
         $metrics = $this->metrics;
 
@@ -131,13 +132,13 @@ final class MetricsAggregator
         $client = $client ?? SentrySdk::getClient($isolationScope);
         $event = Event::createMetrics()->setMetrics($metrics->drain());
 
-        return $client->captureEvent($event, null, Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope));
+        return $client->captureEvent($event, null, SentrySdk::getGlobalScope()->merge($isolationScope));
     }
 
     /**
      * @return array{trace_id: string, span_id: string}
      */
-    private function getTraceContext(Scope $scope): array
+    private function getTraceContext(MergedScope $scope): array
     {
         $traceContext = $scope->getTraceContext();
 

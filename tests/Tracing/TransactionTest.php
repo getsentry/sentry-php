@@ -11,7 +11,7 @@ use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\MergedScope;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -59,7 +59,7 @@ final class TransactionTest extends TestCase
                 $this->assertSame([$span1, $span2], $eventArg->getSpans());
 
                 return true;
-            }), null, $this->isInstanceOf(Scope::class))
+            }), null, $this->isInstanceOf(MergedScope::class))
             ->willReturnCallback(static function (Event $eventArg) use (&$expectedEventId): EventId {
                 $expectedEventId = $eventArg->getId();
 

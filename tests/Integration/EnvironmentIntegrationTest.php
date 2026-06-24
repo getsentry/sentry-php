@@ -12,7 +12,7 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\Integration\EnvironmentIntegration;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Util\PHPVersion;
 
 use function Sentry\withScope;
@@ -35,12 +35,12 @@ final class EnvironmentIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        withScope(function (Scope $scope) use ($expectedRuntimeContext, $expectedOsContext, $initialRuntimeContext, $initialOsContext): void {
+        withScope(function (IsolationScope $scope) use ($expectedRuntimeContext, $expectedOsContext, $initialRuntimeContext, $initialOsContext): void {
             $event = Event::createEvent();
             $event->setRuntimeContext($initialRuntimeContext);
             $event->setOsContext($initialOsContext);
 
-            $event = $scope->applyToEvent($event);
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);
 

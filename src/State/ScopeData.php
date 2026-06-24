@@ -87,6 +87,11 @@ class ScopeData
      */
     private $attachments = [];
 
+    public function __construct(?PropagationContext $propagationContext = null)
+    {
+        $this->propagationContext = $propagationContext ?? PropagationContext::fromDefaults();
+    }
+
     public function getPropagationContext(): PropagationContext
     {
         return $this->propagationContext;
@@ -107,14 +112,12 @@ class ScopeData
         $this->client = $client;
     }
 
+    /**
+     * @return Breadcrumb[]
+     */
     public function getBreadcrumbs(): array
     {
         return $this->breadcrumbs;
-    }
-
-    public function setBreadcrumbs(array $breadcrumbs): void
-    {
-        $this->breadcrumbs = $breadcrumbs;
     }
 
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): void
@@ -158,16 +161,17 @@ class ScopeData
         $this->user = null;
     }
 
+    /**
+     * @return array<string, array<string, mixed>>
+     */
     public function getContexts(): array
     {
         return $this->contexts;
     }
 
-    public function setContexts(array $contexts): void
-    {
-        $this->contexts = $contexts;
-    }
-
+    /**
+     * @param array<string, mixed> $value
+     */
     public function setContext(string $name, array $value): void
     {
         $this->contexts[$name] = $value;
@@ -178,11 +182,17 @@ class ScopeData
         unset($this->contexts[$key]);
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getTags(): array
     {
         return $this->tags;
     }
 
+    /**
+     * @param array<string, string> $tags
+     */
     public function setTags(array $tags): void
     {
         $this->tags = $tags;
@@ -198,19 +208,12 @@ class ScopeData
         unset($this->tags[$key]);
     }
 
+    /**
+     * @return array<int, array<string, bool>>
+     */
     public function getFlags(): array
     {
         return $this->flags;
-    }
-
-    public function removeFlag(int $flagIndex): void
-    {
-        unset($this->flags[$flagIndex]);
-    }
-
-    public function setFlags(array $flags): void
-    {
-        $this->flags = $flags;
     }
 
     public function addFeatureFlag(string $key, bool $result): self
@@ -233,26 +236,41 @@ class ScopeData
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getExtra(): array
     {
         return $this->extra;
     }
 
+    /**
+     * @param array<string, mixed> $extra
+     */
     public function setExtras(array $extra): void
     {
         $this->extra = $extra;
     }
 
+    /**
+     * @param mixed $value
+     */
     public function setExtra(string $key, $value): void
     {
         $this->extra[$key] = $value;
     }
 
+    /**
+     * @return string[]
+     */
     public function getFingerprint(): array
     {
         return $this->fingerprint;
     }
 
+    /**
+     * @param string[] $fingerprint
+     */
     public function setFingerprint(array $fingerprint): void
     {
         $this->fingerprint = $fingerprint;
@@ -268,26 +286,33 @@ class ScopeData
         $this->level = $level;
     }
 
+    /**
+     * @return array<callable(Event, EventHint): ?Event>
+     */
     public function getEventProcessors(): array
     {
         return $this->eventProcessors;
     }
 
-    public function setEventProcessors(array $eventProcessors): void
-    {
-        $this->eventProcessors = $eventProcessors;
-    }
-
+    /**
+     * @param callable(Event, EventHint): ?Event $eventProcessor
+     */
     public function addEventProcessor(callable $eventProcessor): void
     {
         $this->eventProcessors[] = $eventProcessor;
     }
 
+    /**
+     * @return Attachment[]
+     */
     public function getAttachments(): array
     {
         return $this->attachments;
     }
 
+    /**
+     * @param Attachment[] $attachments
+     */
     public function setAttachments(array $attachments): void
     {
         $this->attachments = $attachments;
@@ -316,9 +341,7 @@ class ScopeData
         if ($this->user !== null) {
             $this->user = clone $this->user;
         }
-        if ($this->propagationContext !== null) {
-            $this->propagationContext = clone $this->propagationContext;
-        }
+        $this->propagationContext = clone $this->propagationContext;
     }
 
     /**

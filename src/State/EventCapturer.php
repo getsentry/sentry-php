@@ -85,7 +85,7 @@ final class EventCapturer
     }
 
     /**
-     * @param callable(ClientInterface, Scope): ?EventId $capture
+     * @param callable(ClientInterface, MergedScope): ?EventId $capture
      */
     private static function capture(callable $capture): ?EventId
     {
@@ -95,7 +95,7 @@ final class EventCapturer
     }
 
     /**
-     * @param callable(ClientInterface, Scope): ?EventId $capture
+     * @param callable(ClientInterface, MergedScope): ?EventId $capture
      */
     private static function captureWithScope(ClientInterface $client, IsolationScope $isolationScope, callable $capture): ?EventId
     {

@@ -11,7 +11,8 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Integration\ModulesIntegration;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -36,8 +37,8 @@ final class ModulesIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        withScope(function (Scope $scope) use ($expectedEmptyModules): void {
-            $event = $scope->applyToEvent(Event::createEvent());
+        withScope(function (IsolationScope $scope) use ($expectedEmptyModules): void {
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
 
@@ -88,7 +89,7 @@ final class ModulesIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        $client->captureEvent(Event::createEvent(), null, new Scope());
+        $client->captureEvent(Event::createEvent(), null, (new GlobalScope())->merge(new IsolationScope()));
     }
 
     /**

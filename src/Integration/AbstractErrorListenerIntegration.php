@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Sentry\Integration;
 
 use Sentry\Event;
+use Sentry\EventHint;
 use Sentry\ExceptionMechanism;
 use Sentry\State\EventCapturer;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
 
@@ -18,8 +19,10 @@ abstract class AbstractErrorListenerIntegration implements IntegrationInterface
      */
     protected function captureException(\Throwable $exception): void
     {
-        withIsolationScope(function (Scope $scope) use ($exception): void {
-            $scope->addEventProcessor(\Closure::fromCallable([$this, 'addExceptionMechanismToEvent']));
+        withIsolationScope(function (IsolationScope $scope) use ($exception): void {
+            $scope->addEventProcessor(function (Event $event, EventHint $hint): Event {
+                return $this->addExceptionMechanismToEvent($event);
+            });
 
             EventCapturer::captureException($exception);
         });
