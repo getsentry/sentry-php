@@ -6,6 +6,7 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Options;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -119,10 +120,10 @@ final class Transaction extends Span
         return $this;
     }
 
-    public function initProfiler(): Profiler
+    public function initProfiler(?Options $options = null): Profiler
     {
         if ($this->profiler === null) {
-            $this->profiler = new Profiler($this->hub->getClient()->getOptions());
+            $this->profiler = new Profiler($options ?? $this->hub->getClient()->getOptions());
         }
 
         return $this->profiler;
