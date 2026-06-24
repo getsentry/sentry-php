@@ -213,6 +213,31 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
+    public function testMergedScopeAttributesAreAddedToLogMessage(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        SentrySdk::getGlobalScope()->setClient($client);
+        SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
+
+        $spanContext = new SpanContext();
+        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        SentrySdk::getIsolationScope()->setSpan(new Span($spanContext));
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes();
+        $this->assertSame('global-user', $attributes->get('user.id')->getValue());
+        $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
+    }
+
     public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
     {
         $client = ClientBuilder::create([

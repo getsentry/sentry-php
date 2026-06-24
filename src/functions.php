@@ -20,7 +20,7 @@ use Sentry\Tracing\TransactionContext;
 use Sentry\Transport\TransportInterface;
 
 /**
- * Creates a new Client and Hub which will be set as current.
+ * Creates a new Client and initializes the SDK.
  *
  * @param array{
  *     attach_stacktrace?: bool,
@@ -213,7 +213,7 @@ function addBreadcrumb($category, ?string $message = null, array $metadata = [],
  */
 function configureScope(callable $callback): void
 {
-    SentrySdk::getCurrentHub()->configureScope($callback);
+    $callback(SentrySdk::getIsolationScope());
 }
 
 /**
@@ -330,7 +330,7 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
  */
 function trace(callable $trace, SpanContext $context)
 {
-    return SentrySdk::getCurrentHub()->withScope(static function (Scope $scope) use ($context, $trace) {
+    return withIsolationScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
         $span = null;
 
@@ -360,10 +360,9 @@ function trace(callable $trace, SpanContext $context)
  */
 function getOtlpTracesEndpointUrl(): ?string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
+    $client = SentrySdk::getClient();
 
-    $integration = $hub->getIntegration(OTLPIntegration::class);
+    $integration = $client->getIntegration(OTLPIntegration::class);
     if ($integration instanceof OTLPIntegration && $integration->getCollectorUrl() !== null) {
         return $integration->getCollectorUrl();
     }
@@ -384,27 +383,22 @@ function getOtlpTracesEndpointUrl(): ?string
  */
 function getTraceparent(): string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
+    $client = SentrySdk::getClient();
     $options = $client->getOptions();
+    $scope = SentrySdk::getIsolationScope();
 
     if ($options->isTracingEnabled()) {
-        $span = SentrySdk::getCurrentHub()->getSpan();
+        $span = $scope->getSpan();
         if ($span !== null) {
             return $span->toTraceparent();
         }
     }
 
-    $traceParent = '';
-    $hub->configureScope(static function (Scope $scope) use (&$traceParent) {
-        if ($scope->hasExternalPropagationContext()) {
-            return;
-        }
+    if ($scope->hasExternalPropagationContext()) {
+        return '';
+    }
 
-        $traceParent = $scope->getPropagationContext()->toTraceparent();
-    });
-
-    return $traceParent;
+    return $scope->getPropagationContext()->toTraceparent();
 }
 
 /**
@@ -415,27 +409,22 @@ function getTraceparent(): string
  */
 function getBaggage(): string
 {
-    $hub = SentrySdk::getCurrentHub();
-    $client = $hub->getClient();
+    $client = SentrySdk::getClient();
     $options = $client->getOptions();
+    $scope = SentrySdk::getIsolationScope();
 
     if ($options->isTracingEnabled()) {
-        $span = SentrySdk::getCurrentHub()->getSpan();
+        $span = $scope->getSpan();
         if ($span !== null) {
             return $span->toBaggage();
         }
     }
 
-    $baggage = '';
-    $hub->configureScope(static function (Scope $scope) use (&$baggage) {
-        if ($scope->hasExternalPropagationContext()) {
-            return;
-        }
+    if ($scope->hasExternalPropagationContext()) {
+        return '';
+    }
 
-        $baggage = $scope->getPropagationContext()->toBaggage();
-    });
-
-    return $baggage;
+    return $scope->getPropagationContext()->toBaggage();
 }
 
 /**
@@ -466,10 +455,7 @@ function continueTrace(string $sentryTrace, string $baggage): TransactionContext
         $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
     }
 
-    $hub = SentrySdk::getCurrentHub();
-    $hub->configureScope(static function (Scope $scope) use ($propagationContext): void {
-        $scope->setPropagationContext($propagationContext);
-    });
+    SentrySdk::getIsolationScope()->setPropagationContext($propagationContext);
 
     return $transactionContext;
 }
@@ -498,9 +484,7 @@ function traceMetrics(): TraceMetrics
  */
 function addFeatureFlag(string $name, bool $result): void
 {
-    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
-        $scope->addFeatureFlag($name, $result);
-    });
+    SentrySdk::getIsolationScope()->addFeatureFlag($name, $result);
 }
 
 /**
