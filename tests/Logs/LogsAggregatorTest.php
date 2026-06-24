@@ -13,6 +13,7 @@ use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
@@ -354,7 +355,7 @@ final class LogsAggregatorTest extends TestCase
         $propagationContext->setSpanId(new SpanId('1234567890abcdef'));
 
         SentrySdk::init($client);
-        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope($propagationContext));
 
         $aggregator = new LogsAggregator();
         $aggregator->add(LogLevel::info(), 'Test message');

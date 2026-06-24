@@ -19,6 +19,9 @@ use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
+use Sentry\State\MergedScope;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -74,7 +77,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($globalScope, SentrySdk::getGlobalScope());
         $this->assertSame(SentrySdk::getClient(), $globalScope->getClient());
 
-        $event = $globalScope->applyToEvent(Event::createEvent());
+        $event = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['baseline' => 'yes'], $event->getTags());
@@ -365,7 +368,7 @@ final class FunctionsTest extends TestCase
                     && $checkIn->getMonitorConfig() !== null
                     && $checkIn->getMonitorConfig()->getSchedule()->getValue() === '*/5 * * * *';
             }), null, $this->captureScopeConstraint($scope))
-            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?Scope $scope = null) use (&$events): EventId {
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?MergedScope $scope = null) use (&$events): EventId {
                 $events[] = $event;
 
                 return EventId::generate();
@@ -396,7 +399,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->exactly(2))
             ->method('captureEvent')
             ->with($this->isInstanceOf(Event::class), null, $this->captureScopeConstraint($scope))
-            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?Scope $scope = null) use (&$events): EventId {
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?MergedScope $scope = null) use (&$events): EventId {
                 $events[] = $event;
 
                 return EventId::generate();
@@ -426,7 +429,7 @@ final class FunctionsTest extends TestCase
     public function testAddBreadcrumb(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
-        $otherScope = new Scope();
+        $otherScope = new IsolationScope();
 
         /** @var ClientInterface&MockObject $client */
         $client = $this->createMock(ClientInterface::class);
@@ -523,23 +526,23 @@ final class FunctionsTest extends TestCase
         $globalScope = SentrySdk::getGlobalScope();
         $globalScope->setTag('scope', 'global');
 
-        $isolationScope = new Scope();
+        $isolationScope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
 
         $callbackScope = null;
 
-        configureScope(static function (Scope $scope) use (&$callbackScope): void {
+        configureScope(static function (IsolationScope $scope) use (&$callbackScope): void {
             $callbackScope = $scope;
             $scope->setTag('scope', 'isolation');
         });
 
         $this->assertSame($isolationScope, $callbackScope);
 
-        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $isolationEvent = (new GlobalScope())->merge($isolationScope)->applyToEvent(Event::createEvent());
         $this->assertNotNull($isolationEvent);
         $this->assertSame(['scope' => 'isolation'], $isolationEvent->getTags());
 
-        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $globalEvent = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
         $this->assertNotNull($globalEvent);
         $this->assertSame(['scope' => 'global'], $globalEvent->getTags());
     }
@@ -547,14 +550,13 @@ final class FunctionsTest extends TestCase
     public function testAddFeatureFlagMutatesCurrentIsolationScopeOnly(): void
     {
         $globalScope = SentrySdk::getGlobalScope();
-        $globalScope->addFeatureFlag('global-only', true);
 
-        $isolationScope = new Scope();
+        $isolationScope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
 
         addFeatureFlag('isolation-only', false);
 
-        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $isolationEvent = (new GlobalScope())->merge($isolationScope)->applyToEvent(Event::createEvent());
         $this->assertNotNull($isolationEvent);
         $this->assertSame([
             'values' => [
@@ -565,16 +567,9 @@ final class FunctionsTest extends TestCase
             ],
         ], $isolationEvent->getContexts()['flags']);
 
-        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $globalEvent = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
         $this->assertNotNull($globalEvent);
-        $this->assertSame([
-            'values' => [
-                [
-                    'flag' => 'global-only',
-                    'result' => true,
-                ],
-            ],
-        ], $globalEvent->getContexts()['flags']);
+        $this->assertArrayNotHasKey('flags', $globalEvent->getContexts());
     }
 
     public function testStartAndEndContext(): void
@@ -621,7 +616,7 @@ final class FunctionsTest extends TestCase
         withContext(function () use (&$outerScope, &$innerScope, $globalScope): void {
             $outerScope = SentrySdk::getIsolationScope();
 
-            configureScope(static function (Scope $scope): void {
+            configureScope(static function (IsolationScope $scope): void {
                 $scope->setTag('outer', 'yes');
             });
 
@@ -631,8 +626,8 @@ final class FunctionsTest extends TestCase
 
             $event = Event::createEvent();
 
-            configureScope(static function (Scope $scope) use (&$event): void {
-                $event = $scope->applyToEvent($event);
+            configureScope(static function (IsolationScope $scope) use (&$event): void {
+                $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
             });
 
             $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
@@ -710,7 +705,7 @@ final class FunctionsTest extends TestCase
 
         $childSpan = null;
 
-        trace(function (Scope $scope) use ($outerScope, $transaction, &$childSpan): void {
+        trace(function (IsolationScope $scope) use ($outerScope, $transaction, &$childSpan): void {
             $childSpan = $scope->getSpan();
 
             $this->assertNotSame($outerScope, $scope);
@@ -725,7 +720,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
 
         try {
-            trace(function (Scope $scope) use ($transaction): void {
+            trace(function (IsolationScope $scope) use ($transaction): void {
                 $this->assertNotSame($transaction, $scope->getSpan());
 
                 throw new \RuntimeException('Throwing should still restore the previous span');
@@ -745,7 +740,7 @@ final class FunctionsTest extends TestCase
         $outerScope->setSpan($transaction);
         $callbackScope = null;
 
-        trace(function (Scope $scope) use ($transaction, &$callbackScope): void {
+        trace(function (IsolationScope $scope) use ($transaction, &$callbackScope): void {
             $callbackScope = $scope;
 
             $this->assertSame($transaction, $scope->getSpan());
@@ -763,7 +758,7 @@ final class FunctionsTest extends TestCase
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
 
-        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope($propagationContext));
 
         $traceParent = getTraceparent();
 
@@ -807,7 +802,7 @@ final class FunctionsTest extends TestCase
             ];
         });
 
-        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope($propagationContext));
 
         $this->assertSame('', getTraceparent());
         $this->assertSame('', getBaggage());
@@ -830,7 +825,7 @@ final class FunctionsTest extends TestCase
             ]));
 
         SentrySdk::getGlobalScope()->setClient($client);
-        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope($propagationContext));
 
         $baggage = getBaggage();
 
@@ -910,7 +905,7 @@ final class FunctionsTest extends TestCase
     {
         SentrySdk::getGlobalScope()->setClient(new NoOpClient());
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
@@ -945,7 +940,7 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::getGlobalScope()->setClient($client);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
@@ -983,7 +978,7 @@ final class FunctionsTest extends TestCase
 
         SentrySdk::getGlobalScope()->setClient($client);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
@@ -1006,7 +1001,7 @@ final class FunctionsTest extends TestCase
         $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
     }
 
-    private function setClientAndIsolationScope(ClientInterface $client): Scope
+    private function setClientAndIsolationScope(ClientInterface $client): IsolationScope
     {
         SentrySdk::init();
 
@@ -1015,7 +1010,7 @@ final class FunctionsTest extends TestCase
         SentrySdk::getGlobalScope()->setTag('global', 'yes');
         SentrySdk::getGlobalScope()->setClient($client);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $scope->setTag('scope', 'isolation');
         $scope->setTag('isolation', 'yes');
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
@@ -1023,9 +1018,9 @@ final class FunctionsTest extends TestCase
         return $scope;
     }
 
-    private function captureScopeConstraint(Scope $isolationScope)
+    private function captureScopeConstraint(IsolationScope $isolationScope)
     {
-        return $this->callback(function (Scope $captureScope) use ($isolationScope): bool {
+        return $this->callback(function (MergedScope $captureScope) use ($isolationScope): bool {
             $this->assertNotSame($isolationScope, $captureScope);
 
             $event = $captureScope->applyToEvent(Event::createEvent());
@@ -1044,9 +1039,9 @@ final class FunctionsTest extends TestCase
     /**
      * @param Breadcrumb[] $expectedBreadcrumbs
      */
-    private function assertScopeBreadcrumbs(Scope $scope, array $expectedBreadcrumbs): void
+    private function assertScopeBreadcrumbs(IsolationScope $scope, array $expectedBreadcrumbs): void
     {
-        $event = $scope->applyToEvent(Event::createEvent());
+        $event = (new GlobalScope())->merge($scope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame($expectedBreadcrumbs, $event->getBreadcrumbs());

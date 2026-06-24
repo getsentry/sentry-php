@@ -26,28 +26,28 @@ final class EventCapturer
 
     public static function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        return self::capture(static function (ClientInterface $client, Scope $captureScope) use ($message, $level, $hint): ?EventId {
+        return self::capture(static function (ClientInterface $client, MergedScope $captureScope) use ($message, $level, $hint): ?EventId {
             return $client->captureMessage($message, $level, $captureScope, $hint);
         });
     }
 
     public static function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        return self::capture(static function (ClientInterface $client, Scope $captureScope) use ($exception, $hint): ?EventId {
+        return self::capture(static function (ClientInterface $client, MergedScope $captureScope) use ($exception, $hint): ?EventId {
             return $client->captureException($exception, $captureScope, $hint);
         });
     }
 
     public static function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
-        return self::capture(static function (ClientInterface $client, Scope $captureScope) use ($event, $hint): ?EventId {
+        return self::capture(static function (ClientInterface $client, MergedScope $captureScope) use ($event, $hint): ?EventId {
             return $client->captureEvent($event, $hint, $captureScope);
         });
     }
 
     public static function captureLastError(?EventHint $hint = null): ?EventId
     {
-        return self::capture(static function (ClientInterface $client, Scope $captureScope) use ($hint): ?EventId {
+        return self::capture(static function (ClientInterface $client, MergedScope $captureScope) use ($hint): ?EventId {
             return $client->captureLastError($captureScope, $hint);
         });
     }
@@ -77,7 +77,7 @@ final class EventCapturer
         );
         $event->setCheckIn($checkIn);
 
-        self::captureWithScope($client, $isolationScope, static function (ClientInterface $client, Scope $captureScope) use ($event): ?EventId {
+        self::captureWithScope($client, $isolationScope, static function (ClientInterface $client, MergedScope $captureScope) use ($event): ?EventId {
             return $client->captureEvent($event, null, $captureScope);
         });
 
@@ -85,7 +85,7 @@ final class EventCapturer
     }
 
     /**
-     * @param callable(ClientInterface, Scope): ?EventId $capture
+     * @param callable(ClientInterface, MergedScope): ?EventId $capture
      */
     private static function capture(callable $capture): ?EventId
     {
@@ -95,11 +95,11 @@ final class EventCapturer
     }
 
     /**
-     * @param callable(ClientInterface, Scope): ?EventId $capture
+     * @param callable(ClientInterface, MergedScope): ?EventId $capture
      */
-    private static function captureWithScope(ClientInterface $client, Scope $isolationScope, callable $capture): ?EventId
+    private static function captureWithScope(ClientInterface $client, IsolationScope $isolationScope, callable $capture): ?EventId
     {
-        $eventId = $capture($client, Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope));
+        $eventId = $capture($client, SentrySdk::getGlobalScope()->merge($isolationScope));
         $isolationScope->setLastEventId($eventId);
 
         return $eventId;

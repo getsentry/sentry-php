@@ -12,7 +12,7 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
 use Sentry\State\BreadcrumbRecorder;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
@@ -22,7 +22,7 @@ use function Sentry\getTraceparent;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?Scope $scope = null): \Closure
+    public static function trace(?IsolationScope $scope = null): \Closure
     {
         return static function (callable $handler) use ($scope): \Closure {
             return static function (RequestInterface $request, array $options) use ($handler, $scope) {

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 
 use function Sentry\getTraceparent;
 use function Sentry\init;
@@ -50,7 +49,7 @@ $handler = static function (): void {
         }
 
         $event = Event::createEvent();
-        $event = Scope::mergeScopes(SentrySdk::getGlobalScope(), SentrySdk::getIsolationScope())->applyToEvent($event);
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $tags = [];
 

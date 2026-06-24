@@ -12,7 +12,7 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Monolog\ExceptionToSentryIssueHandler;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\MergedScope;
 
 final class ExceptionToSentryIssueHandlerTest extends TestCase
 {
@@ -30,7 +30,7 @@ final class ExceptionToSentryIssueHandlerTest extends TestCase
             ->method('captureException')
             ->with(
                 $this->identicalTo($exception),
-                $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+                $this->callback(function (MergedScope $scopeArg) use ($expectedExtra): bool {
                     $event = $scopeArg->applyToEvent(Event::createEvent());
 
                     $this->assertNotNull($event);
@@ -57,7 +57,7 @@ final class ExceptionToSentryIssueHandlerTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureException')
-            ->with($this->identicalTo($exception), $this->isInstanceOf(Scope::class), null);
+            ->with($this->identicalTo($exception), $this->isInstanceOf(MergedScope::class), null);
 
         SentrySdk::init($client);
 
@@ -84,7 +84,7 @@ final class ExceptionToSentryIssueHandlerTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureException')
-            ->with($this->identicalTo($exception), $this->isInstanceOf(Scope::class), null);
+            ->with($this->identicalTo($exception), $this->isInstanceOf(MergedScope::class), null);
 
         SentrySdk::init($client);
 

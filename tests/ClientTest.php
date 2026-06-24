@@ -20,6 +20,8 @@ use Sentry\Options;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
@@ -69,7 +71,7 @@ final class ClientTest extends TestCase
             $logger
         );
 
-        $client->captureEvent(Event::createEvent(), null, new Scope());
+        $client->captureEvent(Event::createEvent(), null, (new GlobalScope())->merge(new IsolationScope()));
 
         $this->assertTrue($integrationCalled);
     }
@@ -966,12 +968,12 @@ final class ClientTest extends TestCase
                                ->setLogger($logger)
                                ->getClient();
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $scope->addEventProcessor(static function () {
             return null;
         });
 
-        $client->captureMessage('foo', Severity::debug(), $scope);
+        $client->captureMessage('foo', Severity::debug(), (new GlobalScope())->merge($scope));
     }
 
     public function testAttachStacktrace(): void

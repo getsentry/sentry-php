@@ -16,7 +16,7 @@ use Sentry\Monolog\ExceptionToSentryIssueHandler;
 use Sentry\Monolog\LogToSentryIssueHandler;
 use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\Scope;
+use Sentry\State\MergedScope;
 use Sentry\Tests\StubTransport;
 
 final class LogToSentryIssueHandlerTest extends TestCase
@@ -49,7 +49,7 @@ final class LogToSentryIssueHandlerTest extends TestCase
 
                     return true;
                 }),
-                $this->callback(function (Scope $scopeArg) use ($expectedExtra): bool {
+                $this->callback(function (MergedScope $scopeArg) use ($expectedExtra): bool {
                     $event = $scopeArg->applyToEvent(Event::createEvent());
 
                     $this->assertNotNull($event);
@@ -73,7 +73,7 @@ final class LogToSentryIssueHandlerTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->isInstanceOf(Event::class), $this->isInstanceOf(EventHint::class), $this->isInstanceOf(Scope::class));
+            ->with($this->isInstanceOf(Event::class), $this->isInstanceOf(EventHint::class), $this->isInstanceOf(MergedScope::class));
 
         SentrySdk::init($client);
 
@@ -117,7 +117,7 @@ final class LogToSentryIssueHandlerTest extends TestCase
             ->with(
                 $this->isInstanceOf(Event::class),
                 $this->isInstanceOf(EventHint::class),
-                $this->callback(function (Scope $scopeArg): bool {
+                $this->callback(function (MergedScope $scopeArg): bool {
                     $event = $scopeArg->applyToEvent(Event::createEvent());
 
                     $this->assertNotNull($event);

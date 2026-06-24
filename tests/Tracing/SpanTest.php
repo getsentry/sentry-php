@@ -7,7 +7,8 @@ namespace Sentry\Tests\Tracing;
 use PHPUnit\Framework\TestCase;
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -83,17 +84,17 @@ final class SpanTest extends TestCase
             'status_code' => 201,
         ]);
 
-        $isolationScope = new Scope();
+        $isolationScope = new IsolationScope();
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
 
         $span = new Span();
         $span->setHttpStatus(404);
 
-        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $isolationEvent = (new GlobalScope())->merge($isolationScope)->applyToEvent(Event::createEvent());
         $this->assertNotNull($isolationEvent);
         $this->assertSame(404, $isolationEvent->getContexts()['response']['status_code']);
 
-        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $globalEvent = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
         $this->assertNotNull($globalEvent);
         $this->assertSame(201, $globalEvent->getContexts()['response']['status_code']);
     }

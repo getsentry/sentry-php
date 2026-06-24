@@ -6,9 +6,10 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
-use Sentry\State\Scope;
 
 /**
  * This class is the main entry point for all the most common SDK features.
@@ -18,7 +19,7 @@ use Sentry\State\Scope;
 final class SentrySdk
 {
     /**
-     * @var Scope|null The process-global scope
+     * @var GlobalScope|null The process-global scope
      */
     private static $globalScope;
 
@@ -46,21 +47,21 @@ final class SentrySdk
         self::$runtimeContextManager = new RuntimeContextManager();
     }
 
-    public static function getGlobalScope(): Scope
+    public static function getGlobalScope(): GlobalScope
     {
         if (self::$globalScope === null) {
-            self::$globalScope = new Scope();
+            self::$globalScope = new GlobalScope();
         }
 
         return self::$globalScope;
     }
 
-    public static function getIsolationScope(): Scope
+    public static function getIsolationScope(): IsolationScope
     {
         return self::getCurrentRuntimeContext()->getIsolationScope();
     }
 
-    public static function getClient(?Scope $isolationScope = null): ClientInterface
+    public static function getClient(?IsolationScope $isolationScope = null): ClientInterface
     {
         $client = ($isolationScope ?? self::getIsolationScope())->getClient();
 

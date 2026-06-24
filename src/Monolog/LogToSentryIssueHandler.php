@@ -12,7 +12,7 @@ use Psr\Log\LogLevel;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\State\EventCapturer;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
 
@@ -66,7 +66,7 @@ class LogToSentryIssueHandler extends AbstractProcessingHandler
 
         $hint = new EventHint();
 
-        withIsolationScope(function (Scope $scope) use ($record, $event, $hint): void {
+        withIsolationScope(function (IsolationScope $scope) use ($record, $event, $hint): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
 
