@@ -6,6 +6,7 @@ namespace Sentry\Logs;
 
 use Sentry\Attributes\Attribute;
 use Sentry\Client;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
@@ -159,20 +160,22 @@ final class LogsAggregator
         $logs->push($log);
 
         if ($logFlushThreshold !== null && \count($logs) >= $logFlushThreshold) {
-            $this->flush($hub);
+            $this->flush($client);
         }
     }
 
-    public function flush(?HubInterface $hub = null): ?EventId
+    public function flush(?ClientInterface $client = null): ?EventId
     {
-        if ($this->logs === null || $this->logs->isEmpty()) {
+        $logs = $this->logs;
+
+        if ($logs === null || $logs->isEmpty()) {
             return null;
         }
 
-        $hub = $hub ?? SentrySdk::getCurrentHub();
-        $event = Event::createLogs()->setLogs($this->logs->drain());
+        $client = $client ?? SentrySdk::getCurrentHub()->getClient();
+        $event = Event::createLogs()->setLogs($logs->drain());
 
-        return $hub->captureEvent($event);
+        return $client->captureEvent($event);
     }
 
     /**

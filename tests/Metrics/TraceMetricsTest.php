@@ -6,12 +6,16 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
+use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Metrics\MetricsAggregator;
 use Sentry\Metrics\Types\CounterMetric;
 use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
+use Sentry\SentrySdk;
+use Sentry\State\Hub;
 use Sentry\State\HubAdapter;
 use Sentry\State\Scope;
 
@@ -108,6 +112,39 @@ final class TraceMetricsTest extends TestCase
 
         $this->assertCount(1, StubTransport::$events);
         $this->assertCount(2, StubTransport::$events[0]->getMetrics());
+    }
+
+    public function testFlushCapturesMetricsWithProvidedClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'enable_metrics' => true,
+            ]));
+
+        $fallbackClient = $this->createMock(ClientInterface::class);
+        $fallbackClient->method('getOptions')
+            ->willReturn(new Options([
+                'enable_metrics' => true,
+            ]));
+        $fallbackClient->expects($this->never())
+            ->method('captureEvent');
+        SentrySdk::setCurrentHub(new Hub($fallbackClient));
+
+        $aggregator = new MetricsAggregator();
+        $aggregator->add(CounterMetric::TYPE, 'test-count', 2, ['foo' => 'bar'], null);
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(
+                $this->callback(function (Event $event): bool {
+                    $this->assertCount(1, $event->getMetrics());
+
+                    return true;
+                })
+            );
+
+        $aggregator->flush($client);
     }
 
     public function testMetricsBufferFullWhenMetricFlushThresholdIsNull(): void

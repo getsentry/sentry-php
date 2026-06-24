@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Metrics;
 
 use Sentry\Client;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Metrics\Types\CounterMetric;
@@ -124,20 +125,22 @@ final class MetricsAggregator
         $metrics->push($metric);
 
         if ($metricFlushThreshold !== null && \count($metrics) >= $metricFlushThreshold) {
-            $this->flush($hub);
+            $this->flush($client);
         }
     }
 
-    public function flush(?HubInterface $hub = null): ?EventId
+    public function flush(?ClientInterface $client = null): ?EventId
     {
-        if ($this->metrics === null || $this->metrics->isEmpty()) {
+        $metrics = $this->metrics;
+
+        if ($metrics === null || $metrics->isEmpty()) {
             return null;
         }
 
-        $hub = $hub ?? SentrySdk::getCurrentHub();
-        $event = Event::createMetrics()->setMetrics($this->metrics->drain());
+        $client = $client ?? SentrySdk::getCurrentHub()->getClient();
+        $event = Event::createMetrics()->setMetrics($metrics->drain());
 
-        return $hub->captureEvent($event);
+        return $client->captureEvent($event);
     }
 
     /**

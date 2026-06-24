@@ -7,8 +7,11 @@ namespace Sentry\Tests\Logs;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
+use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -269,6 +272,39 @@ final class LogsAggregatorTest extends TestCase
         $this->assertCount(2, StubTransport::$events[0]->getLogs());
         $this->assertSame('First message', StubTransport::$events[0]->getLogs()[0]->getBody());
         $this->assertSame('Second message', StubTransport::$events[0]->getLogs()[1]->getBody());
+    }
+
+    public function testFlushCapturesLogsWithProvidedClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'enable_logs' => true,
+            ]));
+
+        $fallbackClient = $this->createMock(ClientInterface::class);
+        $fallbackClient->method('getOptions')
+            ->willReturn(new Options([
+                'enable_logs' => true,
+            ]));
+        $fallbackClient->expects($this->never())
+            ->method('captureEvent');
+        SentrySdk::setCurrentHub(new Hub($fallbackClient));
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(
+                $this->callback(function (Event $event): bool {
+                    $this->assertCount(1, $event->getLogs());
+
+                    return true;
+                })
+            );
+
+        $aggregator->flush($client);
     }
 
     public function testDoesNotFlushImmediatelyWhenThresholdIsNull(): void
