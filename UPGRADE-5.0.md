@@ -21,6 +21,39 @@ $logger->pushHandler(new \Sentry\Monolog\LogsHandler());
 
 To continue sending Monolog records to Sentry issues instead, use `Sentry\Monolog\LogToSentryIssueHandler` for log messages or `Sentry\Monolog\ExceptionToSentryIssueHandler` for exceptions.
 
+### Hub APIs Removed
+
+The Hub API has been removed. This includes:
+
+- **Removed classes and interfaces:**
+  - `Sentry\State\Hub`
+  - `Sentry\State\HubAdapter`
+  - `Sentry\State\HubInterface`
+
+- **Removed methods:**
+  - `SentrySdk::getCurrentHub()`
+  - `SentrySdk::setCurrentHub()`
+
+The SDK now exposes runtime state directly through `SentrySdk`, global helpers, and `Scope`:
+
+```php
+// Before (4.x)
+\Sentry\SentrySdk::getCurrentHub()->configureScope(static function (\Sentry\State\Scope $scope): void {
+    $scope->setTag('feature', 'checkout');
+});
+
+// After (5.0)
+\Sentry\configureScope(static function (\Sentry\State\Scope $scope): void {
+    $scope->setTag('feature', 'checkout');
+});
+```
+
+Use `SentrySdk::getClient()` for the active client, `SentrySdk::getGlobalScope()` for process-global data, and `SentrySdk::getIsolationScope()` for the current runtime isolation scope. Use the capture helpers such as `captureMessage()`, `captureException()`, and `captureEvent()` to send events.
+
+Use `configureScope()` to mutate the current isolation scope, `withIsolationScope()` to run code with a temporary forked scope, and `startTransaction()` to start manual tracing instrumentation.
+
+`SentrySdk::init()` no longer returns a Hub instance. It now returns `void`.
+
 ### Metrics API Removed
 
 The entire Metrics API has been removed as it is no longer supported. This includes:

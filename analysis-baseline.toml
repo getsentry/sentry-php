@@ -1369,18 +1369,6 @@ message = '''Possible argument type mismatch for argument #1 of `Sentry\Stacktra
 count = 1
 
 [[issues]]
-file = "src/State/Hub.php"
-code = "mixed-operand"
-message = "Right operand in `<` comparison has `mixed` type."
-count = 1
-
-[[issues]]
-file = "src/State/Hub.php"
-code = "possibly-null-operand"
-message = "Left operand in `<` comparison might be `null` (type `float|null`)."
-count = 1
-
-[[issues]]
 file = "src/State/Scope.php"
 code = "impossible-condition"
 message = "This condition (type `false`) will always evaluate to false."
