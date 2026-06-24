@@ -11,7 +11,8 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
+use Sentry\State\BreadcrumbRecorder;
+use Sentry\State\Scope;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
@@ -21,13 +22,13 @@ use function Sentry\getTraceparent;
  */
 final class GuzzleTracingMiddleware
 {
-    public static function trace(?HubInterface $hub = null): \Closure
+    public static function trace(?Scope $scope = null): \Closure
     {
-        return static function (callable $handler) use ($hub): \Closure {
-            return static function (RequestInterface $request, array $options) use ($hub, $handler) {
-                $hub = $hub ?? SentrySdk::getCurrentHub();
-                $client = $hub->getClient();
-                $parentSpan = $hub->getSpan();
+        return static function (callable $handler) use ($scope): \Closure {
+            return static function (RequestInterface $request, array $options) use ($handler, $scope) {
+                $scope = $scope ?? SentrySdk::getIsolationScope();
+                $client = SentrySdk::getClient($scope);
+                $parentSpan = $scope->getSpan();
 
                 $partialUri = Uri::fromParts([
                     'scheme' => $request->getUri()->getScheme(),
@@ -59,28 +60,27 @@ final class GuzzleTracingMiddleware
 
                     $childSpan = $parentSpan->startChild($spanContext);
 
-                    $hub->setSpan($childSpan);
+                    $scope->setSpan($childSpan);
                 }
 
                 if (self::shouldAttachTracingHeaders($client, $request)) {
-                    $traceParent = getTraceparent();
+                    $traceParent = getTraceparent($scope);
                     if ($traceParent !== '') {
                         $request = $request->withHeader('sentry-trace', $traceParent);
                     }
 
-                    $baggage = getBaggage();
+                    $baggage = getBaggage($scope);
                     if ($baggage !== '') {
                         $request = $request->withHeader('baggage', $baggage);
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($client, $scope, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
                     if ($childSpan !== null) {
-                        // We finish the span (which means setting the span end timestamp) first to ensure the measured time
-                        // the span spans is as close to only the HTTP request time and do the data collection afterwards
+                        // We finish the span first to keep the measured duration as close as possible to the HTTP request time.
                         $childSpan->finish();
 
-                        $hub->setSpan($parentSpan);
+                        $scope->setSpan($parentSpan);
                     }
 
                     $response = null;
@@ -113,7 +113,7 @@ final class GuzzleTracingMiddleware
                         }
                     }
 
-                    $hub->addBreadcrumb(new Breadcrumb(
+                    BreadcrumbRecorder::record($client, $scope, new Breadcrumb(
                         $breadcrumbLevel,
                         Breadcrumb::TYPE_HTTP,
                         'http',

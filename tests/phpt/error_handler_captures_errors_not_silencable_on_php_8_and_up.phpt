@@ -57,7 +57,7 @@ $client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 echo 'Triggering "silenced" E_USER_ERROR error' . PHP_EOL;
 

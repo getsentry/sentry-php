@@ -8,8 +8,11 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Monolog\BreadcrumbHandler;
-use Sentry\State\HubInterface;
+use Sentry\Options;
+use Sentry\SentrySdk;
 
 final class BreadcrumbHandlerTest extends TestCase
 {
@@ -20,22 +23,29 @@ final class BreadcrumbHandlerTest extends TestCase
      */
     public function testHandle($record, Breadcrumb $expectedBreadcrumb): void
     {
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('addBreadcrumb')
-            ->with($this->callback(function (Breadcrumb $breadcrumb) use ($expectedBreadcrumb): bool {
-                $this->assertSame($expectedBreadcrumb->getMessage(), $breadcrumb->getMessage());
-                $this->assertSame($expectedBreadcrumb->getLevel(), $breadcrumb->getLevel());
-                $this->assertSame($expectedBreadcrumb->getType(), $breadcrumb->getType());
-                $this->assertEquals($expectedBreadcrumb->getTimestamp(), $breadcrumb->getTimestamp());
-                $this->assertSame($expectedBreadcrumb->getCategory(), $breadcrumb->getCategory());
-                $this->assertEquals($expectedBreadcrumb->getMetadata(), $breadcrumb->getMetadata());
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
-                return true;
-            }));
+        SentrySdk::init($client);
 
-        $handler = new BreadcrumbHandler($hub);
+        $handler = new BreadcrumbHandler();
         $handler->handle($record);
+
+        $event = Event::createEvent();
+        SentrySdk::getIsolationScope()->applyToEvent($event);
+
+        $this->assertCount(1, $event->getBreadcrumbs());
+
+        $breadcrumb = $event->getBreadcrumbs()[0];
+
+        $this->assertSame($expectedBreadcrumb->getMessage(), $breadcrumb->getMessage());
+        $this->assertSame($expectedBreadcrumb->getLevel(), $breadcrumb->getLevel());
+        $this->assertSame($expectedBreadcrumb->getType(), $breadcrumb->getType());
+        $this->assertEquals($expectedBreadcrumb->getTimestamp(), $breadcrumb->getTimestamp());
+        $this->assertSame($expectedBreadcrumb->getCategory(), $breadcrumb->getCategory());
+        $this->assertEquals($expectedBreadcrumb->getMetadata(), $breadcrumb->getMetadata());
     }
 
     /**
