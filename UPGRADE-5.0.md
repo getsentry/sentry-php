@@ -4,6 +4,23 @@ This guide provides details on how to upgrade from SDK version 4.x to 5.0.
 
 ## Breaking Changes
 
+### Deprecated Monolog Handler Removed
+
+The deprecated `Sentry\Monolog\Handler` class has been removed.
+
+Use `Sentry\Monolog\LogsHandler` with the `enable_logs` SDK option to capture Monolog records as Sentry logs:
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'enable_logs' => true,
+]);
+
+$logger->pushHandler(new \Sentry\Monolog\LogsHandler());
+```
+
+To continue sending Monolog records to Sentry issues instead, use `Sentry\Monolog\LogToSentryIssueHandler` for log messages or `Sentry\Monolog\ExceptionToSentryIssueHandler` for exceptions.
+
 ### Metrics API Removed
 
 The entire Metrics API has been removed as it is no longer supported. This includes:
