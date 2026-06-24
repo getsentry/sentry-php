@@ -11,12 +11,13 @@ use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+
+use function Sentry\startTransaction;
 
 /**
  * @group time-sensitive
@@ -112,7 +113,9 @@ final class TransactionTest extends TestCase
                 ])
             );
 
-        $transaction = (new Hub($client))->startTransaction($context);
+        SentrySdk::init($client);
+
+        $transaction = startTransaction($context);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
@@ -155,7 +158,9 @@ final class TransactionTest extends TestCase
                 ])
             );
 
-        $transaction = (new Hub($client))->startTransaction($context);
+        SentrySdk::init($client);
+
+        $transaction = startTransaction($context);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
     }
