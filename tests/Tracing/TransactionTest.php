@@ -10,8 +10,9 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\State\Hub;
-use Sentry\State\HubInterface;
+use Sentry\State\Scope;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -37,19 +38,16 @@ final class TransactionTest extends TestCase
             ->method('getOptions')
             ->willReturn(new Options());
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('getClient')
-            ->willReturn($client);
+        SentrySdk::init($client);
 
-        $transaction = new Transaction($transactionContext, $hub);
+        $transaction = new Transaction($transactionContext);
         $transaction->initSpanRecorder();
 
         $span1 = $transaction->startChild(new SpanContext());
         $span2 = $transaction->startChild(new SpanContext());
         $span3 = $transaction->startChild(new SpanContext()); // This span isn't finished, so it should not be included in the event
 
-        $hub->expects($this->once())
+        $client->expects($this->once())
             ->method('captureEvent')
             ->with($this->callback(function (Event $eventArg) use ($transactionContext, $span1, $span2): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
@@ -60,7 +58,7 @@ final class TransactionTest extends TestCase
                 $this->assertSame([$span1, $span2], $eventArg->getSpans());
 
                 return true;
-            }))
+            }), null, $this->isInstanceOf(Scope::class))
             ->willReturnCallback(static function (Event $eventArg) use (&$expectedEventId): EventId {
                 $expectedEventId = $eventArg->getId();
 
@@ -77,11 +75,13 @@ final class TransactionTest extends TestCase
 
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void
     {
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->never())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->never())
             ->method('captureEvent');
 
-        $transaction = new Transaction(new TransactionContext(), $hub);
+        SentrySdk::init($client);
+
+        $transaction = new Transaction(new TransactionContext());
         $transaction->finish();
     }
 

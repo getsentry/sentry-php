@@ -9,18 +9,12 @@ use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
 
 /**
  * This class stores all the information about a Transaction.
  */
 final class Transaction extends Span
 {
-    /**
-     * @var HubInterface The hub instance
-     */
-    private $hub;
-
     /**
      * @var string Name of the transaction
      */
@@ -45,15 +39,13 @@ final class Transaction extends Span
      * Span constructor.
      *
      * @param TransactionContext $context The context to create the transaction with
-     * @param HubInterface|null  $hub     Instance of a hub to flush the transaction
      *
      * @internal
      */
-    public function __construct(TransactionContext $context, ?HubInterface $hub = null)
+    public function __construct(TransactionContext $context)
     {
         parent::__construct($context);
 
-        $this->hub = $hub ?? SentrySdk::getCurrentHub();
         $this->name = $context->getName();
         $this->metadata = $context->getMetadata();
         $this->transaction = $this;
@@ -98,7 +90,7 @@ final class Transaction extends Span
             return $this->metadata->getDynamicSamplingContext();
         }
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, SentrySdk::getClient());
         $this->getMetadata()->setDynamicSamplingContext($samplingContext);
 
         return $samplingContext;
@@ -123,7 +115,7 @@ final class Transaction extends Span
     public function initProfiler(?Options $options = null): Profiler
     {
         if ($this->profiler === null) {
-            $this->profiler = new Profiler($options ?? $this->hub->getClient()->getOptions());
+            $this->profiler = new Profiler($options ?? SentrySdk::getClient()->getOptions());
         }
 
         return $this->profiler;
@@ -188,6 +180,6 @@ final class Transaction extends Span
             }
         }
 
-        return $this->hub->captureEvent($event);
+        return \Sentry\captureEvent($event);
     }
 }
