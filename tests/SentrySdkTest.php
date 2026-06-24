@@ -47,6 +47,87 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($hub, SentrySdk::getCurrentHub());
     }
 
+    public function testGetGlobalScope(): void
+    {
+        $scope = SentrySdk::getGlobalScope();
+
+        $this->assertSame($scope, SentrySdk::getGlobalScope());
+    }
+
+    public function testGetIsolationScope(): void
+    {
+        $scope = SentrySdk::getIsolationScope();
+
+        $this->assertSame($scope, SentrySdk::getIsolationScope());
+    }
+
+    public function testGetClientReturnsCachedNoOpFallbackBeforeInit(): void
+    {
+        $client = SentrySdk::getClient();
+
+        $this->assertInstanceOf(NoOpClient::class, $client);
+        $this->assertSame($client, SentrySdk::getClient());
+    }
+
+    public function testGetClientReturnsGlobalScopeClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+
+        SentrySdk::getGlobalScope()->setClient($client);
+
+        $this->assertSame($client, SentrySdk::getClient());
+    }
+
+    public function testGetClientReturnsIsolationScopeClientBeforeGlobalScopeClient(): void
+    {
+        $globalClient = $this->createMock(ClientInterface::class);
+        $isolationClient = $this->createMock(ClientInterface::class);
+
+        SentrySdk::getGlobalScope()->setClient($globalClient);
+        SentrySdk::getIsolationScope()->setClient($isolationClient);
+
+        $this->assertSame($isolationClient, SentrySdk::getClient());
+    }
+
+    public function testStartContextUsesSeparateIsolationScope(): void
+    {
+        $globalIsolationScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::startContext();
+
+        $contextIsolationScope = SentrySdk::getIsolationScope();
+
+        $this->assertNotSame($globalIsolationScope, $contextIsolationScope);
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalIsolationScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testInitWithClientSetsGlobalScopeClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+
+        SentrySdk::init($client);
+
+        $this->assertSame($client, SentrySdk::getClient());
+    }
+
+    public function testInitDoesNotResetGlobalScope(): void
+    {
+        $globalScope = SentrySdk::getGlobalScope();
+        $globalScope->setTag('baseline', 'yes');
+
+        SentrySdk::init();
+
+        $this->assertSame($globalScope, SentrySdk::getGlobalScope());
+
+        $event = $globalScope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['baseline' => 'yes'], $event->getTags());
+    }
+
     public function testStartAndEndContextIsolateScopeData(): void
     {
         SentrySdk::init();

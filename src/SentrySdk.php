@@ -10,6 +10,7 @@ use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
+use Sentry\State\Scope;
 
 /**
  * This class is the main entry point for all the most common SDK features.
@@ -22,6 +23,11 @@ final class SentrySdk
      * @var HubInterface|null The baseline hub
      */
     private static $currentHub;
+
+    /**
+     * @var Scope|null The process-global scope
+     */
+    private static $globalScope;
 
     /**
      * @var RuntimeContextManager|null
@@ -41,10 +47,12 @@ final class SentrySdk
      */
     public static function init(?ClientInterface $client = null): HubInterface
     {
-        if ($client === null) {
-            $client = new NoOpClient();
+        $hubClient = $client ?? new NoOpClient();
+
+        if ($client !== null) {
+            self::getGlobalScope()->setClient($client);
         }
-        self::$currentHub = new Hub($client);
+        self::$currentHub = new Hub($hubClient);
         self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
 
         return self::getCurrentHub();
@@ -77,6 +85,31 @@ final class SentrySdk
         }
 
         return $hub;
+    }
+
+    public static function getGlobalScope(): Scope
+    {
+        if (self::$globalScope === null) {
+            self::$globalScope = new Scope();
+        }
+
+        return self::$globalScope;
+    }
+
+    public static function getIsolationScope(): Scope
+    {
+        return self::getCurrentRuntimeContext()->getIsolationScope();
+    }
+
+    public static function getClient(): ClientInterface
+    {
+        $client = self::getIsolationScope()->getClient();
+
+        if (!$client instanceof NoOpClient) {
+            return $client;
+        }
+
+        return self::getGlobalScope()->getClient();
     }
 
     public static function startContext(): void
