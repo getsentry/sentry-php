@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer\EnvelopItems;
 
+use Sentry\Attributes\Attribute;
+use Sentry\Attributes\AttributeBag;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
@@ -22,14 +24,6 @@ use Sentry\Util\JSON;
  *     count: int,
  *     tags: array<string>,
  * }
- *
- * @phpstan-import-type AttributeValue from \Sentry\Attributes\Attribute
- *
- * @phpstan-type SerializedSpanV2AttributeArrayValue array<int, string|bool|int|float>
- * @phpstan-type SerializedSpanV2AttributeType 'string'|'boolean'|'integer'|'double'|'array'
- * @phpstan-type SerializedSpanV2AttributeValue AttributeValue|SerializedSpanV2AttributeArrayValue
- * @phpstan-type SerializedSpanV2Attribute array{type: SerializedSpanV2AttributeType, value: SerializedSpanV2AttributeValue}
- * @phpstan-type SerializedSpanV2Attributes array<string, SerializedSpanV2Attribute>
  */
 class TransactionItem implements EnvelopeItemInterface
 {
@@ -233,7 +227,7 @@ class TransactionItem implements EnvelopeItemInterface
      *     name: string|null,
      *     is_segment: false,
      *     start_timestamp: float,
-     *     attributes: SerializedSpanV2Attributes,
+     *     attributes: array<string, mixed>,
      *     status: 'ok'|'error',
      *     end_timestamp?: float|null,
      *     parent_span_id?: string,
@@ -247,7 +241,12 @@ class TransactionItem implements EnvelopeItemInterface
             'name' => $span->getDescription() ?? $span->getOp(),
             'is_segment' => false,
             'start_timestamp' => $span->getStartTimestamp(),
-            'attributes' => self::collectV2Attributes($span, $event),
+            'attributes' => array_map(static function (Attribute $value) {
+                return [
+                    'type' => $value->getType(),
+                    'value' => $value->getValue(),
+                ];
+            }, self::collectV2Attributes($span, $event)->all()),
             'status' => 'ok',
         ];
         if ($span->getEndTimestamp() !== null) {
@@ -263,129 +262,33 @@ class TransactionItem implements EnvelopeItemInterface
         return $result;
     }
 
-    /**
-     * @return array<string, array{type: string, value: mixed}>
-     *
-     * @phpstan-return SerializedSpanV2Attributes
-     *
+    /***
      * @mago-ignore analysis:redundant-null-coalesce
      * @mago-ignore analysis:mixed-assignment
      */
-    private static function collectV2Attributes(Span $span, Event $event): array
+    private static function collectV2Attributes(Span $span, Event $event): AttributeBag
     {
-        /** @var SerializedSpanV2Attributes $attributes */
-        $attributes = [];
-
-        self::setStringAttribute($attributes, 'sentry.op', $span->getOp());
-        self::setStringAttribute($attributes, 'sentry.origin', $span->getOrigin() ?? 'manual');
-        self::setStringAttribute($attributes, 'sentry.release', $event->getRelease());
-        self::setStringAttribute($attributes, 'sentry.environment', $event->getEnvironment());
-        self::setStringAttribute($attributes, 'server.address', $event->getServerName());
-        self::setStringAttribute($attributes, 'sentry.segment.name', $event->getTransaction());
-        self::setStringAttribute($attributes, 'sentry.sdk.name', $event->getSdkPayload()['name'] ?? null);
-        self::setStringAttribute($attributes, 'sentry.sdk.version', $event->getSdkPayload()['version'] ?? null);
-
-        $runtimeContext = $event->getRuntimeContext();
-        if ($runtimeContext !== null) {
-            self::setStringAttribute($attributes, 'process.runtime.name', $runtimeContext->getName());
-            self::setStringAttribute($attributes, 'process.runtime.version', $runtimeContext->getVersion());
-        }
-
-        $user = $event->getUser();
-        if ($user !== null) {
-            self::setAttribute($attributes, 'user.id', $user->getId());
-            self::setAttribute($attributes, 'user.name', $user->getUsername());
-            self::setAttribute($attributes, 'user.email', $user->getEmail());
-        }
-
-        self::setAttribute($attributes, 'sentry.segment.id', $event->getContexts()['trace']['span_id'] ?? null);
+        $attributes = new AttributeBag();
+        $attributes->setUnlessNull('sentry.op', $span->getOp());
+        $attributes->set('sentry.origin', $span->getOrigin() ?? 'manual');
+        $attributes->setUnlessNull('sentry.release', $event->getRelease());
+        $attributes->setUnlessNull('sentry.environment', $event->getEnvironment());
+        $attributes->setUnlessNull('server.address', $event->getServerName());
+        $attributes->setUnlessNull('sentry.segment.name', $event->getTransaction());
+        $attributes->set('sentry.sdk.name', $event->getSdkPayload()['name'] ?? null);
+        $attributes->set('sentry.sdk.version', $event->getSdkPayload()['version'] ?? null);
+        $attributes->set('sentry.segment.id', $event->getContexts()['trace']['span_id'] ?? null);
 
         foreach ($span->getTags() as $key => $value) {
-            self::setStringAttribute($attributes, $key, $value);
+            $attributes->set($key, $value);
         }
 
         foreach ($span->getData() as $key => $value) {
-            self::setAttribute($attributes, $key, $value);
+            $attributes->set($key, $value);
         }
 
-        unset($attributes['status']);
+        $attributes->forget('status');
 
         return $attributes;
-    }
-
-    /**
-     * @param mixed $value
-     *
-     * @phpstan-param SerializedSpanV2Attributes $attributes
-     */
-    private static function setAttribute(&$attributes, string $key, $value): void
-    {
-        if (\is_array($value)) {
-            if ($value === [] || self::isHomogeneousScalarArray($value)) {
-                self::setTypeAttribute($attributes, $key, 'array', $value);
-            }
-
-            return;
-        }
-
-        $attribute = \Sentry\Attributes\Attribute::tryFromValue($value);
-        if ($attribute === null) {
-            return;
-        }
-
-        self::setTypeAttribute($attributes, $key, $attribute->getType(), $attribute->getValue());
-    }
-
-    /**
-     * @phpstan-param SerializedSpanV2Attributes $attributes
-     * @phpstan-param SerializedSpanV2AttributeType $type
-     * @phpstan-param SerializedSpanV2AttributeValue|null $value
-     */
-    private static function setTypeAttribute(&$attributes, string $key, string $type, $value): void
-    {
-        if ($value === null) {
-            return;
-        }
-        $attributes[$key] = [
-            'type' => $type,
-            'value' => $value,
-        ];
-    }
-
-    /**
-     * @phpstan-param SerializedSpanV2Attributes $attributes
-     */
-    private static function setStringAttribute(&$attributes, string $key, ?string $value): void
-    {
-        self::setTypeAttribute($attributes, $key, 'string', $value);
-    }
-
-    /**
-     * @param array<mixed> $arr
-     *
-     * @phpstan-assert-if-true SerializedSpanV2AttributeArrayValue $arr
-     *
-     * @mago-ignore analysis:mixed-assignment
-     */
-    private static function isHomogeneousScalarArray(array $arr): bool
-    {
-        $type = null;
-        $index = 0;
-
-        foreach ($arr as $key => $value) {
-            if ($key !== $index++ || !\is_scalar($value)) {
-                return false;
-            }
-
-            $itemType = \gettype($value);
-
-            if ($type === null) {
-                $type = $itemType;
-            } elseif ($type !== $itemType) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }
