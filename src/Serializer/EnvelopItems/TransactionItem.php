@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Sentry\Serializer\EnvelopItems;
 
+use Sentry\Attributes\Attribute;
+use Sentry\Attributes\AttributeBag;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Serializer\Traits\BreadcrumbSeralizerTrait;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TransactionMetadata;
 use Sentry\Util\JSON;
 
@@ -28,6 +31,17 @@ class TransactionItem implements EnvelopeItemInterface
 
     public static function toEnvelopeItem(Event $event): string
     {
+        $transactionSpans = [];
+        $genAiSpans = [];
+
+        foreach ($event->getSpans() as $span) {
+            if (strpos($span->getOp() ?? '', 'gen_ai.') === 0) {
+                $genAiSpans[] = $span;
+            } else {
+                $transactionSpans[] = $span;
+            }
+        }
+
         $header = [
             'type' => (string) EventType::transaction(),
             'content_type' => 'application/json',
@@ -121,11 +135,27 @@ class TransactionItem implements EnvelopeItemInterface
             $payload['request'] = $event->getRequest();
         }
 
-        $payload['spans'] = array_values(array_map([self::class, 'serializeSpan'], $event->getSpans()));
+        $payload['spans'] = array_values(array_map([self::class, 'serializeSpan'], $transactionSpans));
 
         $transactionMetadata = $event->getSdkMetadata('transaction_metadata');
         if ($transactionMetadata instanceof TransactionMetadata) {
             $payload['transaction_info']['source'] = (string) $transactionMetadata->getSource();
+        }
+
+        if (\count($genAiSpans) > 0) {
+            $genAi = [];
+            $genAi['items'] = array_map(static function (Span $span) use ($event) {
+                return self::serializeSpanV2($span, $event);
+            }, $genAiSpans);
+            $genAi['version'] = 2;
+
+            $genAiHeaders = [
+                'type' => 'span',
+                'item_count' => \count($genAiSpans),
+                'content_type' => 'application/vnd.sentry.items.span.v2+json',
+            ];
+
+            return \sprintf("%s\n%s\n%s\n%s", JSON::encode($header), JSON::encode($payload), JSON::encode($genAiHeaders), JSON::encode($genAi));
         }
 
         return \sprintf("%s\n%s", JSON::encode($header), JSON::encode($payload));
@@ -186,5 +216,79 @@ class TransactionItem implements EnvelopeItemInterface
         }
 
         return $result;
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @phpstan-return array{
+     *     trace_id: string,
+     *     span_id: string,
+     *     name: string|null,
+     *     is_segment: false,
+     *     start_timestamp: float,
+     *     attributes: array<string, mixed>,
+     *     status: 'ok'|'error',
+     *     end_timestamp?: float|null,
+     *     parent_span_id?: string,
+     * }
+     */
+    protected static function serializeSpanV2(Span $span, Event $event): array
+    {
+        $result = [
+            'trace_id' => (string) $span->getTraceId(),
+            'span_id' => (string) $span->getSpanId(),
+            'name' => $span->getDescription() ?? $span->getOp(),
+            'is_segment' => false,
+            'start_timestamp' => $span->getStartTimestamp(),
+            'attributes' => array_map(static function (Attribute $value) {
+                return [
+                    'type' => $value->getType(),
+                    'value' => $value->getValue(),
+                ];
+            }, self::collectV2Attributes($span, $event)->all()),
+            'status' => 'ok',
+        ];
+        if ($span->getEndTimestamp() !== null) {
+            $result['end_timestamp'] = $span->getEndTimestamp();
+        }
+        if ($span->getStatus() !== null) {
+            $result['status'] = $span->getStatus() === SpanStatus::ok() ? 'ok' : 'error';
+        }
+        if ($span->getParentSpanId() !== null) {
+            $result['parent_span_id'] = (string) $span->getParentSpanId();
+        }
+
+        return $result;
+    }
+
+    /***
+     * @mago-ignore analysis:redundant-null-coalesce
+     * @mago-ignore analysis:mixed-assignment
+     */
+    private static function collectV2Attributes(Span $span, Event $event): AttributeBag
+    {
+        $attributes = new AttributeBag();
+        $attributes->setUnlessNull('sentry.op', $span->getOp());
+        $attributes->set('sentry.origin', $span->getOrigin() ?? 'manual');
+        $attributes->setUnlessNull('sentry.release', $event->getRelease());
+        $attributes->setUnlessNull('sentry.environment', $event->getEnvironment());
+        $attributes->setUnlessNull('server.address', $event->getServerName());
+        $attributes->setUnlessNull('sentry.segment.name', $event->getTransaction());
+        $attributes->set('sentry.sdk.name', $event->getSdkPayload()['name'] ?? null);
+        $attributes->set('sentry.sdk.version', $event->getSdkPayload()['version'] ?? null);
+        $attributes->set('sentry.segment.id', $event->getContexts()['trace']['span_id'] ?? null);
+
+        foreach ($span->getTags() as $key => $value) {
+            $attributes->set($key, $value);
+        }
+
+        foreach ($span->getData() as $key => $value) {
+            $attributes->set($key, $value);
+        }
+
+        $attributes->forget('status');
+
+        return $attributes;
     }
 }

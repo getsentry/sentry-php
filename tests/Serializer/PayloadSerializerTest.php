@@ -311,6 +311,76 @@ TEXT
             ,
         ];
 
+        $regularSpan = new Span();
+        $regularSpan->setSpanId(new SpanId('b01b9f6349558cd1'));
+        $regularSpan->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+        $regularSpan->setParentSpanId(new SpanId('5dd538dc297544cc'));
+        $regularSpan->setOp('http.client');
+        $regularSpan->setDescription('GET https://api.example.com/models');
+        $regularSpan->setStatus(SpanStatus::ok());
+        $regularSpan->setStartTimestamp(1597790836);
+        $regularSpan->setData([
+            'url' => 'https://api.example.com/models',
+            'method' => 'GET',
+        ]);
+        $regularSpan->setTags(['http.status_code' => '200']);
+        $regularSpan->finish(1597790836.25);
+
+        $genAiSpan1 = new Span();
+        $genAiSpan1->setSpanId(new SpanId('a01b9f6349558cd1'));
+        $genAiSpan1->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+        $genAiSpan1->setParentSpanId(new SpanId('b01b9f6349558cd1'));
+        $genAiSpan1->setOp('gen_ai.chat');
+        $genAiSpan1->setDescription('chat.completions create');
+        $genAiSpan1->setStatus(SpanStatus::ok());
+        $genAiSpan1->setStartTimestamp(1597790836.5);
+        $genAiSpan1->setOrigin('auto.ai.openai');
+        $genAiSpan1->setTags([
+            'ai.provider' => 'openai',
+            'ai.operation' => 'chat',
+        ]);
+        $genAiSpan1->setData([
+            'gen_ai.request.model' => 'gpt-4o-mini',
+            'gen_ai.response.streaming' => true,
+            'gen_ai.usage.input_tokens' => 12,
+            'gen_ai.request.temperature' => 0.7,
+        ]);
+        $genAiSpan1->finish(1597790837.25);
+
+        $genAiSpan2 = new Span();
+        $genAiSpan2->setSpanId(new SpanId('a01b9f6349558cd2'));
+        $genAiSpan2->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
+        $genAiSpan2->setParentSpanId(new SpanId('a01b9f6349558cd1'));
+        $genAiSpan2->setOp('gen_ai.embeddings');
+        $genAiSpan2->setDescription('embeddings create');
+        $genAiSpan2->setStatus(SpanStatus::internalError());
+        $genAiSpan2->setStartTimestamp(1597790837.5);
+        $genAiSpan2->setData([
+            'gen_ai.request.model' => 'text-embedding-3-small',
+            'gen_ai.usage.input_tokens' => 7,
+        ]);
+        $genAiSpan2->finish(1597790838);
+
+        $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setSpans([$regularSpan, $genAiSpan1, $genAiSpan2]);
+        $event->setTransaction('POST /ai/chat');
+        $event->setContext('trace', [
+            'trace_id' => '21160e9b836d479f81611368b2aa3d2c',
+            'span_id' => '5dd538dc297544cc',
+        ]);
+
+        yield [
+            $event,
+            <<<TEXT
+{"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"event_id":"fc9442f5aef34234bb22b9a615e30ccd"}
+{"type":"transaction","content_type":"application\/json"}
+{"timestamp":1597790835,"platform":"php","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]},"transaction":"POST \/ai\/chat","contexts":{"trace":{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"5dd538dc297544cc"}},"spans":[{"span_id":"b01b9f6349558cd1","trace_id":"21160e9b836d479f81611368b2aa3d2c","start_timestamp":1597790836,"origin":"manual","parent_span_id":"5dd538dc297544cc","timestamp":1597790836.25,"status":"ok","description":"GET https:\/\/api.example.com\/models","op":"http.client","data":{"url":"https:\/\/api.example.com\/models","method":"GET"},"tags":{"http.status_code":"200"}}]}
+{"type":"span","item_count":2,"content_type":"application\/vnd.sentry.items.span.v2+json"}
+{"items":[{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"a01b9f6349558cd1","name":"chat.completions create","is_segment":false,"start_timestamp":1597790836.5,"attributes":{"sentry.op":{"type":"string","value":"gen_ai.chat"},"sentry.origin":{"type":"string","value":"auto.ai.openai"},"sentry.segment.name":{"type":"string","value":"POST \/ai\/chat"},"sentry.sdk.name":{"type":"string","value":"sentry.php"},"sentry.sdk.version":{"type":"string","value":"$sdkVersion"},"sentry.segment.id":{"type":"string","value":"5dd538dc297544cc"},"ai.provider":{"type":"string","value":"openai"},"ai.operation":{"type":"string","value":"chat"},"gen_ai.request.model":{"type":"string","value":"gpt-4o-mini"},"gen_ai.response.streaming":{"type":"boolean","value":true},"gen_ai.usage.input_tokens":{"type":"integer","value":12},"gen_ai.request.temperature":{"type":"double","value":0.7}},"status":"ok","end_timestamp":1597790837.25,"parent_span_id":"b01b9f6349558cd1"},{"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"a01b9f6349558cd2","name":"embeddings create","is_segment":false,"start_timestamp":1597790837.5,"attributes":{"sentry.op":{"type":"string","value":"gen_ai.embeddings"},"sentry.origin":{"type":"string","value":"manual"},"sentry.segment.name":{"type":"string","value":"POST \/ai\/chat"},"sentry.sdk.name":{"type":"string","value":"sentry.php"},"sentry.sdk.version":{"type":"string","value":"$sdkVersion"},"sentry.segment.id":{"type":"string","value":"5dd538dc297544cc"},"gen_ai.request.model":{"type":"string","value":"text-embedding-3-small"},"gen_ai.usage.input_tokens":{"type":"integer","value":7}},"status":"error","end_timestamp":1597790838,"parent_span_id":"a01b9f6349558cd1"}],"version":2}
+TEXT
+            ,
+        ];
+
         $event = Event::createTransaction(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setSdkMetadata('dynamic_sampling_context', DynamicSamplingContext::fromHeader('sentry-public_key=public,sentry-trace_id=d49d9bf66f13450b81f65bc51cf49c03,sentry-sample_rate=1'));
         $event->setSdkMetadata('transaction_metadata', new TransactionMetadata());
