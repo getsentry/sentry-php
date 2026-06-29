@@ -76,7 +76,7 @@
         "tests": "vendor/bin/phpunit --verbose",
         "cs-check": "vendor/bin/php-cs-fixer fix --verbose --diff --dry-run",
         "cs-fix": "vendor/bin/php-cs-fixer fix --verbose --diff",
-        "phpstan": "vendor/bin/phpstan analyse",
+        "phpstan": "vendor/bin/phpstan analyse --memory-limit=512M",
         "mago": "vendor/bin/mago --config=mago.toml analyze"
     },
     "config": {
