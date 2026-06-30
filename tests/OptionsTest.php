@@ -13,7 +13,6 @@ use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Transport\HttpTransport;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
-use Symfony\Component\OptionsResolver\Exception\UndefinedOptionsException;
 
 final class OptionsTest extends TestCase
 {
