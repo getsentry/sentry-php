@@ -149,11 +149,11 @@ final class DataCollectionOptions
     }
 
     /**
-     * @param array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}} $httpHeaders
+     * @param array{mode?: string, terms?: string[]}|array{request?: array{mode?: string, terms?: string[]}, response?: array{mode?: string, terms?: string[]}} $httpHeaders
      */
     public function setHttpHeaders(array $httpHeaders): self
     {
-        $this->options['http_headers'] = $httpHeaders;
+        $this->options['http_headers'] = DataCollectionOptionsNormalizer::normalizeHttpHeaders($httpHeaders);
 
         return $this;
     }

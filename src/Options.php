@@ -7,6 +7,7 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\DataCollection\DataCollectionOptionsNormalizer;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -1657,11 +1658,11 @@ final class Options
 
         return new DataCollectionOptions([
             'user_info' => $resolvedOptions['user_info'],
-            'cookies' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['cookies']),
-            'http_headers' => $this->normalizeHttpHeadersDataCollectionOptions($resolvedOptions['http_headers']),
+            'cookies' => DataCollectionOptionsNormalizer::normalizeKeyValueCollection($resolvedOptions['cookies']),
+            'http_headers' => DataCollectionOptionsNormalizer::normalizeHttpHeaders($resolvedOptions['http_headers']),
             'http_bodies' => $resolvedOptions['http_bodies'],
-            'query_params' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['query_params']),
-            'gen_ai' => $this->normalizeGenAiDataCollectionOptions($resolvedOptions['gen_ai']),
+            'query_params' => DataCollectionOptionsNormalizer::normalizeKeyValueCollection($resolvedOptions['query_params']),
+            'gen_ai' => DataCollectionOptionsNormalizer::normalizeGenAi($resolvedOptions['gen_ai']),
             'stack_frame_variables' => $resolvedOptions['stack_frame_variables'],
             'frame_context_lines' => $resolvedOptions['frame_context_lines'],
         ]);
@@ -1723,83 +1724,6 @@ final class Options
          *     frame_context_lines: int
          * } $resolvedOptions
          */
-        $resolvedOptions = $resolver->resolve($value);
-
-        return $resolvedOptions;
-    }
-
-    /**
-     * @param array<string, mixed> $value
-     *
-     * @return array{mode: string, terms: string[]}
-     */
-    private function normalizeKeyValueDataCollectionOptions(array $value): array
-    {
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults(DataCollectionOptions::getDefaultKeyValueCollection());
-        $resolver->setAllowedTypes('mode', 'string');
-        $resolver->setAllowedTypes('terms', 'string[]');
-        $resolver->setAllowedValues('mode', [
-            'off',
-            'denyList',
-            'allowList',
-        ]);
-
-        /** @var array{mode: string, terms: string[]} $resolvedOptions */
-        $resolvedOptions = $resolver->resolve($value);
-
-        return $resolvedOptions;
-    }
-
-    /**
-     * @param array<string, mixed> $value
-     *
-     * @return array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}}
-     */
-    private function normalizeHttpHeadersDataCollectionOptions(array $value): array
-    {
-        if (!isset($value['request']) && !isset($value['response'])) {
-            $headers = $this->normalizeKeyValueDataCollectionOptions($value);
-
-            return [
-                'request' => $headers,
-                'response' => $headers,
-            ];
-        }
-
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults([
-            'request' => [],
-            'response' => [],
-        ]);
-        $resolver->setAllowedTypes('request', 'array');
-        $resolver->setAllowedTypes('response', 'array');
-
-        /** @var array{request: array<string, mixed>, response: array<string, mixed>} $resolvedOptions */
-        $resolvedOptions = $resolver->resolve($value);
-
-        return [
-            'request' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['request']),
-            'response' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['response']),
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $value
-     *
-     * @return array{inputs: bool, outputs: bool}
-     */
-    private function normalizeGenAiDataCollectionOptions(array $value): array
-    {
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults([
-            'inputs' => true,
-            'outputs' => true,
-        ]);
-        $resolver->setAllowedTypes('inputs', 'bool');
-        $resolver->setAllowedTypes('outputs', 'bool');
-
-        /** @var array{inputs: bool, outputs: bool} $resolvedOptions */
         $resolvedOptions = $resolver->resolve($value);
 
         return $resolvedOptions;
