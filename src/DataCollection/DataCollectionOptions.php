@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-/**
- * Configuration for data automatically collected by the SDK.
- */
 final class DataCollectionOptions
 {
     /**
@@ -19,9 +16,6 @@ final class DataCollectionOptions
         'outgoingResponse',
     ];
 
-    /**
-     * Terms used to identify sensitive key-value data which must be filtered.
-     */
     public const SENSITIVE_DEFAULTS = [
         'auth',
         'token',
@@ -42,9 +36,6 @@ final class DataCollectionOptions
         'identity',
     ];
 
-    /**
-     * Additional deny terms users may opt into for user-identifying values.
-     */
     public const EXTENDED_DENY_TERMS = [
         'forwarded',
         '-ip',
