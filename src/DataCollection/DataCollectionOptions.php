@@ -97,9 +97,7 @@ final class DataCollectionOptions
 
     public function setUserInfo(bool $userInfo): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['user_info' => $userInfo]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['user_info' => $userInfo]));
     }
 
     public function getCookies(): KeyValueCollectionBehavior
@@ -112,9 +110,7 @@ final class DataCollectionOptions
      */
     public function setCookies($cookies): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['cookies' => $cookies]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['cookies' => $cookies]));
     }
 
     public function getHttpHeaders(): HttpHeaders
@@ -129,9 +125,7 @@ final class DataCollectionOptions
      */
     public function setHttpHeaders($httpHeaders): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['http_headers' => $httpHeaders]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['http_headers' => $httpHeaders]));
     }
 
     /**
@@ -147,9 +141,7 @@ final class DataCollectionOptions
      */
     public function setHttpBodies(?array $httpBodies): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['http_bodies' => $httpBodies]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['http_bodies' => $httpBodies]));
     }
 
     public function getQueryParams(): KeyValueCollectionBehavior
@@ -162,9 +154,7 @@ final class DataCollectionOptions
      */
     public function setQueryParams($queryParams): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['query_params' => $queryParams]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['query_params' => $queryParams]));
     }
 
     public function getGenAi(): GenAi
@@ -177,9 +167,7 @@ final class DataCollectionOptions
      */
     public function setGenAi(array $genAi): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['gen_ai' => $genAi]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['gen_ai' => $genAi]));
     }
 
     public function shouldCollectStackFrameVariables(): bool
@@ -189,9 +177,7 @@ final class DataCollectionOptions
 
     public function setStackFrameVariables(bool $stackFrameVariables): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['stack_frame_variables' => $stackFrameVariables]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['stack_frame_variables' => $stackFrameVariables]));
     }
 
     public function getFrameContextLines(): int
@@ -201,9 +187,7 @@ final class DataCollectionOptions
 
     public function setFrameContextLines(int $frameContextLines): self
     {
-        $this->options = $this->resolveOptions(array_merge($this->options, ['frame_context_lines' => $frameContextLines]));
-
-        return $this;
+        return $this->resolveOptions(array_merge($this->options, ['frame_context_lines' => $frameContextLines]));
     }
 
     private function configureOptions(OptionsResolver $resolver): void
@@ -249,16 +233,16 @@ final class DataCollectionOptions
     /**
      * @param array<string, mixed> $options
      *
-     * @return array<string, mixed>
-     *
      * @phpstan-return ResolvedDataCollectionOptions
      */
-    private function resolveOptions(array $options): array
+    private function resolveOptions(array $options): self
     {
         /** @var ResolvedDataCollectionOptions $resolvedOptions */
         $resolvedOptions = $this->resolver->resolve($options);
 
-        return $resolvedOptions;
+        $this->options = $resolvedOptions;
+
+        return $this;
     }
 
     /**
