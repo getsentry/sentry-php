@@ -31,6 +31,19 @@ use Sentry\Transport\TransportInterface;
  *     before_send_transaction?: callable,
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
+ *     data_collection?: DataCollection\DataCollectionOptions|array{
+ *         user_info?: bool,
+ *         cookies?: DataCollection\KeyValueCollectionBehavior|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         http_headers?: DataCollection\HttpHeaders|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>}|array{
+ *             request?: DataCollection\KeyValueCollectionBehavior|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *             response?: DataCollection\KeyValueCollectionBehavior|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>}
+ *         },
+ *         http_bodies?: array<"incomingRequest"|"outgoingRequest"|"incomingResponse"|"outgoingResponse">|null,
+ *         query_params?: DataCollection\KeyValueCollectionBehavior|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         gen_ai?: array{inputs?: bool, outputs?: bool},
+ *         stack_frame_variables?: bool,
+ *         frame_context_lines?: int
+ *     },
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,

@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -399,6 +400,23 @@ final class Options
     public function setContextLines(?int $contextLines): self
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    public function getDataCollection(): DataCollectionOptions
+    {
+        /** @var DataCollectionOptions $dataCollection */
+        $dataCollection = $this->options['data_collection'];
+
+        return $dataCollection;
+    }
+
+    public function setDataCollection(DataCollectionOptions $dataCollection): self
+    {
+        $options = array_merge($this->options, ['data_collection' => $dataCollection]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1397,6 +1415,8 @@ final class Options
     {
         $options = array_merge($this->options, ['traces_sampler' => $sampler]);
 
+        // resolve produces <array-key, mixed> and we expect <string, mixed>
+        // @mago-ignore analysis:property-type-coercion
         $this->options = $this->resolver->resolve($options);
 
         return $this;
@@ -1493,6 +1513,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'data_collection' => DataCollectionOptions::default(),
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
@@ -1549,6 +1570,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('data_collection', ['array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -1559,6 +1581,7 @@ final class Options
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('data_collection', \Closure::fromCallable([$this, 'normalizeDataCollectionOption']));
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1618,6 +1641,19 @@ final class Options
         }
 
         return $url;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function normalizeDataCollectionOption(SymfonyOptions $options, $value): DataCollectionOptions
+    {
+        if ($value instanceof DataCollectionOptions) {
+            return $value;
+        }
+
+        /** @var array<string, mixed> $value */
+        return new DataCollectionOptions($value);
     }
 
     /**

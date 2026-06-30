@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\Dsn;
 use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
@@ -189,6 +190,13 @@ final class OptionsTest extends TestCase
             3,
             'getContextLines',
             'setContextLines',
+        ];
+
+        yield [
+            'data_collection',
+            DataCollectionOptions::default()->setUserInfo(false),
+            'getDataCollection',
+            'setDataCollection',
         ];
 
         yield [
@@ -674,6 +682,96 @@ final class OptionsTest extends TestCase
             null,
             null,
         ];
+    }
+
+    public function testDataCollectionOptionDefaultsToResolvedDataCollectionOptions(): void
+    {
+        $dataCollection = (new Options())->getDataCollection();
+
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
+    }
+
+    public function testDataCollectionOptionNormalizesArrayConfiguration(): void
+    {
+        $dataCollection = (new Options([
+            'data_collection' => [
+                'user_info' => false,
+                'cookies' => [
+                    'mode' => 'allowList',
+                    'terms' => ['session_id'],
+                ],
+                'http_headers' => [
+                    'request' => [
+                        'mode' => 'off',
+                        'terms' => ['authorization'],
+                    ],
+                    'response' => [
+                        'mode' => 'denyList',
+                        'terms' => ['set-cookie'],
+                    ],
+                ],
+                'http_bodies' => ['incomingRequest'],
+                'query_params' => [
+                    'mode' => 'off',
+                ],
+                'gen_ai' => [
+                    'inputs' => false,
+                ],
+                'stack_frame_variables' => false,
+                'frame_context_lines' => 0,
+            ],
+        ]))->getDataCollection();
+
+        $this->assertFalse($dataCollection->shouldCollectUserInfo());
+        $this->assertSame('allowList', $dataCollection->getCookies()->getMode());
+        $this->assertSame(['session_id'], $dataCollection->getCookies()->getTerms());
+        $this->assertSame('off', $dataCollection->getHttpHeaders()->getRequest()->getMode());
+        $this->assertSame(['authorization'], $dataCollection->getHttpHeaders()->getRequest()->getTerms());
+        $this->assertSame('denyList', $dataCollection->getHttpHeaders()->getResponse()->getMode());
+        $this->assertSame(['set-cookie'], $dataCollection->getHttpHeaders()->getResponse()->getTerms());
+        $this->assertSame(['incomingRequest'], $dataCollection->getHttpBodies());
+        $this->assertSame('off', $dataCollection->getQueryParams()->getMode());
+        $this->assertFalse($dataCollection->getGenAi()->getInputs());
+        $this->assertTrue($dataCollection->getGenAi()->getOutputs());
+        $this->assertFalse($dataCollection->shouldCollectStackFrameVariables());
+        $this->assertSame(0, $dataCollection->getFrameContextLines());
+    }
+
+    public function testDataCollectionOptionAppliesSingleHttpHeadersConfigurationToBothDirections(): void
+    {
+        $dataCollection = (new Options([
+            'data_collection' => [
+                'http_headers' => [
+                    'mode' => 'allowList',
+                    'terms' => ['x-request-id'],
+                ],
+            ],
+        ]))->getDataCollection();
+
+        $this->assertSame('allowList', $dataCollection->getHttpHeaders()->getRequest()->getMode());
+        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()->getRequest()->getTerms());
+        $this->assertSame('allowList', $dataCollection->getHttpHeaders()->getResponse()->getMode());
+        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()->getResponse()->getTerms());
+    }
+
+    public function testDataCollectionOptionAcceptsConfigurationObjects(): void
+    {
+        $dataCollection = DataCollectionOptions::default()
+            ->setUserInfo(false)
+            ->setCookies(['mode' => 'off', 'terms' => []])
+            ->setHttpHeaders([
+                'request' => ['mode' => 'allowList', 'terms' => ['x-request-id']],
+                'response' => ['mode' => 'denyList', 'terms' => []],
+            ])
+            ->setHttpBodies([])
+            ->setQueryParams(['mode' => 'denyList', 'terms' => ['token']])
+            ->setGenAi(['inputs' => false, 'outputs' => false])
+            ->setStackFrameVariables(false)
+            ->setFrameContextLines(1);
+
+        $options = new Options(['data_collection' => $dataCollection]);
+
+        $this->assertSame($dataCollection, $options->getDataCollection());
     }
 
     /**
