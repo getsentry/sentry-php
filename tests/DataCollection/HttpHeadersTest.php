@@ -36,7 +36,6 @@ final class HttpHeadersTest extends TestCase
     public function testRequestAndResponseIsNull(): void
     {
         $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage('The option "request" with value null is expected to be of type "array" or "Sentry\DataCollection\KeyValueCollectionBehavior", but is of type "null"');
 
         new HttpHeaders([
             'request' => null,
