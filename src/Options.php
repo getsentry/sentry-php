@@ -7,7 +7,6 @@ namespace Sentry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\DataCollection\DataCollectionOptions;
-use Sentry\DataCollection\DataCollectionOptionsNormalizer;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -1654,79 +1653,7 @@ final class Options
         }
 
         /** @var array<string, mixed> $value */
-        $resolvedOptions = $this->resolveDataCollectionOptions($value);
-
-        return new DataCollectionOptions([
-            'user_info' => $resolvedOptions['user_info'],
-            'cookies' => DataCollectionOptionsNormalizer::normalizeKeyValueCollection($resolvedOptions['cookies']),
-            'http_headers' => DataCollectionOptionsNormalizer::normalizeHttpHeaders($resolvedOptions['http_headers']),
-            'http_bodies' => $resolvedOptions['http_bodies'],
-            'query_params' => DataCollectionOptionsNormalizer::normalizeKeyValueCollection($resolvedOptions['query_params']),
-            'gen_ai' => DataCollectionOptionsNormalizer::normalizeGenAi($resolvedOptions['gen_ai']),
-            'stack_frame_variables' => $resolvedOptions['stack_frame_variables'],
-            'frame_context_lines' => $resolvedOptions['frame_context_lines'],
-        ]);
-    }
-
-    /**
-     * @param array<string, mixed> $value
-     *
-     * @return array<string, mixed>
-     *
-     * @phpstan-return array{
-     *     user_info: bool,
-     *     cookies: array<string, mixed>,
-     *     http_headers: array<string, mixed>,
-     *     http_bodies: string[],
-     *     query_params: array<string, mixed>,
-     *     gen_ai: array<string, mixed>,
-     *     stack_frame_variables: bool,
-     *     frame_context_lines: int
-     * }
-     */
-    private function resolveDataCollectionOptions(array $value): array
-    {
-        $resolver = new OptionsResolver();
-        $resolver->setDefaults([
-            'user_info' => true,
-            'cookies' => [],
-            'http_headers' => [],
-            'http_bodies' => DataCollectionOptions::HTTP_BODY_TYPES,
-            'query_params' => [],
-            'gen_ai' => [],
-            'stack_frame_variables' => true,
-            'frame_context_lines' => 5,
-        ]);
-        $resolver->setAllowedTypes('user_info', 'bool');
-        $resolver->setAllowedTypes('cookies', 'array');
-        $resolver->setAllowedTypes('http_headers', 'array');
-        $resolver->setAllowedTypes('http_bodies', 'string[]');
-        $resolver->setAllowedTypes('query_params', 'array');
-        $resolver->setAllowedTypes('gen_ai', 'array');
-        $resolver->setAllowedTypes('stack_frame_variables', 'bool');
-        $resolver->setAllowedTypes('frame_context_lines', 'int');
-        $resolver->setAllowedValues('http_bodies', static function (array $value): bool {
-            /** @var string[] $value */
-            return \count(array_diff($value, DataCollectionOptions::HTTP_BODY_TYPES)) === 0;
-        });
-        $resolver->setAllowedValues('frame_context_lines', static function (int $value): bool {
-            return $value >= 0;
-        });
-
-        /** @var array{
-         *     user_info: bool,
-         *     cookies: array<string, mixed>,
-         *     http_headers: array<string, mixed>,
-         *     http_bodies: string[],
-         *     query_params: array<string, mixed>,
-         *     gen_ai: array<string, mixed>,
-         *     stack_frame_variables: bool,
-         *     frame_context_lines: int
-         * } $resolvedOptions
-         */
-        $resolvedOptions = $resolver->resolve($value);
-
-        return $resolvedOptions;
+        return new DataCollectionOptions($value);
     }
 
     /**

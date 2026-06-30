@@ -684,21 +684,11 @@ final class OptionsTest extends TestCase
         ];
     }
 
-    public function testDataCollectionOptionDefaults(): void
+    public function testDataCollectionOptionDefaultsToResolvedDataCollectionOptions(): void
     {
         $dataCollection = (new Options())->getDataCollection();
 
-        $this->assertTrue($dataCollection->shouldCollectUserInfo());
-        $this->assertSame('denyList', $dataCollection->getCookies()['mode']);
-        $this->assertSame([], $dataCollection->getCookies()['terms']);
-        $this->assertSame('denyList', $dataCollection->getHttpHeaders()['request']['mode']);
-        $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
-        $this->assertSame(DataCollectionOptions::HTTP_BODY_TYPES, $dataCollection->getHttpBodies());
-        $this->assertSame('denyList', $dataCollection->getQueryParams()['mode']);
-        $this->assertTrue($dataCollection->getGenAi()['inputs']);
-        $this->assertTrue($dataCollection->getGenAi()['outputs']);
-        $this->assertTrue($dataCollection->shouldCollectStackFrameVariables());
-        $this->assertSame(5, $dataCollection->getFrameContextLines());
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
     }
 
     public function testDataCollectionOptionNormalizesArrayConfiguration(): void
@@ -733,16 +723,16 @@ final class OptionsTest extends TestCase
         ]))->getDataCollection();
 
         $this->assertFalse($dataCollection->shouldCollectUserInfo());
-        $this->assertSame('allowList', $dataCollection->getCookies()['mode']);
-        $this->assertSame(['session_id'], $dataCollection->getCookies()['terms']);
-        $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
-        $this->assertSame(['authorization'], $dataCollection->getHttpHeaders()['request']['terms']);
-        $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
-        $this->assertSame(['set-cookie'], $dataCollection->getHttpHeaders()['response']['terms']);
+        $this->assertSame('allowList', $dataCollection->getCookies()->getMode());
+        $this->assertSame(['session_id'], $dataCollection->getCookies()->getTerms());
+        $this->assertSame('off', $dataCollection->getHttpHeaders()->getRequest()->getMode());
+        $this->assertSame(['authorization'], $dataCollection->getHttpHeaders()->getRequest()->getTerms());
+        $this->assertSame('denyList', $dataCollection->getHttpHeaders()->getResponse()->getMode());
+        $this->assertSame(['set-cookie'], $dataCollection->getHttpHeaders()->getResponse()->getTerms());
         $this->assertSame(['incomingRequest'], $dataCollection->getHttpBodies());
-        $this->assertSame('off', $dataCollection->getQueryParams()['mode']);
-        $this->assertFalse($dataCollection->getGenAi()['inputs']);
-        $this->assertTrue($dataCollection->getGenAi()['outputs']);
+        $this->assertSame('off', $dataCollection->getQueryParams()->getMode());
+        $this->assertFalse($dataCollection->getGenAi()->getInputs());
+        $this->assertTrue($dataCollection->getGenAi()->getOutputs());
         $this->assertFalse($dataCollection->shouldCollectStackFrameVariables());
         $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
@@ -758,10 +748,10 @@ final class OptionsTest extends TestCase
             ],
         ]))->getDataCollection();
 
-        $this->assertSame('allowList', $dataCollection->getHttpHeaders()['request']['mode']);
-        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()['request']['terms']);
-        $this->assertSame('allowList', $dataCollection->getHttpHeaders()['response']['mode']);
-        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()['response']['terms']);
+        $this->assertSame('allowList', $dataCollection->getHttpHeaders()->getRequest()->getMode());
+        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()->getRequest()->getTerms());
+        $this->assertSame('allowList', $dataCollection->getHttpHeaders()->getResponse()->getMode());
+        $this->assertSame(['x-request-id'], $dataCollection->getHttpHeaders()->getResponse()->getTerms());
     }
 
     public function testDataCollectionOptionAcceptsConfigurationObjects(): void

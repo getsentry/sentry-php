@@ -4,6 +4,24 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+
+/**
+ * @phpstan-import-type KeyValueCollection from KeyValueCollectionBehavior
+ *
+ * @phpstan-type HttpHeadersOption KeyValueCollection|array{request?: KeyValueCollection|KeyValueCollectionBehavior, response?: KeyValueCollection|KeyValueCollectionBehavior}
+ * @phpstan-type ResolvedDataCollectionOptions array{
+ *     user_info: bool,
+ *     cookies: KeyValueCollectionBehavior,
+ *     http_headers: HttpHeaders,
+ *     http_bodies: string[],
+ *     query_params: KeyValueCollectionBehavior,
+ *     gen_ai: GenAi,
+ *     stack_frame_variables: bool,
+ *     frame_context_lines: int
+ * }
+ */
 final class DataCollectionOptions
 {
     /**
@@ -47,67 +65,29 @@ final class DataCollectionOptions
     /**
      * @var array<string, mixed>
      *
-     * @phpstan-var array{
-     *     user_info: bool,
-     *     cookies: array{mode: string, terms: string[]},
-     *     http_headers: array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}},
-     *     http_bodies: string[],
-     *     query_params: array{mode: string, terms: string[]},
-     *     gen_ai: array{inputs: bool, outputs: bool},
-     *     stack_frame_variables: bool,
-     *     frame_context_lines: int
-     * }
+     * @phpstan-var ResolvedDataCollectionOptions
      */
     private $options;
 
     /**
-     * @param array<string, mixed> $options
-     *
-     * @phpstan-param array{
-     *     user_info: bool,
-     *     cookies: array{mode: string, terms: string[]},
-     *     http_headers: array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}},
-     *     http_bodies: string[],
-     *     query_params: array{mode: string, terms: string[]},
-     *     gen_ai: array{inputs: bool, outputs: bool},
-     *     stack_frame_variables: bool,
-     *     frame_context_lines: int
-     * } $options
+     * @var OptionsResolver
      */
-    public function __construct(array $options)
+    private $resolver;
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    public function __construct(array $options = [])
     {
-        $this->options = $options;
+        $this->resolver = new OptionsResolver();
+        $this->configureOptions($this->resolver);
+
+        $this->options = $this->resolveOptions($options);
     }
 
     public static function default(): self
     {
-        return new self([
-            'user_info' => true,
-            'cookies' => self::getDefaultKeyValueCollection(),
-            'http_headers' => [
-                'request' => self::getDefaultKeyValueCollection(),
-                'response' => self::getDefaultKeyValueCollection(),
-            ],
-            'http_bodies' => self::HTTP_BODY_TYPES,
-            'query_params' => self::getDefaultKeyValueCollection(),
-            'gen_ai' => [
-                'inputs' => true,
-                'outputs' => true,
-            ],
-            'stack_frame_variables' => true,
-            'frame_context_lines' => 5,
-        ]);
-    }
-
-    /**
-     * @return array{mode: string, terms: string[]}
-     */
-    public static function getDefaultKeyValueCollection(): array
-    {
-        return [
-            'mode' => 'denyList',
-            'terms' => [],
-        ];
+        return new self();
     }
 
     public function shouldCollectUserInfo(): bool
@@ -117,43 +97,39 @@ final class DataCollectionOptions
 
     public function setUserInfo(bool $userInfo): self
     {
-        $this->options['user_info'] = $userInfo;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['user_info' => $userInfo]));
 
         return $this;
     }
 
-    /**
-     * @return array{mode: string, terms: string[]}
-     */
-    public function getCookies(): array
+    public function getCookies(): KeyValueCollectionBehavior
     {
         return $this->options['cookies'];
     }
 
     /**
-     * @param array{mode: string, terms: string[]} $cookies
+     * @param KeyValueCollection|KeyValueCollectionBehavior $cookies
      */
-    public function setCookies(array $cookies): self
+    public function setCookies($cookies): self
     {
-        $this->options['cookies'] = $cookies;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['cookies' => $cookies]));
 
         return $this;
     }
 
-    /**
-     * @return array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}}
-     */
-    public function getHttpHeaders(): array
+    public function getHttpHeaders(): HttpHeaders
     {
         return $this->options['http_headers'];
     }
 
     /**
-     * @param array{mode?: string, terms?: string[]}|array{request?: array{mode?: string, terms?: string[]}, response?: array{mode?: string, terms?: string[]}} $httpHeaders
+     * @param array<string, mixed>|HttpHeaders $httpHeaders
+     *
+     * @phpstan-param HttpHeadersOption|HttpHeaders $httpHeaders
      */
-    public function setHttpHeaders(array $httpHeaders): self
+    public function setHttpHeaders($httpHeaders): self
     {
-        $this->options['http_headers'] = DataCollectionOptionsNormalizer::normalizeHttpHeaders($httpHeaders);
+        $this->options = $this->resolveOptions(array_merge($this->options, ['http_headers' => $httpHeaders]));
 
         return $this;
     }
@@ -167,37 +143,31 @@ final class DataCollectionOptions
     }
 
     /**
-     * @param string[] $httpBodies
+     * @param string[]|null $httpBodies
      */
-    public function setHttpBodies(array $httpBodies): self
+    public function setHttpBodies(?array $httpBodies): self
     {
-        $this->options['http_bodies'] = $httpBodies;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['http_bodies' => $httpBodies]));
 
         return $this;
     }
 
-    /**
-     * @return array{mode: string, terms: string[]}
-     */
-    public function getQueryParams(): array
+    public function getQueryParams(): KeyValueCollectionBehavior
     {
         return $this->options['query_params'];
     }
 
     /**
-     * @param array{mode: string, terms: string[]} $queryParams
+     * @param KeyValueCollection|KeyValueCollectionBehavior $queryParams
      */
-    public function setQueryParams(array $queryParams): self
+    public function setQueryParams($queryParams): self
     {
-        $this->options['query_params'] = $queryParams;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['query_params' => $queryParams]));
 
         return $this;
     }
 
-    /**
-     * @return array{inputs: bool, outputs: bool}
-     */
-    public function getGenAi(): array
+    public function getGenAi(): GenAi
     {
         return $this->options['gen_ai'];
     }
@@ -207,7 +177,7 @@ final class DataCollectionOptions
      */
     public function setGenAi(array $genAi): self
     {
-        $this->options['gen_ai'] = $genAi;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['gen_ai' => $genAi]));
 
         return $this;
     }
@@ -219,7 +189,7 @@ final class DataCollectionOptions
 
     public function setStackFrameVariables(bool $stackFrameVariables): self
     {
-        $this->options['stack_frame_variables'] = $stackFrameVariables;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['stack_frame_variables' => $stackFrameVariables]));
 
         return $this;
     }
@@ -231,27 +201,99 @@ final class DataCollectionOptions
 
     public function setFrameContextLines(int $frameContextLines): self
     {
-        $this->options['frame_context_lines'] = $frameContextLines;
+        $this->options = $this->resolveOptions(array_merge($this->options, ['frame_context_lines' => $frameContextLines]));
 
         return $this;
     }
 
+    private function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setDefaults([
+            'user_info' => true,
+            'cookies' => new KeyValueCollectionBehavior(),
+            'http_headers' => new HttpHeaders(),
+            'http_bodies' => self::HTTP_BODY_TYPES,
+            'query_params' => new KeyValueCollectionBehavior(),
+            'gen_ai' => new GenAi(),
+            'stack_frame_variables' => true,
+            'frame_context_lines' => 5,
+        ]);
+        $resolver->setAllowedTypes('user_info', 'bool');
+        $resolver->setAllowedTypes('cookies', ['array', KeyValueCollectionBehavior::class]);
+        $resolver->setAllowedTypes('http_headers', ['array', HttpHeaders::class]);
+        $resolver->setAllowedTypes('http_bodies', ['null', 'string[]']);
+        $resolver->setAllowedTypes('query_params', ['array', KeyValueCollectionBehavior::class]);
+        $resolver->setAllowedTypes('gen_ai', ['array', GenAi::class]);
+        $resolver->setAllowedTypes('stack_frame_variables', 'bool');
+        $resolver->setAllowedTypes('frame_context_lines', 'int');
+        $resolver->setAllowedValues('http_bodies', static function (?array $value): bool {
+            if ($value === null) {
+                return true;
+            }
+
+            /** @var string[] $value */
+            return \count(array_diff($value, self::HTTP_BODY_TYPES)) === 0;
+        });
+        $resolver->setAllowedValues('frame_context_lines', static function (int $value): bool {
+            return $value >= 0;
+        });
+        $resolver->setNormalizer('cookies', \Closure::fromCallable([self::class, 'normalizeKeyValueCollection']));
+        $resolver->setNormalizer('http_headers', \Closure::fromCallable([self::class, 'normalizeHttpHeaders']));
+        $resolver->setNormalizer('http_bodies', static function (SymfonyOptions $options, ?array $value): array {
+            return $value ?? self::HTTP_BODY_TYPES;
+        });
+        $resolver->setNormalizer('query_params', \Closure::fromCallable([self::class, 'normalizeKeyValueCollection']));
+        $resolver->setNormalizer('gen_ai', \Closure::fromCallable([self::class, 'normalizeGenAi']));
+    }
+
     /**
+     * @param array<string, mixed> $options
+     *
      * @return array<string, mixed>
      *
-     * @phpstan-return array{
-     *     user_info: bool,
-     *     cookies: array{mode: string, terms: string[]},
-     *     http_headers: array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}},
-     *     http_bodies: string[],
-     *     query_params: array{mode: string, terms: string[]},
-     *     gen_ai: array{inputs: bool, outputs: bool},
-     *     stack_frame_variables: bool,
-     *     frame_context_lines: int
-     * }
+     * @phpstan-return ResolvedDataCollectionOptions
      */
-    public function toArray(): array
+    private function resolveOptions(array $options): array
     {
-        return $this->options;
+        /** @var ResolvedDataCollectionOptions $resolvedOptions */
+        $resolvedOptions = $this->resolver->resolve($options);
+
+        return $resolvedOptions;
+    }
+
+    /**
+     * @param array<string, mixed>|HttpHeaders $value
+     */
+    private static function normalizeHttpHeaders(SymfonyOptions $options, $value): HttpHeaders
+    {
+        if ($value instanceof HttpHeaders) {
+            return $value;
+        }
+
+        return new HttpHeaders($value);
+    }
+
+    /**
+     * @param array<string, mixed>|KeyValueCollectionBehavior $value
+     */
+    private static function normalizeKeyValueCollection(SymfonyOptions $options, $value): KeyValueCollectionBehavior
+    {
+        if ($value instanceof KeyValueCollectionBehavior) {
+            return $value;
+        }
+
+        return new KeyValueCollectionBehavior($value);
+    }
+
+    /**
+     * @param array<string, mixed>|GenAi $value
+     */
+    private static function normalizeGenAi(SymfonyOptions $options, $value): GenAi
+    {
+        if ($value instanceof GenAi) {
+            return $value;
+        }
+
+        return new GenAi($value);
     }
 }
