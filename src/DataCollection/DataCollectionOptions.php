@@ -82,7 +82,7 @@ final class DataCollectionOptions
         $this->resolver = new OptionsResolver();
         $this->configureOptions($this->resolver);
 
-        $this->options = $this->resolveOptions($options);
+        $this->resolveOptions($options);
     }
 
     public static function default(): self
@@ -232,8 +232,6 @@ final class DataCollectionOptions
 
     /**
      * @param array<string, mixed> $options
-     *
-     * @phpstan-return ResolvedDataCollectionOptions
      */
     private function resolveOptions(array $options): self
     {
