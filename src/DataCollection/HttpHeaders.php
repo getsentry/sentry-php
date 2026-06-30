@@ -43,7 +43,7 @@ final class HttpHeaders
     {
         $resolver = self::getResolverInstance();
 
-        if (!isset($options['request']) && !isset($options['response'])) {
+        if (!\array_key_exists('request', $options) && !\array_key_exists('response', $options)) {
             $options = [
                 'request' => $options,
                 'response' => $options,
