@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -399,6 +400,23 @@ final class Options
     public function setContextLines(?int $contextLines): self
     {
         $options = array_merge($this->options, ['context_lines' => $contextLines]);
+
+        $this->options = $this->resolver->resolve($options);
+
+        return $this;
+    }
+
+    public function getDataCollection(): DataCollectionOptions
+    {
+        /** @var DataCollectionOptions $dataCollection */
+        $dataCollection = $this->options['data_collection'];
+
+        return $dataCollection;
+    }
+
+    public function setDataCollection(DataCollectionOptions $dataCollection): self
+    {
+        $options = array_merge($this->options, ['data_collection' => $dataCollection]);
 
         $this->options = $this->resolver->resolve($options);
 
@@ -1397,6 +1415,8 @@ final class Options
     {
         $options = array_merge($this->options, ['traces_sampler' => $sampler]);
 
+        // resolve produces <array-key, mixed> and we expect <string, mixed>
+        // @mago-ignore analysis:property-type-coercion
         $this->options = $this->resolver->resolve($options);
 
         return $this;
@@ -1493,6 +1513,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'data_collection' => DataCollectionOptions::default(),
         ]);
 
         $resolver->setAllowedTypes('prefixes', 'string[]');
@@ -1549,6 +1570,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('data_collection', ['array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -1559,6 +1581,7 @@ final class Options
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('data_collection', \Closure::fromCallable([$this, 'normalizeDataCollectionOption']));
 
         $resolver->setNormalizer('prefixes', function (SymfonyOptions $options, array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1618,6 +1641,168 @@ final class Options
         }
 
         return $url;
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private function normalizeDataCollectionOption(SymfonyOptions $options, $value): DataCollectionOptions
+    {
+        if ($value instanceof DataCollectionOptions) {
+            return $value;
+        }
+
+        /** @var array<string, mixed> $value */
+        $resolvedOptions = $this->resolveDataCollectionOptions($value);
+
+        return new DataCollectionOptions([
+            'user_info' => $resolvedOptions['user_info'],
+            'cookies' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['cookies']),
+            'http_headers' => $this->normalizeHttpHeadersDataCollectionOptions($resolvedOptions['http_headers']),
+            'http_bodies' => $resolvedOptions['http_bodies'],
+            'query_params' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['query_params']),
+            'gen_ai' => $this->normalizeGenAiDataCollectionOptions($resolvedOptions['gen_ai']),
+            'stack_frame_variables' => $resolvedOptions['stack_frame_variables'],
+            'frame_context_lines' => $resolvedOptions['frame_context_lines'],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     *
+     * @return array<string, mixed>
+     *
+     * @phpstan-return array{
+     *     user_info: bool,
+     *     cookies: array<string, mixed>,
+     *     http_headers: array<string, mixed>,
+     *     http_bodies: string[],
+     *     query_params: array<string, mixed>,
+     *     gen_ai: array<string, mixed>,
+     *     stack_frame_variables: bool,
+     *     frame_context_lines: int
+     * }
+     */
+    private function resolveDataCollectionOptions(array $value): array
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'user_info' => true,
+            'cookies' => [],
+            'http_headers' => [],
+            'http_bodies' => DataCollectionOptions::HTTP_BODY_TYPES,
+            'query_params' => [],
+            'gen_ai' => [],
+            'stack_frame_variables' => true,
+            'frame_context_lines' => 5,
+        ]);
+        $resolver->setAllowedTypes('user_info', 'bool');
+        $resolver->setAllowedTypes('cookies', 'array');
+        $resolver->setAllowedTypes('http_headers', 'array');
+        $resolver->setAllowedTypes('http_bodies', 'string[]');
+        $resolver->setAllowedTypes('query_params', 'array');
+        $resolver->setAllowedTypes('gen_ai', 'array');
+        $resolver->setAllowedTypes('stack_frame_variables', 'bool');
+        $resolver->setAllowedTypes('frame_context_lines', 'int');
+        $resolver->setAllowedValues('http_bodies', static function (array $value): bool {
+            /** @var string[] $value */
+            return \count(array_diff($value, DataCollectionOptions::HTTP_BODY_TYPES)) === 0;
+        });
+        $resolver->setAllowedValues('frame_context_lines', static function (int $value): bool {
+            return $value >= 0;
+        });
+
+        /** @var array{
+         *     user_info: bool,
+         *     cookies: array<string, mixed>,
+         *     http_headers: array<string, mixed>,
+         *     http_bodies: string[],
+         *     query_params: array<string, mixed>,
+         *     gen_ai: array<string, mixed>,
+         *     stack_frame_variables: bool,
+         *     frame_context_lines: int
+         * } $resolvedOptions
+         */
+        $resolvedOptions = $resolver->resolve($value);
+
+        return $resolvedOptions;
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     *
+     * @return array{mode: string, terms: string[]}
+     */
+    private function normalizeKeyValueDataCollectionOptions(array $value): array
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults(DataCollectionOptions::getDefaultKeyValueCollection());
+        $resolver->setAllowedTypes('mode', 'string');
+        $resolver->setAllowedTypes('terms', 'string[]');
+        $resolver->setAllowedValues('mode', [
+            'off',
+            'denyList',
+            'allowList',
+        ]);
+
+        /** @var array{mode: string, terms: string[]} $resolvedOptions */
+        $resolvedOptions = $resolver->resolve($value);
+
+        return $resolvedOptions;
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     *
+     * @return array{request: array{mode: string, terms: string[]}, response: array{mode: string, terms: string[]}}
+     */
+    private function normalizeHttpHeadersDataCollectionOptions(array $value): array
+    {
+        if (!isset($value['request']) && !isset($value['response'])) {
+            $headers = $this->normalizeKeyValueDataCollectionOptions($value);
+
+            return [
+                'request' => $headers,
+                'response' => $headers,
+            ];
+        }
+
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'request' => [],
+            'response' => [],
+        ]);
+        $resolver->setAllowedTypes('request', 'array');
+        $resolver->setAllowedTypes('response', 'array');
+
+        /** @var array{request: array<string, mixed>, response: array<string, mixed>} $resolvedOptions */
+        $resolvedOptions = $resolver->resolve($value);
+
+        return [
+            'request' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['request']),
+            'response' => $this->normalizeKeyValueDataCollectionOptions($resolvedOptions['response']),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $value
+     *
+     * @return array{inputs: bool, outputs: bool}
+     */
+    private function normalizeGenAiDataCollectionOptions(array $value): array
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'inputs' => true,
+            'outputs' => true,
+        ]);
+        $resolver->setAllowedTypes('inputs', 'bool');
+        $resolver->setAllowedTypes('outputs', 'bool');
+
+        /** @var array{inputs: bool, outputs: bool} $resolvedOptions */
+        $resolvedOptions = $resolver->resolve($value);
+
+        return $resolvedOptions;
     }
 
     /**
