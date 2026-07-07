@@ -17,6 +17,8 @@ use Sentry\State\Scope;
  */
 final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegration
 {
+    // Intentionally looser than ErrorHandler::OOM_MESSAGE_MATCHER — matches the
+    // prefixed FatalErrorException message and needs no capture groups.
     private const OOM_MESSAGE_MATCHER = '/Allowed memory size of \d+ bytes exhausted/';
 
     /**
