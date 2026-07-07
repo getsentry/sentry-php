@@ -2,8 +2,8 @@
 Test that when handling an OOM error with large breadcrumbs, breadcrumb metadata is stripped to prevent secondary OOM during serialization
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID >= 80400) {
-    die('skip - only works for PHP 8.4 and below');
+if (PHP_VERSION_ID < 80500) {
+    die('skip - only works for PHP 8.5 and above');
 }
 --INI--
 memory_limit=67108864
@@ -98,6 +98,8 @@ for ($i = 0; $i < 100000000; ++$i) {
 }
 --EXPECTF--
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Stack trace:
+%A
 Breadcrumb count: 100
 First breadcrumb category: db.query
 First breadcrumb has metadata: no
