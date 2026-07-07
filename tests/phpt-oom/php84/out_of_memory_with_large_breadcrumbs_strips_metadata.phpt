@@ -25,6 +25,8 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $vendor = __DIR__;
 
 while (!file_exists($vendor . '/vendor')) {
@@ -32,8 +34,6 @@ while (!file_exists($vendor . '/vendor')) {
 }
 
 require $vendor . '/vendor/autoload.php';
-
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $options = new Options([
     'dsn' => 'http://public@example.com/sentry/1',
