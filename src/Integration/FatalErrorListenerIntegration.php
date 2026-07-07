@@ -56,7 +56,7 @@ final class FatalErrorListenerIntegration extends AbstractErrorListenerIntegrati
                     $scope->clearBreadcrumbs();
 
                     foreach ($strippedBreadcrumbs as $breadcrumb) {
-                        $scope->addBreadcrumb($breadcrumb);
+                        $scope->addBreadcrumb($breadcrumb, \count($strippedBreadcrumbs));
                     }
                 });
             }
