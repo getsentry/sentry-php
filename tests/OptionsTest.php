@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 use Sentry\Dsn;
 use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Transport\HttpTransport;
-use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 
 final class OptionsTest extends TestCase
 {
@@ -548,26 +548,23 @@ final class OptionsTest extends TestCase
     }
 
     /**
-     * @dataProvider dsnOptionThrowsOnInvalidValueDataProvider
+     * @dataProvider dsnOptionInvalidValueDataProvider
      */
-    public function testDsnOptionThrowsOnInvalidValue($value, string $expectedExceptionMessage): void
+    public function testDsnOptionInvalidValueFallsBackToDefault($value): void
     {
-        $this->expectException(InvalidOptionsException::class);
-        $this->expectExceptionMessage($expectedExceptionMessage);
+        $options = new Options(['dsn' => $value]);
 
-        new Options(['dsn' => $value]);
+        $this->assertNull($options->getDsn());
     }
 
-    public static function dsnOptionThrowsOnInvalidValueDataProvider(): \Generator
+    public static function dsnOptionInvalidValueDataProvider(): \Generator
     {
-        yield [
+        yield '"true" is not a valid DSN' => [
             true,
-            'The option "dsn" with value true is invalid.',
         ];
 
-        yield [
+        yield '"foo" is not a valid DSN' => [
             'foo',
-            'The option "dsn" with value "foo" is invalid.',
         ];
     }
 
@@ -614,60 +611,51 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider
      */
-    public function testMaxBreadcrumbsOptionIsValidatedCorrectly(bool $isValid, $value): void
+    public function testMaxBreadcrumbsOptionIsValidatedCorrectly($value, int $expectedValue): void
     {
-        if (!$isValid) {
-            $this->expectException(InvalidOptionsException::class);
-        }
-
         $options = new Options(['max_breadcrumbs' => $value]);
 
-        $this->assertSame($value, $options->getMaxBreadcrumbs());
+        $this->assertSame($expectedValue, $options->getMaxBreadcrumbs());
     }
 
     public static function maxBreadcrumbsOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
-            [false, -1],
-            [true, 0],
-            [true, 1],
-            [true, Options::DEFAULT_MAX_BREADCRUMBS],
-            [true, Options::DEFAULT_MAX_BREADCRUMBS + 1],
-            [false, 'string'],
-            [false, '1'],
+            [-1, Options::DEFAULT_MAX_BREADCRUMBS],
+            [0, 0],
+            [1, 1],
+            [Options::DEFAULT_MAX_BREADCRUMBS, Options::DEFAULT_MAX_BREADCRUMBS],
+            [Options::DEFAULT_MAX_BREADCRUMBS + 1, Options::DEFAULT_MAX_BREADCRUMBS + 1],
+            ['string', Options::DEFAULT_MAX_BREADCRUMBS],
+            ['1', Options::DEFAULT_MAX_BREADCRUMBS],
         ];
     }
 
     /**
      * @dataProvider contextLinesOptionValidatesInputValueDataProvider
      */
-    public function testContextLinesOptionValidatesInputValue(?int $value, ?string $expectedExceptionMessage): void
+    public function testContextLinesOptionValidatesInputValue(?int $value, ?int $expectedValue): void
     {
-        if ($expectedExceptionMessage !== null) {
-            $this->expectException(InvalidOptionsException::class);
-            $this->expectExceptionMessage($expectedExceptionMessage);
-        } else {
-            $this->expectNotToPerformAssertions();
-        }
+        $options = new Options(['context_lines' => $value]);
 
-        new Options(['context_lines' => $value]);
+        $this->assertSame($expectedValue, $options->getContextLines());
     }
 
     public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
     {
         yield [
             -1,
-            'The option "context_lines" with value -1 is invalid.',
+            5,
         ];
 
         yield [
             0,
-            null,
+            0,
         ];
 
         yield [
             1,
-            null,
+            1,
         ];
 
         yield [
@@ -679,55 +667,80 @@ final class OptionsTest extends TestCase
     /**
      * @dataProvider logFlushThresholdOptionIsValidatedCorrectlyDataProvider
      */
-    public function testLogFlushThresholdOptionIsValidatedCorrectly(bool $isValid, $value): void
+    public function testLogFlushThresholdOptionIsValidatedCorrectly($value, ?int $expectedValue): void
     {
-        if (!$isValid) {
-            $this->expectException(InvalidOptionsException::class);
-        }
-
         $options = new Options(['log_flush_threshold' => $value]);
 
-        $this->assertSame($value, $options->getLogFlushThreshold());
+        $this->assertSame($expectedValue, $options->getLogFlushThreshold());
     }
 
     public static function logFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
-            [false, -1],
-            [false, 0],
-            [true, 1],
-            [true, 10],
-            [true, null],
-            [false, 'string'],
-            [false, '1'],
+            [-1, null],
+            [0, null],
+            [1, 1],
+            [10, 10],
+            [null, null],
+            ['string', null],
+            ['1', null],
         ];
     }
 
     /**
      * @dataProvider metricFlushThresholdOptionIsValidatedCorrectlyDataProvider
      */
-    public function testMetricFlushThresholdOptionIsValidatedCorrectly(bool $isValid, $value): void
+    public function testMetricFlushThresholdOptionIsValidatedCorrectly($value, ?int $expectedValue): void
     {
-        if (!$isValid) {
-            $this->expectException(InvalidOptionsException::class);
-        }
-
         $options = new Options(['metric_flush_threshold' => $value]);
 
-        $this->assertSame($value, $options->getMetricFlushThreshold());
+        $this->assertSame($expectedValue, $options->getMetricFlushThreshold());
     }
 
     public static function metricFlushThresholdOptionIsValidatedCorrectlyDataProvider(): array
     {
         return [
-            [false, -1],
-            [false, 0],
-            [true, 1],
-            [true, 10],
-            [true, null],
-            [false, 'string'],
-            [false, '1'],
+            [-1, null],
+            [0, null],
+            [1, 1],
+            [10, 10],
+            [null, null],
+            ['string', null],
+            ['1', null],
         ];
+    }
+
+    public function testUpdateOptionsLogsInvalidValuesAndFallsBackToDefault(): void
+    {
+        $logger = new class extends AbstractLogger {
+            /**
+             * @var string[]
+             */
+            private $logs = [];
+
+            public function log($level, $message, array $context = []): void
+            {
+                $this->logs[] = $message;
+            }
+
+            /**
+             * @return string[]
+             */
+            public function getLogs(): array
+            {
+                return $this->logs;
+            }
+        };
+
+        $options = new Options([
+            'logger' => $logger,
+            'sample_rate' => 0.5,
+        ]);
+
+        $options->updateOptions(['sample_rate' => 'invalid']);
+
+        $this->assertSame(1.0, $options->getSampleRate());
+        $this->assertSame(['Invalid value for option "sample_rate". Using default value.'], $logger->getLogs());
     }
 
     /**
