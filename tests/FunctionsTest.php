@@ -21,7 +21,6 @@ use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
-use Sentry\State\MergedScope;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -368,7 +367,7 @@ final class FunctionsTest extends TestCase
                     && $checkIn->getMonitorConfig() !== null
                     && $checkIn->getMonitorConfig()->getSchedule()->getValue() === '*/5 * * * *';
             }), null, $this->captureScopeConstraint($scope))
-            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?MergedScope $scope = null) use (&$events): EventId {
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null) use (&$events): EventId {
                 $events[] = $event;
 
                 return EventId::generate();
@@ -399,7 +398,7 @@ final class FunctionsTest extends TestCase
         $client->expects($this->exactly(2))
             ->method('captureEvent')
             ->with($this->isInstanceOf(Event::class), null, $this->captureScopeConstraint($scope))
-            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?MergedScope $scope = null) use (&$events): EventId {
+            ->willReturnCallback(static function (Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null) use (&$events): EventId {
                 $events[] = $event;
 
                 return EventId::generate();
@@ -1020,10 +1019,10 @@ final class FunctionsTest extends TestCase
 
     private function captureScopeConstraint(IsolationScope $isolationScope)
     {
-        return $this->callback(function (MergedScope $captureScope) use ($isolationScope): bool {
-            $this->assertNotSame($isolationScope, $captureScope);
+        return $this->callback(function (IsolationScope $captureScope) use ($isolationScope): bool {
+            $this->assertSame($isolationScope, $captureScope);
 
-            $event = $captureScope->applyToEvent(Event::createEvent());
+            $event = SentrySdk::getGlobalScope()->merge($captureScope)->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);
             $this->assertSame([

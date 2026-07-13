@@ -223,7 +223,7 @@ abstract class MutableScope extends Scope
     }
 
     /**
-     * Adds a new event processor that will be called after {@see MutableScope::applyToEvent}
+     * Adds a new event processor that will be called after {@see MergedScope::applyToEvent}
      * finished its work.
      *
      * @param callable(Event, EventHint): ?Event $eventProcessor The event processor

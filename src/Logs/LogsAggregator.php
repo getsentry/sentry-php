@@ -11,7 +11,6 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
-use Sentry\State\MergedScope;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
@@ -44,7 +43,8 @@ final class LogsAggregator
 
         $isolationScope = SentrySdk::getIsolationScope();
         $client = SentrySdk::getClient($isolationScope);
-        $scope = SentrySdk::getGlobalScope()->merge($isolationScope);
+        $globalScope = SentrySdk::getGlobalScope();
+        $scope = $globalScope->merge($isolationScope);
 
         $options = $client->getOptions();
         $sdkLogger = $options->getLogger();
@@ -73,7 +73,7 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $traceData = $this->getTraceData($scope);
+        $traceData = $this->getTraceData($isolationScope);
         $traceId = $traceData['trace_id'];
         $parentSpanId = $traceData['parent_span_id'];
 
@@ -176,7 +176,7 @@ final class LogsAggregator
         $client = $client ?? SentrySdk::getClient($isolationScope);
         $event = Event::createLogs()->setLogs($logs->drain());
 
-        return $client->captureEvent($event, null, SentrySdk::getGlobalScope()->merge($isolationScope));
+        return $client->captureEvent($event, null, $isolationScope);
     }
 
     /**
@@ -190,7 +190,7 @@ final class LogsAggregator
     /**
      * @return array{trace_id: string, parent_span_id: string|null}
      */
-    private function getTraceData(MergedScope $scope): array
+    private function getTraceData(IsolationScope $scope): array
     {
         $span = $scope->getSpan();
 

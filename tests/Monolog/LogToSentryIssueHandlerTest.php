@@ -16,7 +16,7 @@ use Sentry\Monolog\ExceptionToSentryIssueHandler;
 use Sentry\Monolog\LogToSentryIssueHandler;
 use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\MergedScope;
+use Sentry\State\IsolationScope;
 use Sentry\Tests\StubTransport;
 
 final class LogToSentryIssueHandlerTest extends TestCase
@@ -49,8 +49,9 @@ final class LogToSentryIssueHandlerTest extends TestCase
 
                     return true;
                 }),
-                $this->callback(function (MergedScope $scopeArg) use ($expectedExtra): bool {
-                    $event = $scopeArg->applyToEvent(Event::createEvent());
+                $this->callback(function (IsolationScope $scopeArg) use ($expectedExtra): bool {
+                    $globalScope = SentrySdk::getGlobalScope();
+                    $event = $globalScope->merge($scopeArg)->applyToEvent(Event::createEvent());
 
                     $this->assertNotNull($event);
                     $this->assertSame($expectedExtra, $event->getExtra());
@@ -73,7 +74,7 @@ final class LogToSentryIssueHandlerTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($this->isInstanceOf(Event::class), $this->isInstanceOf(EventHint::class), $this->isInstanceOf(MergedScope::class));
+            ->with($this->isInstanceOf(Event::class), $this->isInstanceOf(EventHint::class), $this->isInstanceOf(IsolationScope::class));
 
         SentrySdk::init($client);
 
@@ -117,8 +118,9 @@ final class LogToSentryIssueHandlerTest extends TestCase
             ->with(
                 $this->isInstanceOf(Event::class),
                 $this->isInstanceOf(EventHint::class),
-                $this->callback(function (MergedScope $scopeArg): bool {
-                    $event = $scopeArg->applyToEvent(Event::createEvent());
+                $this->callback(function (IsolationScope $scopeArg): bool {
+                    $globalScope = SentrySdk::getGlobalScope();
+                    $event = $globalScope->merge($scopeArg)->applyToEvent(Event::createEvent());
 
                     $this->assertNotNull($event);
                     $this->assertSame([

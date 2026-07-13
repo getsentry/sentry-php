@@ -113,7 +113,7 @@ final class TraceMetricsTest extends TestCase
         $this->assertCount(2, StubTransport::$events[0]->getMetrics());
     }
 
-    public function testMergedScopeAttributesAreAddedToMetric(): void
+    public function testGlobalScopeAttributesAreAddedToMetric(): void
     {
         SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
 

@@ -10,8 +10,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
-use Sentry\State\MergedScope;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Transport\Result;
 use Sentry\Transport\TransportInterface;
 
@@ -141,7 +140,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?MergedScope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $event = Event::createEvent();
         $event->setMessage($message);
@@ -153,7 +152,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureException(\Throwable $exception, ?MergedScope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureException(\Throwable $exception, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $className = \get_class($exception);
         if ($this->shouldIgnoreException($className)) {
@@ -177,7 +176,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureEvent(Event $event, ?EventHint $hint = null, ?MergedScope $scope = null): ?EventId
+    public function captureEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
     {
         // Client reports don't need to be augmented in the prepareEvent pipeline.
         if ($event->getType() !== EventType::clientReport()) {
@@ -209,7 +208,7 @@ class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function captureLastError(?MergedScope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureLastError(?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         $error = error_get_last();
 
@@ -278,13 +277,13 @@ class Client implements ClientInterface
     /**
      * Assembles an event and prepares it to be sent of to Sentry.
      *
-     * @param Event            $event The payload that will be converted to an Event
-     * @param EventHint|null   $hint  May contain additional information about the event
-     * @param MergedScope|null $scope Optional scope which enriches the Event
+     * @param Event               $event The payload that will be converted to an Event
+     * @param EventHint|null      $hint  May contain additional information about the event
+     * @param IsolationScope|null $scope Optional scope which enriches the Event
      *
      * @return Event|null The prepared event object or null if it must be discarded
      */
-    private function prepareEvent(Event $event, ?EventHint $hint = null, ?MergedScope $scope = null): ?Event
+    private function prepareEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?Event
     {
         if ($hint !== null) {
             if ($hint->exception !== null && empty($event->getExceptions())) {
@@ -340,7 +339,8 @@ class Client implements ClientInterface
 
         if ($scope !== null) {
             $beforeEventProcessors = $event;
-            $event = $scope->applyToEvent($event, $hint, $this->options);
+            $globalScope = SentrySdk::getGlobalScope();
+            $event = $globalScope->merge($scope)->applyToEvent($event, $hint, $this->options);
 
             if ($event === null) {
                 $this->logger->info(

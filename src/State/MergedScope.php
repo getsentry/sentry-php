@@ -4,39 +4,30 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
-use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Tracing\DynamicSamplingContext;
-use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
-use Sentry\Tracing\Transaction;
 
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
  * can hold context data, extra parameters, level overrides, fingerprints etc.
+ *
+ * @internal
  */
-class MergedScope extends Scope
+final class MergedScope extends Scope
 {
     /**
-     * @var Span|null Set a Span on the Scope
+     * @var Span|null
      */
     private $span;
 
-    public function __construct(ScopeData $scopeData, ?Span $span = null)
+    public function __construct(ScopeData $scopeData, ?Span $span)
     {
         $this->scopeData = $scopeData;
         $this->span = $span;
-    }
-
-    /**
-     * Returns the client bound to this scope.
-     */
-    public function getClient(): ClientInterface
-    {
-        return $this->scopeData->getClient();
     }
 
     /**
@@ -115,9 +106,10 @@ class MergedScope extends Scope
                 $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
             }
         } elseif ($externalPropagationContext === null) {
-            $dynamicSamplingContext = $this->scopeData->getPropagationContext()->getDynamicSamplingContext();
+            $propagationContext = $this->scopeData->getPropagationContext();
+            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
             if ($dynamicSamplingContext === null && $options !== null) {
-                $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
+                $dynamicSamplingContext = DynamicSamplingContext::fromOptionsAndPropagationContext($options, $propagationContext);
             }
             $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
         }
@@ -150,62 +142,5 @@ class MergedScope extends Scope
         }
 
         return $event;
-    }
-
-    /**
-     * Returns the span that is on the scope.
-     */
-    public function getSpan(): ?Span
-    {
-        return $this->span;
-    }
-
-    /**
-     * Returns the transaction attached to the scope (if there is one).
-     */
-    public function getTransaction(): ?Transaction
-    {
-        if ($this->span !== null) {
-            return $this->span->getTransaction();
-        }
-
-        return null;
-    }
-
-    public function hasExternalPropagationContext(): bool
-    {
-        return $this->span === null && self::getExternalPropagationContext() !== null;
-    }
-
-    /**
-     * @return array{
-     *     trace_id: string,
-     *     span_id: string,
-     *     parent_span_id?: string,
-     *     data?: array<string, mixed>,
-     *     description?: string,
-     *     op?: string,
-     *     status?: string,
-     *     tags?: array<string, string>,
-     *     origin?: string
-     * }
-     */
-    public function getTraceContext(): array
-    {
-        if ($this->span !== null) {
-            return $this->span->getTraceContext();
-        }
-
-        return self::getExternalPropagationContext() ?? $this->scopeData->getPropagationContext()->getTraceContext();
-    }
-
-    public function getPropagationContext(): PropagationContext
-    {
-        return $this->scopeData->getPropagationContext();
-    }
-
-    public function __clone()
-    {
-        $this->scopeData = clone $this->scopeData;
     }
 }

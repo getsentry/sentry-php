@@ -16,7 +16,6 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
-use Sentry\State\MergedScope;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
@@ -30,9 +29,11 @@ use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
-    private function mergeScope(IsolationScope $scope, ?GlobalScope $globalScope = null): MergedScope
+    private function applyScope(IsolationScope $scope, Event $event, ?EventHint $hint = null, ?Options $options = null): ?Event
     {
-        return ($globalScope ?? new GlobalScope())->merge($scope);
+        $globalScope = new GlobalScope();
+
+        return $globalScope->merge($scope)->applyToEvent($event, $hint, $options);
     }
 
     public function testGetAndSetClient(): void
@@ -78,7 +79,7 @@ final class ScopeTest extends TestCase
     public function testSetTag(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getTags());
@@ -86,7 +87,7 @@ final class ScopeTest extends TestCase
         $scope->setTag('foo', 'bar');
         $scope->setTag('bar', 'baz');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
@@ -97,14 +98,14 @@ final class ScopeTest extends TestCase
         $scope = new IsolationScope();
         $scope->setTags(['foo' => 'bar']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getTags());
 
         $scope->setTags(['bar' => 'baz']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
@@ -113,19 +114,19 @@ final class ScopeTest extends TestCase
     public function testRemoveTag(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $scope->setTag('foo', 'bar');
         $scope->setTag('bar', 'baz');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getTags());
 
         $scope->removeTag('foo');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['bar' => 'baz'], $event->getTags());
@@ -134,7 +135,7 @@ final class ScopeTest extends TestCase
     public function testSetFlag(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertArrayNotHasKey('flags', $event->getContexts());
@@ -142,7 +143,7 @@ final class ScopeTest extends TestCase
         $scope->addFeatureFlag('foo', true);
         $scope->addFeatureFlag('bar', false);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertArrayHasKey('flags', $event->getContexts());
@@ -163,7 +164,7 @@ final class ScopeTest extends TestCase
     public function testSetFlagLimit(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertArrayNotHasKey('flags', $event->getContexts());
@@ -179,7 +180,7 @@ final class ScopeTest extends TestCase
             ];
         }
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertArrayHasKey('flags', $event->getContexts());
@@ -194,7 +195,7 @@ final class ScopeTest extends TestCase
             'result' => true,
         ];
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertArrayHasKey('flags', $event->getContexts());
@@ -220,7 +221,7 @@ final class ScopeTest extends TestCase
         $scope = new IsolationScope($propgationContext);
         $scope->setContext('foo', ['foo' => 'bar']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([
@@ -233,7 +234,7 @@ final class ScopeTest extends TestCase
 
         $scope->removeContext('foo');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([
@@ -245,7 +246,7 @@ final class ScopeTest extends TestCase
 
         $scope->setContext('foo', []);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([
@@ -259,7 +260,7 @@ final class ScopeTest extends TestCase
     public function testSetExtra(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getExtra());
@@ -267,7 +268,7 @@ final class ScopeTest extends TestCase
         $scope->setExtra('foo', 'bar');
         $scope->setExtra('bar', 'baz');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
@@ -278,14 +279,14 @@ final class ScopeTest extends TestCase
         $scope = new IsolationScope();
         $scope->setExtras(['foo' => 'bar']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar'], $event->getExtra());
 
         $scope->setExtras(['bar' => 'baz']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo' => 'bar', 'bar' => 'baz'], $event->getExtra());
@@ -294,7 +295,7 @@ final class ScopeTest extends TestCase
     public function testSetUser(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNull($event->getUser());
@@ -304,7 +305,7 @@ final class ScopeTest extends TestCase
 
         $scope->setUser($user);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEquals($user, $event->getUser());
@@ -315,7 +316,7 @@ final class ScopeTest extends TestCase
 
         $scope->setUser(['ip_address' => '127.0.0.1', 'subscription_expires_at' => '2020-08-26']);
 
-        $event = $this->mergeScope($scope)->applyToEvent($event);
+        $event = $this->applyScope($scope, $event);
 
         $this->assertNotNull($event);
         $this->assertEquals($expectedUser, $event->getUser());
@@ -335,14 +336,14 @@ final class ScopeTest extends TestCase
         $scope = new IsolationScope();
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNotNull($event->getUser());
 
         $scope->removeUser();
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNull($event->getUser());
@@ -351,14 +352,14 @@ final class ScopeTest extends TestCase
     public function testSetFingerprint(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getFingerprint());
 
         $scope->setFingerprint(['foo', 'bar']);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['foo', 'bar'], $event->getFingerprint());
@@ -367,14 +368,14 @@ final class ScopeTest extends TestCase
     public function testSetLevel(): void
     {
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNull($event->getLevel());
 
         $scope->setLevel(Severity::debug());
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEquals(Severity::debug(), $event->getLevel());
@@ -387,7 +388,7 @@ final class ScopeTest extends TestCase
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -395,14 +396,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb($breadcrumb1);
         $scope->addBreadcrumb($breadcrumb2);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb1, $breadcrumb2], $event->getBreadcrumbs());
 
         $scope->addBreadcrumb($breadcrumb3, 2);
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
@@ -415,14 +416,14 @@ final class ScopeTest extends TestCase
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
         $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting'));
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNotEmpty($event->getBreadcrumbs());
 
         $scope->clearBreadcrumbs();
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertEmpty($event->getBreadcrumbs());
@@ -446,7 +447,7 @@ final class ScopeTest extends TestCase
             return $eventArg;
         });
 
-        $this->assertSame($event, $this->mergeScope($scope)->applyToEvent($event));
+        $this->assertSame($event, $this->applyScope($scope, $event));
         $this->assertTrue($callback1Called);
 
         $scope->addEventProcessor(function () use ($callback1Called, &$callback2Called, $callback3Called) {
@@ -464,7 +465,7 @@ final class ScopeTest extends TestCase
             return null;
         });
 
-        $this->assertNull($this->mergeScope($scope)->applyToEvent($event));
+        $this->assertNull($this->applyScope($scope, $event));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
     }
@@ -485,7 +486,7 @@ final class ScopeTest extends TestCase
             return $eventArg;
         });
 
-        $this->assertSame($event, $this->mergeScope($scope)->applyToEvent($event, $hint));
+        $this->assertSame($event, $this->applyScope($scope, $event, $hint));
         $this->assertSame($hint, $processorReceivedHint);
         $this->assertTrue($processorCalled);
     }
@@ -508,7 +509,7 @@ final class ScopeTest extends TestCase
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
         $scope->clear();
 
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent());
+        $event = $this->applyScope($scope, Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertNull($event->getLevel());
@@ -550,7 +551,7 @@ final class ScopeTest extends TestCase
         $scope->addFeatureFlag('feature', true);
         $scope->setSpan($span);
 
-        $this->assertSame($event, $this->mergeScope($scope)->applyToEvent($event));
+        $this->assertSame($event, $this->applyScope($scope, $event));
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
         $this->assertSame(['foo'], $event->getFingerprint());
         $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
@@ -700,18 +701,6 @@ final class ScopeTest extends TestCase
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::error()));
     }
 
-    public function testMergeScopesCarriesIsolationClient(): void
-    {
-        $globalScope = new GlobalScope();
-        $globalScope->setClient($this->createMock(ClientInterface::class));
-
-        $isolationClient = $this->createMock(ClientInterface::class);
-        $isolationScope = new IsolationScope();
-        $isolationScope->setClient($isolationClient);
-
-        $this->assertSame($isolationClient, $globalScope->merge($isolationScope)->getClient());
-    }
-
     public function testMergeScopesCapsBreadcrumbsAndFlags(): void
     {
         $globalScope = new GlobalScope();
@@ -768,14 +757,14 @@ final class ScopeTest extends TestCase
 
         $isolationScope = new IsolationScope($isolationPropagationContext);
 
-        $mergedScope = $globalScope->merge($isolationScope);
-
-        $this->assertNull($mergedScope->getSpan());
-        $this->assertNotSame($isolationScope->getPropagationContext(), $mergedScope->getPropagationContext());
+        $this->assertNull($isolationScope->getSpan());
         $this->assertSame([
             'trace_id' => '33333333333333333333333333333333',
             'span_id' => '3333333333333333',
-        ], $mergedScope->getTraceContext());
+        ], $isolationScope->getTraceContext());
+
+        $mergedScope = $globalScope->merge($isolationScope);
+        $isolationScope->setPropagationContext(PropagationContext::fromDefaults());
 
         $event = $mergedScope->applyToEvent(Event::createEvent());
 
@@ -823,7 +812,7 @@ final class ScopeTest extends TestCase
     {
         $scope = new IsolationScope();
         $scope->addAttachment(Attachment::fromBytes('test', 'abcde'));
-        $this->mergeScope($scope)->applyToEvent($event);
+        $this->applyScope($scope, $event);
         $this->assertCount($attachmentCount, $event->getAttachments());
     }
 
@@ -896,7 +885,7 @@ final class ScopeTest extends TestCase
         });
 
         $scope = new IsolationScope();
-        $event = $this->mergeScope($scope)->applyToEvent(Event::createEvent(), null, new Options([
+        $event = $this->applyScope($scope, Event::createEvent(), null, new Options([
             'dsn' => 'http://public@example.com/1',
             'release' => '1.0.0',
             'environment' => 'test',

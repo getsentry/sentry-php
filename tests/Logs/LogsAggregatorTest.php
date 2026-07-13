@@ -209,7 +209,7 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
-    public function testMergedScopeAttributesAreAddedToLogMessage(): void
+    public function testGlobalScopeAttributesAreAddedToLogMessage(): void
     {
         $client = ClientBuilder::create([
             'enable_logs' => true,

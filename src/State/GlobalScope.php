@@ -15,6 +15,9 @@ class GlobalScope extends MutableScope
         parent::__construct();
     }
 
+    /**
+     * @internal
+     */
     public function merge(IsolationScope $scope): MergedScope
     {
         return new MergedScope($this->scopeData->merge($scope->scopeData), $scope->getSpan());
