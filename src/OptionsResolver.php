@@ -46,14 +46,7 @@ class OptionsResolver
 
         foreach (array_keys($defaults) as $option) {
             $validation = $this->normalizeAndValidate($option, $defaults[$option]);
-
-            if (!$validation[0]) {
-                // Since defaults are used as fallback values if passed options are invalid, we want to
-                // get hard errors here to make sure we have something to fall back to.
-                throw new \InvalidArgumentException(\sprintf('Invalid default for option "%s"', $option));
-            }
-
-            $processed[$option] = $validation[1];
+            $processed[$option] = $validation[0] ? $validation[1] : null;
         }
 
         $this->defaults = $processed;
@@ -65,14 +58,7 @@ class OptionsResolver
     public function setDefault(string $name, $value): void
     {
         $validation = $this->normalizeAndValidate($name, $value);
-
-        if (!$validation[0]) {
-            // Since defaults are used as fallback values if passed options are invalid, we want to
-            // get hard errors here to make sure we have something to fall back to.
-            throw new \InvalidArgumentException(\sprintf('Invalid default for option "%s"', $name));
-        }
-
-        $this->defaults[$name] = $validation[1];
+        $this->defaults[$name] = $validation[0] ? $validation[1] : null;
     }
 
     /**

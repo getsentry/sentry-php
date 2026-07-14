@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\AbstractLogger;
 use Sentry\OptionsResolver;
 
 class OptionResolverTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        StubLogger::$logs = [];
+    }
+
     public function testFlatOptionResolve(): void
     {
         $resolver = new OptionsResolver();
@@ -290,49 +296,60 @@ class OptionResolverTest extends TestCase
 
     public function testDebugLogsProduced(): void
     {
-        $logger = new TestLogger();
+        $logger = StubLogger::getInstance();
         $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults([
             'test' => 'foo',
         ]);
         $resolver->resolve(['example' => 'abc'], $logger);
-        $this->assertCount(1, $logger->getLogs());
-        $this->assertEquals('Option "example" does not exist and will be ignored', $logger->getLogs()[0]);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Option "example" does not exist and will be ignored',
+            'context' => [],
+        ]], StubLogger::$logs);
 
         $resolver->resolve(['test' => 'abc'], $logger);
-        $this->assertCount(2, $logger->getLogs());
-        $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Option "example" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "test". Using default value.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
 
     public function testDebugLogsProducedForResolveOnly(): void
     {
-        $logger = new TestLogger();
+        $logger = StubLogger::getInstance();
         $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults(['test' => 'foo', 'abc' => 'def', 'bar' => 'baz']);
 
         $resolver->resolveOnly(['example' => 'test'], $logger);
-        $this->assertCount(1, $logger->getLogs());
-        $this->assertEquals('Option "example" does not exist and will be ignored', $logger->getLogs()[0]);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Option "example" does not exist and will be ignored',
+            'context' => [],
+        ]], StubLogger::$logs);
 
         $resolver->resolveOnly(['test' => 'abc'], $logger);
-        $this->assertCount(2, $logger->getLogs());
-        $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
-    }
-}
-
-class TestLogger extends AbstractLogger
-{
-    private $logs = [];
-
-    public function log($level, $message, array $context = []): void
-    {
-        $this->logs[] = $message;
-    }
-
-    public function getLogs(): array
-    {
-        return $this->logs;
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Option "example" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "test". Using default value.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
 }

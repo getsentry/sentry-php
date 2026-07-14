@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
+use Sentry\ClientBuilder;
 use Sentry\Dsn;
+use Sentry\Event;
 use Sentry\HttpClient\HttpClient;
 use Sentry\Options;
+use Sentry\OptionsResolver;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Transport\HttpTransport;
 
@@ -25,6 +27,7 @@ final class OptionsTest extends TestCase
         parent::setUp();
 
         $this->errorReportingOnSetUp = error_reporting();
+        StubLogger::$logs = [];
     }
 
     protected function tearDown(): void
@@ -53,7 +56,7 @@ final class OptionsTest extends TestCase
     /**
      * @group legacy
      *
-     * @dataProvider optionsDataProvider
+     * @dataProvider optionsWithSettersDataProvider
      */
     public function testGettersAndSetters(
         string $option,
@@ -98,6 +101,13 @@ final class OptionsTest extends TestCase
             true,
             'getEnableLogs',
             'setEnableLogs',
+        ];
+
+        yield [
+            'enable_metrics',
+            false,
+            'getEnableMetrics',
+            'setEnableMetrics',
         ];
 
         yield [
@@ -241,6 +251,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'dsn',
+            Dsn::createFromString('http://public:secret@example.com/sentry/1'),
+            'getDsn',
+            null,
+        ];
+
+        yield [
             'server_name',
             'foo',
             'getServerName',
@@ -318,6 +335,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'before_send_metric',
+            static function (): void {},
+            'getBeforeSendMetricCallback',
+            'setBeforeSendMetricCallback',
+        ];
+
+        yield [
             'trace_propagation_targets',
             ['www.example.com'],
             'getTracePropagationTargets',
@@ -357,6 +381,15 @@ final class OptionsTest extends TestCase
             false,
             'hasDefaultIntegrations',
             'setDefaultIntegrations',
+        ];
+
+        yield [
+            'integrations',
+            static function (array $integrations): array {
+                return $integrations;
+            },
+            'getIntegrations',
+            'setIntegrations',
         ];
 
         yield [
@@ -477,6 +510,163 @@ final class OptionsTest extends TestCase
             'getMaxRequestBodySize',
             'setMaxRequestBodySize',
         ];
+
+        yield [
+            'class_serializers',
+            [\stdClass::class => static function (\stdClass $value): array {
+                return ['value' => $value];
+            }],
+            'getClassSerializers',
+            'setClassSerializers',
+        ];
+    }
+
+    public static function optionsWithSettersDataProvider(): \Generator
+    {
+        foreach (self::optionsDataProvider() as $testCase) {
+            if ($testCase[3] !== null) {
+                yield $testCase;
+            }
+        }
+    }
+
+    public function testAllOptionsAreCoveredByOptionsDataProvider(): void
+    {
+        $configuredOptions = array_keys(self::getResolvedOptions(new Options()));
+        $testedOptions = [];
+
+        foreach (self::optionsDataProvider() as $testCase) {
+            $testedOptions[] = $testCase[0];
+        }
+
+        $testedOptions = array_values(array_unique($testedOptions));
+
+        sort($configuredOptions);
+        sort($testedOptions);
+
+        $this->assertSame($configuredOptions, $testedOptions);
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testDefaultOptionValues(): void
+    {
+        unset(
+            $_SERVER['SENTRY_DSN'],
+            $_SERVER['SENTRY_ENVIRONMENT'],
+            $_SERVER['SENTRY_RELEASE'],
+            $_SERVER['SENTRY_SPOTLIGHT'],
+            $_SERVER['AWS_LAMBDA_FUNCTION_VERSION']
+        );
+
+        $prefixes = array_map(static function (string $prefix): string {
+            $absolutePath = @realpath($prefix);
+
+            return $absolutePath === false ? $prefix : $absolutePath;
+        }, array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')));
+
+        $actual = self::getResolvedOptions(new Options());
+        $callbackOptions = [
+            'before_send',
+            'before_send_transaction',
+            'before_send_check_in',
+            'before_send_log',
+            'before_send_metrics',
+            'before_send_metric',
+            'before_breadcrumb',
+        ];
+
+        foreach ($callbackOptions as $callbackOption) {
+            $this->assertInstanceOf(\Closure::class, $actual[$callbackOption]);
+            $actual[$callbackOption] = \Closure::class;
+        }
+
+        $expected = [
+            'integrations' => [],
+            'default_integrations' => true,
+            'prefixes' => $prefixes,
+            'sample_rate' => 1,
+            'enable_tracing' => null,
+            'enable_logs' => false,
+            'log_flush_threshold' => null,
+            'enable_metrics' => true,
+            'metric_flush_threshold' => null,
+            'traces_sample_rate' => null,
+            'traces_sampler' => null,
+            'profiles_sample_rate' => null,
+            'profiles_sampler' => null,
+            'attach_stacktrace' => false,
+            'attach_metric_code_locations' => false,
+            'context_lines' => 5,
+            'environment' => null,
+            'logger' => null,
+            'spotlight' => false,
+            'spotlight_url' => 'http://localhost:8969',
+            'release' => null,
+            'dsn' => null,
+            'org_id' => null,
+            'server_name' => gethostname(),
+            'ignore_exceptions' => [],
+            'ignore_transactions' => [],
+            'before_send' => \Closure::class,
+            'before_send_transaction' => \Closure::class,
+            'before_send_check_in' => \Closure::class,
+            'before_send_log' => \Closure::class,
+            'before_send_metrics' => \Closure::class,
+            'before_send_metric' => \Closure::class,
+            'trace_propagation_targets' => null,
+            'strict_trace_continuation' => false,
+            'strict_trace_propagation' => false,
+            'tags' => [],
+            'error_types' => null,
+            'max_breadcrumbs' => Options::DEFAULT_MAX_BREADCRUMBS,
+            'before_breadcrumb' => \Closure::class,
+            'in_app_exclude' => [],
+            'in_app_include' => [],
+            'send_default_pii' => false,
+            'max_value_length' => 1024,
+            'transport' => null,
+            'http_client' => null,
+            'http_proxy' => null,
+            'http_proxy_authentication' => null,
+            'http_connect_timeout' => Options::DEFAULT_HTTP_CONNECT_TIMEOUT,
+            'http_timeout' => Options::DEFAULT_HTTP_TIMEOUT,
+            'http_ssl_verify_peer' => true,
+            'http_ssl_native_ca' => false,
+            'http_compression' => true,
+            'http_enable_curl_share_handle' => true,
+            'capture_silenced_errors' => false,
+            'max_request_body_size' => 'medium',
+            'class_serializers' => [],
+        ];
+
+        ksort($actual);
+        ksort($expected);
+
+        $this->assertSame($expected, $actual);
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testAllDefaultValuesPassValidation(): void
+    {
+        unset(
+            $_SERVER['SENTRY_DSN'],
+            $_SERVER['SENTRY_ENVIRONMENT'],
+            $_SERVER['SENTRY_RELEASE'],
+            $_SERVER['SENTRY_SPOTLIGHT'],
+            $_SERVER['AWS_LAMBDA_FUNCTION_VERSION']
+        );
+
+        $resolver = new RecordingOptionsResolver();
+        self::configureOptions(new Options(), $resolver);
+        $logger = StubLogger::getInstance();
+
+        $resolver->resolve($resolver->getConfiguredDefaults(), $logger);
+
+        $this->assertSame([], StubLogger::$logs);
     }
 
     /**
@@ -712,25 +902,7 @@ final class OptionsTest extends TestCase
 
     public function testUpdateOptionsLogsInvalidValuesAndFallsBackToDefault(): void
     {
-        $logger = new class extends AbstractLogger {
-            /**
-             * @var string[]
-             */
-            private $logs = [];
-
-            public function log($level, $message, array $context = []): void
-            {
-                $this->logs[] = $message;
-            }
-
-            /**
-             * @return string[]
-             */
-            public function getLogs(): array
-            {
-                return $this->logs;
-            }
-        };
+        $logger = StubLogger::getInstance();
 
         $options = new Options([
             'logger' => $logger,
@@ -740,7 +912,11 @@ final class OptionsTest extends TestCase
         $options->updateOptions(['sample_rate' => 'invalid']);
 
         $this->assertSame(1.0, $options->getSampleRate());
-        $this->assertSame(['Invalid value for option "sample_rate". Using default value.'], $logger->getLogs());
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "sample_rate". Using default value.',
+            'context' => [],
+        ]], StubLogger::$logs);
     }
 
     /**
@@ -751,6 +927,19 @@ final class OptionsTest extends TestCase
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
 
         $this->assertEquals(Dsn::createFromString($_SERVER['SENTRY_DSN']), (new Options())->getDsn());
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testInvalidDsnOptionFromEnvironmentVariableFallsBackToNull(): void
+    {
+        $_SERVER['SENTRY_DSN'] = 'invalid';
+
+        $options = new Options(['logger' => StubLogger::getInstance()]);
+
+        $this->assertNull($options->getDsn());
+        $this->assertSame([], StubLogger::$logs);
     }
 
     /**
@@ -823,6 +1012,93 @@ final class OptionsTest extends TestCase
             ['http://localhost:1234', true, 'http://localhost:1234'],
             ['some invalid looking value', false, $defaultSpotlightUrl],
         ];
+    }
+
+    /**
+     * @backupGlobals enabled
+     *
+     * @dataProvider invalidEnvironmentBackedOptionDataProvider
+     *
+     * @param mixed $expected
+     */
+    public function testInvalidEnvironmentBackedOptionFallsBackToSafeDefault(
+        string $serverVariable,
+        string $getter,
+        $expected
+    ): void {
+        $_SERVER[$serverVariable] = [];
+
+        $options = new Options(['logger' => StubLogger::getInstance()]);
+
+        $this->assertSame($expected, $options->$getter());
+        $this->assertSame([], StubLogger::$logs);
+    }
+
+    public static function invalidEnvironmentBackedOptionDataProvider(): \Generator
+    {
+        yield 'environment' => ['SENTRY_ENVIRONMENT', 'getEnvironment', null];
+        yield 'Sentry release' => ['SENTRY_RELEASE', 'getRelease', null];
+        yield 'Lambda release' => ['AWS_LAMBDA_FUNCTION_VERSION', 'getRelease', null];
+        yield 'Spotlight' => ['SENTRY_SPOTLIGHT', 'isSpotlightEnabled', false];
+        yield 'DSN' => ['SENTRY_DSN', 'getDsn', null];
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testInvalidEnvironmentBackedOptionsAreSafeDuringClientConstruction(): void
+    {
+        $_SERVER['SENTRY_DSN'] = [];
+        $_SERVER['SENTRY_ENVIRONMENT'] = [];
+        $_SERVER['SENTRY_RELEASE'] = [];
+        $_SERVER['SENTRY_SPOTLIGHT'] = [];
+
+        $client = ClientBuilder::create(['logger' => StubLogger::getInstance()])->getClient();
+        $options = $client->getOptions();
+
+        $this->assertNull($options->getDsn());
+        $this->assertNull($options->getEnvironment());
+        $this->assertNull($options->getRelease());
+        $this->assertFalse($options->isSpotlightEnabled());
+
+        $this->assertNotNull($client->captureMessage('Invalid environment-backed options'));
+
+        $lastLog = StubLogger::$logs[
+            \count(StubLogger::$logs) - 1
+        ];
+
+        $this->assertSame('info', $lastLog['level']);
+        $this->assertStringContainsString('because no DSN is set.', $lastLog['message']);
+        $this->assertArrayHasKey('event', $lastLog['context']);
+        $this->assertInstanceOf(Event::class, $lastLog['context']['event']);
+        $this->assertSame(Event::DEFAULT_ENVIRONMENT, $lastLog['context']['event']->getEnvironment());
+        $this->assertNull($lastLog['context']['event']->getRelease());
+    }
+
+    /**
+     * @backupGlobals enabled
+     */
+    public function testExplicitOptionsTakePrecedenceOverEnvironmentBackedOptions(): void
+    {
+        $_SERVER['SENTRY_DSN'] = [];
+        $_SERVER['SENTRY_ENVIRONMENT'] = [];
+        $_SERVER['SENTRY_RELEASE'] = [];
+        $_SERVER['SENTRY_SPOTLIGHT'] = [];
+
+        $dsn = Dsn::createFromString('http://public@example.com/1');
+        $options = new Options([
+            'dsn' => $dsn,
+            'environment' => 'production',
+            'release' => '1.0.0',
+            'spotlight' => true,
+            'logger' => StubLogger::getInstance(),
+        ]);
+
+        $this->assertSame($dsn, $options->getDsn());
+        $this->assertSame('production', $options->getEnvironment());
+        $this->assertSame('1.0.0', $options->getRelease());
+        $this->assertTrue($options->isSpotlightEnabled());
+        $this->assertSame([], StubLogger::$logs);
     }
 
     public function testErrorTypesOptionIsNotDynamiclyReadFromErrorReportingLevelWhenSet(): void
@@ -918,5 +1194,51 @@ final class OptionsTest extends TestCase
         yield ['http://localhost:8969/foo', 'http://localhost:8969/foo'];
         yield ['http://localhost:8969/foo/stream', 'http://localhost:8969/foo'];
         yield ['http://localhost:8969/stream/foo', 'http://localhost:8969/stream/foo'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function getResolvedOptions(Options $options): array
+    {
+        /** @var \Closure(Options): array<string, mixed> $getOptions */
+        $getOptions = \Closure::bind(static function (Options $options): array {
+            return $options->options;
+        }, null, Options::class);
+
+        return $getOptions($options);
+    }
+
+    private static function configureOptions(Options $options, OptionsResolver $resolver): void
+    {
+        /** @var \Closure(Options, OptionsResolver): void $configureOptions */
+        $configureOptions = \Closure::bind(static function (Options $options, OptionsResolver $resolver): void {
+            $options->configureOptions($resolver);
+        }, null, Options::class);
+
+        $configureOptions($options, $resolver);
+    }
+}
+
+final class RecordingOptionsResolver extends OptionsResolver
+{
+    /**
+     * @var array<string, mixed>
+     */
+    private $configuredDefaults = [];
+
+    public function setDefaults(array $defaults): void
+    {
+        $this->configuredDefaults = $defaults;
+
+        parent::setDefaults($defaults);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getConfiguredDefaults(): array
+    {
+        return $this->configuredDefaults;
     }
 }
