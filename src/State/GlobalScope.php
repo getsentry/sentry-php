@@ -10,11 +10,6 @@ namespace Sentry\State;
  */
 class GlobalScope extends MutableScope
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * @internal
      */
