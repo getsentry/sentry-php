@@ -97,10 +97,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        $eventId = SentrySdk::getClient()->captureMessage($message, $level, SentrySdk::getIsolationScope(), $hint);
-        SentrySdk::getIsolationScope()->setLastEventId($eventId);
-
-        return $eventId;
+        return EventCapturer::captureMessage($message, $level, $hint);
     }
 
     /**
@@ -108,10 +105,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        $eventId = SentrySdk::getClient()->captureException($exception, SentrySdk::getIsolationScope(), $hint);
-        SentrySdk::getIsolationScope()->setLastEventId($eventId);
-
-        return $eventId;
+        return EventCapturer::captureException($exception, $hint);
     }
 
     /**
@@ -119,10 +113,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
-        $eventId = SentrySdk::getClient()->captureEvent($event, $hint, SentrySdk::getIsolationScope());
-        SentrySdk::getIsolationScope()->setLastEventId($eventId);
-
-        return $eventId;
+        return EventCapturer::captureEvent($event, $hint);
     }
 
     /**
@@ -130,10 +121,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        $eventId = SentrySdk::getClient()->captureLastError(SentrySdk::getIsolationScope(), $hint);
-        SentrySdk::getIsolationScope()->setLastEventId($eventId);
-
-        return $eventId;
+        return EventCapturer::captureLastError($hint);
     }
 
     /**
@@ -143,27 +131,7 @@ final class HubAdapter implements HubInterface
      */
     public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
     {
-        $client = SentrySdk::getClient();
-
-        if ($client instanceof NoOpClient) {
-            return null;
-        }
-
-        $options = $client->getOptions();
-        $event = Event::createCheckIn();
-        $checkIn = new \Sentry\CheckIn(
-            $slug,
-            $status,
-            $checkInId,
-            $options->getRelease(),
-            $options->getEnvironment(),
-            $duration,
-            $monitorConfig
-        );
-        $event->setCheckIn($checkIn);
-        $this->captureEvent($event);
-
-        return $checkIn->getId();
+        return EventCapturer::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
     }
 
     /**
@@ -171,26 +139,9 @@ final class HubAdapter implements HubInterface
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
-        $client = SentrySdk::getClient();
+        $scope = SentrySdk::getIsolationScope();
 
-        if ($client instanceof NoOpClient) {
-            return false;
-        }
-
-        $options = $client->getOptions();
-        $maxBreadcrumbs = $options->getMaxBreadcrumbs();
-
-        if ($maxBreadcrumbs <= 0) {
-            return false;
-        }
-
-        $breadcrumb = ($options->getBeforeBreadcrumbCallback())($breadcrumb);
-
-        if ($breadcrumb !== null) {
-            SentrySdk::getIsolationScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
-        }
-
-        return $breadcrumb !== null;
+        return BreadcrumbRecorder::record(SentrySdk::getClient($scope), $scope, $breadcrumb);
     }
 
     /**
