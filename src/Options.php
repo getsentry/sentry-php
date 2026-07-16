@@ -1548,7 +1548,11 @@ final class Options
      */
     public function updateOptions(array $override = []): self
     {
-        $resolved = $this->resolver->resolveOnly($override, $this->getLoggerOrNullLogger($override));
+        $resolved = $this->resolver->resolveOnly(
+            $override,
+            $this->options,
+            $this->getLoggerOrNullLogger($override)
+        );
 
         $this->options = array_merge($this->options, $resolved);
 

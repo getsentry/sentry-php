@@ -900,21 +900,50 @@ final class OptionsTest extends TestCase
         ];
     }
 
-    public function testUpdateOptionsLogsInvalidValuesAndFallsBackToDefault(): void
+    public function testTagsAreValidatedAndReplacedAsOneAssociativeArray(): void
+    {
+        $options = new Options([
+            'tags' => [
+                'environment' => 'production',
+                'release' => '1.0',
+            ],
+        ]);
+
+        $this->assertSame([
+            'environment' => 'production',
+            'release' => '1.0',
+        ], $options->getTags());
+
+        $options->setTags(['environment' => 'staging']);
+
+        $this->assertSame([
+            'environment' => 'staging',
+        ], $options->getTags());
+
+        $options->updateOptions(['tags' => ['invalid' => 42]]);
+
+        $this->assertSame([
+            'environment' => 'staging',
+        ], $options->getTags());
+    }
+
+    public function testUpdateOptionsLogsInvalidValuesAndKeepsCurrentValue(): void
     {
         $logger = StubLogger::getInstance();
 
         $options = new Options([
             'logger' => $logger,
             'sample_rate' => 0.5,
+            'environment' => 'custom',
         ]);
 
         $options->updateOptions(['sample_rate' => 'invalid']);
 
-        $this->assertSame(1.0, $options->getSampleRate());
+        $this->assertSame(0.5, $options->getSampleRate());
+        $this->assertSame('custom', $options->getEnvironment());
         $this->assertSame([[
             'level' => 'debug',
-            'message' => 'Invalid value for option "sample_rate". Using default value.',
+            'message' => 'Invalid value for option "sample_rate". The value has been ignored.',
             'context' => [],
         ]], StubLogger::$logs);
     }
