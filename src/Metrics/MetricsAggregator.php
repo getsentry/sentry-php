@@ -129,7 +129,7 @@ final class MetricsAggregator
         }
     }
 
-    public function flush(?ClientInterface $client = null): ?EventId
+    public function flush(?ClientInterface $client = null, ?Scope $isolationScope = null): ?EventId
     {
         $metrics = $this->metrics;
 
@@ -137,10 +137,11 @@ final class MetricsAggregator
             return null;
         }
 
-        $client = $client ?? SentrySdk::getCurrentHub()->getClient();
+        $isolationScope = $isolationScope ?? SentrySdk::getIsolationScope();
+        $client = $client ?? SentrySdk::getClient($isolationScope);
         $event = Event::createMetrics()->setMetrics($metrics->drain());
 
-        return $client->captureEvent($event);
+        return $client->captureEvent($event, null, Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope));
     }
 
     /**

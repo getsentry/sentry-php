@@ -164,7 +164,7 @@ final class LogsAggregator
         }
     }
 
-    public function flush(?ClientInterface $client = null): ?EventId
+    public function flush(?ClientInterface $client = null, ?Scope $isolationScope = null): ?EventId
     {
         $logs = $this->logs;
 
@@ -172,10 +172,11 @@ final class LogsAggregator
             return null;
         }
 
-        $client = $client ?? SentrySdk::getCurrentHub()->getClient();
+        $isolationScope = $isolationScope ?? SentrySdk::getIsolationScope();
+        $client = $client ?? SentrySdk::getClient($isolationScope);
         $event = Event::createLogs()->setLogs($logs->drain());
 
-        return $client->captureEvent($event);
+        return $client->captureEvent($event, null, Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope));
     }
 
     /**

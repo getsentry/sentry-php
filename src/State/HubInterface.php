@@ -31,22 +31,6 @@ interface HubInterface
     public function getLastEventId(): ?EventId;
 
     /**
-     * Creates a new scope to store context information that will be layered on
-     * top of the current one. It is isolated, i.e. all breadcrumbs and context
-     * information added to this scope will be removed once the scope ends. Be
-     * sure to always remove this scope with {@see Hub::popScope} when the
-     * operation finishes or throws.
-     */
-    public function pushScope(): Scope;
-
-    /**
-     * Removes a previously pushed scope from the stack. This restores the state
-     * before the scope was pushed. All breadcrumbs and context information added
-     * since the last call to {@see Hub::pushScope} are discarded.
-     */
-    public function popScope(): bool;
-
-    /**
      * Creates a new scope with and executes the given operation within. The scope
      * is automatically removed once the operation finishes or throws.
      *

@@ -6,7 +6,7 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
-use Sentry\State\Hub;
+use Sentry\State\HubAdapter;
 use Sentry\State\HubInterface;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
@@ -19,11 +19,6 @@ use Sentry\State\Scope;
  */
 final class SentrySdk
 {
-    /**
-     * @var HubInterface|null The baseline hub
-     */
-    private static $currentHub;
-
     /**
      * @var Scope|null The process-global scope
      */
@@ -42,29 +37,22 @@ final class SentrySdk
     }
 
     /**
-     * Initializes the SDK by creating a new hub instance each time this method
-     * gets called.
+     * Initializes the SDK by binding the client to the global scope and reset
+     * the current local runtime state.
      */
     public static function init(?ClientInterface $client = null): HubInterface
     {
-        $hubClient = $client ?? new NoOpClient();
-
         if ($client !== null) {
             self::getGlobalScope()->setClient($client);
         }
-        self::$currentHub = new Hub($hubClient);
-        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
+        self::$runtimeContextManager = new RuntimeContextManager();
 
         return self::getCurrentHub();
     }
 
-    /**
-     * Gets the current hub. If it's not initialized then creates a new instance
-     * and sets it as current hub.
-     */
     public static function getCurrentHub(): HubInterface
     {
-        return self::getRuntimeContextManager()->getCurrentHub();
+        return HubAdapter::getInstance();
     }
 
     /**
@@ -78,11 +66,7 @@ final class SentrySdk
      */
     public static function setCurrentHub(HubInterface $hub): HubInterface
     {
-        $wasSetOnActiveRuntimeContext = self::getRuntimeContextManager()->setCurrentHub($hub);
-
-        if (!$wasSetOnActiveRuntimeContext) {
-            self::$currentHub = $hub;
-        }
+        self::getGlobalScope()->setClient($hub->getClient());
 
         return $hub;
     }
@@ -101,9 +85,9 @@ final class SentrySdk
         return self::getCurrentRuntimeContext()->getIsolationScope();
     }
 
-    public static function getClient(): ClientInterface
+    public static function getClient(?Scope $isolationScope = null): ClientInterface
     {
-        $client = self::getIsolationScope()->getClient();
+        $client = ($isolationScope ?? self::getIsolationScope())->getClient();
 
         if (!$client instanceof NoOpClient) {
             return $client;
@@ -181,18 +165,13 @@ final class SentrySdk
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
 
-        $client = self::getCurrentHub()->getClient();
-        $client->flush();
+        self::getClient()->flush();
     }
 
     private static function getRuntimeContextManager(): RuntimeContextManager
     {
-        if (self::$currentHub === null) {
-            self::$currentHub = new Hub(new NoOpClient());
-        }
-
         if (self::$runtimeContextManager === null) {
-            self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
+            self::$runtimeContextManager = new RuntimeContextManager();
         }
 
         return self::$runtimeContextManager;

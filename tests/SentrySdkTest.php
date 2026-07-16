@@ -26,7 +26,7 @@ final class SentrySdkTest extends TestCase
         $hub2 = SentrySdk::getCurrentHub();
 
         $this->assertSame($hub1, $hub2);
-        $this->assertNotSame(SentrySdk::init(), SentrySdk::init());
+        $this->assertSame(SentrySdk::init(), SentrySdk::init());
     }
 
     public function testGetCurrentHub(): void
@@ -41,10 +41,11 @@ final class SentrySdkTest extends TestCase
 
     public function testSetCurrentHub(): void
     {
-        $hub = new Hub(new NoOpClient());
+        $client = $this->createMock(ClientInterface::class);
+        $hub = new Hub($client);
 
         $this->assertSame($hub, SentrySdk::setCurrentHub($hub));
-        $this->assertSame($hub, SentrySdk::getCurrentHub());
+        $this->assertSame($client, SentrySdk::getClient());
     }
 
     public function testGetGlobalScope(): void
@@ -211,22 +212,22 @@ final class SentrySdkTest extends TestCase
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
+        $globalScope = SentrySdk::getIsolationScope();
 
         SentrySdk::startContext();
-        $firstContextHub = SentrySdk::getCurrentHub();
+        $firstContextScope = SentrySdk::getIsolationScope();
 
         SentrySdk::startContext();
-        $secondContextHub = SentrySdk::getCurrentHub();
+        $secondContextScope = SentrySdk::getIsolationScope();
 
-        $this->assertNotSame($globalHub, $firstContextHub);
-        $this->assertSame($firstContextHub, $secondContextHub);
-
-        SentrySdk::endContext();
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertNotSame($globalScope, $firstContextScope);
+        $this->assertSame($firstContextScope, $secondContextScope);
 
         SentrySdk::endContext();
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::endContext();
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testEndContextFlushesClientTransportWithOptionalTimeout(): void
@@ -261,45 +262,45 @@ final class SentrySdkTest extends TestCase
         SentrySdk::flush();
     }
 
-    public function testWithContextReturnsCallbackResultAndRestoresGlobalHub(): void
+    public function testWithContextReturnsCallbackResultAndRestoresGlobalIsolationScope(): void
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
-        $callbackHub = null;
+        $globalScope = SentrySdk::getIsolationScope();
+        $callbackScope = null;
 
-        $result = SentrySdk::withContext(static function () use (&$callbackHub): string {
-            $callbackHub = SentrySdk::getCurrentHub();
+        $result = SentrySdk::withContext(static function () use (&$callbackScope): string {
+            $callbackScope = SentrySdk::getIsolationScope();
 
             return 'ok';
         });
 
         $this->assertSame('ok', $result);
-        $this->assertNotNull($callbackHub);
-        $this->assertNotSame($globalHub, $callbackHub);
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertNotNull($callbackScope);
+        $this->assertNotSame($globalScope, $callbackScope);
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testNestedWithContextReusesOuterContext(): void
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
-        $outerHub = null;
-        $innerHub = null;
+        $globalScope = SentrySdk::getIsolationScope();
+        $outerScope = null;
+        $innerScope = null;
         $outerContextId = null;
         $innerContextId = null;
 
-        SentrySdk::withContext(function () use (&$outerHub, &$innerHub, &$outerContextId, &$innerContextId, $globalHub): void {
-            $outerHub = SentrySdk::getCurrentHub();
+        SentrySdk::withContext(function () use (&$outerScope, &$innerScope, &$outerContextId, &$innerContextId, $globalScope): void {
+            $outerScope = SentrySdk::getIsolationScope();
             $outerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
 
             SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope): void {
                 $scope->setTag('outer', 'yes');
             });
 
-            SentrySdk::withContext(static function () use (&$innerHub, &$innerContextId): void {
-                $innerHub = SentrySdk::getCurrentHub();
+            SentrySdk::withContext(static function () use (&$innerScope, &$innerContextId): void {
+                $innerScope = SentrySdk::getIsolationScope();
                 $innerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
             });
 
@@ -309,30 +310,30 @@ final class SentrySdkTest extends TestCase
                 $event = $scope->applyToEvent($event);
             });
 
-            $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+            $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
             $this->assertSame('yes', $event->getTags()['outer'] ?? null);
             $this->assertSame($outerContextId, SentrySdk::getCurrentRuntimeContext()->getId());
         });
 
-        $this->assertNotNull($outerHub);
-        $this->assertNotNull($innerHub);
+        $this->assertNotNull($outerScope);
+        $this->assertNotNull($innerScope);
         $this->assertNotNull($outerContextId);
         $this->assertNotNull($innerContextId);
-        $this->assertSame($outerHub, $innerHub);
+        $this->assertSame($outerScope, $innerScope);
         $this->assertSame($outerContextId, $innerContextId);
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testWithContextEndsContextWhenCallbackThrows(): void
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
-        $callbackHub = null;
+        $globalScope = SentrySdk::getIsolationScope();
+        $callbackScope = null;
 
         try {
-            SentrySdk::withContext(static function () use (&$callbackHub): void {
-                $callbackHub = SentrySdk::getCurrentHub();
+            SentrySdk::withContext(static function () use (&$callbackScope): void {
+                $callbackScope = SentrySdk::getIsolationScope();
 
                 throw new \RuntimeException('boom');
             });
@@ -342,9 +343,9 @@ final class SentrySdkTest extends TestCase
             $this->assertSame('boom', $exception->getMessage());
         }
 
-        $this->assertNotNull($callbackHub);
-        $this->assertNotSame($globalHub, $callbackHub);
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertNotNull($callbackScope);
+        $this->assertNotSame($globalScope, $callbackScope);
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     private function getCurrentScopeTraceparent(): string

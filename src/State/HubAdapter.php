@@ -13,11 +13,13 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
+use Sentry\NoOpClient;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Tracing\TransactionSampler;
 
 /**
  * An implementation of {@see HubInterface} that uses {@see SentrySdk} internally
@@ -55,7 +57,7 @@ final class HubAdapter implements HubInterface
      */
     public function getClient(): ClientInterface
     {
-        return SentrySdk::getCurrentHub()->getClient();
+        return SentrySdk::getClient();
     }
 
     /**
@@ -63,23 +65,7 @@ final class HubAdapter implements HubInterface
      */
     public function getLastEventId(): ?EventId
     {
-        return SentrySdk::getCurrentHub()->getLastEventId();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function pushScope(): Scope
-    {
-        return SentrySdk::getCurrentHub()->pushScope();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function popScope(): bool
-    {
-        return SentrySdk::getCurrentHub()->popScope();
+        return SentrySdk::getIsolationScope()->getLastEventId();
     }
 
     /**
@@ -87,7 +73,7 @@ final class HubAdapter implements HubInterface
      */
     public function withScope(callable $callback)
     {
-        return SentrySdk::getCurrentHub()->withScope($callback);
+        return \Sentry\withIsolationScope($callback);
     }
 
     /**
@@ -95,7 +81,7 @@ final class HubAdapter implements HubInterface
      */
     public function configureScope(callable $callback): void
     {
-        SentrySdk::getCurrentHub()->configureScope($callback);
+        $callback(SentrySdk::getIsolationScope());
     }
 
     /**
@@ -103,7 +89,7 @@ final class HubAdapter implements HubInterface
      */
     public function bindClient(ClientInterface $client): void
     {
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::getGlobalScope()->setClient($client);
     }
 
     /**
@@ -111,7 +97,10 @@ final class HubAdapter implements HubInterface
      */
     public function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureMessage($message, $level, $hint);
+        $eventId = SentrySdk::getClient()->captureMessage($message, $level, SentrySdk::getIsolationScope(), $hint);
+        SentrySdk::getIsolationScope()->setLastEventId($eventId);
+
+        return $eventId;
     }
 
     /**
@@ -119,7 +108,10 @@ final class HubAdapter implements HubInterface
      */
     public function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureException($exception, $hint);
+        $eventId = SentrySdk::getClient()->captureException($exception, SentrySdk::getIsolationScope(), $hint);
+        SentrySdk::getIsolationScope()->setLastEventId($eventId);
+
+        return $eventId;
     }
 
     /**
@@ -127,7 +119,10 @@ final class HubAdapter implements HubInterface
      */
     public function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureEvent($event, $hint);
+        $eventId = SentrySdk::getClient()->captureEvent($event, $hint, SentrySdk::getIsolationScope());
+        SentrySdk::getIsolationScope()->setLastEventId($eventId);
+
+        return $eventId;
     }
 
     /**
@@ -135,7 +130,10 @@ final class HubAdapter implements HubInterface
      */
     public function captureLastError(?EventHint $hint = null): ?EventId
     {
-        return SentrySdk::getCurrentHub()->captureLastError($hint);
+        $eventId = SentrySdk::getClient()->captureLastError(SentrySdk::getIsolationScope(), $hint);
+        SentrySdk::getIsolationScope()->setLastEventId($eventId);
+
+        return $eventId;
     }
 
     /**
@@ -145,7 +143,27 @@ final class HubAdapter implements HubInterface
      */
     public function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
     {
-        return SentrySdk::getCurrentHub()->captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+        $client = SentrySdk::getClient();
+
+        if ($client instanceof NoOpClient) {
+            return null;
+        }
+
+        $options = $client->getOptions();
+        $event = Event::createCheckIn();
+        $checkIn = new \Sentry\CheckIn(
+            $slug,
+            $status,
+            $checkInId,
+            $options->getRelease(),
+            $options->getEnvironment(),
+            $duration,
+            $monitorConfig
+        );
+        $event->setCheckIn($checkIn);
+        $this->captureEvent($event);
+
+        return $checkIn->getId();
     }
 
     /**
@@ -153,7 +171,26 @@ final class HubAdapter implements HubInterface
      */
     public function addBreadcrumb(Breadcrumb $breadcrumb): bool
     {
-        return SentrySdk::getCurrentHub()->addBreadcrumb($breadcrumb);
+        $client = SentrySdk::getClient();
+
+        if ($client instanceof NoOpClient) {
+            return false;
+        }
+
+        $options = $client->getOptions();
+        $maxBreadcrumbs = $options->getMaxBreadcrumbs();
+
+        if ($maxBreadcrumbs <= 0) {
+            return false;
+        }
+
+        $breadcrumb = ($options->getBeforeBreadcrumbCallback())($breadcrumb);
+
+        if ($breadcrumb !== null) {
+            SentrySdk::getIsolationScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
+        }
+
+        return $breadcrumb !== null;
     }
 
     /**
@@ -161,7 +198,13 @@ final class HubAdapter implements HubInterface
      */
     public function addAttachment(Attachment $attachment): bool
     {
-        return SentrySdk::getCurrentHub()->addAttachment($attachment);
+        if (SentrySdk::getClient() instanceof NoOpClient) {
+            return false;
+        }
+
+        SentrySdk::getIsolationScope()->addAttachment($attachment);
+
+        return true;
     }
 
     /**
@@ -169,7 +212,7 @@ final class HubAdapter implements HubInterface
      */
     public function getIntegration(string $className): ?IntegrationInterface
     {
-        return SentrySdk::getCurrentHub()->getIntegration($className);
+        return SentrySdk::getClient()->getIntegration($className);
     }
 
     /**
@@ -177,7 +220,7 @@ final class HubAdapter implements HubInterface
      */
     public function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
+        return TransactionSampler::startTransaction(SentrySdk::getClient()->getOptions(), $context, $customSamplingContext);
     }
 
     /**
@@ -185,7 +228,7 @@ final class HubAdapter implements HubInterface
      */
     public function getTransaction(): ?Transaction
     {
-        return SentrySdk::getCurrentHub()->getTransaction();
+        return SentrySdk::getIsolationScope()->getTransaction();
     }
 
     /**
@@ -193,7 +236,7 @@ final class HubAdapter implements HubInterface
      */
     public function getSpan(): ?Span
     {
-        return SentrySdk::getCurrentHub()->getSpan();
+        return SentrySdk::getIsolationScope()->getSpan();
     }
 
     /**
@@ -201,7 +244,9 @@ final class HubAdapter implements HubInterface
      */
     public function setSpan(?Span $span): HubInterface
     {
-        return SentrySdk::getCurrentHub()->setSpan($span);
+        SentrySdk::getIsolationScope()->setSpan($span);
+
+        return $this;
     }
 
     /**

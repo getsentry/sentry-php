@@ -10,7 +10,6 @@ use Sentry\State\Scope;
 use Spiral\RoadRunner\Http\PSR7Worker;
 use Spiral\RoadRunner\Worker;
 
-use function Sentry\configureScope;
 use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\withContext;
@@ -37,9 +36,7 @@ init([
     'default_integrations' => false,
 ]);
 
-configureScope(static function (Scope $scope): void {
-    $scope->setTag('baseline', 'yes');
-});
+SentrySdk::getGlobalScope()->setTag('baseline', 'yes');
 
 $factory = new Psr17Factory();
 $worker = Worker::create();
@@ -102,18 +99,14 @@ function handleRequest($request): Response
     $leakTag = isset($query['leak']) ? (string) $query['leak'] : null;
 
     $payload = withContext(static function () use ($requestTag, $leakTag): string {
-        configureScope(static function (Scope $scope) use ($requestTag, $leakTag): void {
-            $scope->setTag('request', $requestTag);
+        SentrySdk::getIsolationScope()->setTag('request', $requestTag);
 
-            if ($leakTag !== null) {
-                $scope->setTag('leak', $leakTag);
-            }
-        });
+        if ($leakTag !== null) {
+            SentrySdk::getIsolationScope()->setTag('leak', $leakTag);
+        }
 
         $event = Event::createEvent();
-        configureScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event);
-        });
+        $event = Scope::mergeScopes(SentrySdk::getGlobalScope(), SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $tags = [];
 

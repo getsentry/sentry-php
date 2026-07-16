@@ -20,7 +20,6 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Hub;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -85,14 +84,18 @@ final class FunctionsTest extends TestCase
     public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs): void
     {
         $eventId = EventId::generate();
+        $message = $expectedFunctionCallArgs[0];
+        $level = $expectedFunctionCallArgs[1];
+        $scope = $this->isInstanceOf(Scope::class);
+        $hint = $expectedFunctionCallArgs[2];
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureMessage')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($message, $level, $scope, $hint)
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($eventId, captureMessage(...$functionCallArgs));
     }
@@ -132,13 +135,13 @@ final class FunctionsTest extends TestCase
     {
         $eventId = EventId::generate();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureException')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($expectedFunctionCallArgs[0], $this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[1])
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($eventId, captureException(...$functionCallArgs));
     }
@@ -172,13 +175,13 @@ final class FunctionsTest extends TestCase
         $event = Event::createEvent();
         $hint = new EventHint();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureEvent')
-            ->with($event, $hint)
+            ->with($event, $hint, $this->isInstanceOf(Scope::class))
             ->willReturn($event->getId());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($event->getId(), captureEvent($event, $hint));
     }
@@ -190,13 +193,13 @@ final class FunctionsTest extends TestCase
     {
         $eventId = EventId::generate();
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
             ->method('captureLastError')
-            ->with(...$expectedFunctionCallArgs)
+            ->with($this->isInstanceOf(Scope::class), $expectedFunctionCallArgs[0])
             ->willReturn($eventId);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         @trigger_error('foo', \E_USER_NOTICE);
 
@@ -226,13 +229,20 @@ final class FunctionsTest extends TestCase
             'UTC'
         );
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('captureCheckIn')
-            ->with('test-crontab', CheckInStatus::ok(), 10, $monitorConfig, $checkInId)
-            ->willReturn($checkInId);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($checkInId): bool {
+                $checkIn = $event->getCheckIn();
 
-        SentrySdk::setCurrentHub($hub);
+                return $checkIn !== null && $checkIn->getId() === $checkInId;
+            }), null, $this->isInstanceOf(Scope::class))
+            ->willReturn(EventId::generate());
+
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame($checkInId, captureCheckIn(
             'test-crontab',
@@ -245,28 +255,22 @@ final class FunctionsTest extends TestCase
 
     public function testWithMonitor(): void
     {
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->exactly(2))
-            ->method('captureCheckIn')
-            ->with(
-                $this->callback(static function (string $slug): bool {
-                    return $slug === 'test-crontab';
-                }),
-                $this->callback(static function (CheckInStatus $checkInStatus): bool {
-                    // just check for type CheckInStatus
-                    return true;
-                }),
-                $this->anything(),
-                $this->callback(static function (MonitorConfig $monitorConfig): bool {
-                    return $monitorConfig->getSchedule()->getValue() === '*/5 * * * *'
-                        && $monitorConfig->getSchedule()->getType() === MonitorSchedule::TYPE_CRONTAB
-                        && $monitorConfig->getCheckinMargin() === 5
-                        && $monitorConfig->getMaxRuntime() === 30
-                        && $monitorConfig->getTimezone() === 'UTC';
-                })
-            );
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->exactly(2))
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->exactly(2))
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event): bool {
+                $checkIn = $event->getCheckIn();
 
-        SentrySdk::setCurrentHub($hub);
+                return $checkIn !== null
+                    && $checkIn->getMonitorSlug() === 'test-crontab'
+                    && $checkIn->getMonitorConfig() !== null
+                    && $checkIn->getMonitorConfig()->getSchedule()->getValue() === '*/5 * * * *';
+            }), null, $this->isInstanceOf(Scope::class));
+
+        SentrySdk::getGlobalScope()->setClient($client);
 
         withMonitor('test-crontab', static function () {
             // Do something...
@@ -282,28 +286,15 @@ final class FunctionsTest extends TestCase
     {
         $this->expectException(\Exception::class);
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->exactly(2))
-            ->method('captureCheckIn')
-            ->with(
-                $this->callback(static function (string $slug): bool {
-                    return $slug === 'test-crontab';
-                }),
-                $this->callback(static function (CheckInStatus $checkInStatus): bool {
-                    // just check for type CheckInStatus
-                    return true;
-                }),
-                $this->anything(),
-                $this->callback(static function (MonitorConfig $monitorConfig): bool {
-                    return $monitorConfig->getSchedule()->getValue() === '*/5 * * * *'
-                        && $monitorConfig->getSchedule()->getType() === MonitorSchedule::TYPE_CRONTAB
-                        && $monitorConfig->getCheckinMargin() === 5
-                        && $monitorConfig->getMaxRuntime() === 30
-                        && $monitorConfig->getTimezone() === 'UTC';
-                })
-            );
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->exactly(2))
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->exactly(2))
+            ->method('captureEvent')
+            ->with($this->isInstanceOf(Event::class), null, $this->isInstanceOf(Scope::class));
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
         withMonitor('test-crontab', static function () {
             throw new \Exception();
@@ -360,52 +351,52 @@ final class FunctionsTest extends TestCase
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
+        $globalScope = SentrySdk::getIsolationScope();
 
         startContext();
 
-        $requestHub = SentrySdk::getCurrentHub();
+        $requestScope = SentrySdk::getIsolationScope();
 
-        $this->assertNotSame($globalHub, $requestHub);
+        $this->assertNotSame($globalScope, $requestScope);
 
         endContext();
 
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testWithContext(): void
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
+        $globalScope = SentrySdk::getIsolationScope();
 
-        $result = withContext(function () use ($globalHub): string {
-            $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+        $result = withContext(function () use ($globalScope): string {
+            $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
 
             return 'ok';
         });
 
         $this->assertSame('ok', $result);
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testNestedWithContextReusesOuterContext(): void
     {
         SentrySdk::init();
 
-        $globalHub = SentrySdk::getCurrentHub();
-        $outerHub = null;
-        $innerHub = null;
+        $globalScope = SentrySdk::getIsolationScope();
+        $outerScope = null;
+        $innerScope = null;
 
-        withContext(function () use (&$outerHub, &$innerHub, $globalHub): void {
-            $outerHub = SentrySdk::getCurrentHub();
+        withContext(function () use (&$outerScope, &$innerScope, $globalScope): void {
+            $outerScope = SentrySdk::getIsolationScope();
 
             configureScope(static function (Scope $scope): void {
                 $scope->setTag('outer', 'yes');
             });
 
-            withContext(static function () use (&$innerHub): void {
-                $innerHub = SentrySdk::getCurrentHub();
+            withContext(static function () use (&$innerScope): void {
+                $innerScope = SentrySdk::getIsolationScope();
             });
 
             $event = Event::createEvent();
@@ -414,14 +405,14 @@ final class FunctionsTest extends TestCase
                 $event = $scope->applyToEvent($event);
             });
 
-            $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+            $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
             $this->assertSame('yes', $event->getTags()['outer'] ?? null);
         });
 
-        $this->assertNotNull($outerHub);
-        $this->assertNotNull($innerHub);
-        $this->assertSame($outerHub, $innerHub);
-        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+        $this->assertNotNull($outerScope);
+        $this->assertNotNull($innerScope);
+        $this->assertSame($outerScope, $innerScope);
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
     public function testWithContextAlwaysEndsContextWithOptionalTimeout(): void
@@ -455,15 +446,16 @@ final class FunctionsTest extends TestCase
         $transaction = new Transaction($transactionContext);
         $customSamplingContext = ['foo' => 'bar'];
 
-        $hub = $this->createMock(HubInterface::class);
-        $hub->expects($this->once())
-            ->method('startTransaction')
-            ->with($transactionContext, $customSamplingContext)
-            ->willReturn($transaction);
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
 
-        $this->assertSame($transaction, startTransaction($transactionContext, $customSamplingContext));
+        $transaction = startTransaction($transactionContext, $customSamplingContext);
+
+        $this->assertSame('foo', $transaction->getName());
     }
 
     public function testTraceReturnsClosureResult(): void
@@ -479,37 +471,31 @@ final class FunctionsTest extends TestCase
 
     public function testTraceCorrectlyReplacesAndRestoresCurrentSpan(): void
     {
-        $hub = new Hub(new NoOpClient());
-
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(true);
 
-        $hub->setSpan($transaction);
+        SentrySdk::getCurrentHub()->setSpan($transaction);
 
-        SentrySdk::setCurrentHub($hub);
+        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
 
-        $this->assertSame($transaction, $hub->getSpan());
-
-        trace(function () use ($transaction, $hub) {
-            $this->assertNotSame($transaction, $hub->getSpan());
+        trace(function (Scope $scope) use ($transaction) {
+            $this->assertNotSame($transaction, $scope->getSpan());
         }, new SpanContext());
 
-        $this->assertSame($transaction, $hub->getSpan());
+        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
 
         try {
             trace(static function () {
                 throw new \RuntimeException('Throwing should still restore the previous span');
             }, new SpanContext());
         } catch (\RuntimeException $e) {
-            $this->assertSame($transaction, $hub->getSpan());
+            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
         }
     }
 
     public function testTraceDoesntCreateSpanIfTransactionIsNotSampled(): void
     {
         $scope = $this->createMock(Scope::class);
-
-        $hub = new Hub(new NoOpClient(), $scope);
 
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(false);
@@ -520,13 +506,13 @@ final class FunctionsTest extends TestCase
               ->method('getSpan')
               ->willReturn($transaction);
 
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
-        trace(function () use ($transaction, $hub) {
-            $this->assertSame($transaction, $hub->getSpan());
+        trace(function () use ($transaction) {
+            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
         }, SpanContext::make());
 
-        $this->assertSame($transaction, $hub->getSpan());
+        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
     }
 
     public function testTraceparentWithTracingDisabled(): void
@@ -535,11 +521,7 @@ final class FunctionsTest extends TestCase
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $propagationContext->setSpanId(new SpanId('566e3688a61d4bc8'));
 
-        $scope = new Scope($propagationContext);
-
-        $hub = new Hub(new NoOpClient(), $scope);
-
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
 
         $traceParent = getTraceparent();
 
@@ -555,9 +537,7 @@ final class FunctionsTest extends TestCase
                 'traces_sample_rate' => 1.0,
             ]));
 
-        $hub = new Hub($client);
-
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::setCurrentHub(new Hub($client));
 
         $spanContext = (new SpanContext())
             ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
@@ -565,7 +545,7 @@ final class FunctionsTest extends TestCase
 
         $span = new Span($spanContext);
 
-        $hub->setSpan($span);
+        SentrySdk::getCurrentHub()->setSpan($span);
 
         $traceParent = getTraceparent();
 
@@ -585,7 +565,7 @@ final class FunctionsTest extends TestCase
             ];
         });
 
-        SentrySdk::setCurrentHub(new Hub(new NoOpClient(), new Scope($propagationContext)));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
 
         $this->assertSame('', getTraceparent());
         $this->assertSame('', getBaggage());
@@ -599,8 +579,6 @@ final class FunctionsTest extends TestCase
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $propagationContext->setSampleRand(0.25);
 
-        $scope = new Scope($propagationContext);
-
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->atLeastOnce())
             ->method('getOptions')
@@ -609,9 +587,8 @@ final class FunctionsTest extends TestCase
                 'environment' => 'development',
             ]));
 
-        $hub = new Hub($client, $scope);
-
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
 
         $baggage = getBaggage();
 
@@ -629,10 +606,7 @@ final class FunctionsTest extends TestCase
                 'environment' => 'development',
             ]));
 
-        $hub = new Hub($client);
-
         SentrySdk::getGlobalScope()->setClient($client);
-        SentrySdk::setCurrentHub($hub);
 
         $transactionContext = new TransactionContext();
         $transactionContext->setName('Test');
@@ -645,7 +619,7 @@ final class FunctionsTest extends TestCase
 
         $span = $transaction->startChild($spanContext);
 
-        $hub->setSpan($span);
+        SentrySdk::getCurrentHub()->setSpan($span);
 
         $baggage = getBaggage();
 

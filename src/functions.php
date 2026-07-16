@@ -77,6 +77,21 @@ function init(array $options = []): void
     SentrySdk::init($client);
 }
 
+function getGlobalScope(): Scope
+{
+    return SentrySdk::getGlobalScope();
+}
+
+function getIsolationScope(): Scope
+{
+    return SentrySdk::getIsolationScope();
+}
+
+function getClient(): ClientInterface
+{
+    return SentrySdk::getClient();
+}
+
 /**
  * Captures a message event and sends it to Sentry.
  *
@@ -211,10 +226,38 @@ function configureScope(callable $callback): void
  * @return mixed|void The callback's return value, upon successful execution
  *
  * @phpstan-return T
+ *
+ * @deprecated This function will be removed in a follow-up PR. Use {@see withIsolationScope()} instead.
  */
 function withScope(callable $callback)
 {
-    return SentrySdk::getCurrentHub()->withScope($callback);
+    return withIsolationScope($callback);
+}
+
+/**
+ * Forks the current isolation scope for the duration of the callback.
+ *
+ * @param callable $callback The callback to be executed
+ *
+ * @phpstan-template T
+ *
+ * @phpstan-param callable(Scope): T $callback
+ *
+ * @return mixed|void The callback's return value, upon successful execution
+ *
+ * @phpstan-return T
+ */
+function withIsolationScope(callable $callback)
+{
+    $context = SentrySdk::getCurrentRuntimeContext();
+    $previousScope = $context->getIsolationScope();
+    $context->setIsolationScope(clone $previousScope);
+
+    try {
+        return $callback($context->getIsolationScope());
+    } finally {
+        $context->setIsolationScope($previousScope);
+    }
 }
 
 function startContext(): void
@@ -268,7 +311,7 @@ function withContext(callable $callback, ?int $timeout = null)
  */
 function startTransaction(TransactionContext $context, array $customSamplingContext = []): Transaction
 {
-    return SentrySdk::getCurrentHub()->startTransaction($context, $customSamplingContext);
+    return Tracing\TransactionSampler::startTransaction(SentrySdk::getClient()->getOptions(), $context, $customSamplingContext);
 }
 
 /**
