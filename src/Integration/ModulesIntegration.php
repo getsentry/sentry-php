@@ -28,8 +28,6 @@ final class ModulesIntegration implements IntegrationInterface
         Scope::addGlobalEventProcessor(static function (Event $event): Event {
             $integration = SentrySdk::getClient()->getIntegration(self::class);
 
-            // The integration could be bound to a client that is not the one
-            // attached to the current hub. If this is the case, bail out
             if ($integration !== null) {
                 $event->setModules(self::getComposerPackages());
             }

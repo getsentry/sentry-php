@@ -6,8 +6,6 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
-use Sentry\State\HubAdapter;
-use Sentry\State\HubInterface;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
 use Sentry\State\Scope;
@@ -37,38 +35,15 @@ final class SentrySdk
     }
 
     /**
-     * Initializes the SDK by binding the client to the global scope and reset
+     * Initializes the SDK by binding the client to the global scope and resetting
      * the current local runtime state.
      */
-    public static function init(?ClientInterface $client = null): HubInterface
+    public static function init(?ClientInterface $client = null): void
     {
         if ($client !== null) {
             self::getGlobalScope()->setClient($client);
         }
         self::$runtimeContextManager = new RuntimeContextManager();
-
-        return self::getCurrentHub();
-    }
-
-    public static function getCurrentHub(): HubInterface
-    {
-        return HubAdapter::getInstance();
-    }
-
-    /**
-     * Sets the current hub.
-     *
-     * If called while an explicit runtime context is active, the hub update is
-     * scoped to that active context only. Otherwise, it updates the baseline
-     * hub used by the global fallback context and future contexts.
-     *
-     * @param HubInterface $hub The hub to set
-     */
-    public static function setCurrentHub(HubInterface $hub): HubInterface
-    {
-        self::getGlobalScope()->setClient($hub->getClient());
-
-        return $hub;
     }
 
     public static function getGlobalScope(): Scope

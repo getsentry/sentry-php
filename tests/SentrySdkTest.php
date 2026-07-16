@@ -11,7 +11,6 @@ use Sentry\Event;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
@@ -22,32 +21,21 @@ use function Sentry\startTransaction;
 
 final class SentrySdkTest extends TestCase
 {
-    public function testInit(): void
+    public function testInitResetsRuntimeContext(): void
     {
-        $hub1 = SentrySdk::init();
-        $hub2 = SentrySdk::getCurrentHub();
+        $previousScope = SentrySdk::getIsolationScope();
+        $previousScope->setTag('runtime', 'old');
 
-        $this->assertSame($hub1, $hub2);
-        $this->assertSame(SentrySdk::init(), SentrySdk::init());
-    }
-
-    public function testGetCurrentHub(): void
-    {
         SentrySdk::init();
 
-        $hub2 = SentrySdk::getCurrentHub();
-        $hub3 = SentrySdk::getCurrentHub();
+        $currentScope = SentrySdk::getIsolationScope();
 
-        $this->assertSame($hub2, $hub3);
-    }
+        $this->assertNotSame($previousScope, $currentScope);
 
-    public function testSetCurrentHub(): void
-    {
-        $client = $this->createMock(ClientInterface::class);
-        $hub = new Hub($client);
+        $event = $currentScope->applyToEvent(Event::createEvent());
 
-        $this->assertSame($hub, SentrySdk::setCurrentHub($hub));
-        $this->assertSame($client, SentrySdk::getClient());
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getTags());
     }
 
     public function testGetGlobalScope(): void
