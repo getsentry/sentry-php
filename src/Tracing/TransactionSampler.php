@@ -13,24 +13,19 @@ use Sentry\Options;
  */
 final class TransactionSampler
 {
-    /**
-     * @var Options
-     */
-    private $options;
-
-    public function __construct(Options $options)
+    private function __construct()
     {
-        $this->options = $options;
     }
 
     /**
      * @param array<string, mixed> $customSamplingContext Additional context that will be passed to the {@see SamplingContext}
      */
-    public function startTransaction(Transaction $transaction, TransactionContext $context, array $customSamplingContext = []): Transaction
+    public static function startTransaction(Options $options, TransactionContext $context, array $customSamplingContext = []): Transaction
     {
-        $logger = $this->options->getLoggerOrNullLogger();
+        $transaction = new Transaction($context);
+        $logger = $options->getLoggerOrNullLogger();
 
-        if (!$this->options->isTracingEnabled()) {
+        if (!$options->isTracingEnabled()) {
             $transaction->setSampled(false);
 
             $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
@@ -45,7 +40,7 @@ final class TransactionSampler
         $sampleRand = $context->getMetadata()->getSampleRand() ?? 0.0;
 
         if ($transaction->getSampled() === null) {
-            $tracesSampler = $this->options->getTracesSampler();
+            $tracesSampler = $options->getTracesSampler();
 
             if ($tracesSampler !== null) {
                 $sampleRate = $tracesSampler($samplingContext);
@@ -56,15 +51,15 @@ final class TransactionSampler
                     $sampleRate = $parentSampleRate;
                     $sampleSource = 'parent:sample_rate';
                 } else {
-                    $sampleRate = $this->getSampleRate(
+                    $sampleRate = self::getSampleRate(
                         $samplingContext->getParentSampled(),
-                        $this->options->getTracesSampleRate() ?? 0
+                        $options->getTracesSampleRate() ?? 0
                     );
                     $sampleSource = $samplingContext->getParentSampled() !== null ? 'parent:sampling_decision' : 'config:traces_sample_rate';
                 }
             }
 
-            if (!$this->isValidSampleRate($sampleRate)) {
+            if (!self::isValidSampleRate($sampleRate)) {
                 $transaction->setSampled(false);
 
                 $logger->warning(\sprintf('Transaction [%s] was started but not sampled because sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
@@ -102,23 +97,23 @@ final class TransactionSampler
         $transaction->initSpanRecorder();
 
         $profilesSampleSource = 'config:profiles_sample_rate';
-        $profilesSampler = $this->options->getProfilesSampler();
+        $profilesSampler = $options->getProfilesSampler();
 
         if ($profilesSampler !== null) {
             $profilesSampleRate = $profilesSampler($samplingContext);
             $profilesSampleSource = 'config:profiles_sampler';
         } else {
-            $profilesSampleRate = $this->options->getProfilesSampleRate();
+            $profilesSampleRate = $options->getProfilesSampleRate();
         }
 
         if ($profilesSampleRate === null) {
             $logger->info(\sprintf('Transaction [%s] is not profiling because neither `profiles_sample_rate` nor `profiles_sampler` option is set.', (string) $transaction->getTraceId()));
-        } elseif (!$this->isValidSampleRate($profilesSampleRate)) {
+        } elseif (!self::isValidSampleRate($profilesSampleRate)) {
             $logger->warning(\sprintf('Transaction [%s] is not profiling because profile sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $profilesSampleSource));
-        } elseif ($this->sampleRate($profilesSampleRate)) {
+        } elseif (self::sampleRate($profilesSampleRate)) {
             $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 
-            $transaction->initProfiler()->start();
+            $transaction->initProfiler($options)->start();
         } else {
             $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
         }
@@ -126,7 +121,7 @@ final class TransactionSampler
         return $transaction;
     }
 
-    private function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
+    private static function getSampleRate(?bool $hasParentBeenSampled, float $fallbackSampleRate): float
     {
         if ($hasParentBeenSampled === true) {
             return 1.0;
@@ -142,7 +137,7 @@ final class TransactionSampler
     /**
      * @param mixed $sampleRate
      */
-    private function sampleRate($sampleRate): bool
+    private static function sampleRate($sampleRate): bool
     {
         if (!\is_float($sampleRate) && !\is_int($sampleRate)) {
             return false;
@@ -162,7 +157,7 @@ final class TransactionSampler
     /**
      * @param mixed $sampleRate
      */
-    private function isValidSampleRate($sampleRate): bool
+    private static function isValidSampleRate($sampleRate): bool
     {
         if (!\is_float($sampleRate) && !\is_int($sampleRate)) {
             return false;
