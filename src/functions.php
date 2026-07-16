@@ -99,64 +99,59 @@ function getClient(): ClientInterface
 /**
  * Captures a message event and sends it to Sentry.
  *
- * @param string              $message The message
- * @param Severity|null       $level   The severity level of the message
- * @param EventHint|null      $hint    Object that can contain additional information about the event
- * @param IsolationScope|null $scope   The scope to capture the event with
+ * @param string         $message The message
+ * @param Severity|null  $level   The severity level of the message
+ * @param EventHint|null $hint    Object that can contain additional information about the event
  */
-function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
+function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    return EventRecorder::captureMessage($message, $level, $hint, $scope);
+    return EventRecorder::captureMessage($message, $level, $hint);
 }
 
 /**
  * Captures an exception event and sends it to Sentry.
  *
- * @param \Throwable          $exception The exception
- * @param EventHint|null      $hint      Object that can contain additional information about the event
- * @param IsolationScope|null $scope     The scope to capture the event with
+ * @param \Throwable     $exception The exception
+ * @param EventHint|null $hint      Object that can contain additional information about the event
  */
-function captureException(\Throwable $exception, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
+function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    return EventRecorder::captureException($exception, $hint, $scope);
+    return EventRecorder::captureException($exception, $hint);
 }
 
 /**
  * Captures a new event using the provided data.
  *
- * @param Event               $event The event being captured
- * @param EventHint|null      $hint  May contain additional information about the event
- * @param IsolationScope|null $scope The scope to capture the event with
+ * @param Event          $event The event being captured
+ * @param EventHint|null $hint  May contain additional information about the event
  */
-function captureEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
+function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {
-    return EventRecorder::captureEvent($event, $hint, $scope);
+    return EventRecorder::captureEvent($event, $hint);
 }
 
 /**
  * Logs the most recent error (obtained with {@see error_get_last()}).
  *
- * @param EventHint|null      $hint  Object that can contain additional information about the event
- * @param IsolationScope|null $scope The scope to capture the event with
+ * @param EventHint|null $hint Object that can contain additional information about the event
  */
-function captureLastError(?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
+function captureLastError(?EventHint $hint = null): ?EventId
 {
-    return EventRecorder::captureLastError($hint, $scope);
+    return EventRecorder::captureLastError($hint);
 }
 
 /**
  * Captures a check-in and sends it to Sentry.
  *
- * @param string              $slug          Identifier of the Monitor
- * @param CheckInStatus       $status        The status of the check-in
- * @param int|float|null      $duration      The duration of the check-in
- * @param MonitorConfig|null  $monitorConfig Configuration of the Monitor
- * @param string|null         $checkInId     A check-in ID from the previous check-in
- * @param IsolationScope|null $scope         The scope to capture the check-in with
+ * @param string             $slug          Identifier of the Monitor
+ * @param CheckInStatus      $status        The status of the check-in
+ * @param int|float|null     $duration      The duration of the check-in
+ * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
+ * @param string|null        $checkInId     A check-in ID from the previous check-in
  */
-function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null, ?IsolationScope $scope = null): ?string
+function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
 {
-    return EventRecorder::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId, $scope);
+    return EventRecorder::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
 }
 
 /**

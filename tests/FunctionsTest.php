@@ -192,27 +192,6 @@ final class FunctionsTest extends TestCase
         $this->assertSame($event->getId(), $scope->getLastEventId());
     }
 
-    public function testCaptureEventWithExplicitScope(): void
-    {
-        $event = Event::createEvent();
-        $eventId = $event->getId();
-        $client = $this->createMock(ClientInterface::class);
-        $currentScope = $this->setClientAndIsolationScope($this->createMock(ClientInterface::class));
-        $scope = new IsolationScope();
-        $scope->setTag('scope', 'isolation');
-        $scope->setTag('isolation', 'yes');
-        $scope->setClient($client);
-
-        $client->expects($this->once())
-            ->method('captureEvent')
-            ->with($event, null, $this->captureScopeConstraint($scope))
-            ->willReturn($eventId);
-
-        $this->assertSame($eventId, captureEvent($event, null, $scope));
-        $this->assertSame($eventId, $scope->getLastEventId());
-        $this->assertNull($currentScope->getLastEventId());
-    }
-
     /**
      * @dataProvider captureLastErrorDataProvider
      */
