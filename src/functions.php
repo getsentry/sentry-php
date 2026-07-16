@@ -11,7 +11,7 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\State\BreadcrumbRecorder;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
@@ -105,7 +105,7 @@ function getClient(): ClientInterface
  */
 function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
 {
-    return EventCapturer::captureMessage($message, $level, $hint);
+    return EventRecorder::captureMessage($message, $level, $hint);
 }
 
 /**
@@ -116,7 +116,7 @@ function captureMessage(string $message, ?Severity $level = null, ?EventHint $hi
  */
 function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
 {
-    return EventCapturer::captureException($exception, $hint);
+    return EventRecorder::captureException($exception, $hint);
 }
 
 /**
@@ -127,7 +127,7 @@ function captureException(\Throwable $exception, ?EventHint $hint = null): ?Even
  */
 function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
 {
-    return EventCapturer::captureEvent($event, $hint);
+    return EventRecorder::captureEvent($event, $hint);
 }
 
 /**
@@ -137,7 +137,7 @@ function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
  */
 function captureLastError(?EventHint $hint = null): ?EventId
 {
-    return EventCapturer::captureLastError($hint);
+    return EventRecorder::captureLastError($hint);
 }
 
 /**
@@ -151,7 +151,7 @@ function captureLastError(?EventHint $hint = null): ?EventId
  */
 function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
 {
-    return EventCapturer::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    return EventRecorder::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
 }
 
 /**

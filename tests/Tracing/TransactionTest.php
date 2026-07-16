@@ -41,7 +41,9 @@ final class TransactionTest extends TestCase
 
         SentrySdk::init($client);
 
-        $transaction = new Transaction($transactionContext);
+        $scope = SentrySdk::getIsolationScope();
+        $transaction = new Transaction($transactionContext, $scope);
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope());
         $transaction->initSpanRecorder();
 
         $span1 = $transaction->startChild(new SpanContext());
@@ -59,7 +61,7 @@ final class TransactionTest extends TestCase
                 $this->assertSame([$span1, $span2], $eventArg->getSpans());
 
                 return true;
-            }), null, $this->isInstanceOf(IsolationScope::class))
+            }), null, $scope)
             ->willReturnCallback(static function (Event $eventArg) use (&$expectedEventId): EventId {
                 $expectedEventId = $eventArg->getId();
 
@@ -72,6 +74,8 @@ final class TransactionTest extends TestCase
         $eventId = $transaction->finish();
 
         $this->assertSame($expectedEventId, $eventId);
+        $this->assertSame($expectedEventId, $scope->getLastEventId());
+        $this->assertNull(SentrySdk::getIsolationScope()->getLastEventId());
     }
 
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void

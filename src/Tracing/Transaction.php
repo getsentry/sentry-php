@@ -9,6 +9,8 @@ use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
+use Sentry\State\EventRecorder;
+use Sentry\State\IsolationScope;
 
 /**
  * This class stores all the information about a Transaction.
@@ -19,6 +21,11 @@ final class Transaction extends Span
      * @var string Name of the transaction
      */
     private $name;
+
+    /**
+     * @var IsolationScope
+     */
+    private $scope;
 
     /**
      * @var Transaction The transaction
@@ -42,11 +49,12 @@ final class Transaction extends Span
      *
      * @internal
      */
-    public function __construct(TransactionContext $context)
+    public function __construct(TransactionContext $context, ?IsolationScope $scope = null)
     {
         parent::__construct($context);
 
         $this->name = $context->getName();
+        $this->scope = $scope ?? SentrySdk::getIsolationScope();
         $this->metadata = $context->getMetadata();
         $this->transaction = $this;
     }
@@ -90,7 +98,7 @@ final class Transaction extends Span
             return $this->metadata->getDynamicSamplingContext();
         }
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, SentrySdk::getClient());
+        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, SentrySdk::getClient($this->scope));
         $this->getMetadata()->setDynamicSamplingContext($samplingContext);
 
         return $samplingContext;
@@ -115,7 +123,7 @@ final class Transaction extends Span
     public function initProfiler(?Options $options = null): Profiler
     {
         if ($this->profiler === null) {
-            $this->profiler = new Profiler($options ?? SentrySdk::getClient()->getOptions());
+            $this->profiler = new Profiler($options ?? SentrySdk::getClient($this->scope)->getOptions());
         }
 
         return $this->profiler;
@@ -180,6 +188,6 @@ final class Transaction extends Span
             }
         }
 
-        return \Sentry\captureEvent($event);
+        return EventRecorder::captureEvent($event, null, $this->scope);
     }
 }

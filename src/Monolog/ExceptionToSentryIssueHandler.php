@@ -9,7 +9,7 @@ use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Psr\Log\LogLevel;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
@@ -56,7 +56,7 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
                 $scope->setExtra('monolog.extra', $monologExtraData);
             }
 
-            EventCapturer::captureException($exception);
+            EventRecorder::captureException($exception, null, $scope);
         });
 
         return $this->bubble === false;
