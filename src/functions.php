@@ -74,7 +74,7 @@ function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init()->bindClient($client);
+    SentrySdk::init($client);
 }
 
 /**

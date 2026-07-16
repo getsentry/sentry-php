@@ -7,8 +7,11 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\EventId;
+use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
@@ -24,6 +27,46 @@ use Sentry\UserDataBag;
 
 final class ScopeTest extends TestCase
 {
+    public function testGetAndSetClient(): void
+    {
+        $scope = new Scope();
+
+        $this->assertInstanceOf(NoOpClient::class, $scope->getClient());
+
+        $client = $this->createMock(ClientInterface::class);
+
+        $this->assertSame($scope, $scope->setClient($client));
+        $this->assertSame($client, $scope->getClient());
+    }
+
+    public function testClonedScopeKeepsClientShared(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+
+        $scope = new Scope();
+        $scope->setClient($client);
+
+        $clonedScope = clone $scope;
+
+        $this->assertSame($client, $clonedScope->getClient());
+    }
+
+    public function testGetAndSetLastEventId(): void
+    {
+        $scope = new Scope();
+
+        $this->assertNull($scope->getLastEventId());
+
+        $eventId = EventId::generate();
+        $scope->setLastEventId($eventId);
+
+        $this->assertSame($eventId, $scope->getLastEventId());
+
+        $scope->setLastEventId(null);
+
+        $this->assertNull($scope->getLastEventId());
+    }
+
     public function testSetTag(): void
     {
         $scope = new Scope();
@@ -443,7 +486,11 @@ final class ScopeTest extends TestCase
     {
         $scope = new Scope();
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
+        $client = $this->createMock(ClientInterface::class);
+        $eventId = EventId::generate();
 
+        $scope->setClient($client);
+        $scope->setLastEventId($eventId);
         $scope->setLevel(Severity::info());
         $scope->addBreadcrumb($breadcrumb);
         $scope->setFingerprint(['foo']);
@@ -463,6 +510,8 @@ final class ScopeTest extends TestCase
         $this->assertEmpty($event->getTags());
         $this->assertEmpty($event->getUser());
         $this->assertArrayNotHasKey('flags', $event->getContexts());
+        $this->assertSame($client, $scope->getClient());
+        $this->assertSame($eventId, $scope->getLastEventId());
     }
 
     public function testApplyToEvent(): void
@@ -647,6 +696,18 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertTrue($event->getLevel()->isEqualTo(Severity::error()));
+    }
+
+    public function testMergeScopesCarriesIsolationClient(): void
+    {
+        $globalScope = new Scope();
+        $globalScope->setClient($this->createMock(ClientInterface::class));
+
+        $isolationClient = $this->createMock(ClientInterface::class);
+        $isolationScope = new Scope();
+        $isolationScope->setClient($isolationClient);
+
+        $this->assertSame($isolationClient, Scope::mergeScopes($globalScope, $isolationScope)->getClient());
     }
 
     public function testMergeScopesCapsBreadcrumbsAndFlags(): void
