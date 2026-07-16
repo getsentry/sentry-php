@@ -531,6 +531,233 @@ final class ScopeTest extends TestCase
         $this->assertSame('566e3688a61d4bc888951642d6f14a19', $dynamicSamplingContext->get('trace_id'));
     }
 
+    public function testMergeScopesAppliesGlobalScopeUnderIsolationScope(): void
+    {
+        $globalBreadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'global');
+        $isolationBreadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'isolation');
+        $globalAttachment = Attachment::fromBytes('global.txt', 'global');
+        $isolationAttachment = Attachment::fromBytes('isolation.txt', 'isolation');
+
+        $globalUser = UserDataBag::createFromUserIdentifier('global-user');
+        $globalUser->setMetadata('shared', 'global');
+        $globalUser->setMetadata('global', true);
+
+        $globalScope = new Scope();
+        $globalScope->setTag('shared', 'global');
+        $globalScope->setTag('global', 'tag');
+        $globalScope->setExtra('shared', 'global');
+        $globalScope->setExtra('global', true);
+        $globalScope->setContext('shared_context', ['value' => 'global']);
+        $globalScope->setContext('global_context', ['value' => 'global']);
+        $globalScope->setUser($globalUser);
+        $globalScope->setLevel(Severity::error());
+        $globalScope->setFingerprint(['global-fingerprint']);
+        $globalScope->addBreadcrumb($globalBreadcrumb);
+        $globalScope->addFeatureFlag('shared-flag', false);
+        $globalScope->addFeatureFlag('global-flag', true);
+        $globalScope->addAttachment($globalAttachment);
+
+        $isolationUser = UserDataBag::createFromUserIdentifier('isolation-user');
+        $isolationUser->setMetadata('shared', 'isolation');
+        $isolationUser->setMetadata('isolation', true);
+
+        $isolationScope = new Scope();
+        $isolationScope->setTag('shared', 'isolation');
+        $isolationScope->setTag('isolation', 'tag');
+        $isolationScope->setExtra('shared', 'isolation');
+        $isolationScope->setExtra('isolation', true);
+        $isolationScope->setContext('shared_context', ['value' => 'isolation']);
+        $isolationScope->setContext('isolation_context', ['value' => 'isolation']);
+        $isolationScope->setUser($isolationUser);
+        $isolationScope->setLevel(Severity::warning());
+        $isolationScope->setFingerprint(['isolation-fingerprint']);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb);
+        $isolationScope->addFeatureFlag('shared-flag', true);
+        $isolationScope->addFeatureFlag('isolation-flag', false);
+        $isolationScope->addAttachment($isolationAttachment);
+
+        $eventUser = UserDataBag::createFromUserIdentifier('event-user');
+        $eventUser->setMetadata('shared', 'event');
+        $eventUser->setMetadata('event', true);
+
+        $event = Event::createEvent();
+        $event->setTag('shared', 'event');
+        $event->setTag('event', 'tag');
+        $event->setExtra(['shared' => 'event', 'event' => true]);
+        $event->setContext('shared_context', ['value' => 'event']);
+        $event->setUser($eventUser);
+        $event->setFingerprint(['event-fingerprint']);
+
+        $event = Scope::mergeScopes($globalScope, $isolationScope)->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertTrue($event->getLevel()->isEqualTo(Severity::warning()));
+        $this->assertSame(['event-fingerprint', 'global-fingerprint', 'isolation-fingerprint'], $event->getFingerprint());
+        $this->assertSame([
+            'shared' => 'event',
+            'global' => 'tag',
+            'isolation' => 'tag',
+            'event' => 'tag',
+        ], $event->getTags());
+        $this->assertSame([
+            'shared' => 'event',
+            'global' => true,
+            'isolation' => true,
+            'event' => true,
+        ], $event->getExtra());
+        $this->assertSame(['value' => 'event'], $event->getContexts()['shared_context']);
+        $this->assertSame(['value' => 'global'], $event->getContexts()['global_context']);
+        $this->assertSame(['value' => 'isolation'], $event->getContexts()['isolation_context']);
+        $this->assertSame([
+            'values' => [
+                [
+                    'flag' => 'global-flag',
+                    'result' => true,
+                ],
+                [
+                    'flag' => 'shared-flag',
+                    'result' => true,
+                ],
+                [
+                    'flag' => 'isolation-flag',
+                    'result' => false,
+                ],
+            ],
+        ], $event->getContexts()['flags']);
+        $this->assertSame([$globalBreadcrumb, $isolationBreadcrumb], $event->getBreadcrumbs());
+        $this->assertSame([$globalAttachment, $isolationAttachment], $event->getAttachments());
+
+        $user = $event->getUser();
+        $this->assertNotNull($user);
+        $this->assertSame('event-user', $user->getId());
+        $this->assertSame([
+            'shared' => 'event',
+            'global' => true,
+            'isolation' => true,
+            'event' => true,
+        ], $user->getMetadata());
+    }
+
+    public function testMergeScopesUsesGlobalLevelWhenIsolationLevelIsUnset(): void
+    {
+        $globalScope = new Scope();
+        $globalScope->setLevel(Severity::error());
+
+        $event = Scope::mergeScopes($globalScope, new Scope())->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertTrue($event->getLevel()->isEqualTo(Severity::error()));
+    }
+
+    public function testMergeScopesCapsBreadcrumbsAndFlags(): void
+    {
+        $globalScope = new Scope();
+        $globalBreadcrumbs = [];
+
+        foreach (range(1, 100) as $i) {
+            $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, "global{$i}");
+            $globalBreadcrumbs[] = $breadcrumb;
+            $globalScope->addBreadcrumb($breadcrumb);
+            $globalScope->addFeatureFlag("feature{$i}", true);
+        }
+
+        $isolationBreadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'isolation');
+        $isolationScope = new Scope();
+        $isolationScope->addBreadcrumb($isolationBreadcrumb);
+        $isolationScope->addFeatureFlag('feature50', false);
+        $isolationScope->addFeatureFlag('feature101', true);
+
+        $event = Scope::mergeScopes($globalScope, $isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertCount(100, $event->getBreadcrumbs());
+        $this->assertSame($globalBreadcrumbs[1], $event->getBreadcrumbs()[0]);
+        $this->assertSame($isolationBreadcrumb, $event->getBreadcrumbs()[99]);
+
+        $flags = $event->getContexts()['flags']['values'];
+        $this->assertCount(Scope::MAX_FLAGS, $flags);
+        $this->assertSame([
+            'flag' => 'feature2',
+            'result' => true,
+        ], $flags[0]);
+        $this->assertSame([
+            'flag' => 'feature50',
+            'result' => false,
+        ], $flags[98]);
+        $this->assertSame([
+            'flag' => 'feature101',
+            'result' => true,
+        ], $flags[99]);
+        $this->assertFalse(\in_array('feature1', array_column($flags, 'flag'), true));
+    }
+
+    public function testMergeScopesKeepsTraceStateFromIsolationScope(): void
+    {
+        $globalPropagationContext = PropagationContext::fromDefaults();
+        $globalPropagationContext->setTraceId(new TraceId('11111111111111111111111111111111'));
+        $globalPropagationContext->setSpanId(new SpanId('1111111111111111'));
+
+        $globalSpan = new Span();
+        $globalSpan->setTraceId(new TraceId('22222222222222222222222222222222'));
+        $globalSpan->setSpanId(new SpanId('2222222222222222'));
+
+        $globalScope = new Scope($globalPropagationContext);
+        $globalScope->setSpan($globalSpan);
+
+        $isolationPropagationContext = PropagationContext::fromDefaults();
+        $isolationPropagationContext->setTraceId(new TraceId('33333333333333333333333333333333'));
+        $isolationPropagationContext->setSpanId(new SpanId('3333333333333333'));
+
+        $isolationScope = new Scope($isolationPropagationContext);
+
+        $mergedScope = Scope::mergeScopes($globalScope, $isolationScope);
+
+        $this->assertNull($mergedScope->getSpan());
+        $this->assertNotSame($isolationScope->getPropagationContext(), $mergedScope->getPropagationContext());
+        $this->assertSame([
+            'trace_id' => '33333333333333333333333333333333',
+            'span_id' => '3333333333333333',
+        ], $mergedScope->getTraceContext());
+
+        $event = $mergedScope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([
+            'trace_id' => '33333333333333333333333333333333',
+            'span_id' => '3333333333333333',
+        ], $event->getContexts()['trace']);
+    }
+
+    public function testMergeScopesKeepsProcessorOrder(): void
+    {
+        $calls = [];
+
+        Scope::addGlobalEventProcessor(static function (Event $event) use (&$calls): ?Event {
+            $calls[] = 'static';
+
+            return $event;
+        });
+
+        $globalScope = new Scope();
+        $globalScope->addEventProcessor(static function (Event $event) use (&$calls): ?Event {
+            $calls[] = 'global';
+
+            return $event;
+        });
+
+        $isolationScope = new Scope();
+        $isolationScope->addEventProcessor(static function (Event $event) use (&$calls): ?Event {
+            $calls[] = 'isolation';
+
+            return $event;
+        });
+
+        $event = Scope::mergeScopes($globalScope, $isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['static', 'global', 'isolation'], $calls);
+    }
+
     /**
      * @dataProvider eventWithLogCountProvider
      */
