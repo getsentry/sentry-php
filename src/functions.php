@@ -381,11 +381,11 @@ function getOtlpTracesEndpointUrl(): ?string
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
  */
-function getTraceparent(): string
+function getTraceparent(?Scope $scope = null): string
 {
-    $client = SentrySdk::getClient();
+    $scope = $scope ?? SentrySdk::getIsolationScope();
+    $client = SentrySdk::getClient($scope);
     $options = $client->getOptions();
-    $scope = SentrySdk::getIsolationScope();
 
     if ($options->isTracingEnabled()) {
         $span = $scope->getSpan();
@@ -407,11 +407,11 @@ function getTraceparent(): string
  * This function is context aware, as in it either returns the baggage based
  * on the current span or the scope's propagation context.
  */
-function getBaggage(): string
+function getBaggage(?Scope $scope = null): string
 {
-    $client = SentrySdk::getClient();
+    $scope = $scope ?? SentrySdk::getIsolationScope();
+    $client = SentrySdk::getClient($scope);
     $options = $client->getOptions();
-    $scope = SentrySdk::getIsolationScope();
 
     if ($options->isTracingEnabled()) {
         $span = $scope->getSpan();

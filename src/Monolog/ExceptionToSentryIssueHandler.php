@@ -9,8 +9,10 @@ use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
 use Psr\Log\LogLevel;
-use Sentry\State\HubInterface;
+use Sentry\State\EventCapturer;
 use Sentry\State\Scope;
+
+use function Sentry\withIsolationScope;
 
 /**
  * This Monolog handler will collect monolog events and send them to sentry.
@@ -18,17 +20,10 @@ use Sentry\State\Scope;
 class ExceptionToSentryIssueHandler extends AbstractHandler
 {
     /**
-     * @var HubInterface
-     */
-    private $hub;
-
-    /**
      * @phpstan-param value-of<Level::VALUES>|value-of<Level::NAMES>|Level|LogLevel::* $level
      */
-    public function __construct(HubInterface $hub, $level = Logger::DEBUG, bool $bubble = true)
+    public function __construct($level = Logger::DEBUG, bool $bubble = true)
     {
-        $this->hub = $hub;
-
         parent::__construct($level, $bubble);
     }
 
@@ -44,7 +39,7 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
             return false;
         }
 
-        $this->hub->withScope(function (Scope $scope) use ($record, $exception): void {
+        withIsolationScope(function (Scope $scope) use ($record, $exception): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
             $scope->setExtra('monolog.message', $record['message']);
@@ -61,7 +56,7 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
                 $scope->setExtra('monolog.extra', $monologExtraData);
             }
 
-            $this->hub->captureException($exception);
+            EventCapturer::captureException($exception);
         });
 
         return $this->bubble === false;
