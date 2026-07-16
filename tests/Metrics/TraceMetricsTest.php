@@ -18,6 +18,7 @@ use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\HubAdapter;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 
 use function Sentry\traceMetrics;
 
@@ -112,6 +113,19 @@ final class TraceMetricsTest extends TestCase
 
         $this->assertCount(1, StubTransport::$events);
         $this->assertCount(2, StubTransport::$events[0]->getMetrics());
+    }
+
+    public function testMergedScopeAttributesAreAddedToMetric(): void
+    {
+        SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
+
+        traceMetrics()->count('test-count', 2);
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $metric = StubTransport::$events[0]->getMetrics()[0];
+        $this->assertSame('global-user', $metric->getAttributes()->get('user.id')->getValue());
     }
 
     public function testFlushCapturesMetricsWithProvidedClient(): void

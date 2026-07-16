@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Event;
+use Sentry\SentrySdk;
+use Sentry\State\Scope;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -71,6 +74,28 @@ final class SpanTest extends TestCase
         $this->assertSame($spanContext1->getSampled(), $span2->getSampled());
         $this->assertSame($spanContext1->getSpanId(), $span2->getParentSpanId());
         $this->assertSame($spanContext1->getTraceId(), $span2->getTraceId());
+    }
+
+    public function testSetHttpStatusWritesResponseContextToCurrentIsolationScopeOnly(): void
+    {
+        $globalScope = SentrySdk::getGlobalScope();
+        $globalScope->setContext('response', [
+            'status_code' => 201,
+        ]);
+
+        $isolationScope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
+
+        $span = new Span();
+        $span->setHttpStatus(404);
+
+        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($isolationEvent);
+        $this->assertSame(404, $isolationEvent->getContexts()['response']['status_code']);
+
+        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($globalEvent);
+        $this->assertSame(201, $globalEvent->getContexts()['response']['status_code']);
     }
 
     /**

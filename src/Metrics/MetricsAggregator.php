@@ -13,7 +13,6 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
@@ -52,60 +51,53 @@ final class MetricsAggregator
         array $attributes,
         ?Unit $unit
     ): void {
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
-        $metricFlushThreshold = null;
+        $isolationScope = SentrySdk::getIsolationScope();
+        $client = SentrySdk::getClient($isolationScope);
+        $scope = Scope::mergeScopes(SentrySdk::getGlobalScope(), $isolationScope);
+        $options = $client->getOptions();
+        $metricFlushThreshold = $options->getMetricFlushThreshold();
 
         if (!\is_int($value) && !\is_float($value)) {
-            if ($client !== null) {
-                $client->getOptions()->getLoggerOrNullLogger()->debug('Metrics value is neither int nor float. Metric will be discarded');
-            }
+            $options->getLoggerOrNullLogger()->debug('Metrics value is neither int nor float. Metric will be discarded');
 
             return;
         }
 
-        if ($client !== null) {
-            $options = $client->getOptions();
-            $metricFlushThreshold = $options->getMetricFlushThreshold();
-
-            if ($options->getEnableMetrics() === false) {
-                return;
-            }
-
-            $defaultAttributes = [
-                'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
-                'server.address' => $options->getServerName(),
-            ];
-
-            if ($client instanceof Client) {
-                $defaultAttributes['sentry.sdk.name'] = $client->getSdkIdentifier();
-                $defaultAttributes['sentry.sdk.version'] = $client->getSdkVersion();
-            }
-
-            $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
-                $user = $scope->getUser();
-                if ($user !== null) {
-                    if ($user->getId() !== null) {
-                        $defaultAttributes['user.id'] = $user->getId();
-                    }
-                    if ($user->getEmail() !== null) {
-                        $defaultAttributes['user.email'] = $user->getEmail();
-                    }
-                    if ($user->getUsername() !== null) {
-                        $defaultAttributes['user.name'] = $user->getUsername();
-                    }
-                }
-            });
-
-            $release = $options->getRelease();
-            if ($release !== null) {
-                $defaultAttributes['sentry.release'] = $release;
-            }
-
-            $attributes += $defaultAttributes;
+        if ($options->getEnableMetrics() === false) {
+            return;
         }
 
-        $traceContext = $this->getTraceContext($hub);
+        $defaultAttributes = [
+            'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
+            'server.address' => $options->getServerName(),
+        ];
+
+        if ($client instanceof Client) {
+            $defaultAttributes['sentry.sdk.name'] = $client->getSdkIdentifier();
+            $defaultAttributes['sentry.sdk.version'] = $client->getSdkVersion();
+        }
+
+        $user = $scope->getUser();
+        if ($user !== null) {
+            if ($user->getId() !== null) {
+                $defaultAttributes['user.id'] = $user->getId();
+            }
+            if ($user->getEmail() !== null) {
+                $defaultAttributes['user.email'] = $user->getEmail();
+            }
+            if ($user->getUsername() !== null) {
+                $defaultAttributes['user.name'] = $user->getUsername();
+            }
+        }
+
+        $release = $options->getRelease();
+        if ($release !== null) {
+            $defaultAttributes['sentry.release'] = $release;
+        }
+
+        $attributes += $defaultAttributes;
+
+        $traceContext = $this->getTraceContext($scope);
         $traceId = new TraceId($traceContext['trace_id']);
         $spanId = new SpanId($traceContext['span_id']);
 
@@ -113,12 +105,10 @@ final class MetricsAggregator
         /** @var Metric $metric */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
-        if ($client !== null) {
-            $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
-            $metric = $beforeSendMetric($metric);
-            if ($metric === null) {
-                return;
-            }
+        $beforeSendMetric = $options->getBeforeSendMetricCallback();
+        $metric = $beforeSendMetric($metric);
+        if ($metric === null) {
+            return;
         }
 
         $metrics = $this->getStorage($metricFlushThreshold);
@@ -147,16 +137,14 @@ final class MetricsAggregator
     /**
      * @return array{trace_id: string, span_id: string}
      */
-    private function getTraceContext(HubInterface $hub): array
+    private function getTraceContext(Scope $scope): array
     {
-        $traceContext = null;
+        $traceContext = $scope->getTraceContext();
 
-        $hub->configureScope(static function (Scope $scope) use (&$traceContext): void {
-            $traceContext = $scope->getTraceContext();
-        });
-
-        /** @var array{trace_id: string, span_id: string} $traceContext */
-        return $traceContext;
+        return [
+            'trace_id' => $traceContext['trace_id'],
+            'span_id' => $traceContext['span_id'],
+        ];
     }
 
     /**

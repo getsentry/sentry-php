@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
@@ -111,6 +113,29 @@ final class PropagationContextTest extends TestCase
         $propagationContext->setDynamicSamplingContext($dynamicSamplingContext);
 
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19', $propagationContext->toBaggage());
+    }
+
+    public function testToBaggageUsesCurrentClientAndIsolationScope(): void
+    {
+        $propagationContext = PropagationContext::fromDefaults();
+        $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $propagationContext->setSampleRand(0.25);
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'release' => '1.0.0',
+                'environment' => 'development',
+            ]));
+
+        SentrySdk::getGlobalScope()->setClient($client);
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
+
+        $this->assertSame(
+            'sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rand=0.25,sentry-release=1.0.0,sentry-environment=development',
+            $propagationContext->toBaggage()
+        );
     }
 
     public function testGetTraceContext(): void

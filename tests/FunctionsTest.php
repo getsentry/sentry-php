@@ -19,7 +19,6 @@ use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -33,6 +32,7 @@ use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
 use function Sentry\addBreadcrumb;
+use function Sentry\addFeatureFlag;
 use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
 use function Sentry\captureException;
@@ -516,15 +516,63 @@ final class FunctionsTest extends TestCase
         $this->assertSame('foobarbaz', $returnValue);
     }
 
-    public function testConfigureScope(): void
+    public function testConfigureScopeMutatesCurrentIsolationScopeOnly(): void
     {
-        $callbackInvoked = false;
+        $globalScope = SentrySdk::getGlobalScope();
+        $globalScope->setTag('scope', 'global');
 
-        configureScope(static function () use (&$callbackInvoked): void {
-            $callbackInvoked = true;
+        $isolationScope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
+
+        $callbackScope = null;
+
+        configureScope(static function (Scope $scope) use (&$callbackScope): void {
+            $callbackScope = $scope;
+            $scope->setTag('scope', 'isolation');
         });
 
-        $this->assertTrue($callbackInvoked);
+        $this->assertSame($isolationScope, $callbackScope);
+
+        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($isolationEvent);
+        $this->assertSame(['scope' => 'isolation'], $isolationEvent->getTags());
+
+        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($globalEvent);
+        $this->assertSame(['scope' => 'global'], $globalEvent->getTags());
+    }
+
+    public function testAddFeatureFlagMutatesCurrentIsolationScopeOnly(): void
+    {
+        $globalScope = SentrySdk::getGlobalScope();
+        $globalScope->addFeatureFlag('global-only', true);
+
+        $isolationScope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
+
+        addFeatureFlag('isolation-only', false);
+
+        $isolationEvent = $isolationScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($isolationEvent);
+        $this->assertSame([
+            'values' => [
+                [
+                    'flag' => 'isolation-only',
+                    'result' => false,
+                ],
+            ],
+        ], $isolationEvent->getContexts()['flags']);
+
+        $globalEvent = $globalScope->applyToEvent(Event::createEvent());
+        $this->assertNotNull($globalEvent);
+        $this->assertSame([
+            'values' => [
+                [
+                    'flag' => 'global-only',
+                    'result' => true,
+                ],
+            ],
+        ], $globalEvent->getContexts()['flags']);
     }
 
     public function testStartAndEndContext(): void
@@ -653,46 +701,58 @@ final class FunctionsTest extends TestCase
     {
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(true);
+        $outerScope = SentrySdk::getIsolationScope();
+        $outerScope->setSpan($transaction);
 
-        SentrySdk::getCurrentHub()->setSpan($transaction);
+        $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
 
-        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+        $childSpan = null;
 
-        trace(function (Scope $scope) use ($transaction) {
-            $this->assertNotSame($transaction, $scope->getSpan());
+        trace(function (Scope $scope) use ($outerScope, $transaction, &$childSpan): void {
+            $childSpan = $scope->getSpan();
+
+            $this->assertNotSame($outerScope, $scope);
+            $this->assertNotSame($transaction, $childSpan);
+            $this->assertSame($childSpan, SentrySdk::getIsolationScope()->getSpan());
+            $this->assertNull($childSpan->getEndTimestamp());
         }, new SpanContext());
 
-        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+        $this->assertNotNull($childSpan);
+        $this->assertNotNull($childSpan->getEndTimestamp());
+        $this->assertSame($outerScope, SentrySdk::getIsolationScope());
+        $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
 
         try {
-            trace(static function () {
+            trace(function (Scope $scope) use ($transaction): void {
+                $this->assertNotSame($transaction, $scope->getSpan());
+
                 throw new \RuntimeException('Throwing should still restore the previous span');
             }, new SpanContext());
         } catch (\RuntimeException $e) {
-            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+            $this->assertSame($outerScope, SentrySdk::getIsolationScope());
+            $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
         }
     }
 
     public function testTraceDoesntCreateSpanIfTransactionIsNotSampled(): void
     {
-        $scope = $this->createMock(Scope::class);
-
         $transaction = new Transaction(TransactionContext::make());
         $transaction->setSampled(false);
 
-        $scope->expects($this->never())
-              ->method('setSpan');
-        $scope->expects($this->exactly(3))
-              ->method('getSpan')
-              ->willReturn($transaction);
+        $outerScope = SentrySdk::getIsolationScope();
+        $outerScope->setSpan($transaction);
+        $callbackScope = null;
 
-        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
+        trace(function (Scope $scope) use ($transaction, &$callbackScope): void {
+            $callbackScope = $scope;
 
-        trace(function () use ($transaction) {
-            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+            $this->assertSame($transaction, $scope->getSpan());
+            $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
         }, SpanContext::make());
 
-        $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+        $this->assertNotSame($outerScope, $callbackScope);
+        $this->assertSame($outerScope, SentrySdk::getIsolationScope());
+        $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
     }
 
     public function testTraceparentWithTracingDisabled(): void
@@ -717,7 +777,7 @@ final class FunctionsTest extends TestCase
                 'traces_sample_rate' => 1.0,
             ]));
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $spanContext = (new SpanContext())
             ->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'))
@@ -725,7 +785,7 @@ final class FunctionsTest extends TestCase
 
         $span = new Span($spanContext);
 
-        SentrySdk::getCurrentHub()->setSpan($span);
+        SentrySdk::getIsolationScope()->setSpan($span);
 
         $traceParent = getTraceparent();
 
@@ -767,12 +827,13 @@ final class FunctionsTest extends TestCase
                 'environment' => 'development',
             ]));
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getGlobalScope()->setClient($client);
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new Scope($propagationContext));
 
         $baggage = getBaggage();
 
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rand=0.25,sentry-release=1.0.0,sentry-environment=development', $baggage);
+        $this->assertNotNull($propagationContext->getDynamicSamplingContext());
     }
 
     public function testBaggageWithTracingEnabled(): void
@@ -799,7 +860,7 @@ final class FunctionsTest extends TestCase
 
         $span = $transaction->startChild($spanContext);
 
-        SentrySdk::getCurrentHub()->setSpan($span);
+        SentrySdk::getIsolationScope()->setSpan($span);
 
         $baggage = getBaggage();
 
@@ -819,7 +880,7 @@ final class FunctionsTest extends TestCase
                 'dsn' => 'https://public@example.com/1',
             ]));
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame('https://example.com/api/1/integration/otlp/v1/traces/', getOtlpTracesEndpointUrl());
     }
@@ -838,16 +899,17 @@ final class FunctionsTest extends TestCase
                 'dsn' => 'https://public@example.com/1',
             ]));
 
-        SentrySdk::setCurrentHub(new Hub($client));
+        SentrySdk::getGlobalScope()->setClient($client);
 
         $this->assertSame('http://collector:4318/v1/traces', getOtlpTracesEndpointUrl());
     }
 
     public function testContinueTrace(): void
     {
-        $hub = new Hub(new NoOpClient());
+        SentrySdk::getGlobalScope()->setClient(new NoOpClient());
 
-        SentrySdk::setCurrentHub($hub);
+        $scope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
@@ -858,17 +920,15 @@ final class FunctionsTest extends TestCase
         $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
         $this->assertTrue($transactionContext->getParentSampled());
 
-        configureScope(function (Scope $scope): void {
-            $propagationContext = $scope->getPropagationContext();
+        $propagationContext = $scope->getPropagationContext();
 
-            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
-            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
 
-            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+        $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
 
-            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
-            $this->assertTrue($dynamicSamplingContext->isFrozen());
-        });
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $dynamicSamplingContext->get('trace_id'));
+        $this->assertTrue($dynamicSamplingContext->isFrozen());
     }
 
     public function testContinueTraceWhenOrgMismatch(): void
@@ -881,8 +941,10 @@ final class FunctionsTest extends TestCase
                 'org_id' => 1,
             ]));
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
+
+        $scope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
@@ -899,14 +961,12 @@ final class FunctionsTest extends TestCase
         $this->assertNull($transactionContext->getMetadata()->getDynamicSamplingContext());
         $this->assertNotNull($newSampleRand);
 
-        configureScope(function (Scope $scope) use ($newTraceId, $newSampleRand): void {
-            $propagationContext = $scope->getPropagationContext();
+        $propagationContext = $scope->getPropagationContext();
 
-            $this->assertSame($newTraceId, (string) $propagationContext->getTraceId());
-            $this->assertNull($propagationContext->getParentSpanId());
-            $this->assertNull($propagationContext->getDynamicSamplingContext());
-            $this->assertSame($newSampleRand, $propagationContext->getSampleRand());
-        });
+        $this->assertSame($newTraceId, (string) $propagationContext->getTraceId());
+        $this->assertNull($propagationContext->getParentSpanId());
+        $this->assertNull($propagationContext->getDynamicSamplingContext());
+        $this->assertSame($newSampleRand, $propagationContext->getSampleRand());
     }
 
     public function testContinueTraceWhenOrgMatch(): void
@@ -919,8 +979,10 @@ final class FunctionsTest extends TestCase
                 'org_id' => 1,
             ]));
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::getGlobalScope()->setClient($client);
+
+        $scope = new Scope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
 
         $transactionContext = continueTrace(
             '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
@@ -931,17 +993,15 @@ final class FunctionsTest extends TestCase
         $this->assertSame('566e3688a61d4bc8', (string) $transactionContext->getParentSpanId());
         $this->assertTrue($transactionContext->getParentSampled());
 
-        configureScope(function (Scope $scope): void {
-            $propagationContext = $scope->getPropagationContext();
+        $propagationContext = $scope->getPropagationContext();
 
-            $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
-            $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
+        $this->assertSame('566e3688a61d4bc888951642d6f14a19', (string) $propagationContext->getTraceId());
+        $this->assertSame('566e3688a61d4bc8', (string) $propagationContext->getParentSpanId());
 
-            $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
+        $dynamicSamplingContext = $propagationContext->getDynamicSamplingContext();
 
-            $this->assertNotNull($dynamicSamplingContext);
-            $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
-        });
+        $this->assertNotNull($dynamicSamplingContext);
+        $this->assertSame('1', $dynamicSamplingContext->get('org_id'));
     }
 
     private function setClientAndIsolationScope(ClientInterface $client): Scope
