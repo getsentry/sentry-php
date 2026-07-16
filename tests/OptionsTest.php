@@ -7,6 +7,7 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Sentry\ClientBuilder;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClient;
@@ -377,6 +378,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'option' => 'data_collection',
+            'value' => (new DataCollectionOptions())->setUserInfo(false),
+            'getter' => 'getDataCollection',
+            'setter' => null,
+        ];
+
+        yield [
             'default_integrations',
             false,
             'hasDefaultIntegrations',
@@ -524,7 +532,7 @@ final class OptionsTest extends TestCase
     public static function optionsWithSettersDataProvider(): \Generator
     {
         foreach (self::optionsDataProvider() as $testCase) {
-            if ($testCase[3] !== null) {
+            if (($testCase['setter'] ?? $testCase[3] ?? null) !== null) {
                 yield $testCase;
             }
         }
@@ -536,7 +544,7 @@ final class OptionsTest extends TestCase
         $testedOptions = [];
 
         foreach (self::optionsDataProvider() as $testCase) {
-            $testedOptions[] = $testCase[0];
+            $testedOptions[] = $testCase['option'] ?? $testCase[0];
         }
 
         $testedOptions = array_values(array_unique($testedOptions));
@@ -582,6 +590,9 @@ final class OptionsTest extends TestCase
             $actual[$callbackOption] = \Closure::class;
         }
 
+        $this->assertInstanceOf(DataCollectionOptions::class, $actual['data_collection']);
+        $actual['data_collection'] = DataCollectionOptions::class;
+
         $expected = [
             'integrations' => [],
             'default_integrations' => true,
@@ -625,6 +636,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'data_collection' => DataCollectionOptions::class,
             'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
@@ -667,6 +679,34 @@ final class OptionsTest extends TestCase
         $resolver->resolve($resolver->getConfiguredDefaults(), $logger);
 
         $this->assertSame([], StubLogger::$logs);
+    }
+
+    public function testDataCollectionOptionNormalizesNestedArray(): void
+    {
+        $dataCollection = (new Options([
+            'data_collection' => [
+                'user_info' => false,
+                'http_headers' => [
+                    'request' => ['mode' => 'off'],
+                ],
+                'gen_ai' => ['outputs' => false],
+            ],
+        ]))->getDataCollection();
+
+        $this->assertFalse($dataCollection->shouldCollectUserInfo());
+        $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
+        $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
+        $this->assertSame(['inputs' => true, 'outputs' => false], $dataCollection->getGenAi());
+    }
+
+    public function testDataCollectionOptionPreservesObjectIdentityAndCanBeUpdatedThroughGetter(): void
+    {
+        $dataCollection = (new DataCollectionOptions())->setUserInfo(false);
+        $options = new Options(['data_collection' => $dataCollection]);
+
+        $this->assertSame($dataCollection, $options->getDataCollection());
+        $options->getDataCollection()->setFrameContextLines(0);
+        $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
 
     /**
