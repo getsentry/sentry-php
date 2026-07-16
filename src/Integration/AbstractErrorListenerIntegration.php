@@ -7,7 +7,7 @@ namespace Sentry\Integration;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\ExceptionMechanism;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
@@ -24,7 +24,7 @@ abstract class AbstractErrorListenerIntegration implements IntegrationInterface
                 return $this->addExceptionMechanismToEvent($event);
             });
 
-            EventCapturer::captureException($exception);
+            EventRecorder::captureException($exception, null, $scope);
         });
     }
 

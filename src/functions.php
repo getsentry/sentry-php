@@ -11,7 +11,7 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\State\BreadcrumbRecorder;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
@@ -99,59 +99,64 @@ function getClient(): ClientInterface
 /**
  * Captures a message event and sends it to Sentry.
  *
- * @param string         $message The message
- * @param Severity|null  $level   The severity level of the message
- * @param EventHint|null $hint    Object that can contain additional information about the event
+ * @param string              $message The message
+ * @param Severity|null       $level   The severity level of the message
+ * @param EventHint|null      $hint    Object that can contain additional information about the event
+ * @param IsolationScope|null $scope   The scope to capture the event with
  */
-function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null): ?EventId
+function captureMessage(string $message, ?Severity $level = null, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
 {
-    return EventCapturer::captureMessage($message, $level, $hint);
+    return EventRecorder::captureMessage($message, $level, $hint, $scope);
 }
 
 /**
  * Captures an exception event and sends it to Sentry.
  *
- * @param \Throwable     $exception The exception
- * @param EventHint|null $hint      Object that can contain additional information about the event
+ * @param \Throwable          $exception The exception
+ * @param EventHint|null      $hint      Object that can contain additional information about the event
+ * @param IsolationScope|null $scope     The scope to capture the event with
  */
-function captureException(\Throwable $exception, ?EventHint $hint = null): ?EventId
+function captureException(\Throwable $exception, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
 {
-    return EventCapturer::captureException($exception, $hint);
+    return EventRecorder::captureException($exception, $hint, $scope);
 }
 
 /**
  * Captures a new event using the provided data.
  *
- * @param Event          $event The event being captured
- * @param EventHint|null $hint  May contain additional information about the event
+ * @param Event               $event The event being captured
+ * @param EventHint|null      $hint  May contain additional information about the event
+ * @param IsolationScope|null $scope The scope to capture the event with
  */
-function captureEvent(Event $event, ?EventHint $hint = null): ?EventId
+function captureEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
 {
-    return EventCapturer::captureEvent($event, $hint);
+    return EventRecorder::captureEvent($event, $hint, $scope);
 }
 
 /**
  * Logs the most recent error (obtained with {@see error_get_last()}).
  *
- * @param EventHint|null $hint Object that can contain additional information about the event
+ * @param EventHint|null      $hint  Object that can contain additional information about the event
+ * @param IsolationScope|null $scope The scope to capture the event with
  */
-function captureLastError(?EventHint $hint = null): ?EventId
+function captureLastError(?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
 {
-    return EventCapturer::captureLastError($hint);
+    return EventRecorder::captureLastError($hint, $scope);
 }
 
 /**
  * Captures a check-in and sends it to Sentry.
  *
- * @param string             $slug          Identifier of the Monitor
- * @param CheckInStatus      $status        The status of the check-in
- * @param int|float|null     $duration      The duration of the check-in
- * @param MonitorConfig|null $monitorConfig Configuration of the Monitor
- * @param string|null        $checkInId     A check-in ID from the previous check-in
+ * @param string              $slug          Identifier of the Monitor
+ * @param CheckInStatus       $status        The status of the check-in
+ * @param int|float|null      $duration      The duration of the check-in
+ * @param MonitorConfig|null  $monitorConfig Configuration of the Monitor
+ * @param string|null         $checkInId     A check-in ID from the previous check-in
+ * @param IsolationScope|null $scope         The scope to capture the check-in with
  */
-function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null): ?string
+function captureCheckIn(string $slug, CheckInStatus $status, $duration = null, ?MonitorConfig $monitorConfig = null, ?string $checkInId = null, ?IsolationScope $scope = null): ?string
 {
-    return EventCapturer::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+    return EventRecorder::captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId, $scope);
 }
 
 /**

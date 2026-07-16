@@ -16,11 +16,11 @@ use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
 use Sentry\Util\SentryUid;
 
-final class EventCapturerTest extends TestCase
+final class EventRecorderTest extends TestCase
 {
     public function testCaptureMessagePassesIsolationScopeAndStoresLastEventId(): void
     {
@@ -36,7 +36,7 @@ final class EventCapturerTest extends TestCase
             }), $hint)
             ->willReturn($eventId);
 
-        $this->assertSame($eventId, EventCapturer::captureMessage('foo', Severity::debug(), $hint));
+        $this->assertSame($eventId, EventRecorder::captureMessage('foo', Severity::debug(), $hint, $isolationScope));
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
 
@@ -55,7 +55,7 @@ final class EventCapturerTest extends TestCase
             }), $hint)
             ->willReturn($eventId);
 
-        $this->assertSame($eventId, EventCapturer::captureException($exception, $hint));
+        $this->assertSame($eventId, EventRecorder::captureException($exception, $hint, $isolationScope));
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
 
@@ -73,7 +73,7 @@ final class EventCapturerTest extends TestCase
             }))
             ->willReturn($event->getId());
 
-        $this->assertSame($event->getId(), EventCapturer::captureEvent($event, $hint));
+        $this->assertSame($event->getId(), EventRecorder::captureEvent($event, $hint, $isolationScope));
         $this->assertSame($event->getId(), $isolationScope->getLastEventId());
     }
 
@@ -91,7 +91,7 @@ final class EventCapturerTest extends TestCase
             }), $hint)
             ->willReturn($eventId);
 
-        $this->assertSame($eventId, EventCapturer::captureLastError($hint));
+        $this->assertSame($eventId, EventRecorder::captureLastError($hint, $isolationScope));
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
 
@@ -109,7 +109,7 @@ final class EventCapturerTest extends TestCase
             }))
             ->willReturn(null);
 
-        $this->assertNull(EventCapturer::captureEvent($event));
+        $this->assertNull(EventRecorder::captureEvent($event));
         $this->assertNull($isolationScope->getLastEventId());
     }
 
@@ -150,12 +150,13 @@ final class EventCapturerTest extends TestCase
             }))
             ->willReturn($eventId);
 
-        $this->assertSame($checkInId, EventCapturer::captureCheckIn(
+        $this->assertSame($checkInId, EventRecorder::captureCheckIn(
             'test-crontab',
             CheckInStatus::ok(),
             10,
             $monitorConfig,
-            $checkInId
+            $checkInId,
+            $isolationScope
         ));
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
@@ -166,7 +167,7 @@ final class EventCapturerTest extends TestCase
         $eventId = EventId::generate();
         SentrySdk::getIsolationScope()->setLastEventId($eventId);
 
-        $this->assertNull(EventCapturer::captureCheckIn('test-crontab', CheckInStatus::ok()));
+        $this->assertNull(EventRecorder::captureCheckIn('test-crontab', CheckInStatus::ok()));
         $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
     }
 

@@ -11,7 +11,7 @@ use Monolog\LogRecord;
 use Psr\Log\LogLevel;
 use Sentry\Event;
 use Sentry\EventHint;
-use Sentry\State\EventCapturer;
+use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
@@ -84,7 +84,7 @@ class LogToSentryIssueHandler extends AbstractProcessingHandler
                 }
             }
 
-            EventCapturer::captureEvent($event, $hint);
+            EventRecorder::captureEvent($event, $hint, $scope);
         });
     }
 
