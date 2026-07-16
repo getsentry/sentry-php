@@ -64,11 +64,11 @@ class OptionResolverTest extends TestCase
         $this->assertEquals(['foo' => ['php'], 'a' => 'b'], $result);
     }
 
-    public function testEmptyDefaultArrayIsReplaced()
+    public function testEmptyDefaultArrayIsReplaced(): void
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
-            'empty' => []
+            'empty' => [],
         ]);
 
         $result = $resolver->resolve([
@@ -78,14 +78,14 @@ class OptionResolverTest extends TestCase
         $this->assertSame(['empty' => ['not' => 'empty']], $result);
     }
 
-    public function testRegularArrayIsReplaced()
+    public function testRegularArrayIsReplaced(): void
     {
         $resolver = new OptionsResolver();
         $resolver->setDefaults([
-            'list' => ['abc', 'efg']
+            'list' => ['abc', 'efg'],
         ]);
         $result = $resolver->resolve([
-            'list' => ['foo']
+            'list' => ['foo'],
         ]);
         $this->assertSame(['list' => ['foo']], $result);
     }
@@ -130,8 +130,8 @@ class OptionResolverTest extends TestCase
             'foo' => [
                 'bar' => [
                     'baz' => '   abc   ',
-                ]
-            ]
+                ],
+            ],
         ]);
 
         $this->assertSame([
@@ -152,7 +152,7 @@ class OptionResolverTest extends TestCase
 
         $result = $resolver->resolveOnly([
             'known' => null,
-            'missing' => null
+            'missing' => null,
         ], [], $logger);
 
         $this->assertSame(['known' => null], $result);
@@ -217,6 +217,38 @@ class OptionResolverTest extends TestCase
         $this->assertSame(0, $normalizerCalls);
     }
 
+    public function testResolveOnlyKeepsCurrentValueWhenOverrideIsInvalid(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedTypes('foo.bar.baz', 'string');
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'default',
+                ],
+            ],
+        ]);
+        $currentOptions = [
+            'foo' => [
+                'bar' => [
+                    'baz' => 'current',
+                ],
+            ],
+        ];
+
+        $result = $this->resolvePartialUpdate($resolver, $currentOptions, [
+            'foo' => ['bar' => ['baz' => 42]],
+        ], $logger);
+
+        $this->assertSame($currentOptions, $result);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
     public function testNestedValidationLogsFullOptionPaths(): void
     {
         $logger = StubLogger::getInstance();
@@ -258,7 +290,7 @@ class OptionResolverTest extends TestCase
             ],
             [
                 'level' => 'debug',
-                'message' => 'Invalid value for option "foo.bar.baz". Using default value.',
+                'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
                 'context' => [],
             ],
         ], StubLogger::$logs);
@@ -284,7 +316,7 @@ class OptionResolverTest extends TestCase
         ], $result);
         $this->assertSame([[
             'level' => 'debug',
-            'message' => 'Invalid value for option "foo". Using default value.',
+            'message' => 'Invalid value for option "foo". The value has been ignored.',
             'context' => [],
         ]], StubLogger::$logs);
     }
@@ -312,7 +344,7 @@ class OptionResolverTest extends TestCase
         ], $result);
         $this->assertSame([[
             'level' => 'debug',
-            'message' => 'Invalid value for option "foo.bar.baz". Using default value.',
+            'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
             'context' => [],
         ]], StubLogger::$logs);
     }
@@ -608,7 +640,7 @@ class OptionResolverTest extends TestCase
             ],
             [
                 'level' => 'debug',
-                'message' => 'Invalid value for option "test". Using default value.',
+                'message' => 'Invalid value for option "test". The value has been ignored.',
                 'context' => [],
             ],
         ], StubLogger::$logs);
@@ -637,7 +669,7 @@ class OptionResolverTest extends TestCase
             ],
             [
                 'level' => 'debug',
-                'message' => 'Invalid value for option "test". Using default value.',
+                'message' => 'Invalid value for option "test". The value has been ignored.',
                 'context' => [],
             ],
         ], StubLogger::$logs);

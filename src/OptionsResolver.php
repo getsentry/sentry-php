@@ -9,7 +9,8 @@ use Sentry\Util\Arr;
 
 /**
  * A container that declares defaults and allows validation and normalization in a central place.
- * When a value fails validation, it will instead fall back to the default value and emit debug logs.
+ * When a value fails validation, it will keep the current value (or fall back to the default value if there is no
+ * current value) and emit debug logs.
  *
  * Supports a nested config with arbitrary number of layers.
  *
@@ -203,14 +204,17 @@ class OptionsResolver
             /** @mago-ignore analysis:mixed-assignment */
             [$isValid, $value] = $this->normalizeAndValidate($path, $value);
 
-            // If the value is invalid or the value is not in the correct shape, we fall back to the default.
+            // If the value is invalid or the value is not in the correct shape, keep the current value if one exists.
+            // Otherwise, fall back to the default.
             // For example, we expected to receive a nested value, but we got a scalar
             if (!$isValid || ($isBranch && !\is_array($value))) {
                 if ($logger !== null) {
-                    $logger->debug(\sprintf('Invalid value for option "%s". Using default value.', $path));
+                    $logger->debug(\sprintf('Invalid value for option "%s". The value has been ignored.', $path));
                 }
 
-                $resolved[$option] = $default;
+                if (!\array_key_exists($option, $resolved)) {
+                    $resolved[$option] = $default;
+                }
 
                 continue;
             }

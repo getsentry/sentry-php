@@ -922,10 +922,12 @@ final class OptionsTest extends TestCase
 
         $options->updateOptions(['tags' => ['invalid' => 42]]);
 
-        $this->assertSame([], $options->getTags());
+        $this->assertSame([
+            'environment' => 'staging',
+        ], $options->getTags());
     }
 
-    public function testUpdateOptionsLogsInvalidValuesAndFallsBackToDefault(): void
+    public function testUpdateOptionsLogsInvalidValuesAndKeepsCurrentValue(): void
     {
         $logger = StubLogger::getInstance();
 
@@ -937,11 +939,11 @@ final class OptionsTest extends TestCase
 
         $options->updateOptions(['sample_rate' => 'invalid']);
 
-        $this->assertSame(1.0, $options->getSampleRate());
+        $this->assertSame(0.5, $options->getSampleRate());
         $this->assertSame('custom', $options->getEnvironment());
         $this->assertSame([[
             'level' => 'debug',
-            'message' => 'Invalid value for option "sample_rate". Using default value.',
+            'message' => 'Invalid value for option "sample_rate". The value has been ignored.',
             'context' => [],
         ]], StubLogger::$logs);
     }
