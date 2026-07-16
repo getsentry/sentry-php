@@ -21,10 +21,12 @@ use Sentry\OptionsResolver;
  *     frame_context_lines: int
  * }
  *
- * @implements \ArrayAccess<
+ * @phpstan-implements \ArrayAccess<
  *     key-of<ResolvedDataCollectionOptions>,
  *     value-of<ResolvedDataCollectionOptions>
  * >
+ *
+ * @mago-ignore analysis:missing-template-parameter
  */
 final class DataCollectionOptions implements \ArrayAccess
 {
@@ -223,11 +225,17 @@ final class DataCollectionOptions implements \ArrayAccess
     }
 
     /**
-     * @template TKey of key-of<ResolvedDataCollectionOptions>
+     * @phpstan-template TKey of key-of<ResolvedDataCollectionOptions>
      *
-     * @param TKey $offset
+     * @param mixed $offset
      *
-     * @return ResolvedDataCollectionOptions[TKey]
+     * @return mixed
+     *
+     * @phpstan-param TKey $offset
+     * @phpstan-return ResolvedDataCollectionOptions[TKey]
+     *
+     * @mago-ignore analysis:incompatible-parameter-type
+     * @mago-ignore analysis:invalid-return-statement
      */
     #[\ReturnTypeWillChange]
     public function offsetGet($offset)
