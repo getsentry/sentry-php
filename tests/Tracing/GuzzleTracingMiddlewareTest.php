@@ -16,6 +16,8 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tracing\GuzzleTracingMiddleware;
 use Sentry\Tracing\SpanStatus;
@@ -60,7 +62,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $event = Event::createEvent();
 
-        SentrySdk::getIsolationScope()->applyToEvent($event);
+        (new GlobalScope())->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $this->assertCount(1, $event->getBreadcrumbs());
     }
@@ -103,7 +105,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $event = Event::createEvent();
 
-        SentrySdk::getIsolationScope()->applyToEvent($event);
+        (new GlobalScope())->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $this->assertCount(1, $event->getBreadcrumbs());
     }
@@ -123,7 +125,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $currentScope = SentrySdk::getIsolationScope();
 
-        $providedScope = new Scope();
+        $providedScope = new IsolationScope();
         $providedScope->setClient($client);
 
         $request = new Request('GET', 'https://www.example.com');
@@ -149,10 +151,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertSame($expectedPromiseResult, $promiseResult);
 
         $currentEvent = Event::createEvent();
-        $currentScope->applyToEvent($currentEvent);
+        (new GlobalScope())->merge($currentScope)->applyToEvent($currentEvent);
 
         $providedEvent = Event::createEvent();
-        $providedScope->applyToEvent($providedEvent);
+        (new GlobalScope())->merge($providedScope)->applyToEvent($providedEvent);
 
         $this->assertCount(0, $currentEvent->getBreadcrumbs());
         $this->assertCount(1, $providedEvent->getBreadcrumbs());
@@ -377,7 +379,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ->with($this->callback(function (Event $eventArg) use ($scope, $request, $expectedPromiseResult, $expectedBreadcrumbData, $expectedSpanData): bool {
                 $this->assertSame(EventType::transaction(), $eventArg->getType());
 
-                $scope->applyToEvent($eventArg);
+                (new GlobalScope())->merge($scope)->applyToEvent($eventArg);
 
                 $spans = $eventArg->getSpans();
                 $breadcrumbs = $eventArg->getBreadcrumbs();

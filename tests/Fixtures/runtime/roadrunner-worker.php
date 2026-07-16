@@ -6,7 +6,6 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\Response;
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 use Spiral\RoadRunner\Http\PSR7Worker;
 use Spiral\RoadRunner\Worker;
 
@@ -106,7 +105,7 @@ function handleRequest($request): Response
         }
 
         $event = Event::createEvent();
-        $event = Scope::mergeScopes(SentrySdk::getGlobalScope(), SentrySdk::getIsolationScope())->applyToEvent($event);
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $tags = [];
 

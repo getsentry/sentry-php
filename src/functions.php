@@ -12,6 +12,8 @@ use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\State\BreadcrumbRecorder;
 use Sentry\State\EventCapturer;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -79,12 +81,12 @@ function init(array $options = []): void
     SentrySdk::init($client);
 }
 
-function getGlobalScope(): Scope
+function getGlobalScope(): GlobalScope
 {
     return SentrySdk::getGlobalScope();
 }
 
-function getIsolationScope(): Scope
+function getIsolationScope(): IsolationScope
 {
     return SentrySdk::getIsolationScope();
 }
@@ -244,7 +246,7 @@ function withScope(callable $callback)
  *
  * @phpstan-template T
  *
- * @phpstan-param callable(Scope): T $callback
+ * @phpstan-param callable(IsolationScope): T $callback
  *
  * @return mixed|void The callback's return value, upon successful execution
  *
@@ -323,14 +325,14 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
  *
  * @template T
  *
- * @param callable(Scope): T $trace   The callable that is going to be traced
- * @param SpanContext        $context The context of the span to be created
+ * @param callable(IsolationScope): T $trace   The callable that is going to be traced
+ * @param SpanContext                 $context The context of the span to be created
  *
  * @return T
  */
 function trace(callable $trace, SpanContext $context)
 {
-    return withIsolationScope(static function (Scope $scope) use ($context, $trace) {
+    return withIsolationScope(static function (IsolationScope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
         $span = null;
 
@@ -381,7 +383,7 @@ function getOtlpTracesEndpointUrl(): ?string
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
  */
-function getTraceparent(?Scope $scope = null): string
+function getTraceparent(?IsolationScope $scope = null): string
 {
     $scope = $scope ?? SentrySdk::getIsolationScope();
     $client = SentrySdk::getClient($scope);
@@ -407,7 +409,7 @@ function getTraceparent(?Scope $scope = null): string
  * This function is context aware, as in it either returns the baggage based
  * on the current span or the scope's propagation context.
  */
-function getBaggage(?Scope $scope = null): string
+function getBaggage(?IsolationScope $scope = null): string
 {
     $scope = $scope ?? SentrySdk::getIsolationScope();
     $client = SentrySdk::getClient($scope);

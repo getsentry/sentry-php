@@ -11,15 +11,16 @@ use Sentry\Event;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\State\BreadcrumbRecorder;
-use Sentry\State\Scope;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 
 final class BreadcrumbRecorderTest extends TestCase
 {
     public function testRecordAddsBreadcrumbToGivenScope(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
-        $scope = new Scope();
-        $otherScope = new Scope();
+        $scope = new IsolationScope();
+        $otherScope = new IsolationScope();
         $client = $this->createMock(ClientInterface::class);
 
         $client->expects($this->once())
@@ -33,7 +34,7 @@ final class BreadcrumbRecorderTest extends TestCase
 
     public function testRecordReturnsFalseForNoOpClient(): void
     {
-        $scope = new Scope();
+        $scope = new IsolationScope();
 
         $this->assertFalse(BreadcrumbRecorder::record(
             new NoOpClient(),
@@ -45,7 +46,7 @@ final class BreadcrumbRecorderTest extends TestCase
 
     public function testRecordReturnsFalseWhenMaxBreadcrumbsLimitIsZero(): void
     {
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $client = $this->createMock(ClientInterface::class);
 
         $client->expects($this->once())
@@ -62,7 +63,7 @@ final class BreadcrumbRecorderTest extends TestCase
 
     public function testRecordReturnsFalseWhenBeforeBreadcrumbCallbackReturnsNull(): void
     {
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $client = $this->createMock(ClientInterface::class);
 
         $client->expects($this->once())
@@ -85,7 +86,7 @@ final class BreadcrumbRecorderTest extends TestCase
     {
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_WARNING, Breadcrumb::TYPE_DEFAULT, 'custom');
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $client = $this->createMock(ClientInterface::class);
 
         $client->expects($this->once())
@@ -105,7 +106,7 @@ final class BreadcrumbRecorderTest extends TestCase
         $breadcrumb1 = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'one');
         $breadcrumb2 = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'two');
         $breadcrumb3 = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'three');
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $client = $this->createMock(ClientInterface::class);
 
         $client->expects($this->exactly(3))
@@ -122,9 +123,9 @@ final class BreadcrumbRecorderTest extends TestCase
     /**
      * @param Breadcrumb[] $expectedBreadcrumbs
      */
-    private function assertScopeBreadcrumbs(Scope $scope, array $expectedBreadcrumbs): void
+    private function assertScopeBreadcrumbs(IsolationScope $scope, array $expectedBreadcrumbs): void
     {
-        $event = $scope->applyToEvent(Event::createEvent());
+        $event = (new GlobalScope())->merge($scope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame($expectedBreadcrumbs, $event->getBreadcrumbs());

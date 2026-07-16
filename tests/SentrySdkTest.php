@@ -11,6 +11,7 @@ use Sentry\Event;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\State\IsolationScope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
@@ -32,7 +33,7 @@ final class SentrySdkTest extends TestCase
 
         $this->assertNotSame($previousScope, $currentScope);
 
-        $event = $currentScope->applyToEvent(Event::createEvent());
+        $event = SentrySdk::getGlobalScope()->merge($currentScope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([], $event->getTags());
@@ -113,7 +114,7 @@ final class SentrySdkTest extends TestCase
 
         $this->assertSame($globalScope, SentrySdk::getGlobalScope());
 
-        $event = $globalScope->applyToEvent(Event::createEvent());
+        $event = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame(['baseline' => 'yes'], $event->getTags());
@@ -132,7 +133,7 @@ final class SentrySdkTest extends TestCase
         SentrySdk::endContext();
 
         $event = Event::createEvent();
-        $event = SentrySdk::getIsolationScope()->applyToEvent($event);
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $this->assertArrayHasKey('baseline', $event->getTags());
         $this->assertArrayNotHasKey('request', $event->getTags());
@@ -286,7 +287,7 @@ final class SentrySdkTest extends TestCase
 
             $event = Event::createEvent();
 
-            $event = SentrySdk::getIsolationScope()->applyToEvent($event);
+            $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
             $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
             $this->assertSame('yes', $event->getTags()['outer'] ?? null);

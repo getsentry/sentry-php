@@ -13,10 +13,10 @@ use Sentry\Breadcrumb;
 use Sentry\Event;
 use Sentry\SentrySdk;
 use Sentry\State\BreadcrumbRecorder;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 /**
- * This Monolog handler logs every message as a {@see Breadcrumb} into the current {@see Scope},
+ * This Monolog handler logs every message as a {@see Breadcrumb} into the current {@see IsolationScope},
  * to enrich any event sent to Sentry.
  */
 final class BreadcrumbHandler extends AbstractProcessingHandler

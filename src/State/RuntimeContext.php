@@ -23,7 +23,7 @@ final class RuntimeContext
     private $id;
 
     /**
-     * @var Scope
+     * @var IsolationScope
      */
     private $isolationScope;
 
@@ -37,10 +37,10 @@ final class RuntimeContext
      */
     private $metricsAggregator;
 
-    public function __construct(string $id, ?Scope $isolationScope = null)
+    public function __construct(string $id, ?IsolationScope $isolationScope = null)
     {
         $this->id = $id;
-        $this->isolationScope = $isolationScope ?? new Scope();
+        $this->isolationScope = $isolationScope ?? new IsolationScope();
         $this->logsAggregator = new LogsAggregator();
         $this->metricsAggregator = new MetricsAggregator();
     }
@@ -50,12 +50,12 @@ final class RuntimeContext
         return $this->id;
     }
 
-    public function getIsolationScope(): Scope
+    public function getIsolationScope(): IsolationScope
     {
         return $this->isolationScope;
     }
 
-    public function setIsolationScope(Scope $isolationScope): void
+    public function setIsolationScope(IsolationScope $isolationScope): void
     {
         $this->isolationScope = $isolationScope;
     }

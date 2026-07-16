@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\NoOpClient;
 use Sentry\Options;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\TraceId;
@@ -135,7 +135,7 @@ final class DynamicSamplingContextTest extends TestCase
         $propagationContext->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
         $propagationContext->setSampleRand(0.5);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $scope->setPropagationContext($propagationContext);
 
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
@@ -156,7 +156,7 @@ final class DynamicSamplingContextTest extends TestCase
             'org_id' => 2,
         ]);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
 
         $this->assertSame('2', $samplingContext->get('org_id'));
@@ -168,7 +168,7 @@ final class DynamicSamplingContextTest extends TestCase
             'dsn' => 'http://public@o1.example.com/1',
         ]);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
 
         $this->assertSame('1', $samplingContext->get('org_id'));

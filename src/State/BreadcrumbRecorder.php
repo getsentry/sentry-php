@@ -20,7 +20,7 @@ final class BreadcrumbRecorder
     /**
      * Records the breadcrumb on the given scope if the client configuration allows it.
      */
-    public static function record(ClientInterface $client, Scope $scope, Breadcrumb $breadcrumb): bool
+    public static function record(ClientInterface $client, IsolationScope $scope, Breadcrumb $breadcrumb): bool
     {
         if ($client instanceof NoOpClient) {
             return false;

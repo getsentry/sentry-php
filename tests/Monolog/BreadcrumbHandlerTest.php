@@ -34,7 +34,7 @@ final class BreadcrumbHandlerTest extends TestCase
         $handler->handle($record);
 
         $event = Event::createEvent();
-        SentrySdk::getIsolationScope()->applyToEvent($event);
+        SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $this->assertCount(1, $event->getBreadcrumbs());
 

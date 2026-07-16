@@ -17,12 +17,12 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\EventCapturer;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Util\SentryUid;
 
 final class EventCapturerTest extends TestCase
 {
-    public function testCaptureMessagePassesMergedScopeAndStoresLastEventIdOnIsolationScope(): void
+    public function testCaptureMessagePassesIsolationScopeAndStoresLastEventId(): void
     {
         $eventId = EventId::generate();
         $hint = new EventHint();
@@ -31,8 +31,8 @@ final class EventCapturerTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureMessage')
-            ->with('foo', Severity::debug(), $this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            ->with('foo', Severity::debug(), $this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }), $hint)
             ->willReturn($eventId);
 
@@ -40,7 +40,7 @@ final class EventCapturerTest extends TestCase
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
 
-    public function testCaptureExceptionPassesMergedScopeAndStoresLastEventIdOnIsolationScope(): void
+    public function testCaptureExceptionPassesIsolationScopeAndStoresLastEventId(): void
     {
         $eventId = EventId::generate();
         $exception = new \RuntimeException('foo');
@@ -50,8 +50,8 @@ final class EventCapturerTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureException')
-            ->with($exception, $this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            ->with($exception, $this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }), $hint)
             ->willReturn($eventId);
 
@@ -59,7 +59,7 @@ final class EventCapturerTest extends TestCase
         $this->assertSame($eventId, $isolationScope->getLastEventId());
     }
 
-    public function testCaptureEventPassesMergedScopeAndStoresLastEventIdOnIsolationScope(): void
+    public function testCaptureEventPassesIsolationScopeAndStoresLastEventId(): void
     {
         $event = Event::createEvent();
         $hint = new EventHint();
@@ -68,8 +68,8 @@ final class EventCapturerTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($event, $hint, $this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            ->with($event, $hint, $this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }))
             ->willReturn($event->getId());
 
@@ -77,7 +77,7 @@ final class EventCapturerTest extends TestCase
         $this->assertSame($event->getId(), $isolationScope->getLastEventId());
     }
 
-    public function testCaptureLastErrorPassesMergedScopeAndStoresLastEventIdOnIsolationScope(): void
+    public function testCaptureLastErrorPassesIsolationScopeAndStoresLastEventId(): void
     {
         $eventId = EventId::generate();
         $hint = new EventHint();
@@ -86,8 +86,8 @@ final class EventCapturerTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureLastError')
-            ->with($this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            ->with($this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }), $hint)
             ->willReturn($eventId);
 
@@ -104,8 +104,8 @@ final class EventCapturerTest extends TestCase
 
         $client->expects($this->once())
             ->method('captureEvent')
-            ->with($event, null, $this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            ->with($event, null, $this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }))
             ->willReturn(null);
 
@@ -145,8 +145,8 @@ final class EventCapturerTest extends TestCase
                     && $checkIn->getEnvironment() === Event::DEFAULT_ENVIRONMENT
                     && $checkIn->getDuration() === 10
                     && $checkIn->getMonitorConfig() === $monitorConfig;
-            }), null, $this->callback(function (Scope $scope) use ($isolationScope): bool {
-                return $this->isMergedCaptureScope($scope, $isolationScope);
+            }), null, $this->callback(function (IsolationScope $scope) use ($isolationScope): bool {
+                return $this->isCaptureScope($scope, $isolationScope);
             }))
             ->willReturn($eventId);
 
@@ -170,7 +170,7 @@ final class EventCapturerTest extends TestCase
         $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
     }
 
-    private function setClientAndIsolationScope(ClientInterface $client): Scope
+    private function setClientAndIsolationScope(ClientInterface $client): IsolationScope
     {
         SentrySdk::init();
 
@@ -179,7 +179,7 @@ final class EventCapturerTest extends TestCase
         SentrySdk::getGlobalScope()->setTag('global', 'yes');
         SentrySdk::getGlobalScope()->setClient($client);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $scope->setTag('scope', 'isolation');
         $scope->setTag('isolation', 'yes');
         SentrySdk::getCurrentRuntimeContext()->setIsolationScope($scope);
@@ -187,11 +187,11 @@ final class EventCapturerTest extends TestCase
         return $scope;
     }
 
-    private function isMergedCaptureScope(Scope $captureScope, Scope $isolationScope): bool
+    private function isCaptureScope(IsolationScope $captureScope, IsolationScope $isolationScope): bool
     {
-        $this->assertNotSame($isolationScope, $captureScope);
+        $this->assertSame($isolationScope, $captureScope);
 
-        $event = $captureScope->applyToEvent(Event::createEvent());
+        $event = SentrySdk::getGlobalScope()->merge($captureScope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
         $this->assertSame([

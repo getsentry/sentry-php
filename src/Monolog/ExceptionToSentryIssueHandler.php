@@ -10,7 +10,7 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use Psr\Log\LogLevel;
 use Sentry\State\EventCapturer;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\withIsolationScope;
 
@@ -39,7 +39,7 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
             return false;
         }
 
-        withIsolationScope(function (Scope $scope) use ($record, $exception): void {
+        withIsolationScope(function (IsolationScope $scope) use ($record, $exception): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
             $scope->setExtra('monolog.message', $record['message']);
