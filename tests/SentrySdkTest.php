@@ -12,11 +12,13 @@ use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
-use Sentry\State\Scope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\TransactionContext;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
+
+use function Sentry\startTransaction;
 
 final class SentrySdkTest extends TestCase
 {
@@ -133,23 +135,16 @@ final class SentrySdkTest extends TestCase
     {
         SentrySdk::init();
 
-        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope): void {
-            $scope->setTag('baseline', 'yes');
-        });
+        SentrySdk::getIsolationScope()->setTag('baseline', 'yes');
 
         SentrySdk::startContext();
 
-        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope): void {
-            $scope->setTag('request', 'yes');
-        });
+        SentrySdk::getIsolationScope()->setTag('request', 'yes');
 
         SentrySdk::endContext();
 
         $event = Event::createEvent();
-
-        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event);
-        });
+        $event = SentrySdk::getIsolationScope()->applyToEvent($event);
 
         $this->assertArrayHasKey('baseline', $event->getTags());
         $this->assertArrayNotHasKey('request', $event->getTags());
@@ -160,16 +155,15 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init();
 
         $baselineSpan = new Span(new SpanContext());
-        SentrySdk::getCurrentHub()->setSpan($baselineSpan);
+        SentrySdk::getIsolationScope()->setSpan($baselineSpan);
 
         SentrySdk::startContext();
-        $contextHub = SentrySdk::getCurrentHub();
 
-        $this->assertNull($contextHub->getSpan());
+        $this->assertNull(SentrySdk::getIsolationScope()->getSpan());
 
         SentrySdk::endContext();
 
-        $this->assertSame($baselineSpan, SentrySdk::getCurrentHub()->getSpan());
+        $this->assertSame($baselineSpan, SentrySdk::getIsolationScope()->getSpan());
     }
 
     public function testStartContextCreatesFreshPropagationContext(): void
@@ -195,16 +189,16 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init();
 
         SentrySdk::withContext(function (): void {
-            $transaction = SentrySdk::getCurrentHub()->startTransaction(new \Sentry\Tracing\TransactionContext('request-1'));
-            SentrySdk::getCurrentHub()->setSpan($transaction);
+            $transaction = startTransaction(new TransactionContext('request-1'));
+            SentrySdk::getIsolationScope()->setSpan($transaction);
 
-            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
-            $this->assertSame($transaction, SentrySdk::getCurrentHub()->getTransaction());
+            $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
+            $this->assertSame($transaction, SentrySdk::getIsolationScope()->getTransaction());
         });
 
         SentrySdk::withContext(function (): void {
-            $this->assertNull(SentrySdk::getCurrentHub()->getSpan());
-            $this->assertNull(SentrySdk::getCurrentHub()->getTransaction());
+            $this->assertNull(SentrySdk::getIsolationScope()->getSpan());
+            $this->assertNull(SentrySdk::getIsolationScope()->getTransaction());
         });
     }
 
@@ -242,7 +236,7 @@ final class SentrySdkTest extends TestCase
             ->with(12)
             ->willReturn(new Result(ResultStatus::success()));
 
-        SentrySdk::init()->bindClient($client);
+        SentrySdk::init($client);
 
         SentrySdk::startContext();
         SentrySdk::endContext(12);
@@ -257,7 +251,7 @@ final class SentrySdkTest extends TestCase
             ->with(null)
             ->willReturn(new Result(ResultStatus::success()));
 
-        SentrySdk::init()->bindClient($client);
+        SentrySdk::init($client);
 
         SentrySdk::flush();
     }
@@ -295,9 +289,7 @@ final class SentrySdkTest extends TestCase
             $outerScope = SentrySdk::getIsolationScope();
             $outerContextId = SentrySdk::getCurrentRuntimeContext()->getId();
 
-            SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope): void {
-                $scope->setTag('outer', 'yes');
-            });
+            SentrySdk::getIsolationScope()->setTag('outer', 'yes');
 
             SentrySdk::withContext(static function () use (&$innerScope, &$innerContextId): void {
                 $innerScope = SentrySdk::getIsolationScope();
@@ -306,9 +298,7 @@ final class SentrySdkTest extends TestCase
 
             $event = Event::createEvent();
 
-            SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use (&$event): void {
-                $event = $scope->applyToEvent($event);
-            });
+            $event = SentrySdk::getIsolationScope()->applyToEvent($event);
 
             $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
             $this->assertSame('yes', $event->getTags()['outer'] ?? null);
@@ -352,9 +342,7 @@ final class SentrySdkTest extends TestCase
     {
         $traceparent = '';
 
-        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use (&$traceparent): void {
-            $traceparent = $scope->getPropagationContext()->toTraceparent();
-        });
+        $traceparent = SentrySdk::getIsolationScope()->getPropagationContext()->toTraceparent();
 
         return $traceparent;
     }

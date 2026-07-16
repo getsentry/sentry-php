@@ -33,7 +33,7 @@ final class EnvironmentIntegrationTest extends TestCase
             ->method('getIntegration')
             ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         withScope(function (Scope $scope) use ($expectedRuntimeContext, $expectedOsContext, $initialRuntimeContext, $initialOsContext): void {
             $event = Event::createEvent();

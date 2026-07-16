@@ -19,7 +19,6 @@ use Sentry\ClientInterface;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tests\Fixtures\OpenTelemetry\StubOtelHttpClient;
 use Sentry\Tests\Fixtures\OpenTelemetry\TestClientDiscoverer;
@@ -115,7 +114,7 @@ final class OTLPIntegrationTest extends TestCase
             ->willReturn($integration);
 
         try {
-            SentrySdk::setCurrentHub(new Hub($client));
+            SentrySdk::init($client);
 
             $this->assertSame([
                 'trace_id' => '771a43a4192642f0b136d5159a501700',
@@ -146,7 +145,7 @@ final class OTLPIntegrationTest extends TestCase
             ->willReturn(null);
 
         try {
-            SentrySdk::setCurrentHub(new Hub($client));
+            SentrySdk::init($client);
 
             $this->assertNull(Scope::getExternalPropagationContext());
         } finally {
