@@ -229,9 +229,10 @@ final class DataCollectionOptions implements \ArrayAccess
      *
      * @param mixed $offset
      *
+     * @phpstan-param TKey $offset
+     *
      * @return mixed
      *
-     * @phpstan-param TKey $offset
      * @phpstan-return ResolvedDataCollectionOptions[TKey]
      *
      * @mago-ignore analysis:incompatible-parameter-type
