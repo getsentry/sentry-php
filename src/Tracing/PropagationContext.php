@@ -83,9 +83,9 @@ final class PropagationContext
     public function toBaggage(): string
     {
         if ($this->dynamicSamplingContext === null) {
-            $this->dynamicSamplingContext = DynamicSamplingContext::fromOptions(
+            $this->dynamicSamplingContext = DynamicSamplingContext::fromOptionsAndPropagationContext(
                 SentrySdk::getClient()->getOptions(),
-                SentrySdk::getIsolationScope()
+                $this
             );
         }
 
