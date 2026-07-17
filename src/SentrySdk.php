@@ -6,8 +6,8 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
-use Sentry\State\Hub;
-use Sentry\State\HubInterface;
+use Sentry\State\GlobalScope;
+use Sentry\State\IsolationScope;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
 
@@ -19,9 +19,9 @@ use Sentry\State\RuntimeContextManager;
 final class SentrySdk
 {
     /**
-     * @var HubInterface|null The baseline hub
+     * @var GlobalScope|null The process-global scope
      */
-    private static $currentHub;
+    private static $globalScope;
 
     /**
      * @var RuntimeContextManager|null
@@ -36,47 +36,45 @@ final class SentrySdk
     }
 
     /**
-     * Initializes the SDK by creating a new hub instance each time this method
-     * gets called.
+     * Initializes the SDK by binding the client to the global scope and resetting
+     * the current local runtime state.
      */
-    public static function init(?ClientInterface $client = null): HubInterface
+    public static function init(?ClientInterface $client = null): void
     {
-        if ($client === null) {
-            $client = new NoOpClient();
+        if ($client !== null) {
+            self::getGlobalScope()->setClient($client);
         }
-        self::$currentHub = new Hub($client);
-        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
-
-        return self::getCurrentHub();
+        self::$runtimeContextManager = new RuntimeContextManager();
     }
 
-    /**
-     * Gets the current hub. If it's not initialized then creates a new instance
-     * and sets it as current hub.
-     */
-    public static function getCurrentHub(): HubInterface
+    public static function getGlobalScope(): GlobalScope
     {
-        return self::getRuntimeContextManager()->getCurrentHub();
-    }
-
-    /**
-     * Sets the current hub.
-     *
-     * If called while an explicit runtime context is active, the hub update is
-     * scoped to that active context only. Otherwise, it updates the baseline
-     * hub used by the global fallback context and future contexts.
-     *
-     * @param HubInterface $hub The hub to set
-     */
-    public static function setCurrentHub(HubInterface $hub): HubInterface
-    {
-        $wasSetOnActiveRuntimeContext = self::getRuntimeContextManager()->setCurrentHub($hub);
-
-        if (!$wasSetOnActiveRuntimeContext) {
-            self::$currentHub = $hub;
+        if (self::$globalScope === null) {
+            self::$globalScope = new GlobalScope();
         }
 
-        return $hub;
+        return self::$globalScope;
+    }
+
+    public static function getIsolationScope(): IsolationScope
+    {
+        return self::getCurrentRuntimeContext()->getIsolationScope();
+    }
+
+    public static function getLastEventId(): ?EventId
+    {
+        return self::getCurrentRuntimeContext()->getLastEventId();
+    }
+
+    public static function getClient(?IsolationScope $isolationScope = null): ClientInterface
+    {
+        $client = ($isolationScope ?? self::getIsolationScope())->getClient();
+
+        if (!$client instanceof NoOpClient) {
+            return $client;
+        }
+
+        return self::getGlobalScope()->getClient();
     }
 
     public static function startContext(): void
@@ -148,18 +146,13 @@ final class SentrySdk
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
 
-        $client = self::getCurrentHub()->getClient();
-        $client->flush();
+        self::getClient()->flush();
     }
 
     private static function getRuntimeContextManager(): RuntimeContextManager
     {
-        if (self::$currentHub === null) {
-            self::$currentHub = new Hub(new NoOpClient());
-        }
-
         if (self::$runtimeContextManager === null) {
-            self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
+            self::$runtimeContextManager = new RuntimeContextManager();
         }
 
         return self::$runtimeContextManager;

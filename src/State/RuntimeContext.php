@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\EventId;
 use Sentry\Logs\LogsAggregator;
 use Sentry\Metrics\MetricsAggregator;
 
@@ -23,9 +24,9 @@ final class RuntimeContext
     private $id;
 
     /**
-     * @var HubInterface
+     * @var IsolationScope
      */
-    private $hub;
+    private $isolationScope;
 
     /**
      * @var LogsAggregator
@@ -37,10 +38,15 @@ final class RuntimeContext
      */
     private $metricsAggregator;
 
-    public function __construct(string $id, HubInterface $hub)
+    /**
+     * @var EventId|null The ID of the last event captured within this context
+     */
+    private $lastEventId;
+
+    public function __construct(string $id, ?IsolationScope $isolationScope = null)
     {
         $this->id = $id;
-        $this->hub = $hub;
+        $this->isolationScope = $isolationScope ?? new IsolationScope();
         $this->logsAggregator = new LogsAggregator();
         $this->metricsAggregator = new MetricsAggregator();
     }
@@ -50,14 +56,14 @@ final class RuntimeContext
         return $this->id;
     }
 
-    public function getHub(): HubInterface
+    public function getIsolationScope(): IsolationScope
     {
-        return $this->hub;
+        return $this->isolationScope;
     }
 
-    public function setHub(HubInterface $hub): void
+    public function setIsolationScope(IsolationScope $isolationScope): void
     {
-        $this->hub = $hub;
+        $this->isolationScope = $isolationScope;
     }
 
     public function getLogsAggregator(): LogsAggregator
@@ -68,5 +74,15 @@ final class RuntimeContext
     public function getMetricsAggregator(): MetricsAggregator
     {
         return $this->metricsAggregator;
+    }
+
+    public function getLastEventId(): ?EventId
+    {
+        return $this->lastEventId;
+    }
+
+    public function setLastEventId(?EventId $lastEventId): void
+    {
+        $this->lastEventId = $lastEventId;
     }
 }

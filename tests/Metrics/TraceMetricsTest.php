@@ -6,14 +6,17 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
+use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Metrics\MetricsAggregator;
 use Sentry\Metrics\Types\CounterMetric;
 use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
-use Sentry\State\HubAdapter;
+use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\UserDataBag;
 
 use function Sentry\traceMetrics;
 
@@ -21,7 +24,7 @@ final class TraceMetricsTest extends TestCase
 {
     protected function setUp(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options(), StubTransport::getInstance()));
+        SentrySdk::init(new Client(new Options(), StubTransport::getInstance()));
         StubTransport::$events = [];
     }
 
@@ -75,7 +78,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testFlushesImmediatelyWhenMetricFlushThresholdIsReached(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'metric_flush_threshold' => 2,
         ]), StubTransport::getInstance()));
 
@@ -95,7 +98,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testDoesNotFlushImmediatelyWhenMetricFlushThresholdIsNull(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'metric_flush_threshold' => null,
         ]), StubTransport::getInstance()));
 
@@ -110,9 +113,55 @@ final class TraceMetricsTest extends TestCase
         $this->assertCount(2, StubTransport::$events[0]->getMetrics());
     }
 
+    public function testGlobalScopeAttributesAreAddedToMetric(): void
+    {
+        SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
+
+        traceMetrics()->count('test-count', 2);
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $metric = StubTransport::$events[0]->getMetrics()[0];
+        $this->assertSame('global-user', $metric->getAttributes()->get('user.id')->getValue());
+    }
+
+    public function testFlushCapturesMetricsWithProvidedClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'enable_metrics' => true,
+            ]));
+
+        $fallbackClient = $this->createMock(ClientInterface::class);
+        $fallbackClient->method('getOptions')
+            ->willReturn(new Options([
+                'enable_metrics' => true,
+            ]));
+        $fallbackClient->expects($this->never())
+            ->method('captureEvent');
+        SentrySdk::init($fallbackClient);
+
+        $aggregator = new MetricsAggregator();
+        $aggregator->add(CounterMetric::TYPE, 'test-count', 2, ['foo' => 'bar'], null);
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(
+                $this->callback(function (Event $event): bool {
+                    $this->assertCount(1, $event->getMetrics());
+
+                    return true;
+                })
+            );
+
+        $aggregator->flush($client);
+    }
+
     public function testMetricsBufferFullWhenMetricFlushThresholdIsNull(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'metric_flush_threshold' => null,
         ]), StubTransport::getInstance()));
 
@@ -131,7 +180,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testEnableMetrics(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'enable_metrics' => false,
         ]), StubTransport::getInstance()));
 
@@ -143,7 +192,7 @@ final class TraceMetricsTest extends TestCase
 
     public function testBeforeSendMetricAltersContent(): void
     {
-        HubAdapter::getInstance()->bindClient(new Client(new Options([
+        SentrySdk::init(new Client(new Options([
             'before_send_metric' => static function (Metric $metric) {
                 $metric->setValue(99999);
 

@@ -6,7 +6,7 @@ namespace Sentry;
 
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Serializer\RepresentationSerializer;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 
@@ -54,22 +54,22 @@ class NoOpClient implements ClientInterface
         return null;
     }
 
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureMessage(string $message, ?Severity $level = null, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         return null;
     }
 
-    public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureException(\Throwable $exception, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         return null;
     }
 
-    public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId
+    public function captureLastError(?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId
     {
         return null;
     }
 
-    public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId
+    public function captureEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId
     {
         return null;
     }

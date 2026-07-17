@@ -127,8 +127,7 @@ trait TraceHeaderParserTrait
             }
         }
 
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $client = SentrySdk::getClient();
         $client->getOptions()->getLoggerOrNullLogger()->debug(
             'Ignoring invalid sentry-sample_rand baggage value because it must be a numeric value in the range [0, 1).',
             ['sample_rand' => $sampleRand]
@@ -139,8 +138,7 @@ trait TraceHeaderParserTrait
 
     private static function shouldContinueTrace(DynamicSamplingContext $samplingContext): bool
     {
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $client = SentrySdk::getClient();
 
         $options = $client->getOptions();
         $clientOrgId = $options->getOrgId();

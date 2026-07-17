@@ -14,7 +14,7 @@ use Sentry\Integration\FrameContextifierIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Stacktrace;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\withScope;
 
@@ -40,7 +40,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         $stacktrace = new Stacktrace([
             new Frame('[unknown]', $fixtureFilePath, $lineNumber, null, $fixtureFilePath),
@@ -49,8 +49,8 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
-        withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event);
+        withScope(static function (IsolationScope $scope) use (&$event): void {
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
         });
 
         $this->assertNotNull($event);
@@ -133,7 +133,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn($options);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
         $stacktrace = new Stacktrace([
             new Frame(null, '[internal]', 0),
@@ -143,8 +143,8 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
-        withScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event);
+        withScope(static function (IsolationScope $scope) use (&$event): void {
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
         });
 
         $this->assertNotNull($event);

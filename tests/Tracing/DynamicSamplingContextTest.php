@@ -8,8 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\NoOpClient;
 use Sentry\Options;
-use Sentry\State\Hub;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\TraceId;
@@ -91,16 +90,14 @@ final class DynamicSamplingContextTest extends TestCase
                 'environment' => 'test',
             ]));
 
-        $hub = new Hub($client);
-
         $transactionContext = new TransactionContext();
         $transactionContext->setName('foo');
 
-        $transaction = new Transaction($transactionContext, $hub);
+        $transaction = new Transaction($transactionContext);
         $transaction->getMetadata()->setSamplingRate(1.0);
         $transaction->getMetadata()->setSampleRand(0.5);
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $client);
 
         $this->assertSame((string) $transaction->getTraceId(), $samplingContext->get('trace_id'));
         $this->assertSame((string) $transaction->getMetaData()->getSamplingRate(), $samplingContext->get('sample_rate'));
@@ -114,15 +111,13 @@ final class DynamicSamplingContextTest extends TestCase
 
     public function testFromTransactionSourceUrl(): void
     {
-        $hub = new Hub(new NoOpClient());
-
         $transactionContext = new TransactionContext();
         $transactionContext->setName('/foo/bar/123');
         $transactionContext->setSource(TransactionSource::url());
 
-        $transaction = new Transaction($transactionContext, $hub);
+        $transaction = new Transaction($transactionContext);
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, new NoOpClient());
 
         $this->assertNull($samplingContext->get('transaction'));
     }
@@ -140,7 +135,7 @@ final class DynamicSamplingContextTest extends TestCase
         $propagationContext->setTraceId(new TraceId('21160e9b836d479f81611368b2aa3d2c'));
         $propagationContext->setSampleRand(0.5);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $scope->setPropagationContext($propagationContext);
 
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
@@ -161,7 +156,7 @@ final class DynamicSamplingContextTest extends TestCase
             'org_id' => 2,
         ]);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
 
         $this->assertSame('2', $samplingContext->get('org_id'));
@@ -173,7 +168,7 @@ final class DynamicSamplingContextTest extends TestCase
             'dsn' => 'http://public@o1.example.com/1',
         ]);
 
-        $scope = new Scope();
+        $scope = new IsolationScope();
         $samplingContext = DynamicSamplingContext::fromOptions($options, $scope);
 
         $this->assertSame('1', $samplingContext->get('org_id'));
@@ -189,9 +184,8 @@ final class DynamicSamplingContextTest extends TestCase
                 'org_id' => 2,
             ]));
 
-        $hub = new Hub($client);
-        $transaction = new Transaction(new TransactionContext(), $hub);
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $transaction = new Transaction(new TransactionContext());
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $client);
 
         $this->assertSame('2', $samplingContext->get('org_id'));
     }
@@ -205,9 +199,8 @@ final class DynamicSamplingContextTest extends TestCase
                 'dsn' => 'http://public@o1.example.com/1',
             ]));
 
-        $hub = new Hub($client);
-        $transaction = new Transaction(new TransactionContext(), $hub);
-        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $hub);
+        $transaction = new Transaction(new TransactionContext());
+        $samplingContext = DynamicSamplingContext::fromTransaction($transaction, $client);
 
         $this->assertSame('1', $samplingContext->get('org_id'));
     }

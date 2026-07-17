@@ -81,7 +81,7 @@ jobs:
 
       - name: Remove OpenTelemetry dependencies on unsupported PHP versions
         if: ${{ matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
-        run: composer remove open-telemetry/api open-telemetry/exporter-otlp open-telemetry/sdk --dev --no-interaction --no-update
+        run: composer remove open-telemetry/api open-telemetry/exporter-otlp open-telemetry/sem-conv open-telemetry/sdk --dev --no-interaction --no-update
 
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update

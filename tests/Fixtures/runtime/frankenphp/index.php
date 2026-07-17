@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 
-use function Sentry\configureScope;
 use function Sentry\getTraceparent;
 use function Sentry\init;
 use function Sentry\withContext;
@@ -20,9 +18,7 @@ init([
     'default_integrations' => false,
 ]);
 
-configureScope(static function (Scope $scope): void {
-    $scope->setTag('baseline', 'yes');
-});
+SentrySdk::getGlobalScope()->setTag('baseline', 'yes');
 
 $handler = static function (): void {
     $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', \PHP_URL_PATH);
@@ -46,18 +42,14 @@ $handler = static function (): void {
     $leakTag = isset($_GET['leak']) ? (string) $_GET['leak'] : null;
 
     withContext(static function () use ($requestTag, $leakTag): void {
-        configureScope(static function (Scope $scope) use ($requestTag, $leakTag): void {
-            $scope->setTag('request', $requestTag);
+        SentrySdk::getIsolationScope()->setTag('request', $requestTag);
 
-            if ($leakTag !== null) {
-                $scope->setTag('leak', $leakTag);
-            }
-        });
+        if ($leakTag !== null) {
+            SentrySdk::getIsolationScope()->setTag('leak', $leakTag);
+        }
 
         $event = Event::createEvent();
-        configureScope(static function (Scope $scope) use (&$event): void {
-            $event = $scope->applyToEvent($event);
-        });
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent($event);
 
         $tags = [];
 
