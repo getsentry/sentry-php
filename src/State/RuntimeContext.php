@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\EventId;
 use Sentry\Logs\LogsAggregator;
 use Sentry\Metrics\MetricsAggregator;
 
@@ -37,6 +38,11 @@ final class RuntimeContext
      */
     private $metricsAggregator;
 
+    /**
+     * @var EventId|null The ID of the last event captured within this context
+     */
+    private $lastEventId;
+
     public function __construct(string $id, ?IsolationScope $isolationScope = null)
     {
         $this->id = $id;
@@ -68,5 +74,15 @@ final class RuntimeContext
     public function getMetricsAggregator(): MetricsAggregator
     {
         return $this->metricsAggregator;
+    }
+
+    public function getLastEventId(): ?EventId
+    {
+        return $this->lastEventId;
+    }
+
+    public function setLastEventId(?EventId $lastEventId): void
+    {
+        $this->lastEventId = $lastEventId;
     }
 }

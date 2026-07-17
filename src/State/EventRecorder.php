@@ -97,8 +97,12 @@ final class EventRecorder
      */
     private static function captureWithScope(ClientInterface $client, IsolationScope $isolationScope, callable $capture): ?EventId
     {
+        if ($client instanceof NoOpClient) {
+            return null;
+        }
+
         $eventId = $capture($client, $isolationScope);
-        $isolationScope->setLastEventId($eventId);
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId($eventId);
 
         return $eventId;
     }

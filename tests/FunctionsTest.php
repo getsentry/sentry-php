@@ -51,6 +51,7 @@ use function Sentry\startContext;
 use function Sentry\startTransaction;
 use function Sentry\trace;
 use function Sentry\withContext;
+use function Sentry\withIsolationScope;
 use function Sentry\withMonitor;
 use function Sentry\withScope;
 
@@ -101,7 +102,7 @@ final class FunctionsTest extends TestCase
             ->willReturn($eventId);
 
         $this->assertSame($eventId, captureMessage(...$functionCallArgs));
-        $this->assertSame($eventId, $scope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public static function captureMessageDataProvider(): \Generator
@@ -148,7 +149,7 @@ final class FunctionsTest extends TestCase
             ->willReturn($eventId);
 
         $this->assertSame($eventId, captureException(...$functionCallArgs));
-        $this->assertSame($eventId, $scope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public static function captureExceptionDataProvider(): \Generator
@@ -189,7 +190,7 @@ final class FunctionsTest extends TestCase
             ->willReturn($event->getId());
 
         $this->assertSame($event->getId(), captureEvent($event, $hint));
-        $this->assertSame($event->getId(), $scope->getLastEventId());
+        $this->assertSame($event->getId(), SentrySdk::getLastEventId());
     }
 
     /**
@@ -210,7 +211,7 @@ final class FunctionsTest extends TestCase
         @trigger_error('foo', \E_USER_NOTICE);
 
         $this->assertSame($eventId, captureLastError(...$functionCallArgs));
-        $this->assertSame($eventId, $scope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public static function captureLastErrorDataProvider(): \Generator
@@ -230,7 +231,7 @@ final class FunctionsTest extends TestCase
     {
         $client = $this->createMock(ClientInterface::class);
         $scope = $this->setClientAndIsolationScope($client);
-        $scope->setLastEventId(EventId::generate());
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId(EventId::generate());
 
         $client->expects($this->once())
             ->method('captureMessage')
@@ -238,7 +239,7 @@ final class FunctionsTest extends TestCase
             ->willReturn(null);
 
         $this->assertNull(captureMessage('foo'));
-        $this->assertNull($scope->getLastEventId());
+        $this->assertNull(SentrySdk::getLastEventId());
     }
 
     public function testCaptureExceptionClearsLastEventIdWhenClientReturnsNull(): void
@@ -246,7 +247,7 @@ final class FunctionsTest extends TestCase
         $exception = new \RuntimeException('foo');
         $client = $this->createMock(ClientInterface::class);
         $scope = $this->setClientAndIsolationScope($client);
-        $scope->setLastEventId(EventId::generate());
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId(EventId::generate());
 
         $client->expects($this->once())
             ->method('captureException')
@@ -254,7 +255,7 @@ final class FunctionsTest extends TestCase
             ->willReturn(null);
 
         $this->assertNull(captureException($exception));
-        $this->assertNull($scope->getLastEventId());
+        $this->assertNull(SentrySdk::getLastEventId());
     }
 
     public function testCaptureEventClearsLastEventIdWhenClientReturnsNull(): void
@@ -262,7 +263,7 @@ final class FunctionsTest extends TestCase
         $event = Event::createEvent();
         $client = $this->createMock(ClientInterface::class);
         $scope = $this->setClientAndIsolationScope($client);
-        $scope->setLastEventId(EventId::generate());
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId(EventId::generate());
 
         $client->expects($this->once())
             ->method('captureEvent')
@@ -270,14 +271,14 @@ final class FunctionsTest extends TestCase
             ->willReturn(null);
 
         $this->assertNull(captureEvent($event));
-        $this->assertNull($scope->getLastEventId());
+        $this->assertNull(SentrySdk::getLastEventId());
     }
 
     public function testCaptureLastErrorClearsLastEventIdWhenClientReturnsNull(): void
     {
         $client = $this->createMock(ClientInterface::class);
         $scope = $this->setClientAndIsolationScope($client);
-        $scope->setLastEventId(EventId::generate());
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId(EventId::generate());
 
         $client->expects($this->once())
             ->method('captureLastError')
@@ -285,7 +286,27 @@ final class FunctionsTest extends TestCase
             ->willReturn(null);
 
         $this->assertNull(captureLastError());
-        $this->assertNull($scope->getLastEventId());
+        $this->assertNull(SentrySdk::getLastEventId());
+    }
+
+    public function testCaptureExceptionInsideWithIsolationScopeUpdatesLastEventId(): void
+    {
+        $eventId = EventId::generate();
+        $exception = new \RuntimeException('foo');
+        $client = $this->createMock(ClientInterface::class);
+        $this->setClientAndIsolationScope($client);
+
+        $client->expects($this->once())
+            ->method('captureException')
+            ->willReturn($eventId);
+
+        withIsolationScope(static function () use ($exception): void {
+            captureException($exception);
+        });
+
+        // The forked isolation scope is discarded after the callback, but the
+        // captured event ID must remain readable from the runtime context.
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureCheckIn(): void
@@ -331,7 +352,7 @@ final class FunctionsTest extends TestCase
             $monitorConfig,
             $checkInId
         ));
-        $this->assertSame($eventId, $scope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureCheckInReturnsNullForNoOpClient(): void

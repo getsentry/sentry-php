@@ -61,6 +61,11 @@ final class SentrySdk
         return self::getCurrentRuntimeContext()->getIsolationScope();
     }
 
+    public static function getLastEventId(): ?EventId
+    {
+        return self::getCurrentRuntimeContext()->getLastEventId();
+    }
+
     public static function getClient(?IsolationScope $isolationScope = null): ClientInterface
     {
         $client = ($isolationScope ?? self::getIsolationScope())->getClient();

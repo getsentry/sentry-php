@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
-use Sentry\Event;
-use Sentry\EventId;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
@@ -21,31 +19,10 @@ class IsolationScope extends MutableScope
      */
     private $span;
 
-    /**
-     * @var EventId|null The ID of the last captured event
-     */
-    private $lastEventId;
-
     public function __construct(?PropagationContext $propagationContext = null)
     {
         parent::__construct();
         $this->scopeData->setPropagationContext($propagationContext ?? PropagationContext::fromDefaults());
-    }
-
-    /**
-     * Returns the ID of the last captured event.
-     */
-    public function getLastEventId(): ?EventId
-    {
-        return $this->lastEventId;
-    }
-
-    /**
-     * @internal
-     */
-    public function setLastEventId(?EventId $lastEventId): void
-    {
-        $this->lastEventId = $lastEventId;
     }
 
     /**

@@ -74,8 +74,7 @@ final class TransactionTest extends TestCase
         $eventId = $transaction->finish();
 
         $this->assertSame($expectedEventId, $eventId);
-        $this->assertSame($expectedEventId, $scope->getLastEventId());
-        $this->assertNull(SentrySdk::getIsolationScope()->getLastEventId());
+        $this->assertSame($expectedEventId, SentrySdk::getLastEventId());
     }
 
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void

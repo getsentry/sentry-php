@@ -37,7 +37,7 @@ final class EventRecorderTest extends TestCase
             ->willReturn($eventId);
 
         $this->assertSame($eventId, EventRecorder::captureMessage('foo', Severity::debug(), $hint, $isolationScope));
-        $this->assertSame($eventId, $isolationScope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureExceptionPassesIsolationScopeAndStoresLastEventId(): void
@@ -56,7 +56,7 @@ final class EventRecorderTest extends TestCase
             ->willReturn($eventId);
 
         $this->assertSame($eventId, EventRecorder::captureException($exception, $hint, $isolationScope));
-        $this->assertSame($eventId, $isolationScope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureEventPassesIsolationScopeAndStoresLastEventId(): void
@@ -74,7 +74,7 @@ final class EventRecorderTest extends TestCase
             ->willReturn($event->getId());
 
         $this->assertSame($event->getId(), EventRecorder::captureEvent($event, $hint, $isolationScope));
-        $this->assertSame($event->getId(), $isolationScope->getLastEventId());
+        $this->assertSame($event->getId(), SentrySdk::getLastEventId());
     }
 
     public function testCaptureLastErrorPassesIsolationScopeAndStoresLastEventId(): void
@@ -92,7 +92,7 @@ final class EventRecorderTest extends TestCase
             ->willReturn($eventId);
 
         $this->assertSame($eventId, EventRecorder::captureLastError($hint, $isolationScope));
-        $this->assertSame($eventId, $isolationScope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureEventClearsLastEventIdWhenClientReturnsNull(): void
@@ -100,7 +100,7 @@ final class EventRecorderTest extends TestCase
         $event = Event::createEvent();
         $client = $this->createMock(ClientInterface::class);
         $isolationScope = $this->setClientAndIsolationScope($client);
-        $isolationScope->setLastEventId(EventId::generate());
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId(EventId::generate());
 
         $client->expects($this->once())
             ->method('captureEvent')
@@ -110,7 +110,7 @@ final class EventRecorderTest extends TestCase
             ->willReturn(null);
 
         $this->assertNull(EventRecorder::captureEvent($event));
-        $this->assertNull($isolationScope->getLastEventId());
+        $this->assertNull(SentrySdk::getLastEventId());
     }
 
     public function testCaptureCheckInCreatesEventAndStoresLastEventId(): void
@@ -158,17 +158,30 @@ final class EventRecorderTest extends TestCase
             $checkInId,
             $isolationScope
         ));
-        $this->assertSame($eventId, $isolationScope->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testCaptureCheckInReturnsNullForNoOpClient(): void
     {
         SentrySdk::init(new NoOpClient());
         $eventId = EventId::generate();
-        SentrySdk::getIsolationScope()->setLastEventId($eventId);
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId($eventId);
 
         $this->assertNull(EventRecorder::captureCheckIn('test-crontab', CheckInStatus::ok()));
-        $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
+    }
+
+    public function testCaptureDoesNotClearLastEventIdForNoOpClient(): void
+    {
+        SentrySdk::init(new NoOpClient());
+        $eventId = EventId::generate();
+        SentrySdk::getCurrentRuntimeContext()->setLastEventId($eventId);
+
+        $this->assertNull(EventRecorder::captureMessage('foo'));
+        $this->assertNull(EventRecorder::captureException(new \RuntimeException('foo')));
+        $this->assertNull(EventRecorder::captureEvent(Event::createEvent()));
+        $this->assertNull(EventRecorder::captureLastError());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     private function setClientAndIsolationScope(ClientInterface $client): IsolationScope

@@ -73,12 +73,12 @@ class ClientReportAggregatorTest extends TestCase
         $eventId = captureMessage('foo');
 
         $this->assertNotNull($eventId);
-        $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
 
         ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::eventProcessor(), 10);
         ClientReportAggregator::getInstance()->flush();
 
-        $this->assertSame($eventId, SentrySdk::getIsolationScope()->getLastEventId());
+        $this->assertSame($eventId, SentrySdk::getLastEventId());
     }
 
     public function testNegativeQuantityDiscarded(): void
