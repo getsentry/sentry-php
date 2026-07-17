@@ -36,6 +36,11 @@ final class ScopeTest extends TestCase
         return $globalScope->merge($scope)->applyToEvent($event, $hint, $options);
     }
 
+    private function breadcrumbWithTimestamp(float $timestamp, string $category = 'test'): Breadcrumb
+    {
+        return new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, $category, null, [], $timestamp);
+    }
+
     public function testGetAndSetClient(): void
     {
         $scope = new IsolationScope();
@@ -745,6 +750,148 @@ final class ScopeTest extends TestCase
             'result' => true,
         ], $flags[99]);
         $this->assertFalse(\in_array('feature1', array_column($flags, 'flag'), true));
+    }
+
+    public function testMergeScopesInterleavesBreadcrumbsChronologically(): void
+    {
+        $globalBreadcrumb1 = $this->breadcrumbWithTimestamp(1.0, 'global1');
+        $globalBreadcrumb2 = $this->breadcrumbWithTimestamp(3.0, 'global2');
+        $isolationBreadcrumb1 = $this->breadcrumbWithTimestamp(2.0, 'isolation1');
+        $isolationBreadcrumb2 = $this->breadcrumbWithTimestamp(4.0, 'isolation2');
+
+        $globalScope = new GlobalScope();
+        $globalScope->addBreadcrumb($globalBreadcrumb1);
+        $globalScope->addBreadcrumb($globalBreadcrumb2);
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addBreadcrumb($isolationBreadcrumb1);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb2);
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$globalBreadcrumb1, $isolationBreadcrumb1, $globalBreadcrumb2, $isolationBreadcrumb2], $event->getBreadcrumbs());
+    }
+
+    public function testMergeScopesRespectsMaxBreadcrumbsLargerThanDefault(): void
+    {
+        $options = new Options(['max_breadcrumbs' => 150]);
+        $globalScope = new GlobalScope();
+        $isolationScope = new IsolationScope();
+        $breadcrumbs = [];
+
+        foreach (range(1, 100) as $i) {
+            $breadcrumb = $this->breadcrumbWithTimestamp((float) $i, "global{$i}");
+            $breadcrumbs[] = $breadcrumb;
+            $globalScope->addBreadcrumb($breadcrumb, 150);
+        }
+
+        foreach (range(101, 200) as $i) {
+            $breadcrumb = $this->breadcrumbWithTimestamp((float) $i, "isolation{$i}");
+            $breadcrumbs[] = $breadcrumb;
+            $isolationScope->addBreadcrumb($breadcrumb, 150);
+        }
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent(), null, $options);
+
+        $this->assertNotNull($event);
+        $this->assertCount(150, $event->getBreadcrumbs());
+        $this->assertSame(\array_slice($breadcrumbs, -150), $event->getBreadcrumbs());
+    }
+
+    public function testMergeScopesAppliesMaxBreadcrumbsSmallerThanMergedCount(): void
+    {
+        $globalBreadcrumb1 = $this->breadcrumbWithTimestamp(1.0, 'global1');
+        $globalBreadcrumb2 = $this->breadcrumbWithTimestamp(4.0, 'global2');
+        $isolationBreadcrumb1 = $this->breadcrumbWithTimestamp(2.0, 'isolation1');
+        $isolationBreadcrumb2 = $this->breadcrumbWithTimestamp(3.0, 'isolation2');
+        $isolationBreadcrumb3 = $this->breadcrumbWithTimestamp(5.0, 'isolation3');
+
+        $globalScope = new GlobalScope();
+        $globalScope->addBreadcrumb($globalBreadcrumb1);
+        $globalScope->addBreadcrumb($globalBreadcrumb2);
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addBreadcrumb($isolationBreadcrumb1);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb2);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb3);
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent(), null, new Options(['max_breadcrumbs' => 3]));
+
+        $this->assertNotNull($event);
+        $this->assertSame([$isolationBreadcrumb2, $globalBreadcrumb2, $isolationBreadcrumb3], $event->getBreadcrumbs());
+    }
+
+    public function testMergeScopesBreadcrumbsWithEqualTimestampsKeepGlobalScopeFirst(): void
+    {
+        $globalBreadcrumb1 = $this->breadcrumbWithTimestamp(1.0, 'global1');
+        $globalBreadcrumb2 = $this->breadcrumbWithTimestamp(1.0, 'global2');
+        $isolationBreadcrumb1 = $this->breadcrumbWithTimestamp(1.0, 'isolation1');
+        $isolationBreadcrumb2 = $this->breadcrumbWithTimestamp(1.0, 'isolation2');
+
+        $globalScope = new GlobalScope();
+        $globalScope->addBreadcrumb($globalBreadcrumb1);
+        $globalScope->addBreadcrumb($globalBreadcrumb2);
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addBreadcrumb($isolationBreadcrumb1);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb2);
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$globalBreadcrumb1, $globalBreadcrumb2, $isolationBreadcrumb1, $isolationBreadcrumb2], $event->getBreadcrumbs());
+    }
+
+    public function testMergeScopesPreservesInsertionOrderWithinScopeForOutOfOrderTimestamps(): void
+    {
+        // Breadcrumbs recorded on the same scope are never reordered, even when
+        // their user-supplied timestamps are not monotonic; only breadcrumbs of
+        // different scopes are interleaved by timestamp.
+        $globalBreadcrumb = $this->breadcrumbWithTimestamp(4.0, 'global1');
+        $isolationBreadcrumb1 = $this->breadcrumbWithTimestamp(2.0, 'isolation1');
+        $isolationBreadcrumb2 = $this->breadcrumbWithTimestamp(6.0, 'isolation2');
+        $isolationBreadcrumb3 = $this->breadcrumbWithTimestamp(1.0, 'isolation3');
+
+        $globalScope = new GlobalScope();
+        $globalScope->addBreadcrumb($globalBreadcrumb);
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addBreadcrumb($isolationBreadcrumb1);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb2);
+        $isolationScope->addBreadcrumb($isolationBreadcrumb3);
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$isolationBreadcrumb1, $globalBreadcrumb, $isolationBreadcrumb2, $isolationBreadcrumb3], $event->getBreadcrumbs());
+    }
+
+    public function testApplyToEventDropsScopeBreadcrumbsWhenMaxBreadcrumbsIsZero(): void
+    {
+        $scope = new IsolationScope();
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'test'));
+
+        $event = $this->applyScope($scope, Event::createEvent(), null, new Options(['max_breadcrumbs' => 0]));
+
+        $this->assertNotNull($event);
+        $this->assertSame([], $event->getBreadcrumbs());
+    }
+
+    public function testApplyToEventDoesNotOverrideEventBreadcrumbs(): void
+    {
+        $eventBreadcrumb = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'event');
+
+        $scope = new IsolationScope();
+        $scope->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'scope'));
+
+        $event = Event::createEvent();
+        $event->setBreadcrumb([$eventBreadcrumb]);
+
+        $event = $this->applyScope($scope, $event);
+
+        $this->assertNotNull($event);
+        $this->assertSame([$eventBreadcrumb], $event->getBreadcrumbs());
     }
 
     public function testMergeScopesKeepsTraceStateFromIsolationScope(): void

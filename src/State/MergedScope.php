@@ -41,7 +41,14 @@ final class MergedScope extends Scope
         $event->setFingerprint(array_merge($event->getFingerprint(), $this->scopeData->getFingerprint()));
 
         if (empty($event->getBreadcrumbs())) {
-            $event->setBreadcrumb($this->scopeData->getBreadcrumbs());
+            $breadcrumbs = $this->scopeData->getBreadcrumbs();
+            $maxBreadcrumbs = $options !== null ? $options->getMaxBreadcrumbs() : Options::DEFAULT_MAX_BREADCRUMBS;
+
+            if (\count($breadcrumbs) > $maxBreadcrumbs) {
+                $breadcrumbs = $maxBreadcrumbs > 0 ? \array_slice($breadcrumbs, -$maxBreadcrumbs) : [];
+            }
+
+            $event->setBreadcrumb($breadcrumbs);
         }
 
         if ($this->scopeData->getLevel() !== null) {

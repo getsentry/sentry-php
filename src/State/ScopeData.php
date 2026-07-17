@@ -123,7 +123,9 @@ class ScopeData
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): void
     {
         $this->breadcrumbs[] = $breadcrumb;
-        $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+        if (\count($this->breadcrumbs) > $maxBreadcrumbs) {
+            $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+        }
     }
 
     public function clearBreadcrumbs(): void
@@ -363,12 +365,57 @@ class ScopeData
 
         $merged->level = $other->level ?? $this->level;
         $merged->fingerprint = array_merge($this->fingerprint, $other->fingerprint);
-        $merged->breadcrumbs = \array_slice(array_merge($this->breadcrumbs, $other->breadcrumbs), -100);
+        $merged->breadcrumbs = self::mergeBreadcrumbs($this->breadcrumbs, $other->breadcrumbs);
         $merged->flags = self::mergeFlags($this->flags, $other->flags);
         $merged->attachments = array_merge($this->attachments, $other->attachments);
         $merged->eventProcessors = array_merge($this->eventProcessors, $other->eventProcessors);
 
         return $merged;
+    }
+
+    /**
+     * @param Breadcrumb[] $globalBreadcrumbs
+     * @param Breadcrumb[] $isolationBreadcrumbs
+     *
+     * @return Breadcrumb[]
+     */
+    private static function mergeBreadcrumbs(array $globalBreadcrumbs, array $isolationBreadcrumbs): array
+    {
+        if (empty($globalBreadcrumbs)) {
+            return $isolationBreadcrumbs;
+        }
+
+        if (empty($isolationBreadcrumbs)) {
+            return $globalBreadcrumbs;
+        }
+
+        // if the last global is before the first isolation, it means that no global breadcrumb was created after
+        // the first isolation was written, so we can just merge them normally
+        if ($globalBreadcrumbs[\count($globalBreadcrumbs) - 1]->getTimestamp() <= $isolationBreadcrumbs[0]->getTimestamp()) {
+            return array_merge($globalBreadcrumbs, $isolationBreadcrumbs);
+        }
+
+        $globalCount = \count($globalBreadcrumbs);
+        $isolationCount = \count($isolationBreadcrumbs);
+        $globalIndex = 0;
+        $isolationIndex = 0;
+        $merged = [];
+
+        // we iterate over both lists as long as both have elements. Once we reached the end of one list,
+        // we can stop iterating and merge the remaining list fully
+        while ($globalIndex < $globalCount && $isolationIndex < $isolationCount) {
+            if ($globalBreadcrumbs[$globalIndex]->getTimestamp() <= $isolationBreadcrumbs[$isolationIndex]->getTimestamp()) {
+                $merged[] = $globalBreadcrumbs[$globalIndex++];
+            } else {
+                $merged[] = $isolationBreadcrumbs[$isolationIndex++];
+            }
+        }
+
+        return array_merge(
+            $merged,
+            \array_slice($globalBreadcrumbs, $globalIndex),
+            \array_slice($isolationBreadcrumbs, $isolationIndex)
+        );
     }
 
     /**
