@@ -9,12 +9,11 @@ use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
+use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
 use Sentry\Util\JSON;
-use Symfony\Component\OptionsResolver\Options as SymfonyOptions;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * This integration collects information from the request and attaches them to
@@ -55,6 +54,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     private const DEFAULT_SENSITIVE_HEADERS = [
         'Authorization',
+        'Proxy-Authorization',
         'Cookie',
         'Set-Cookie',
         'X-Forwarded-For',
@@ -92,7 +92,10 @@ final class RequestIntegration implements IntegrationInterface
         $this->configureOptions($resolver);
 
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
-        $this->options = $resolver->resolve($options);
+
+        /** @var array{pii_sanitize_headers: string[]} $resolvedOptions */
+        $resolvedOptions = $resolver->resolve($options);
+        $this->options = $resolvedOptions;
     }
 
     /**
@@ -302,10 +305,10 @@ final class RequestIntegration implements IntegrationInterface
      */
     private function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
         $resolver->setAllowedTypes('pii_sanitize_headers', 'string[]');
-        $resolver->setNormalizer('pii_sanitize_headers', static function (SymfonyOptions $options, array $value): array {
+        $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
             return array_map('strtolower', $value);
         });
+        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
     }
 }

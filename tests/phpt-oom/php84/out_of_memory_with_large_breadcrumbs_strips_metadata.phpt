@@ -1,5 +1,5 @@
 --TEST--
-Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
+Test that when handling an OOM error with large breadcrumbs, breadcrumb metadata is stripped to prevent secondary OOM during serialization
 --SKIPIF--
 <?php
 if (PHP_VERSION_ID >= 80500) {
@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests;
 
+use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\Event;
 use Sentry\Options;
@@ -48,7 +49,16 @@ $transport = new class(new PayloadSerializer($options)) implements TransportInte
 
     public function send(Event $event): Result
     {
-        $serialized = $this->payloadSerializer->serialize($event);
+        $breadcrumbs = $event->getBreadcrumbs();
+        echo 'Breadcrumb count: ' . \count($breadcrumbs) . \PHP_EOL;
+
+        if (\count($breadcrumbs) > 0) {
+            $firstBreadcrumb = $breadcrumbs[0];
+            echo 'First breadcrumb category: ' . $firstBreadcrumb->getCategory() . \PHP_EOL;
+            echo 'First breadcrumb has metadata: ' . (empty($firstBreadcrumb->getMetadata()) ? 'no' : 'yes') . \PHP_EOL;
+        }
+
+        $this->payloadSerializer->serialize($event);
 
         echo 'Transport called' . \PHP_EOL;
 
@@ -67,18 +77,28 @@ $client = (new ClientBuilder($options))->getClient();
 
 SentrySdk::init()->bindClient($client);
 
-echo 'Before OOM memory limit: ' . \ini_get('memory_limit');
-
-register_shutdown_function(function () {
-    echo 'After OOM memory limit: ' . \ini_get('memory_limit');
+// Add 100 breadcrumbs with ~100KB metadata each to simulate the real-world scenario
+$hub = SentrySdk::getCurrentHub();
+$hub->configureScope(function (\Sentry\State\Scope $scope): void {
+    for ($i = 0; $i < 100; ++$i) {
+        $scope->addBreadcrumb(new Breadcrumb(
+            Breadcrumb::LEVEL_INFO,
+            Breadcrumb::TYPE_DEFAULT,
+            'db.query',
+            'SELECT * FROM large_table WHERE id = ?',
+            ['bindings' => str_repeat('x', 100 * 1024)]
+        ));
+    }
 });
 
+// Trigger OOM - the remaining memory after breadcrumbs is limited
 $array = [];
 for ($i = 0; $i < 100000000; ++$i) {
     $array[] = 'sentry';
 }
 --EXPECTF--
-Before OOM memory limit: 67108864
 Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Breadcrumb count: 100
+First breadcrumb category: db.query
+First breadcrumb has metadata: no
 Transport called
-After OOM memory limit: 72351744

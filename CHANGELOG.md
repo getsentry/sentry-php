@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 4.29.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.29.0.
+
+### Features
+
+- Scrub `Proxy-Authorization` request headers by default. [(#2126)](https://github.com/getsentry/sentry-php/pull/2126)
+- Send `gen_ai` spans using the span v2 protocol. [(#2141)](https://github.com/getsentry/sentry-php/pull/2141)
+
+### Bug Fixes
+
+- Reset fatal error handler state when starting a new runtime context. [(#2128)](https://github.com/getsentry/sentry-php/pull/2128)
+
 ## 4.28.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.28.0.

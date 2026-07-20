@@ -327,6 +327,16 @@ class Scope
     }
 
     /**
+     * Gets the breadcrumbs.
+     *
+     * @return Breadcrumb[]
+     */
+    public function getBreadcrumbs(): array
+    {
+        return $this->breadcrumbs;
+    }
+
+    /**
      * Clears all the breadcrumbs.
      *
      * @return $this

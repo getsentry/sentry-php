@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\ErrorHandler;
 use Sentry\Tracing\PropagationContext;
 
 /**
@@ -112,6 +113,8 @@ final class RuntimeContextManager
             // Nested start calls for the same execution key should be a no-op.
             return;
         }
+
+        ErrorHandler::resetFatalErrorHandlerState();
 
         $this->createContextForExecutionContextKey($executionContextKey);
     }
