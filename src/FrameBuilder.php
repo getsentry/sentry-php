@@ -131,11 +131,16 @@ final class FrameBuilder
 
         $excludedAppPaths = $this->options->getInAppExcludedPaths();
         $includedAppPaths = $this->options->getInAppIncludedPaths();
+
+        if ($excludedAppPaths === [] && $includedAppPaths === []) {
+            return true;
+        }
+
         $absoluteFilePath = @realpath($file) ?: $file;
         $isInApp = true;
 
         foreach ($excludedAppPaths as $excludedAppPath) {
-            if (mb_substr($absoluteFilePath, 0, mb_strlen($excludedAppPath)) === $excludedAppPath) {
+            if (strncmp($absoluteFilePath, $excludedAppPath, \strlen($excludedAppPath)) === 0) {
                 $isInApp = false;
 
                 break;
@@ -143,7 +148,7 @@ final class FrameBuilder
         }
 
         foreach ($includedAppPaths as $includedAppPath) {
-            if (mb_substr($absoluteFilePath, 0, mb_strlen($includedAppPath)) === $includedAppPath) {
+            if (strncmp($absoluteFilePath, $includedAppPath, \strlen($includedAppPath)) === 0) {
                 $isInApp = true;
 
                 break;
