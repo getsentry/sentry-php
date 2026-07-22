@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
-use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -87,7 +86,8 @@ final class GuzzleTracingMiddleware
 
                     if ($responseOrException instanceof ResponseInterface) {
                         $response = $responseOrException;
-                    } elseif ($responseOrException instanceof GuzzleRequestException) {
+                    } elseif (\is_object($responseOrException) && \method_exists($responseOrException, 'getResponse')) {
+                        // Guzzle 7: RequestException::getResponse(); Guzzle 8: ResponseException::getResponse()
                         $response = $responseOrException->getResponse();
                     }
 
