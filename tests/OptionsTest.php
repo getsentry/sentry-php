@@ -590,9 +590,6 @@ final class OptionsTest extends TestCase
             $actual[$callbackOption] = \Closure::class;
         }
 
-        $this->assertInstanceOf(DataCollectionOptions::class, $actual['data_collection']);
-        $actual['data_collection'] = DataCollectionOptions::class;
-
         $expected = [
             'integrations' => [],
             'default_integrations' => true,
@@ -636,7 +633,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'data_collection' => DataCollectionOptions::class,
+            'data_collection' => null,
             'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
@@ -697,6 +694,14 @@ final class OptionsTest extends TestCase
         $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
         $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
         $this->assertSame(['inputs' => true, 'outputs' => false], $dataCollection->getGenAi());
+    }
+
+    public function testDataCollectionIsNullUnlessExplicitlyConfigured(): void
+    {
+        $this->assertNull((new Options())->getDataCollection());
+        $this->assertNull((new Options(['send_default_pii' => true]))->getDataCollection());
+        $this->assertNull((new Options(['send_default_pii' => false]))->getDataCollection());
+        $this->assertNull((new Options(['data_collection' => null]))->getDataCollection());
     }
 
     public function testDataCollectionOptionPreservesObjectIdentityAndCanBeUpdatedThroughGetter(): void

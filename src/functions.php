@@ -43,7 +43,7 @@ use Sentry\Transport\TransportInterface;
  *         gen_ai?: array{inputs?: bool, outputs?: bool},
  *         stack_frame_variables?: bool,
  *         frame_context_lines?: int,
- *     },
+ *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,

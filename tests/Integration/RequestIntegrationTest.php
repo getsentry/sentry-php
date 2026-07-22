@@ -232,6 +232,33 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => true,
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo?token=secret'))
+                ->withCookieParams(['session_id' => 'secret'])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo?token=secret',
+                'method' => 'POST',
+                'query_string' => 'token=secret',
+                'cookies' => ['session_id' => 'secret'],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['Bearer secret'],
+                    'Content-Length' => ['3'],
+                ],
+                'data' => 'foo',
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'none',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -251,6 +278,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'never',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -270,6 +298,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -290,6 +319,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -316,6 +346,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -338,6 +369,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'medium',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -364,6 +396,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'medium',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -386,6 +419,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -424,6 +458,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -449,6 +484,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -473,6 +509,7 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -492,6 +529,123 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [],
+            (new ServerRequest('POST', 'http://www.example.com/foo?token=secret&page=5', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Request-Id', 'request-id')
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo?token=secret&page=5',
+                'method' => 'POST',
+                'query_string' => 'token=secret&page=5',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['[Filtered]'],
+                    'X-Request-Id' => ['request-id'],
+                    'Content-Length' => ['3'],
+                ],
+                'data' => 'foo',
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'off'],
+                    'http_headers' => ['request' => ['mode' => 'off']],
+                    'http_bodies' => [],
+                    'query_params' => ['mode' => 'off'],
+                ],
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo?token=secret', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams(['session_id' => 'secret'])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'allowList', 'terms' => ['theme']],
+                    'http_headers' => ['request' => ['mode' => 'allowList', 'terms' => ['x-request-id']]],
+                    'http_bodies' => [],
+                    'query_params' => ['mode' => 'denyList', 'terms' => ['page']],
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com/foo?token=secret&page=5'))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Request-Id', 'request-id'),
+            [
+                'url' => 'http://www.example.com/foo?token=%5BFiltered%5D&page=%5BFiltered%5D',
+                'method' => 'GET',
+                'query_string' => 'token=[Filtered]&page=[Filtered]',
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
+                'headers' => [
+                    'Host' => ['[Filtered]'],
+                    'Authorization' => ['[Filtered]'],
+                    'X-Request-Id' => ['request-id'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'data_collection' => [
+                    'http_bodies' => ['incomingRequest'],
+                ],
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', '10')
+                ->withParsedBody([
+                    'username' => 'alice',
+                    'password' => 'secret',
+                    'nested' => ['api_token' => 'secret'],
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['10'],
+                ],
+                'data' => [
+                    'username' => 'alice',
+                    'password' => '[Filtered]',
+                    'nested' => ['api_token' => '[Filtered]'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            ['send_default_pii' => false],
             (new ServerRequest('GET', 'http://www.example.com/foo'))
                 ->withHeader('123', 'test'),
             [
