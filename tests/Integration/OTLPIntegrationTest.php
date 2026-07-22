@@ -237,7 +237,7 @@ final class OTLPIntegrationTest extends TestCase
 
         $integration->setupOnce();
 
-        $this->assertNotInstanceOf(TracerProvider::class, Globals::tracerProvider());
+        $this->assertFalse(Globals::tracerProvider() instanceof TracerProvider);
         $this->assertCount(1, StubLogger::$logs);
         $this->assertSame('debug', StubLogger::$logs[0]['level']);
         $this->assertStringContainsString('Skipping automatic OTLP exporter setup because neither a DSN nor a collector URL is configured.', StubLogger::$logs[0]['message']);
