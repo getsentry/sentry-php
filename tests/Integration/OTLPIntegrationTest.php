@@ -255,10 +255,6 @@ final class OTLPIntegrationTest extends TestCase
             SpanContext::class,
             Context::class,
             ContextStorage::class,
-            HttpClientDiscovery::class,
-            TracerProvider::class,
-            SdkBuilder::class,
-            ClassDiscovery::class,
         ] as $className) {
             if (!class_exists($className) && !interface_exists($className)) {
                 $this->markTestSkipped(\sprintf('OpenTelemetry integration tests require the optional package that provides "%s".', $className));
@@ -276,7 +272,7 @@ final class OTLPIntegrationTest extends TestCase
 
     private function useCapturingHttpClient(): void
     {
-        $this->requireOpenTelemetry();
+        $this->requireOpenTelemetryExporter();
 
         if (method_exists(HttpClientDiscovery::class, 'setDiscoverers')) {
             HttpClientDiscovery::setDiscoverers([new TestClientDiscoverer()]);
@@ -285,6 +281,26 @@ final class OTLPIntegrationTest extends TestCase
         ClassDiscovery::prependStrategy(TestDiscoveryStrategy::class);
 
         StubOtelHttpClient::reset();
+    }
+
+    private function requireOpenTelemetryExporter(): void
+    {
+        $this->requireOpenTelemetry();
+
+        foreach ([
+            \OpenTelemetry\API\Common\Time\Clock::class,
+            HttpClientDiscovery::class,
+            TracerProvider::class,
+            SdkBuilder::class,
+            ClassDiscovery::class,
+            \OpenTelemetry\SDK\Trace\SpanProcessor\BatchSpanProcessor::class,
+            \OpenTelemetry\Contrib\Otlp\OtlpHttpTransportFactory::class,
+            \OpenTelemetry\Contrib\Otlp\SpanExporter::class,
+        ] as $className) {
+            if (!class_exists($className) && !interface_exists($className)) {
+                $this->markTestSkipped(\sprintf('OpenTelemetry exporter integration tests require the optional package that provides "%s".', $className));
+            }
+        }
     }
 
     private function exportSpan(TracerProvider $tracerProvider): void
