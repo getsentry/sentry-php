@@ -226,6 +226,33 @@ final class RequestDataCollectorTest extends TestCase
         ], $collected);
     }
 
+    public function testCollectHeadersAlwaysScrubsCookieHeaders(): void
+    {
+        $collector = $this->collector([]);
+
+        $collected = $collector->collectHeaders([
+            'Cookie' => ['session_id=secret; theme=dark'],
+            'Set-Cookie' => ['session_id=secret'],
+            'X-Request-Id' => ['request-id'],
+        ]);
+
+        $this->assertSame([
+            'Cookie' => ['[Filtered]'],
+            'Set-Cookie' => ['[Filtered]'],
+            'X-Request-Id' => ['request-id'],
+        ], $collected);
+    }
+
+    public function testCollectHeadersAppliesExtendedDenyTermsToClientIpHeaders(): void
+    {
+        $defaultCollector = $this->collector([]);
+        $extendedCollector = $this->collector(['http_headers' => ['request' => ['mode' => 'denyList', 'terms' => ['forwarded', '-ip']]]]);
+        $headers = ['X-Forwarded-For' => ['203.0.113.7']];
+
+        $this->assertSame($headers, $defaultCollector->collectHeaders($headers));
+        $this->assertSame(['X-Forwarded-For' => ['[Filtered]']], $extendedCollector->collectHeaders($headers));
+    }
+
     public function testCollectHeadersScrubsEveryLineOfSensitiveHeaders(): void
     {
         $collector = $this->collector([]);
@@ -306,30 +333,16 @@ final class RequestDataCollectorTest extends TestCase
         $this->assertSame('raw body', $collectedWithoutPii);
     }
 
-    public function testCollectRequestBodyScrubsSensitiveArrayFields(): void
+    public function testCollectRequestBodyCollectsRawBodyWhenCollectingIncomingRequests(): void
     {
         $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $collected = $collector->collectRequestBody([
+        $body = [
             'password' => 'secret',
             'username' => 'alice',
-            'nested' => ['api_token' => 'secret'],
-        ]);
+        ];
 
-        $this->assertSame([
-            'password' => '[Filtered]',
-            'username' => 'alice',
-            'nested' => ['api_token' => '[Filtered]'],
-        ], $collected);
-    }
-
-    public function testCollectRequestBodyScrubsNonArrayBodies(): void
-    {
-        $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $collected = $collector->collectRequestBody('raw body');
-
-        $this->assertSame('[Filtered]', $collected);
+        $this->assertSame($body, $collector->collectRequestBody($body));
+        $this->assertSame('raw body', $collector->collectRequestBody('raw body'));
     }
 
     public function testCollectRequestBodyIsSkippedWhenNotCollectingIncomingRequests(): void

@@ -615,6 +615,40 @@ final class RequestIntegrationTest extends TestCase
         yield [
             [
                 'data_collection' => [
+                    'user_info' => false,
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com/foo', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Cookie', 'session_id=secret; theme=dark')
+                ->withHeader('Set-Cookie', 'session_id=secret')
+                ->withHeader('X-Forwarded-For', '203.0.113.7')
+                ->withHeader('X-Request-Id', 'request-id'),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'GET',
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Cookie' => ['[Filtered]'],
+                    'Set-Cookie' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                    'X-Request-Id' => ['request-id'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'data_collection' => [
                     'http_bodies' => ['incomingRequest'],
                 ],
                 'max_request_body_size' => 'always',
@@ -636,8 +670,8 @@ final class RequestIntegrationTest extends TestCase
                 ],
                 'data' => [
                     'username' => 'alice',
-                    'password' => '[Filtered]',
-                    'nested' => ['api_token' => '[Filtered]'],
+                    'password' => 'secret',
+                    'nested' => ['api_token' => 'secret'],
                 ],
             ],
             null,

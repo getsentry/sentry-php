@@ -155,8 +155,6 @@ final class RequestDataCollector
         }
 
         if ($this->dataCollection === null) {
-            // The legacy behavior attaches the body untouched, subject only
-            // to the `max_request_body_size` option enforced by the caller
             return $body;
         }
 
@@ -164,9 +162,7 @@ final class RequestDataCollector
             return null;
         }
 
-        return \is_array($body)
-            ? SensitiveDataScrubber::scrubBodyData($body)
-            : '[Filtered]';
+        return \is_array($body) ? $body : '[Filtered]';
     }
 
     /**

@@ -89,6 +89,54 @@ final class SensitiveDataScrubberTest extends TestCase
         $this->assertSame(['X-Api-Key' => ['[Filtered]', '[Filtered]']], $scrubbed);
     }
 
+    public function testScrubHeadersAlwaysScrubsCookieHeaders(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => []];
+
+        $scrubbed = SensitiveDataScrubber::scrubHeaders([
+            'Cookie' => ['session_id=secret; theme=dark'],
+            'Set-Cookie' => ['session_id=secret'],
+            'X-Request-Id' => ['request-id'],
+        ], $behavior);
+
+        $this->assertSame([
+            'Cookie' => ['[Filtered]'],
+            'Set-Cookie' => ['[Filtered]'],
+            'X-Request-Id' => ['request-id'],
+        ], $scrubbed);
+    }
+
+    public function testScrubHeadersAllowListCannotOverrideCookieHeaders(): void
+    {
+        $behavior = ['mode' => 'allowList', 'terms' => ['cookie', 'set-cookie']];
+
+        $scrubbed = SensitiveDataScrubber::scrubHeaders([
+            'Cookie' => ['session_id=secret'],
+            'Set-Cookie' => ['session_id=secret'],
+        ], $behavior);
+
+        $this->assertSame([
+            'Cookie' => ['[Filtered]'],
+            'Set-Cookie' => ['[Filtered]'],
+        ], $scrubbed);
+    }
+
+    public function testScrubHeadersCollectsClientIpHeadersUnlessExtendedDenyTermsAreConfigured(): void
+    {
+        $defaultBehavior = ['mode' => 'denyList', 'terms' => []];
+        $extendedBehavior = ['mode' => 'denyList', 'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user']];
+        $headers = [
+            'X-Forwarded-For' => ['203.0.113.7'],
+            'X-Real-IP' => ['203.0.113.7'],
+        ];
+
+        $this->assertSame($headers, SensitiveDataScrubber::scrubHeaders($headers, $defaultBehavior));
+        $this->assertSame([
+            'X-Forwarded-For' => ['[Filtered]'],
+            'X-Real-IP' => ['[Filtered]'],
+        ], SensitiveDataScrubber::scrubHeaders($headers, $extendedBehavior));
+    }
+
     public function testScrubHeadersAllowListCannotOverrideMandatoryDenyList(): void
     {
         $behavior = ['mode' => 'allowList', 'terms' => ['authorization', 'x-request-id']];
@@ -131,36 +179,5 @@ final class SensitiveDataScrubberTest extends TestCase
         $scrubbed = SensitiveDataScrubber::scrubQueryString('api%5Ftoken=secret&page=1', $behavior);
 
         $this->assertSame('api%5Ftoken=[Filtered]&page=1', $scrubbed);
-    }
-
-    public function testScrubBodyDataScrubsSensitiveFields(): void
-    {
-        $scrubbed = SensitiveDataScrubber::scrubBodyData([
-            'username' => 'alice',
-            'password' => 'secret',
-        ]);
-
-        $this->assertSame([
-            'username' => 'alice',
-            'password' => '[Filtered]',
-        ], $scrubbed);
-    }
-
-    public function testScrubBodyDataScrubsNestedFields(): void
-    {
-        $scrubbed = SensitiveDataScrubber::scrubBodyData([
-            'nested' => ['api_token' => 'secret', 'plain' => 'visible'],
-        ]);
-
-        $this->assertSame([
-            'nested' => ['api_token' => '[Filtered]', 'plain' => 'visible'],
-        ], $scrubbed);
-    }
-
-    public function testScrubBodyDataIgnoresNumericKeys(): void
-    {
-        $scrubbed = SensitiveDataScrubber::scrubBodyData(['first', 'second']);
-
-        $this->assertSame(['first', 'second'], $scrubbed);
     }
 }

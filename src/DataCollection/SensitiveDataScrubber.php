@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-/***
+/**
  * @internal
  *
  * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
@@ -29,6 +29,18 @@ final class SensitiveDataScrubber
         'session',
         'sid',
         'identity',
+    ];
+
+    /**
+     * Headers in lowercase that are always scrubbed. The spec forbids sending
+     * raw Cookie/Set-Cookie header values even in allow-list mode; individual
+     * cookies are collected separately, subject to the cookies behavior.
+     * IP-carrying headers (x-forwarded-for, ...) are deliberately absent: the
+     * spec handles them through user-supplied extended deny terms instead.
+     */
+    private const SENSITIVE_HEADERS = [
+        'cookie',
+        'set-cookie',
     ];
 
     /**
@@ -57,7 +69,7 @@ final class SensitiveDataScrubber
         foreach ($headers as $name => $values) {
             $name = (string) $name;
 
-            if (self::shouldScrubValue($name, $behavior)) {
+            if (\in_array(strtolower($name), self::SENSITIVE_HEADERS, true) || self::shouldScrubValue($name, $behavior)) {
                 foreach ($values as $headerLine => $headerValue) {
                     $values[$headerLine] = '[Filtered]';
                 }
@@ -107,25 +119,6 @@ final class SensitiveDataScrubber
         }
 
         return implode('&', $parts);
-    }
-
-    /**
-     * @param array<array-key, mixed> $data
-     *
-     * @return array<array-key, mixed>
-     */
-    public static function scrubBodyData(array $data): array
-    {
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($data as $key => $value) {
-            if (\is_string($key) && self::matchesMandatoryDenyList($key)) {
-                $data[$key] = '[Filtered]';
-            } elseif (\is_array($value)) {
-                $data[$key] = self::scrubBodyData($value);
-            }
-        }
-
-        return $data;
     }
 
     /**
