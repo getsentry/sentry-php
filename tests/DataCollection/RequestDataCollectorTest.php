@@ -342,7 +342,7 @@ final class RequestDataCollectorTest extends TestCase
         ];
 
         $this->assertSame($body, $collector->collectRequestBody($body));
-        $this->assertSame('raw body', $collector->collectRequestBody('raw body'));
+        $this->assertSame('[Filtered]', $collector->collectRequestBody('raw body'));
     }
 
     public function testCollectRequestBodyIsSkippedWhenNotCollectingIncomingRequests(): void
