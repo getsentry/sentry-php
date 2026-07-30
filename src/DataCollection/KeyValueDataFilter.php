@@ -9,7 +9,7 @@ namespace Sentry\DataCollection;
  *
  * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
  */
-final class SensitiveDataScrubber
+final class KeyValueDataFilter
 {
     private const SENSITIVE_DATA_DENYLIST = [
         'auth',
@@ -32,7 +32,7 @@ final class SensitiveDataScrubber
     ];
 
     /**
-     * cookie headers that we always want to redact.
+     * Cookie headers that must always be filtered when headers are collected.
      */
     private const SENSITIVE_HEADERS = [
         'cookie',
@@ -44,9 +44,6 @@ final class SensitiveDataScrubber
      */
     private static $sensitiveDataDenyListRegex;
 
-    /**
-     * This class contains only static methods and should not be instantiated.
-     */
     private function __construct()
     {
     }
@@ -56,25 +53,29 @@ final class SensitiveDataScrubber
      *
      * @phpstan-param KeyValueCollectionBehavior $behavior
      *
-     * @return array<string, string[]>
+     * @return array<string, string[]>|null Returns null when collection is off
      */
-    public static function scrubHeaders(array $headers, array $behavior): array
+    public static function filterHeaders(array $headers, array $behavior): ?array
     {
-        $scrubbed = [];
+        if ($behavior['mode'] === 'off') {
+            return null;
+        }
+
+        $filtered = [];
 
         foreach ($headers as $name => $values) {
             $name = (string) $name;
 
-            if (\in_array(strtolower($name), self::SENSITIVE_HEADERS, true) || self::shouldScrubValue($name, $behavior)) {
+            if (\in_array(strtolower($name), self::SENSITIVE_HEADERS, true) || self::shouldFilterValue($name, $behavior)) {
                 foreach ($values as $headerLine => $headerValue) {
                     $values[$headerLine] = '[Filtered]';
                 }
             }
 
-            $scrubbed[$name] = $values;
+            $filtered[$name] = $values;
         }
 
-        return $scrubbed;
+        return $filtered;
     }
 
     /**
@@ -82,26 +83,34 @@ final class SensitiveDataScrubber
      *
      * @phpstan-param KeyValueCollectionBehavior $behavior
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|null Returns null when collection is off
      */
-    public static function scrubKeyValueData(array $data, array $behavior): array
+    public static function filterKeyValueData(array $data, array $behavior): ?array
     {
-        $scrubbed = [];
+        if ($behavior['mode'] === 'off') {
+            return null;
+        }
+
+        $filtered = [];
 
         /** @mago-ignore analysis:mixed-assignment */
         foreach ($data as $key => $value) {
             $key = (string) $key;
-            $scrubbed[$key] = self::shouldScrubValue($key, $behavior) ? '[Filtered]' : $value;
+            $filtered[$key] = self::shouldFilterValue($key, $behavior) ? '[Filtered]' : $value;
         }
 
-        return $scrubbed;
+        return $filtered;
     }
 
     /**
      * @phpstan-param KeyValueCollectionBehavior $behavior
      */
-    public static function scrubQueryString(string $queryString, array $behavior): string
+    public static function filterQueryString(string $queryString, array $behavior): ?string
     {
+        if ($behavior['mode'] === 'off') {
+            return null;
+        }
+
         $parts = explode('&', $queryString);
 
         foreach ($parts as $index => $part) {
@@ -109,7 +118,7 @@ final class SensitiveDataScrubber
             $encodedKey = $separatorPosition === false ? $part : substr($part, 0, $separatorPosition);
             $key = urldecode($encodedKey);
 
-            if (self::shouldScrubValue($key, $behavior)) {
+            if (self::shouldFilterValue($key, $behavior)) {
                 $parts[$index] = $encodedKey . '=[Filtered]';
             }
         }
@@ -120,17 +129,17 @@ final class SensitiveDataScrubber
     /**
      * @phpstan-param KeyValueCollectionBehavior $behavior
      */
-    private static function shouldScrubValue(string $key, array $behavior): bool
+    private static function shouldFilterValue(string $key, array $behavior): bool
     {
         if (self::matchesMandatoryDenyList($key)) {
             return true;
         }
 
         if ($behavior['mode'] === 'allowList') {
-            return !self::matchesAnyTerm($key, $behavior['terms'], false);
+            return !self::matchesAnyTerm($key, $behavior['terms']);
         }
 
-        return $behavior['terms'] !== [] && self::matchesAnyTerm($key, $behavior['terms'], true);
+        return self::matchesAnyTerm($key, $behavior['terms']);
     }
 
     private static function matchesMandatoryDenyList(string $key): bool
@@ -147,14 +156,12 @@ final class SensitiveDataScrubber
     /**
      * @param string[] $terms
      */
-    private static function matchesAnyTerm(string $key, array $terms, bool $partial): bool
+    private static function matchesAnyTerm(string $key, array $terms): bool
     {
         $key = strtolower($key);
 
         foreach ($terms as $term) {
-            $term = strtolower($term);
-
-            if (($partial && strpos($key, $term) !== false) || (!$partial && $key === $term)) {
+            if (strpos($key, strtolower($term)) !== false) {
                 return true;
             }
         }
