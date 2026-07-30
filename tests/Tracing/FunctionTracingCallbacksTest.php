@@ -14,6 +14,7 @@ use Sentry\Tests\StubTransport;
 use Sentry\Tracing\FunctionTracingCallbacks;
 use Sentry\Tracing\FunctionTracingState;
 use Sentry\Tracing\Span;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
@@ -59,6 +60,33 @@ final class FunctionTracingCallbacksTest extends TestCase
 
         $this->assertSame(234.567, $callbackState->getCurrentSpan()->getEndTimestamp());
         $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
+    }
+
+    public function testHandleEndSetsHttpStatusFromMetadata(): void
+    {
+        $this->createActiveTransaction(true, true);
+
+        $callbackState = FunctionTracingCallbacks::handleStart([
+            'name' => 'foo',
+            'start_time' => 123.456,
+            'metadata' => [],
+        ]);
+
+        $this->assertInstanceOf(FunctionTracingState::class, $callbackState);
+
+        FunctionTracingCallbacks::handleEnd([
+            'name' => 'foo',
+            'start_time' => 123.456,
+            'end_time' => 234.567,
+            'duration' => 111.111,
+            'metadata' => [
+                'http.response.status_code' => 404,
+            ],
+        ], $callbackState);
+
+        $span = $callbackState->getCurrentSpan();
+        $this->assertSame(SpanStatus::notFound(), $span->getStatus());
+        $this->assertSame(404, $span->getData('http.response.status_code'));
     }
 
     public function testNestedCallbacksRestoreParentSpansInOrder(): void

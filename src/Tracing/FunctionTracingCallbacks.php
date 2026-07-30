@@ -54,8 +54,21 @@ final class FunctionTracingCallbacks
          * @var float $endTime
          */
         $endTime = $data['end_time'];
+        $currentSpan = $callbackState->getCurrentSpan();
+        /** @var array<string, mixed> $metadata */
+        $metadata = $data['metadata'];
 
-        $callbackState->getCurrentSpan()->finish($endTime);
+        if (isset($metadata['http.response.status_code'])
+            && \is_int($metadata['http.response.status_code'])
+        ) {
+            $currentSpan
+                ->setHttpStatus($metadata['http.response.status_code'])
+                ->setData([
+                    'http.response.status_code' => $metadata['http.response.status_code'],
+                ]);
+        }
+
+        $currentSpan->finish($endTime);
         SentrySdk::getCurrentHub()->setSpan($callbackState->getParentSpan());
     }
 
