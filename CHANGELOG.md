@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 4.30.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.30.0.
+
+### Features
+
+- Add support for `guzzlehttp/psr7` 3.x and `guzzlehttp/promises` 3.x. [(#2164)](https://github.com/getsentry/sentry-php/pull/2164)
+
+### Bug Fixes
+
+- Strip breadcrumb metadata when capturing out-of-memory errors to prevent events with large breadcrumbs from being silently dropped. [(#2150)](https://github.com/getsentry/sentry-php/pull/2150)
+
+### Misc
+
+- Use the SDK's internal options resolver and fall back to safe defaults when option values are invalid. [(#2151)](https://github.com/getsentry/sentry-php/pull/2151)
+- Improve `RingBuffer` performance by using native PHP arrays. [(#2159)](https://github.com/getsentry/sentry-php/pull/2159)
+- Improve stack trace construction performance. [(#2160)](https://github.com/getsentry/sentry-php/pull/2160)
+- Correct `BreadcrumbHandler` PHPDoc parameter types for static analysis tools. [(#2152)](https://github.com/getsentry/sentry-php/pull/2152)
+
 ## 4.29.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.29.0.
