@@ -192,6 +192,20 @@ final class TraceMetricsTest extends TestCase
         $this->assertEquals(10.50, $metric->getValue());
     }
 
+    public function testNullAttributeValueIsStringified(): void
+    {
+        traceMetrics()->count('test-count', 2, ['foo' => null]);
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(1, $event->getMetrics());
+        $metric = $event->getMetrics()[0];
+
+        $this->assertSame('null', $metric->getAttributes()->toSimpleArray()['foo']);
+    }
+
     public function testInvalidTypeIsDiscarded(): void
     {
         // @phpstan-ignore-next-line
