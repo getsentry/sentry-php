@@ -34,6 +34,7 @@ use Sentry\Transport\TransportInterface;
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
+ *     enable_metrics?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
