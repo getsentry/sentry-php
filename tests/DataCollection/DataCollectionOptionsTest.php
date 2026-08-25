@@ -21,8 +21,11 @@ final class DataCollectionOptionsTest extends TestCase
             'response' => $collectionDefault,
         ], $options->getHttpHeaders());
         $this->assertSame(DataCollectionOptions::HTTP_BODY_TYPES, $options->getHttpBodies());
-        $this->assertSame($collectionDefault, $options->getQueryParams());
+        $this->assertSame($collectionDefault, $options->getUrlQueryParams());
         $this->assertSame(['inputs' => true, 'outputs' => true], $options->getGenAi());
+        $this->assertTrue($options->shouldCollectDatabaseQueryData());
+        $this->assertTrue($options->shouldCollectQueues());
+        $this->assertSame($collectionDefault, $options->getStackFrameVariables());
         $this->assertTrue($options->shouldCollectStackFrameVariables());
         $this->assertSame(5, $options->getFrameContextLines());
     }
@@ -59,26 +62,68 @@ final class DataCollectionOptionsTest extends TestCase
         $this->assertSame(DataCollectionOptions::HTTP_BODY_TYPES, $options->getHttpBodies());
     }
 
+    public function testStackFrameVariablesSupportsBooleanAndKeyValueCollectionBehavior(): void
+    {
+        $options = new DataCollectionOptions([
+            'stack_frame_variables' => [
+                'mode' => 'allowList',
+                'terms' => ['request_id'],
+            ],
+        ]);
+
+        $this->assertSame([
+            'mode' => 'allowList',
+            'terms' => ['request_id'],
+        ], $options->getStackFrameVariables());
+        $this->assertTrue($options->shouldCollectStackFrameVariables());
+
+        $options->setStackFrameVariables(['terms' => ['trace_id']]);
+        $this->assertSame([
+            'mode' => 'allowList',
+            'terms' => ['trace_id'],
+        ], $options->getStackFrameVariables());
+
+        $options->setStackFrameVariables(false);
+        $this->assertSame(['mode' => 'off', 'terms' => []], $options->getStackFrameVariables());
+        $this->assertFalse($options->shouldCollectStackFrameVariables());
+
+        $options->setStackFrameVariables(true);
+        $this->assertSame(['mode' => 'denyList', 'terms' => []], $options->getStackFrameVariables());
+        $this->assertTrue($options->shouldCollectStackFrameVariables());
+
+        $options->setStackFrameVariables(['mode' => 'off']);
+        $this->assertSame(['mode' => 'off', 'terms' => []], $options->getStackFrameVariables());
+        $this->assertFalse($options->shouldCollectStackFrameVariables());
+    }
+
     public function testInvalidValuesUseDefaultsAndSettersKeepCurrentValues(): void
     {
         $options = new DataCollectionOptions([
             'cookies' => ['mode' => 'invalid', 'terms' => [42]],
             'http_bodies' => ['invalid'],
             'gen_ai' => ['inputs' => 'invalid'],
+            'database_query_data' => 'invalid',
+            'queues' => 'invalid',
+            'stack_frame_variables' => ['mode' => 'invalid'],
             'frame_context_lines' => -1,
         ]);
 
         $this->assertSame(['mode' => 'denyList', 'terms' => []], $options->getCookies());
         $this->assertSame(DataCollectionOptions::HTTP_BODY_TYPES, $options->getHttpBodies());
         $this->assertSame(['inputs' => true, 'outputs' => true], $options->getGenAi());
+        $this->assertTrue($options->shouldCollectDatabaseQueryData());
+        $this->assertTrue($options->shouldCollectQueues());
+        $this->assertSame(['mode' => 'denyList', 'terms' => []], $options->getStackFrameVariables());
         $this->assertSame(5, $options->getFrameContextLines());
 
         $options->setCookies(['mode' => 'allowList'])->setCookies(['mode' => 'invalid']);
         $options->setHttpBodies(['incomingRequest'])->setHttpBodies(['invalid']);
+        $options->setStackFrameVariables(['mode' => 'allowList'])->setStackFrameVariables(['terms' => [42]]);
         $options->setFrameContextLines(2)->setFrameContextLines(-1);
 
         $this->assertSame('allowList', $options->getCookies()['mode']);
         $this->assertSame(['incomingRequest'], $options->getHttpBodies());
+        $this->assertSame(['mode' => 'allowList', 'terms' => []], $options->getStackFrameVariables());
         $this->assertSame(2, $options->getFrameContextLines());
     }
 
@@ -125,11 +170,19 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions([
             'user_info' => false,
             'http_bodies' => [],
+            'stack_frame_variables' => false,
         ]);
 
-        unset($options['user_info'], $options['http_bodies'], $options['unknown'], $options[0]);
+        unset(
+            $options['user_info'],
+            $options['http_bodies'],
+            $options['stack_frame_variables'],
+            $options['unknown'],
+            $options[0]
+        );
 
         $this->assertTrue($options['user_info']);
         $this->assertSame(DataCollectionOptions::HTTP_BODY_TYPES, $options['http_bodies']);
+        $this->assertSame(['mode' => 'denyList', 'terms' => []], $options['stack_frame_variables']);
     }
 }

@@ -166,13 +166,28 @@ final class KeyValueDataFilterTest extends TestCase
         $this->assertSame('token=[Filtered]&page=[Filtered]&flag', $filtered);
     }
 
-    public function testFilterQueryStringDecodesKeysBeforeMatching(): void
+    public function testFilterQueryStringDecodesKeysBeforeMatchingAndPreservesEncoding(): void
     {
         $behavior = ['mode' => 'denyList', 'terms' => []];
 
-        $filtered = KeyValueDataFilter::filterQueryString('api%5Ftoken=secret&page=1', $behavior);
+        $filtered = KeyValueDataFilter::filterQueryString(
+            'api%5Ftoken=secret&q=a%20b%26c&encoded%20field=encoded%2Bvalue',
+            $behavior
+        );
 
-        $this->assertSame('api%5Ftoken=[Filtered]&page=1', $filtered);
+        $this->assertSame(
+            'api%5Ftoken=[Filtered]&q=a%20b%26c&encoded%20field=encoded%2Bvalue',
+            $filtered
+        );
+    }
+
+    public function testFilterQueryStringPreservesValuelessParameters(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => []];
+
+        $filtered = KeyValueDataFilter::filterQueryString('token&token=&flag', $behavior);
+
+        $this->assertSame('token&token=[Filtered]&flag', $filtered);
     }
 
     public function testFilterQueryStringDoesNotTreatCookieNamesAsCookieHeaders(): void

@@ -118,7 +118,7 @@ final class KeyValueDataFilter
             $encodedKey = $separatorPosition === false ? $part : substr($part, 0, $separatorPosition);
             $key = urldecode($encodedKey);
 
-            if (self::shouldFilterValue($key, $behavior)) {
+            if ($separatorPosition !== false && self::shouldFilterValue($key, $behavior)) {
                 $parts[$index] = $encodedKey . '=[Filtered]';
             }
         }
