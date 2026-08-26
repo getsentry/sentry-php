@@ -96,7 +96,14 @@ final class KeyValueDataFilter
         /** @mago-ignore analysis:mixed-assignment */
         foreach ($data as $key => $value) {
             $key = (string) $key;
-            $filtered[$key] = self::shouldFilterValue($key, $behavior) ? '[Filtered]' : $value;
+
+            if (self::shouldFilterValue($key, $behavior)) {
+                $filtered[$key] = '[Filtered]';
+            } elseif (\is_array($value)) {
+                $filtered[$key] = self::filterKeyValueData($value, $behavior);
+            } else {
+                $filtered[$key] = $value;
+            }
         }
 
         return $filtered;
