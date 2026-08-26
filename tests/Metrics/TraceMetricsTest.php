@@ -129,7 +129,7 @@ final class TraceMetricsTest extends TestCase
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, $metrics);
     }
 
-    public function testEnableMetrics(): void
+    public function testMetricSentWhenEnableMetricsIsFalse(): void
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options([
             'enable_metrics' => false,
@@ -138,7 +138,9 @@ final class TraceMetricsTest extends TestCase
         traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
         traceMetrics()->flush();
 
-        $this->assertEmpty(StubTransport::$events);
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertCount(1, StubTransport::$events[0]->getMetrics());
+        $this->assertSame('test-count', StubTransport::$events[0]->getMetrics()[0]->getName());
     }
 
     public function testBeforeSendMetricAltersContent(): void

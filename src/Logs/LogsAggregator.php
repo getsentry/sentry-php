@@ -51,16 +51,6 @@ final class LogsAggregator
         $options = $client->getOptions();
         $sdkLogger = $options->getLogger();
 
-        if (!$options->getEnableLogs()) {
-            if ($sdkLogger !== null) {
-                $sdkLogger->info(
-                    'Log will be discarded because "enable_logs" is "false".'
-                );
-            }
-
-            return;
-        }
-
         $formattedMessage = Str::vsprintfOrNull($message, $values);
 
         if ($formattedMessage === null) {
