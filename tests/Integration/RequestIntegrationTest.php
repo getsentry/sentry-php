@@ -490,6 +490,115 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
+        yield 'data collection can disable all incoming request data' => [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'off'],
+                    'http_headers' => ['request' => ['mode' => 'off']],
+                    'http_bodies' => [],
+                    'url_query_params' => ['mode' => 'off'],
+                ],
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo?token=secret', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams(['session_id' => 'secret'])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+            ],
+            UserDataBag::createFromUserIdentifier('explicit-user'),
+            UserDataBag::createFromUserIdentifier('explicit-user'),
+        ];
+
+        yield 'data collection applies per-category filtering' => [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'allowList', 'terms' => ['theme']],
+                    'http_headers' => ['request' => ['mode' => 'allowList', 'terms' => ['x-request-id']]],
+                    'http_bodies' => [],
+                    'url_query_params' => ['mode' => 'denyList', 'terms' => ['page']],
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com/foo?token=secret&page=5'))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Request-Id', 'request-id'),
+            [
+                'url' => 'http://www.example.com/foo?token=%5BFiltered%5D&page=%5BFiltered%5D',
+                'method' => 'GET',
+                'query_string' => 'token=[Filtered]&page=[Filtered]',
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
+                'headers' => [
+                    'Host' => ['[Filtered]'],
+                    'Authorization' => ['[Filtered]'],
+                    'X-Request-Id' => ['request-id'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield 'data collection defaults filter sensitive request data' => [
+            [
+                'data_collection' => [],
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo?api%5Ftoken=secret&q=a%20b%26c', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Cookie', 'session_id=secret; theme=dark')
+                ->withHeader('X-Forwarded-For', '203.0.113.7')
+                ->withHeader('Content-Length', '100')
+                ->withParsedBody([
+                    'password' => 'secret',
+                    'user' => [
+                        'api_token' => 'secret',
+                        'name' => 'alice',
+                    ],
+                ]),
+            [
+                'url' => 'http://www.example.com/foo?api%5Ftoken=%5BFiltered%5D&q=a%20b%26c',
+                'method' => 'POST',
+                'query_string' => 'api%5Ftoken=[Filtered]&q=a%20b%26c',
+                'env' => [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                ],
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['[Filtered]'],
+                    'Cookie' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                    'Content-Length' => ['100'],
+                ],
+                'data' => [
+                    'password' => '[Filtered]',
+                    'user' => [
+                        'api_token' => '[Filtered]',
+                        'name' => 'alice',
+                    ],
+                ],
+            ],
+            null,
+            UserDataBag::createFromUserIpAddress('127.0.0.1'),
+        ];
+
         yield [
             [],
             (new ServerRequest('GET', 'http://www.example.com/foo'))

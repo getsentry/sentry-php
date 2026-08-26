@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
 use Sentry\Options;
@@ -46,19 +47,6 @@ final class RequestIntegration implements IntegrationInterface
         'small' => self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH,
         'medium' => self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH,
         'always' => \PHP_INT_MAX,
-    ];
-
-    /**
-     * This constant defines the default list of headers that may contain
-     * sensitive data and that will be sanitized if sending PII is disabled.
-     */
-    private const DEFAULT_SENSITIVE_HEADERS = [
-        'Authorization',
-        'Proxy-Authorization',
-        'Cookie',
-        'Set-Cookie',
-        'X-Forwarded-For',
-        'X-Real-IP',
     ];
 
     /**
@@ -128,69 +116,72 @@ final class RequestIntegration implements IntegrationInterface
             return;
         }
 
+        $collector = new RequestDataCollector(
+            $options->getDataCollection(),
+            $options->shouldSendDefaultPii(),
+            $this->options['pii_sanitize_headers']
+        );
+        $queryString = $collector->collectQueryString($request->getUri()->getQuery());
+
         $requestData = [
-            'url' => (string) $request->getUri(),
+            'url' => $collector->usesDataCollection()
+                ? (string) $request->getUri()->withQuery($queryString ?? '')
+                : (string) $request->getUri(),
             'method' => $request->getMethod(),
         ];
 
-        if ($request->getUri()->getQuery()) {
-            $requestData['query_string'] = $request->getUri()->getQuery();
+        if ($queryString !== null) {
+            $requestData['query_string'] = $queryString;
         }
 
-        if ($options->shouldSendDefaultPii()) {
-            $serverParams = $request->getServerParams();
+        if ($collector->shouldCollectUserInfo()) {
+            $this->addRequestUserInfo($event, $request, $requestData);
+        }
 
-            if (!empty($serverParams['REMOTE_ADDR'])) {
-                $user = $event->getUser();
-                $requestData['env']['REMOTE_ADDR'] = $serverParams['REMOTE_ADDR'];
+        $cookies = $collector->collectCookies($request->getCookieParams());
 
-                if ($user === null) {
-                    $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
-                } elseif ($user->getIpAddress() === null) {
-                    $user->setIpAddress($serverParams['REMOTE_ADDR']);
-                }
+        if ($cookies !== null) {
+            $requestData['cookies'] = $cookies;
+        }
 
-                $event->setUser($user);
+        $headers = $collector->collectHeaders($request->getHeaders());
+
+        if ($headers !== null) {
+            $requestData['headers'] = $headers;
+        }
+
+        if ($collector->shouldCollectRequestBody()) {
+            $requestBody = $collector->collectRequestBody($this->captureRequestBody($options, $request));
+
+            if ($requestBody !== null) {
+                $requestData['data'] = $requestBody;
             }
-
-            $requestData['cookies'] = $request->getCookieParams();
-            $requestData['headers'] = $request->getHeaders();
-        } else {
-            $requestData['headers'] = $this->sanitizeHeaders($request->getHeaders());
-        }
-
-        $requestBody = $this->captureRequestBody($options, $request);
-
-        if (!empty($requestBody)) {
-            $requestData['data'] = $requestBody;
         }
 
         $event->setRequest($requestData);
     }
 
     /**
-     * Removes headers containing potential PII.
-     *
-     * @param array<array-key, string[]> $headers Array containing request headers
-     *
-     * @return array<string, string[]>
+     * @param array<string, mixed> $requestData
      */
-    private function sanitizeHeaders(array $headers): array
+    private function addRequestUserInfo(Event $event, ServerRequestInterface $request, array &$requestData): void
     {
-        foreach ($headers as $name => $values) {
-            // Cast the header name into a string, to avoid errors on numeric headers
-            $name = (string) $name;
+        $serverParams = $request->getServerParams();
 
-            if (!\in_array(strtolower($name), $this->options['pii_sanitize_headers'], true)) {
-                continue;
-            }
-
-            foreach ($values as $headerLine => $headerValue) {
-                $headers[$name][$headerLine] = '[Filtered]';
-            }
+        if (empty($serverParams['REMOTE_ADDR'])) {
+            return;
         }
 
-        return $headers;
+        $user = $event->getUser();
+        $requestData['env'] = ['REMOTE_ADDR' => $serverParams['REMOTE_ADDR']];
+
+        if ($user === null) {
+            $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
+        } elseif ($user->getIpAddress() === null) {
+            $user->setIpAddress($serverParams['REMOTE_ADDR']);
+        }
+
+        $event->setUser($user);
     }
 
     /**
@@ -309,6 +300,6 @@ final class RequestIntegration implements IntegrationInterface
         $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
             return array_map('strtolower', $value);
         });
-        $resolver->setDefault('pii_sanitize_headers', self::DEFAULT_SENSITIVE_HEADERS);
+        $resolver->setDefault('pii_sanitize_headers', RequestDataCollector::DEFAULT_PII_SANITIZE_HEADERS);
     }
 }

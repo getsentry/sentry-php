@@ -590,9 +590,6 @@ final class OptionsTest extends TestCase
             $actual[$callbackOption] = \Closure::class;
         }
 
-        $this->assertInstanceOf(DataCollectionOptions::class, $actual['data_collection']);
-        $actual['data_collection'] = DataCollectionOptions::class;
-
         $expected = [
             'integrations' => [],
             'default_integrations' => true,
@@ -636,7 +633,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'data_collection' => DataCollectionOptions::class,
+            'data_collection' => null,
             'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
@@ -697,6 +694,7 @@ final class OptionsTest extends TestCase
             ],
         ]))->getDataCollection();
 
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
         $this->assertFalse($dataCollection->shouldCollectUserInfo());
         $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
         $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
@@ -716,7 +714,9 @@ final class OptionsTest extends TestCase
         $options = new Options(['data_collection' => $dataCollection]);
 
         $this->assertSame($dataCollection, $options->getDataCollection());
-        $options->getDataCollection()->setFrameContextLines(0);
+        $resolvedDataCollection = $options->getDataCollection();
+        $this->assertNotNull($resolvedDataCollection);
+        $resolvedDataCollection->setFrameContextLines(0);
         $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
 

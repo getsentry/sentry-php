@@ -77,6 +77,25 @@ final class KeyValueDataFilterTest extends TestCase
         $this->assertSame(['authorization' => '[Filtered]'], $filtered);
     }
 
+    public function testFilterKeyValueDataFiltersNestedData(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => []];
+
+        $filtered = KeyValueDataFilter::filterKeyValueData([
+            'user' => [
+                'password' => 'secret',
+                'name' => 'alice',
+            ],
+        ], $behavior);
+
+        $this->assertSame([
+            'user' => [
+                'password' => '[Filtered]',
+                'name' => 'alice',
+            ],
+        ], $filtered);
+    }
+
     public function testFilterHeadersReturnsNullWhenCollectionIsOff(): void
     {
         $behavior = ['mode' => 'off', 'terms' => ['x-request-id']];
