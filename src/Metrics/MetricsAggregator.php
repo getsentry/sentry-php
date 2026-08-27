@@ -67,10 +67,6 @@ final class MetricsAggregator
             $options = $client->getOptions();
             $metricFlushThreshold = $options->getMetricFlushThreshold();
 
-            if ($options->getEnableMetrics() === false) {
-                return;
-            }
-
             $defaultAttributes = [
                 'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
                 'server.address' => $options->getServerName(),

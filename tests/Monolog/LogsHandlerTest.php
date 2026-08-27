@@ -22,7 +22,7 @@ final class LogsHandlerTest extends TestCase
     {
         Logs::getInstance()->flush();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
+            'enable_logs' => false,
             'before_send' => static function () {
                 return null; // we don't need to send the event, we are just testing the Monolog handler
             },
@@ -104,7 +104,7 @@ final class LogsHandlerTest extends TestCase
     {
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
+            'enable_logs' => false,
         ])->setTransport($transport)
             ->getClient();
 
