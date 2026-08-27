@@ -47,7 +47,11 @@ final class FrameContextifierIntegration implements IntegrationInterface
                 return $event;
             }
 
-            $maxContextLines = $client->getOptions()->getContextLines();
+            $options = $client->getOptions();
+            $dataCollection = $options->getDataCollection();
+            $maxContextLines = $dataCollection === null
+                ? $options->getContextLines()
+                : $dataCollection->getFrameContextLines();
             $integration = $client->getIntegration(self::class);
 
             if ($integration === null || $maxContextLines === null) {

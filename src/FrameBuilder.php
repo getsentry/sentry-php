@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Util\PrefixStripper;
 
@@ -199,6 +200,15 @@ final class FrameBuilder
             foreach ($backtraceFrame['args'] as $parameterPosition => $parameterValue) {
                 $argumentValues['param' . $parameterPosition] = $parameterValue;
             }
+        }
+
+        $dataCollection = $this->options->getDataCollection();
+
+        if ($dataCollection !== null) {
+            $argumentValues = KeyValueDataFilter::filterKeyValueData(
+                $argumentValues,
+                $dataCollection->getStackFrameVariables()
+            ) ?? [];
         }
 
         foreach ($argumentValues as $argumentName => $argumentValue) {
