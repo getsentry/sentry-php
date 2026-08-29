@@ -20,6 +20,11 @@ use Sentry\SentrySdk;
  * If a child execution shares its parent's context, storage must retain that
  * context until every owner has released it. Otherwise, the child must use an
  * independent context.
+ *
+ * SDK initialization removes the context stored for the current logical
+ * execution without flushing it. Concurrent runtimes must not reinitialize the
+ * SDK while other logical executions are active, because the SDK cannot
+ * enumerate host storage.
  */
 interface RuntimeContextStorageInterface
 {

@@ -251,6 +251,40 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
     }
 
+    public function testInitClearsContextStoredByPreviousManager(): void
+    {
+        /** @var ClientInterface&MockObject $secondClient */
+        $secondClient = $this->createMock(ClientInterface::class);
+        $secondClient->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $secondClient->expects($this->once())
+            ->method('flush')
+            ->willReturn(new Result(ResultStatus::success()));
+
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::init($storage)->bindClient($this->createMock(ClientInterface::class));
+
+        $storage->switchTo('request');
+        SentrySdk::startContext();
+        $previousHub = SentrySdk::getCurrentHub();
+
+        $freshHub = SentrySdk::init($storage);
+
+        $this->assertNull($storage->get());
+        $this->assertNotSame($previousHub, $freshHub);
+
+        $freshHub->bindClient($secondClient);
+
+        // This end/start transition exposes a stale context as a missing client.
+        SentrySdk::endContext();
+        SentrySdk::startContext();
+
+        $this->assertSame($secondClient, SentrySdk::getCurrentHub()->getClient());
+
+        SentrySdk::endContext();
+    }
+
     public function testEndContextFlushesClientTransportWithOptionalTimeout(): void
     {
         /** @var ClientInterface&MockObject $client */

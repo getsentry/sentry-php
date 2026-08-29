@@ -44,6 +44,13 @@ final class SentrySdk
      */
     public static function init(?RuntimeContextStorageInterface $runtimeContextStorage = null): HubInterface
     {
+        if ($runtimeContextStorage !== null) {
+            // The new manager must not select a context the previous one left in host storage.
+            // The removed context is discarded unflushed, matching how reinitialization has
+            // always dropped active manager state.
+            $runtimeContextStorage->remove();
+        }
+
         self::$currentHub = new Hub();
         self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub, $runtimeContextStorage);
 
