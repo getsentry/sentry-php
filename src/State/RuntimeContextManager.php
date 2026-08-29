@@ -12,18 +12,14 @@ use Sentry\Tracing\PropagationContext;
 /**
  * Manages runtime-local SDK state across different execution models.
  *
- * Lifecycle model:
- * - The manager keeps a lazily initialized global context as fallback.
- * - startContext() creates an isolated runtime context for the current
- *   execution key when no context is active yet.
- * - endContext() flushes context resources and removes that context.
+ * The manager keeps a lazily initialized global context as fallback. Explicit
+ * contexts use process-local storage by default, or the configured storage for
+ * runtimes with overlapping logical executions.
  *
  * @internal
  */
 final class RuntimeContextManager
 {
-    private const PROCESS_EXECUTION_CONTEXT_KEY = 'process';
-
     /**
      * @var HubInterface
      */
@@ -35,25 +31,25 @@ final class RuntimeContextManager
     private $globalContext;
 
     /**
-     * @var array<string, RuntimeContext>
+     * @var RuntimeContext|null
      */
-    private $activeContexts = [];
+    private $runtimeContext;
 
     /**
-     * @var array<string, string>
+     * @var RuntimeContextStorageInterface|null
      */
-    private $executionContextToRuntimeContext = [];
+    private $runtimeContextStorage;
 
-    public function __construct(HubInterface $baseHub)
+    public function __construct(HubInterface $baseHub, ?RuntimeContextStorageInterface $runtimeContextStorage = null)
     {
         $this->baseHub = $baseHub;
-        $this->globalContext = null;
+        $this->runtimeContextStorage = $runtimeContextStorage;
     }
 
     /**
      * Sets the current hub with context-aware behavior.
      *
-     * If a runtime context is active for the current execution key, the hub is
+     * If a runtime context is active for the current logical execution, the hub is
      * updated only for that active context. Otherwise, the baseline/global hub
      * template is updated.
      *
@@ -61,11 +57,10 @@ final class RuntimeContextManager
      */
     public function setCurrentHub(HubInterface $hub): bool
     {
-        $executionContextKey = $this->getExecutionContextKey();
+        $runtimeContext = $this->getActiveContext();
 
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-            $this->activeContexts[$runtimeContextId]->setHub($hub);
+        if ($runtimeContext !== null) {
+            $runtimeContext->setHub($hub);
 
             return true;
         }
@@ -86,77 +81,40 @@ final class RuntimeContextManager
 
     public function getCurrentContext(): RuntimeContext
     {
-        $executionContextKey = $this->getExecutionContextKey();
-
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-
-            return $this->activeContexts[$runtimeContextId];
-        }
-
-        return $this->getGlobalContext();
-    }
-
-    public function hasActiveContext(): bool
-    {
-        return $this->hasActiveContextForExecutionContextKey($this->getExecutionContextKey());
+        return $this->getActiveContext() ?? $this->getGlobalContext();
     }
 
     /**
-     * Starts an isolated context for the current execution key.
+     * Starts an isolated context for the current logical execution.
+     *
+     * @return bool Whether a new context was started
      */
-    public function startContext(): void
+    public function startContext(): bool
     {
-        $executionContextKey = $this->getExecutionContextKey();
-
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            // Nested start calls for the same execution key should be a no-op.
-            return;
+        if ($this->getActiveContext() !== null) {
+            // Nested start calls for the same logical execution should be a no-op.
+            return false;
         }
 
         ErrorHandler::resetFatalErrorHandlerState();
 
-        $this->createContextForExecutionContextKey($executionContextKey);
+        $this->setActiveContext(new RuntimeContext($this->generateRuntimeContextId(), $this->createHubFromBaseHub()));
+
+        return true;
     }
 
     /**
-     * Ends and flushes the active context for the current execution key.
+     * Ends and flushes the active context for the current logical execution.
      *
-     * When no context is active for the key this is a no-op.
+     * When no context is active this is a no-op.
      */
     public function endContext(?int $timeout = null): void
     {
-        $executionContextKey = $this->getExecutionContextKey();
+        $runtimeContext = $this->removeActiveContext();
 
-        if (!$this->hasActiveContextForExecutionContextKey($executionContextKey)) {
+        if ($runtimeContext === null) {
             return;
         }
-
-        $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-        unset($this->executionContextToRuntimeContext[$executionContextKey]);
-
-        $this->removeContextById($runtimeContextId, $timeout);
-    }
-
-    private function createContextForExecutionContextKey(string $executionContextKey): void
-    {
-        $runtimeContextId = $this->generateRuntimeContextId();
-        $runtimeContext = new RuntimeContext($runtimeContextId, $this->createHubFromBaseHub());
-
-        $this->activeContexts[$runtimeContextId] = $runtimeContext;
-        $this->executionContextToRuntimeContext[$executionContextKey] = $runtimeContextId;
-    }
-
-    private function removeContextById(string $runtimeContextId, ?int $timeout = null): void
-    {
-        if (!isset($this->activeContexts[$runtimeContextId])) {
-            return;
-        }
-
-        $runtimeContext = $this->activeContexts[$runtimeContextId];
-        unset($this->activeContexts[$runtimeContextId]);
-        // Remove any key mappings that may still reference this context.
-        $this->removeExecutionContextMappingsForRuntimeContext($runtimeContextId);
 
         $logger = $this->getLoggerFromHub($runtimeContext->getHub());
 
@@ -205,31 +163,36 @@ final class RuntimeContextManager
         }
     }
 
-    private function removeExecutionContextMappingsForRuntimeContext(string $runtimeContextId): void
+    private function getActiveContext(): ?RuntimeContext
     {
-        foreach ($this->executionContextToRuntimeContext as $executionContextKey => $mappedRuntimeContextId) {
-            if ($mappedRuntimeContextId === $runtimeContextId) {
-                unset($this->executionContextToRuntimeContext[$executionContextKey]);
-            }
+        if ($this->runtimeContextStorage !== null) {
+            return $this->runtimeContextStorage->get();
         }
+
+        return $this->runtimeContext;
     }
 
-    private function hasActiveContextForExecutionContextKey(string $executionContextKey): bool
+    private function setActiveContext(RuntimeContext $runtimeContext): void
     {
-        if (!isset($this->executionContextToRuntimeContext[$executionContextKey])) {
-            return false;
+        if ($this->runtimeContextStorage !== null) {
+            $this->runtimeContextStorage->set($runtimeContext);
+
+            return;
         }
 
-        $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
+        $this->runtimeContext = $runtimeContext;
+    }
 
-        if (!isset($this->activeContexts[$runtimeContextId])) {
-            // Mapping points to a context that was already evicted/ended; drop the stale index entry.
-            unset($this->executionContextToRuntimeContext[$executionContextKey]);
-
-            return false;
+    private function removeActiveContext(): ?RuntimeContext
+    {
+        if ($this->runtimeContextStorage !== null) {
+            return $this->runtimeContextStorage->remove();
         }
 
-        return true;
+        $runtimeContext = $this->runtimeContext;
+        $this->runtimeContext = null;
+
+        return $runtimeContext;
     }
 
     private function createHubFromBaseHub(): HubInterface
@@ -264,12 +227,6 @@ final class RuntimeContextManager
     private function generateRuntimeContextId(): string
     {
         return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
-    }
-
-    private function getExecutionContextKey(): string
-    {
-        // All supported runtime modes currently use a process-local execution key.
-        return self::PROCESS_EXECUTION_CONTEXT_KEY;
     }
 
     private function getGlobalContext(): RuntimeContext

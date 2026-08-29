@@ -10,6 +10,7 @@ use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
+use Sentry\State\RuntimeContextStorageInterface;
 
 /**
  * This class is the main entry point for all the most common SDK features.
@@ -38,11 +39,13 @@ final class SentrySdk
     /**
      * Initializes the SDK by creating a new hub instance each time this method
      * gets called.
+     *
+     * @param RuntimeContextStorageInterface|null $runtimeContextStorage Storage for isolating overlapping logical executions
      */
-    public static function init(): HubInterface
+    public static function init(?RuntimeContextStorageInterface $runtimeContextStorage = null): HubInterface
     {
         self::$currentHub = new Hub();
-        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
+        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub, $runtimeContextStorage);
 
         return self::getCurrentHub();
     }
@@ -89,7 +92,7 @@ final class SentrySdk
     /**
      * Executes the given callback within an isolated context.
      *
-     * If a context is already active for the current execution key, this method
+     * If a context is already active for the current logical execution, this method
      * reuses it and only executes the callback.
      *
      * @param callable $callback The callback to execute
@@ -105,11 +108,7 @@ final class SentrySdk
     public static function withContext(callable $callback, ?int $timeout = null)
     {
         $runtimeContextManager = self::getRuntimeContextManager();
-        $startedNewContext = !$runtimeContextManager->hasActiveContext();
-
-        if ($startedNewContext) {
-            $runtimeContextManager->startContext();
-        }
+        $startedNewContext = $runtimeContextManager->startContext();
 
         try {
             return $callback();

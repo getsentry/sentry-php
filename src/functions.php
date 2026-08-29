@@ -11,6 +11,7 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\RuntimeContextStorageInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -20,6 +21,9 @@ use Sentry\Transport\TransportInterface;
 
 /**
  * Creates a new Client and Hub which will be set as current.
+ *
+ * Runtimes that execute overlapping logical executions in one process can pass
+ * a runtime context storage to isolate them from each other.
  *
  * @param array{
  *     attach_metric_code_locations?: bool,
@@ -75,11 +79,11 @@ use Sentry\Transport\TransportInterface;
  *     transport?: TransportInterface|null,
  * } $options The client options
  */
-function init(array $options = []): void
+function init(array $options = [], ?RuntimeContextStorageInterface $runtimeContextStorage = null): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init()->bindClient($client);
+    SentrySdk::init($runtimeContextStorage)->bindClient($client);
 }
 
 /**
@@ -235,7 +239,7 @@ function endContext(?int $timeout = null): void
 /**
  * Executes the given callback within an isolated context.
  *
- * If a context is already active for the current execution key, it is reused.
+ * If a context is already active for the current logical execution, it is reused.
  *
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
