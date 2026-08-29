@@ -61,6 +61,22 @@ final class FunctionsTest extends TestCase
         $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
     }
 
+    public function testInitUsesRuntimeContextStorage(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+
+        init(['default_integrations' => false], $storage);
+
+        $storage->switchTo('request');
+        startContext();
+
+        $this->assertNotNull($storage->get());
+
+        endContext();
+
+        $this->assertNull($storage->get());
+    }
+
     /**
      * @dataProvider captureMessageDataProvider
      */

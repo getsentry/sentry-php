@@ -8,6 +8,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Logs\Logs;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
@@ -147,6 +149,108 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
     }
 
+    public function testRuntimeContextStorageIsolatesConcurrentExecutions(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        $globalHub = SentrySdk::init($storage);
+
+        $storage->switchTo('first');
+        SentrySdk::startContext();
+
+        $firstContext = SentrySdk::getCurrentRuntimeContext();
+        $firstLogsAggregator = $firstContext->getLogsAggregator();
+        $firstMetricsAggregator = $firstContext->getMetricsAggregator();
+        $firstHub = new Hub();
+
+        SentrySdk::setCurrentHub($firstHub);
+
+        $this->assertSame($firstHub, $firstContext->getHub());
+
+        $firstHub->configureScope(static function (Scope $scope): void {
+            $scope->setTag('execution', 'first');
+        });
+
+        $storage->switchTo('second');
+        SentrySdk::startContext();
+
+        $secondContext = SentrySdk::getCurrentRuntimeContext();
+        $secondHub = $secondContext->getHub();
+
+        $secondHub->configureScope(static function (Scope $scope): void {
+            $scope->setTag('execution', 'second');
+        });
+
+        $this->assertNotSame($firstContext, $secondContext);
+        $this->assertNotSame($firstHub, $secondHub);
+        $this->assertNotSame($firstLogsAggregator, $secondContext->getLogsAggregator());
+        $this->assertNotSame($firstMetricsAggregator, $secondContext->getMetricsAggregator());
+
+        $storage->switchTo('first');
+
+        $this->assertSame($firstContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame('first', $this->getCurrentScopeTag('execution'));
+
+        $storage->switchTo('second');
+
+        $this->assertSame($secondContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame('second', $this->getCurrentScopeTag('execution'));
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+
+        $storage->switchTo('first');
+
+        $this->assertSame($firstContext, SentrySdk::getCurrentRuntimeContext());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testRuntimeContextStorageCanReleaseAbandonedExecutions(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        $globalHub = SentrySdk::init($storage);
+
+        $storage->switchTo('abandoned');
+        SentrySdk::startContext();
+
+        $abandonedContext = SentrySdk::getCurrentRuntimeContext();
+
+        $storage->release('abandoned');
+
+        $this->assertNotSame($abandonedContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testRepeatedEndContextWithRuntimeContextStorageIsNoOp(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->once())
+            ->method('flush')
+            ->willReturn(new Result(ResultStatus::success()));
+
+        $storage = new StubRuntimeContextStorage();
+        $globalHub = SentrySdk::init($storage);
+        $globalHub->bindClient($client);
+
+        $storage->switchTo('request');
+        SentrySdk::startContext();
+        SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+
+        SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
     public function testEndContextFlushesClientTransportWithOptionalTimeout(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -177,6 +281,43 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init()->bindClient($client);
 
         SentrySdk::flush();
+    }
+
+    public function testEndContextFlushesResourcesIndependently(): void
+    {
+        StubLogger::$logs = [];
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options(['logger' => StubLogger::getInstance()]));
+        $client->expects($this->exactly(2))
+            ->method('captureEvent')
+            ->willReturnCallback(static function (Event $event): void {
+                throw new \RuntimeException('Failed capturing ' . (string) $event->getType());
+            });
+        $client->expects($this->once())
+            ->method('flush')
+            ->willThrowException(new \RuntimeException('Failed flushing transport'));
+
+        SentrySdk::init()->bindClient($client);
+        SentrySdk::startContext();
+
+        Logs::getInstance()->info('log');
+        TraceMetrics::getInstance()->count('metric', 1);
+
+        SentrySdk::endContext();
+
+        $errors = array_filter(StubLogger::$logs, static function (array $log): bool {
+            return $log['level'] === 'error';
+        });
+
+        $this->assertSame([
+            'Failed to flush logs while ending a runtime context.',
+            'Failed to flush trace metrics while ending a runtime context.',
+            'Failed to flush the client transport while ending a runtime context.',
+        ], array_column($errors, 'message'));
     }
 
     public function testWithContextReturnsCallbackResultAndRestoresGlobalHub(): void
@@ -274,5 +415,17 @@ final class SentrySdkTest extends TestCase
         });
 
         return $traceparent;
+    }
+
+    private function getCurrentScopeTag(string $key): ?string
+    {
+        $value = null;
+
+        SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($key, &$value): void {
+            $event = $scope->applyToEvent(Event::createEvent());
+            $value = $event !== null ? $event->getTags()[$key] ?? null : null;
+        });
+
+        return $value;
     }
 }
