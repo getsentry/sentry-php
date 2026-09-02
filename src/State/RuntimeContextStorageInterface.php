@@ -21,10 +21,12 @@ use Sentry\SentrySdk;
  * context until every owner has released it. Otherwise, the child must use an
  * independent context.
  *
- * SDK initialization removes the context stored for the current logical
- * execution without flushing it. Concurrent runtimes must not reinitialize the
- * SDK while other logical executions are active, because the SDK cannot
- * enumerate host storage.
+ * Storage is registered once during framework bootstrap through
+ * {@see SentrySdk::setRuntimeContextStorage()} and remains registered across SDK
+ * initialization. SDK initialization and registration changes discard the context
+ * stored for the current logical execution without flushing it. Concurrent runtimes
+ * must not reinitialize the SDK or change the registration while other logical
+ * executions are active, because the SDK cannot enumerate host storage.
  */
 interface RuntimeContextStorageInterface
 {

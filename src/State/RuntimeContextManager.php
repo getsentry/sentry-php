@@ -121,6 +121,14 @@ final class RuntimeContextManager
         $this->flushRuntimeContextResources($runtimeContext, $timeout, $logger);
     }
 
+    /**
+     * Discards the active context for the current logical execution without flushing it.
+     */
+    public function discardActiveContext(): void
+    {
+        $this->removeActiveContext();
+    }
+
     private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ?int $timeout, LoggerInterface $logger): void
     {
         $hub = $runtimeContext->getHub();

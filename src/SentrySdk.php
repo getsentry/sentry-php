@@ -30,6 +30,11 @@ final class SentrySdk
     private static $runtimeContextManager;
 
     /**
+     * @var RuntimeContextStorageInterface|null
+     */
+    private static $runtimeContextStorage;
+
+    /**
      * Constructor.
      */
     private function __construct()
@@ -39,22 +44,35 @@ final class SentrySdk
     /**
      * Initializes the SDK by creating a new hub instance each time this method
      * gets called.
-     *
-     * @param RuntimeContextStorageInterface|null $runtimeContextStorage Storage for isolating overlapping logical executions
      */
-    public static function init(?RuntimeContextStorageInterface $runtimeContextStorage = null): HubInterface
+    public static function init(): HubInterface
     {
-        if ($runtimeContextStorage !== null) {
-            // The new manager must not select a context the previous one left in host storage.
-            // The removed context is discarded unflushed, matching how reinitialization has
-            // always dropped active manager state.
-            $runtimeContextStorage->remove();
+        if (self::$runtimeContextManager !== null) {
+            self::$runtimeContextManager->discardActiveContext();
         }
 
         self::$currentHub = new Hub();
-        self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub, $runtimeContextStorage);
+        self::$runtimeContextManager = null;
 
         return self::getCurrentHub();
+    }
+
+    /**
+     * Registers storage for isolating runtime contexts across overlapping logical executions.
+     *
+     * The registration persists across SDK initialization. Changing it discards the active
+     * context for the current logical execution without flushing it. Concurrent runtimes
+     * should register storage before logical executions begin and must not replace it while
+     * other logical executions are active.
+     */
+    public static function setRuntimeContextStorage(?RuntimeContextStorageInterface $runtimeContextStorage): void
+    {
+        if (self::$runtimeContextManager !== null) {
+            self::$runtimeContextManager->discardActiveContext();
+        }
+
+        self::$runtimeContextStorage = $runtimeContextStorage;
+        self::$runtimeContextManager = null;
     }
 
     /**
@@ -165,7 +183,7 @@ final class SentrySdk
         }
 
         if (self::$runtimeContextManager === null) {
-            self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub);
+            self::$runtimeContextManager = new RuntimeContextManager(self::$currentHub, self::$runtimeContextStorage);
         }
 
         return self::$runtimeContextManager;

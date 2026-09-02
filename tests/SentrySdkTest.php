@@ -152,7 +152,8 @@ final class SentrySdkTest extends TestCase
     public function testRuntimeContextStorageIsolatesConcurrentExecutions(): void
     {
         $storage = new StubRuntimeContextStorage();
-        $globalHub = SentrySdk::init($storage);
+        SentrySdk::setRuntimeContextStorage($storage);
+        $globalHub = SentrySdk::init();
 
         $storage->switchTo('first');
         SentrySdk::startContext();
@@ -211,7 +212,8 @@ final class SentrySdkTest extends TestCase
     public function testRuntimeContextStorageCanReleaseAbandonedExecutions(): void
     {
         $storage = new StubRuntimeContextStorage();
-        $globalHub = SentrySdk::init($storage);
+        SentrySdk::setRuntimeContextStorage($storage);
+        $globalHub = SentrySdk::init();
 
         $storage->switchTo('abandoned');
         SentrySdk::startContext();
@@ -236,7 +238,8 @@ final class SentrySdkTest extends TestCase
             ->willReturn(new Result(ResultStatus::success()));
 
         $storage = new StubRuntimeContextStorage();
-        $globalHub = SentrySdk::init($storage);
+        SentrySdk::setRuntimeContextStorage($storage);
+        $globalHub = SentrySdk::init();
         $globalHub->bindClient($client);
 
         $storage->switchTo('request');
@@ -253,6 +256,11 @@ final class SentrySdkTest extends TestCase
 
     public function testInitClearsContextStoredByPreviousManager(): void
     {
+        /** @var ClientInterface&MockObject $firstClient */
+        $firstClient = $this->createMock(ClientInterface::class);
+        $firstClient->expects($this->never())
+            ->method('flush');
+
         /** @var ClientInterface&MockObject $secondClient */
         $secondClient = $this->createMock(ClientInterface::class);
         $secondClient->expects($this->once())
@@ -263,26 +271,79 @@ final class SentrySdkTest extends TestCase
             ->willReturn(new Result(ResultStatus::success()));
 
         $storage = new StubRuntimeContextStorage();
-        SentrySdk::init($storage)->bindClient($this->createMock(ClientInterface::class));
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init()->bindClient($firstClient);
 
         $storage->switchTo('request');
         SentrySdk::startContext();
         $previousHub = SentrySdk::getCurrentHub();
 
-        $freshHub = SentrySdk::init($storage);
+        $freshHub = SentrySdk::init();
 
         $this->assertNull($storage->get());
         $this->assertNotSame($previousHub, $freshHub);
 
         $freshHub->bindClient($secondClient);
 
-        // This end/start transition exposes a stale context as a missing client.
         SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+
         SentrySdk::startContext();
 
+        $this->assertNotNull($storage->get());
         $this->assertSame($secondClient, SentrySdk::getCurrentHub()->getClient());
 
         SentrySdk::endContext();
+    }
+
+    public function testReplacingRuntimeContextStorageDiscardsContextFromPreviousStorage(): void
+    {
+        $firstStorage = new StubRuntimeContextStorage();
+        $secondStorage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($firstStorage);
+        $globalHub = SentrySdk::init();
+        SentrySdk::startContext();
+
+        $this->assertNotNull($firstStorage->get());
+
+        SentrySdk::setRuntimeContextStorage($secondStorage);
+
+        $this->assertNull($firstStorage->get());
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+
+        SentrySdk::startContext();
+
+        $this->assertNull($firstStorage->get());
+        $this->assertSame(SentrySdk::getCurrentRuntimeContext(), $secondStorage->get());
+
+        SentrySdk::endContext();
+    }
+
+    public function testUnregisteringRuntimeContextStorageRestoresProcessLocalContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($storage);
+        $globalHub = SentrySdk::init();
+        SentrySdk::startContext();
+
+        $this->assertNotNull($storage->get());
+
+        SentrySdk::setRuntimeContextStorage(null);
+
+        $this->assertNull($storage->get());
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+
+        SentrySdk::startContext();
+
+        $this->assertNull($storage->get());
+        $this->assertNotSame($globalHub, SentrySdk::getCurrentHub());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
     }
 
     public function testEndContextFlushesClientTransportWithOptionalTimeout(): void

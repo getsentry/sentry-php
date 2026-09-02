@@ -11,7 +11,6 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
-use Sentry\State\RuntimeContextStorageInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -21,9 +20,6 @@ use Sentry\Transport\TransportInterface;
 
 /**
  * Creates a new Client and Hub which will be set as current.
- *
- * Runtimes that execute overlapping logical executions in one process can pass
- * a runtime context storage to isolate them from each other.
  *
  * @param array{
  *     attach_metric_code_locations?: bool,
@@ -79,11 +75,11 @@ use Sentry\Transport\TransportInterface;
  *     transport?: TransportInterface|null,
  * } $options The client options
  */
-function init(array $options = [], ?RuntimeContextStorageInterface $runtimeContextStorage = null): void
+function init(array $options = []): void
 {
     $client = ClientBuilder::create($options)->getClient();
 
-    SentrySdk::init($runtimeContextStorage)->bindClient($client);
+    SentrySdk::init()->bindClient($client);
 }
 
 /**

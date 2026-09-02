@@ -65,7 +65,8 @@ final class FunctionsTest extends TestCase
     {
         $storage = new StubRuntimeContextStorage();
 
-        init(['default_integrations' => false], $storage);
+        SentrySdk::setRuntimeContextStorage($storage);
+        init(['default_integrations' => false]);
 
         $storage->switchTo('request');
         startContext();
