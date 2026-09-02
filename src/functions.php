@@ -235,7 +235,7 @@ function endContext(?int $timeout = null): void
 /**
  * Executes the given callback within an isolated context.
  *
- * If a context is already active for the current execution key, it is reused.
+ * If a context is already active for the current logical execution, it is reused.
  *
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport

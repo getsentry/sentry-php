@@ -31,6 +31,15 @@ final class SentrySdkExtension implements BeforeTestHookInterface
             $reflectionProperty->setAccessible(false);
         }
 
+        $reflectionProperty = new \ReflectionProperty(SentrySdk::class, 'runtimeContextStorage');
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
+        $reflectionProperty->setValue(null, null);
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(false);
+        }
+
         StubTransport::$events = [];
 
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'globalEventProcessors');

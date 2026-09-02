@@ -112,8 +112,6 @@ final class ErrorHandler
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed in case a fatal error occurs to handle it
-     *
-     * @phpstan-ignore-next-line This property is used to reserve memory for the fatal error handler and is thus never read
      */
     private static $reservedMemory;
 
@@ -315,7 +313,10 @@ final class ErrorHandler
         self::$disableFatalErrorHandler = false;
         self::$didIncreaseMemoryLimit = false;
 
-        if (self::$handlerInstance !== null && self::$handlerInstance->isFatalErrorHandlerRegistered) {
+        if (self::$handlerInstance !== null
+            && self::$handlerInstance->isFatalErrorHandlerRegistered
+            && self::$reservedMemory === null
+        ) {
             self::$reservedMemory = str_repeat('x', self::$reservedMemorySize);
         }
     }
