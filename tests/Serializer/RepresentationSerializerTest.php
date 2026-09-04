@@ -126,6 +126,37 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
     }
 
     /**
+     * @dataProvider serializeAllObjectsDataProvider
+     */
+    public function testSerializeNonFiniteFloat(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $this->assertSame('INF', $serializer->representationSerialize(\INF));
+        $this->assertSame('-INF', $serializer->representationSerialize(-\INF));
+        $this->assertSame('NAN', $serializer->representationSerialize(\NAN));
+    }
+
+    /**
+     * @dataProvider serializeAllObjectsDataProvider
+     */
+    public function testSerializeFloatOutsideOfIntegerRange(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer();
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $this->assertSame('1.0E+20', $serializer->representationSerialize(1e20));
+        $this->assertSame('-1.0E+20', $serializer->representationSerialize(-1e20));
+    }
+
+    /**
      * @return RepresentationSerializer
      */
     protected function createSerializer(): AbstractSerializer
