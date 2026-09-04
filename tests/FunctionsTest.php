@@ -372,6 +372,22 @@ final class FunctionsTest extends TestCase
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
     }
 
+    public function testStartContextForwardsProvidedHub(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+        $hub = new Hub();
+
+        startContext($hub);
+
+        $this->assertSame($hub, SentrySdk::getCurrentHub());
+
+        endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
     public function testWithContext(): void
     {
         SentrySdk::init();
