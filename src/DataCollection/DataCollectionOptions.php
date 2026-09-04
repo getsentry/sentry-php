@@ -15,9 +15,11 @@ use Sentry\OptionsResolver;
  *     cookies: KeyValueCollectionBehavior,
  *     http_headers: HttpHeaders,
  *     http_bodies: string[],
- *     query_params: KeyValueCollectionBehavior,
+ *     url_query_params: KeyValueCollectionBehavior,
  *     gen_ai: GenAi,
- *     stack_frame_variables: bool,
+ *     database_query_data: bool,
+ *     queues: bool,
+ *     stack_frame_variables: KeyValueCollectionBehavior,
  *     frame_context_lines: int
  * }
  *
@@ -59,11 +61,13 @@ final class DataCollectionOptions implements \ArrayAccess
             'response' => self::COLLECTION_DEFAULT,
         ],
         'http_bodies' => self::HTTP_BODY_TYPES,
-        'query_params' => self::COLLECTION_DEFAULT,
+        'url_query_params' => self::COLLECTION_DEFAULT,
         'gen_ai' => [
             'inputs' => true,
             'outputs' => true,
         ],
+        'database_query_data' => true,
+        'queues' => true,
         'stack_frame_variables' => true,
         'frame_context_lines' => 5,
     ];
@@ -163,19 +167,19 @@ final class DataCollectionOptions implements \ArrayAccess
     /**
      * @phpstan-return KeyValueCollectionBehavior
      */
-    public function getQueryParams(): array
+    public function getUrlQueryParams(): array
     {
-        return $this->options['query_params'];
+        return $this->options['url_query_params'];
     }
 
     /**
-     * @param array<string, mixed> $queryParams
+     * @param array<string, mixed> $urlQueryParams
      *
-     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $queryParams
+     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $urlQueryParams
      */
-    public function setQueryParams(array $queryParams): self
+    public function setUrlQueryParams(array $urlQueryParams): self
     {
-        return $this->updateOptions(['query_params' => $queryParams]);
+        return $this->updateOptions(['url_query_params' => $urlQueryParams]);
     }
 
     /**
@@ -196,12 +200,45 @@ final class DataCollectionOptions implements \ArrayAccess
         return $this->updateOptions(['gen_ai' => $genAi]);
     }
 
-    public function shouldCollectStackFrameVariables(): bool
+    public function shouldCollectDatabaseQueryData(): bool
+    {
+        return $this->options['database_query_data'];
+    }
+
+    public function setDatabaseQueryData(bool $databaseQueryData): self
+    {
+        return $this->updateOptions(['database_query_data' => $databaseQueryData]);
+    }
+
+    public function shouldCollectQueues(): bool
+    {
+        return $this->options['queues'];
+    }
+
+    public function setQueues(bool $queues): self
+    {
+        return $this->updateOptions(['queues' => $queues]);
+    }
+
+    /**
+     * @phpstan-return KeyValueCollectionBehavior
+     */
+    public function getStackFrameVariables(): array
     {
         return $this->options['stack_frame_variables'];
     }
 
-    public function setStackFrameVariables(bool $stackFrameVariables): self
+    public function shouldCollectStackFrameVariables(): bool
+    {
+        return $this->options['stack_frame_variables']['mode'] !== 'off';
+    }
+
+    /**
+     * @param bool|array<string, mixed> $stackFrameVariables
+     *
+     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $stackFrameVariables
+     */
+    public function setStackFrameVariables($stackFrameVariables): self
     {
         return $this->updateOptions(['stack_frame_variables' => $stackFrameVariables]);
     }
@@ -290,19 +327,24 @@ final class DataCollectionOptions implements \ArrayAccess
         $resolver->setAllowedTypes('http_headers.response.mode', 'string');
         $resolver->setAllowedTypes('http_headers.response.terms', 'string[]');
         $resolver->setAllowedTypes('http_bodies', 'string[]');
-        $resolver->setAllowedTypes('query_params', 'array');
-        $resolver->setAllowedTypes('query_params.mode', 'string');
-        $resolver->setAllowedTypes('query_params.terms', 'string[]');
+        $resolver->setAllowedTypes('url_query_params', 'array');
+        $resolver->setAllowedTypes('url_query_params.mode', 'string');
+        $resolver->setAllowedTypes('url_query_params.terms', 'string[]');
         $resolver->setAllowedTypes('gen_ai', 'array');
         $resolver->setAllowedTypes('gen_ai.inputs', 'bool');
         $resolver->setAllowedTypes('gen_ai.outputs', 'bool');
-        $resolver->setAllowedTypes('stack_frame_variables', 'bool');
+        $resolver->setAllowedTypes('database_query_data', 'bool');
+        $resolver->setAllowedTypes('queues', 'bool');
+        $resolver->setAllowedTypes('stack_frame_variables', ['bool', 'array']);
+        $resolver->setAllowedTypes('stack_frame_variables.mode', 'string');
+        $resolver->setAllowedTypes('stack_frame_variables.terms', 'string[]');
         $resolver->setAllowedTypes('frame_context_lines', 'int');
 
         $resolver->setAllowedValues('cookies.mode', self::COLLECTION_MODES);
         $resolver->setAllowedValues('http_headers.request.mode', self::COLLECTION_MODES);
         $resolver->setAllowedValues('http_headers.response.mode', self::COLLECTION_MODES);
-        $resolver->setAllowedValues('query_params.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('url_query_params.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('stack_frame_variables.mode', self::COLLECTION_MODES);
         $resolver->setAllowedValues('http_bodies', static function (array $value): bool {
             return array_diff($value, self::HTTP_BODY_TYPES) === [];
         });
@@ -320,7 +362,31 @@ final class DataCollectionOptions implements \ArrayAccess
 
             return $value;
         });
+        $resolver->setNormalizer(
+            'stack_frame_variables',
+            \Closure::fromCallable([$this, 'normalizeStackFrameVariables'])
+        );
         $resolver->setDefaults(self::DEFAULTS);
+    }
+
+    /**
+     * @param bool|array<string, mixed> $value
+     *
+     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $value
+     *
+     * @phpstan-return array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
+     */
+    private function normalizeStackFrameVariables($value): array
+    {
+        if ($value === true) {
+            return self::COLLECTION_DEFAULT;
+        }
+
+        if ($value === false) {
+            return ['mode' => 'off', 'terms' => []];
+        }
+
+        return $value;
     }
 
     /**

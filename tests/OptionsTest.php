@@ -689,14 +689,25 @@ final class OptionsTest extends TestCase
                 'http_headers' => [
                     'request' => ['mode' => 'off'],
                 ],
+                'url_query_params' => ['terms' => ['private']],
                 'gen_ai' => ['outputs' => false],
+                'database_query_data' => false,
+                'queues' => false,
+                'stack_frame_variables' => ['mode' => 'allowList', 'terms' => ['request_id']],
             ],
         ]))->getDataCollection();
 
         $this->assertFalse($dataCollection->shouldCollectUserInfo());
         $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
         $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
+        $this->assertSame(['mode' => 'denyList', 'terms' => ['private']], $dataCollection->getUrlQueryParams());
         $this->assertSame(['inputs' => true, 'outputs' => false], $dataCollection->getGenAi());
+        $this->assertFalse($dataCollection->shouldCollectDatabaseQueryData());
+        $this->assertFalse($dataCollection->shouldCollectQueues());
+        $this->assertSame([
+            'mode' => 'allowList',
+            'terms' => ['request_id'],
+        ], $dataCollection->getStackFrameVariables());
     }
 
     public function testDataCollectionOptionPreservesObjectIdentityAndCanBeUpdatedThroughGetter(): void
