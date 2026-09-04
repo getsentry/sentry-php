@@ -372,9 +372,9 @@ final class Options
         return $this->updateOptions(['context_lines' => $contextLines]);
     }
 
-    public function getDataCollection(): DataCollectionOptions
+    public function getDataCollection(): ?DataCollectionOptions
     {
-        /** @var DataCollectionOptions $dataCollection */
+        /** @var DataCollectionOptions|null $dataCollection */
         $dataCollection = $this->options['data_collection'];
 
         return $dataCollection;
@@ -1287,7 +1287,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
-        $resolver->setAllowedTypes('data_collection', ['array', DataCollectionOptions::class]);
+        $resolver->setAllowedTypes('data_collection', ['null', 'array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -1396,7 +1396,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'data_collection' => new DataCollectionOptions(),
+            'data_collection' => null,
         ]);
     }
 
@@ -1447,11 +1447,11 @@ final class Options
     }
 
     /**
-     * @param array<string, mixed>|DataCollectionOptions $value
+     * @param array<string, mixed>|DataCollectionOptions|null $value
      */
-    private function normalizeDataCollectionOption($value): DataCollectionOptions
+    private function normalizeDataCollectionOption($value): ?DataCollectionOptions
     {
-        if ($value instanceof DataCollectionOptions) {
+        if ($value === null || $value instanceof DataCollectionOptions) {
             return $value;
         }
 

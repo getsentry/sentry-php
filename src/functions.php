@@ -46,7 +46,7 @@ use Sentry\Transport\TransportInterface;
  *         queues?: bool,
  *         stack_frame_variables?: bool|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
  *         frame_context_lines?: int,
- *     },
+ *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
