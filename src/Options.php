@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -369,6 +370,14 @@ final class Options
     public function setContextLines(?int $contextLines): self
     {
         return $this->updateOptions(['context_lines' => $contextLines]);
+    }
+
+    public function getDataCollection(): DataCollectionOptions
+    {
+        /** @var DataCollectionOptions $dataCollection */
+        $dataCollection = $this->options['data_collection'];
+
+        return $dataCollection;
     }
 
     /**
@@ -1278,6 +1287,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('data_collection', ['array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -1288,6 +1298,7 @@ final class Options
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('data_collection', \Closure::fromCallable([$this, 'normalizeDataCollectionOption']));
 
         $resolver->setNormalizer('prefixes', function (array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1385,6 +1396,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'data_collection' => new DataCollectionOptions(),
         ]);
     }
 
@@ -1432,6 +1444,18 @@ final class Options
         }
 
         return $url;
+    }
+
+    /**
+     * @param array<string, mixed>|DataCollectionOptions $value
+     */
+    private function normalizeDataCollectionOption($value): DataCollectionOptions
+    {
+        if ($value instanceof DataCollectionOptions) {
+            return $value;
+        }
+
+        return new DataCollectionOptions($value);
     }
 
     /**

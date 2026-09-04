@@ -225,8 +225,10 @@ class OptionsResolver
                 continue;
             }
 
+            /** @mago-ignore analysis:mixed-assignment */
             $base = $resolved[$option] ?? null;
             if (!\is_array($base)) {
+                /** @mago-ignore analysis:mixed-assignment */
                 $base = $default;
             }
 
