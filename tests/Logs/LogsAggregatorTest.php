@@ -31,9 +31,7 @@ final class LogsAggregatorTest extends TestCase
      */
     public function testAttributes(array $attributes, array $expected): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -89,9 +87,7 @@ final class LogsAggregatorTest extends TestCase
      */
     public function testMessageFormatting(string $message, array $values, string $expected): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -163,7 +159,6 @@ final class LogsAggregatorTest extends TestCase
     public function testAttributesAreAddedToLogMessage(): void
     {
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'send_default_pii' => true,
             'release' => '1.0.0',
             'environment' => 'production',
@@ -214,7 +209,6 @@ final class LogsAggregatorTest extends TestCase
     public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
     {
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'send_default_pii' => false,
         ])->getClient();
 
@@ -248,7 +242,6 @@ final class LogsAggregatorTest extends TestCase
 
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'log_flush_threshold' => 2,
         ])->setTransport($transport)->getClient();
 
@@ -277,7 +270,6 @@ final class LogsAggregatorTest extends TestCase
 
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'log_flush_threshold' => null,
         ])->setTransport($transport)->getClient();
 
@@ -295,9 +287,7 @@ final class LogsAggregatorTest extends TestCase
 
     public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
@@ -321,9 +311,7 @@ final class LogsAggregatorTest extends TestCase
 
     public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);

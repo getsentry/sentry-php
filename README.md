@@ -66,6 +66,7 @@ The following integrations are available and maintained by members of the Sentry
 - Neos Flow (and CMS) using [flownative/sentry](https://github.com/flownative/flow-sentry) or [networkteam/sentryclient](https://github.com/networkteam/Networkteam.SentryClient)
 - Neos CMS with specific Fusion handling using [networkteam/neos-sentryclient](https://github.com/networkteam/Netwokteam.Neos.SentryClient)
 - [TYPO3](https://github.com/networkteam/sentry_client)
+- [Yii3](https://github.com/yiisoft/yii-sentry)
 - ... feel free to be famous, create a port to your favourite platform!
 
 ## 3rd party integrations using the old SDK 3.x
