@@ -11,6 +11,7 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -222,11 +223,30 @@ function withScope(callable $callback)
     return SentrySdk::getCurrentHub()->withScope($callback);
 }
 
-function startContext(): void
+/**
+ * Starts an isolated context for the current logical execution.
+ *
+ * A provided hub is used as-is, allowing runtimes with their own HubInterface
+ * implementation to manage hub isolation. When no hub is provided, the SDK
+ * creates an isolated hub from the baseline.
+ *
+ * If a context is already active, this function is a no-op and the provided hub
+ * is ignored. Use SentrySdk::setCurrentHub() to replace the active context's hub.
+ *
+ * @param HubInterface|null $hub The hub to use for the new context
+ */
+function startContext(?HubInterface $hub = null): void
 {
-    SentrySdk::startContext();
+    SentrySdk::startContext($hub);
 }
 
+/**
+ * Ends and flushes the active context for the current logical execution.
+ *
+ * When no context is active this is a no-op.
+ *
+ * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+ */
 function endContext(?int $timeout = null): void
 {
     SentrySdk::endContext($timeout);

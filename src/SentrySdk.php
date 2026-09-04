@@ -104,11 +104,30 @@ final class SentrySdk
         return $hub;
     }
 
-    public static function startContext(): void
+    /**
+     * Starts an isolated context for the current logical execution.
+     *
+     * A provided hub is used as-is, allowing runtimes with their own HubInterface
+     * implementation to manage hub isolation. When no hub is provided, the SDK
+     * creates an isolated hub from the baseline.
+     *
+     * If a context is already active, this method is a no-op and the provided hub
+     * is ignored. Use setCurrentHub() to replace the active context's hub.
+     *
+     * @param HubInterface|null $hub The hub to use for the new context
+     */
+    public static function startContext(?HubInterface $hub = null): void
     {
-        self::getRuntimeContextManager()->startContext();
+        self::getRuntimeContextManager()->startContext($hub);
     }
 
+    /**
+     * Ends and flushes the active context for the current logical execution.
+     *
+     * When no context is active this is a no-op.
+     *
+     * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+     */
     public static function endContext(?int $timeout = null): void
     {
         self::getRuntimeContextManager()->endContext($timeout);

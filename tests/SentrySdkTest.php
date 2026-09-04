@@ -91,6 +91,30 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($baselineSpan, SentrySdk::getCurrentHub()->getSpan());
     }
 
+    public function testStartContextUsesProvidedHubAsIs(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+        $span = new Span(new SpanContext());
+        $hub = new Hub();
+        $hub->setSpan($span);
+        $traceparent = '';
+        $hub->configureScope(static function (Scope $scope) use (&$traceparent): void {
+            $traceparent = $scope->getPropagationContext()->toTraceparent();
+        });
+
+        SentrySdk::startContext($hub);
+
+        $this->assertSame($hub, SentrySdk::getCurrentHub());
+        $this->assertSame($span, SentrySdk::getCurrentHub()->getSpan());
+        $this->assertSame($traceparent, $this->getCurrentScopeTraceparent());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
     public function testStartContextCreatesFreshPropagationContext(): void
     {
         SentrySdk::init();
@@ -146,6 +170,24 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
 
         SentrySdk::endContext();
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testNestedStartContextIgnoresProvidedHub(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+
+        SentrySdk::startContext();
+        $contextHub = SentrySdk::getCurrentHub();
+
+        SentrySdk::startContext(new Hub());
+
+        $this->assertSame($contextHub, SentrySdk::getCurrentHub());
+
+        SentrySdk::endContext();
+
         $this->assertSame($globalHub, SentrySdk::getCurrentHub());
     }
 

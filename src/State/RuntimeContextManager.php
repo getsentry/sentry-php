@@ -87,9 +87,13 @@ final class RuntimeContextManager
     /**
      * Starts an isolated context for the current logical execution.
      *
+     * A provided hub is used as-is. It is ignored when a context is already active.
+     *
+     * @param HubInterface|null $hub The hub to use for the new context
+     *
      * @return bool Whether a new context was started
      */
-    public function startContext(): bool
+    public function startContext(?HubInterface $hub = null): bool
     {
         if ($this->getActiveContext() !== null) {
             // Nested start calls for the same logical execution should be a no-op.
@@ -98,7 +102,7 @@ final class RuntimeContextManager
 
         ErrorHandler::resetFatalErrorHandlerState();
 
-        $this->setActiveContext(new RuntimeContext($this->generateRuntimeContextId(), $this->createHubFromBaseHub()));
+        $this->setActiveContext(new RuntimeContext($this->generateRuntimeContextId(), $hub ?? $this->createHubFromBaseHub()));
 
         return true;
     }
@@ -107,6 +111,8 @@ final class RuntimeContextManager
      * Ends and flushes the active context for the current logical execution.
      *
      * When no context is active this is a no-op.
+     *
+     * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
      */
     public function endContext(?int $timeout = null): void
     {
