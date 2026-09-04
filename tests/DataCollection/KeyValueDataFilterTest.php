@@ -96,6 +96,23 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
+    public function testFilterHttpBodyDataFiltersSensitiveAndUnkeyedValues(): void
+    {
+        $this->assertSame([
+            [
+                'password' => '[Filtered]',
+                'name' => 'alice',
+            ],
+            '[Filtered]',
+        ], KeyValueDataFilter::filterHttpBodyData([
+            [
+                'password' => 'secret',
+                'name' => 'alice',
+            ],
+            'unkeyed secret',
+        ]));
+    }
+
     public function testFilterHeadersReturnsNullWhenCollectionIsOff(): void
     {
         $behavior = ['mode' => 'off', 'terms' => ['x-request-id']];

@@ -45,7 +45,7 @@ class Arr
     /**
      * Checks whether a given array is a list.
      *
-     * `array_is_list` is introduced in PHP 8.1, so we have a polyfill for it.
+     * Uses `array_is_list` when available and falls back to a PHP 7.2-compatible implementation.
      *
      * @see https://www.php.net/manual/en/function.array-is-list.php#126794
      *
@@ -53,6 +53,10 @@ class Arr
      */
     public static function isList(array $array): bool
     {
+        if (\function_exists('array_is_list')) {
+            return array_is_list($array);
+        }
+
         $i = 0;
 
         foreach ($array as $k => $v) {

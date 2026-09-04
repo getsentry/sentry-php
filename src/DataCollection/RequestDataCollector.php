@@ -142,13 +142,10 @@ final class RequestDataCollector
         }
 
         if (!\is_array($body)) {
-            return '[Filtered]';
+            return KeyValueDataFilter::FILTERED_VALUE;
         }
 
-        return KeyValueDataFilter::filterKeyValueData($body, [
-            'mode' => 'denyList',
-            'terms' => [],
-        ]);
+        return KeyValueDataFilter::filterHttpBodyData($body);
     }
 
     /**
@@ -165,7 +162,7 @@ final class RequestDataCollector
 
             if (\in_array(strtolower($name), $this->piiSanitizeHeaders, true)) {
                 foreach ($values as $headerLine => $headerValue) {
-                    $values[$headerLine] = '[Filtered]';
+                    $values[$headerLine] = KeyValueDataFilter::FILTERED_VALUE;
                 }
             }
 
