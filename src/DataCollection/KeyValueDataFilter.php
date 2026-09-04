@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Sentry\Util\Arr;
+
 /**
  * @internal
  *
@@ -11,6 +13,13 @@ namespace Sentry\DataCollection;
  */
 final class KeyValueDataFilter
 {
+    public const FILTERED_VALUE = '[Filtered]';
+
+    private const DEFAULT_BODY_FILTER_BEHAVIOR = [
+        'mode' => 'denyList',
+        'terms' => [],
+    ];
+
     private const SENSITIVE_DATA_DENYLIST = [
         'auth',
         'token',
@@ -68,7 +77,7 @@ final class KeyValueDataFilter
 
             if (\in_array(strtolower($name), self::SENSITIVE_HEADERS, true) || self::shouldFilterValue($name, $behavior)) {
                 foreach ($values as $headerLine => $headerValue) {
-                    $values[$headerLine] = '[Filtered]';
+                    $values[$headerLine] = self::FILTERED_VALUE;
                 }
             }
 
@@ -98,12 +107,37 @@ final class KeyValueDataFilter
             $key = (string) $key;
 
             if (self::shouldFilterValue($key, $behavior)) {
-                $filtered[$key] = '[Filtered]';
+                $filtered[$key] = self::FILTERED_VALUE;
             } elseif (\is_array($value)) {
                 $filtered[$key] = self::filterKeyValueData($value, $behavior);
             } else {
                 $filtered[$key] = $value;
             }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Filters structured HTTP body data while replacing unkeyed top-level values.
+     *
+     * @param array<array-key, mixed> $data
+     *
+     * @return array<array-key, mixed>
+     */
+    public static function filterHttpBodyData(array $data): array
+    {
+        if (!Arr::isList($data)) {
+            return self::filterKeyValueData($data, self::DEFAULT_BODY_FILTER_BEHAVIOR) ?? [];
+        }
+
+        $filtered = [];
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($data as $value) {
+            $filtered[] = \is_array($value)
+                ? self::filterHttpBodyData($value)
+                : self::FILTERED_VALUE;
         }
 
         return $filtered;
@@ -126,7 +160,7 @@ final class KeyValueDataFilter
             $key = urldecode($encodedKey);
 
             if ($separatorPosition !== false && self::shouldFilterValue($key, $behavior)) {
-                $parts[$index] = $encodedKey . '=[Filtered]';
+                $parts[$index] = $encodedKey . '=' . self::FILTERED_VALUE;
             }
         }
 
