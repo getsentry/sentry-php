@@ -1151,6 +1151,8 @@ final class Options
     /**
      * Gets the limit up to which integrations should capture the HTTP request
      * body.
+     *
+     * @return 'none'|'never'|'small'|'medium'|'always'
      */
     public function getMaxRequestBodySize(): string
     {
