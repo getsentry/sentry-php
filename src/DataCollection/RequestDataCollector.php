@@ -68,18 +68,7 @@ final class RequestDataCollector
 
     public function collectQueryString(string $queryString): ?string
     {
-        if ($this->dataCollection === null) {
-            return $queryString !== '' ? $queryString : null;
-        }
-
-        if ($queryString === '') {
-            return null;
-        }
-
-        return KeyValueDataFilter::filterQueryString(
-            $queryString,
-            $this->dataCollection->getUrlQueryParams()
-        );
+        return HttpDataCollector::collectQueryString($this->dataCollection, $queryString);
     }
 
     /**

@@ -13,6 +13,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\DataCollection\HttpDataCollector;
 use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -62,7 +63,7 @@ final class GuzzleTracingMiddleware
                     'http.request.body.size' => $requestBody->getSize(),
                 ];
 
-                $queryString = self::collectQueryString($dataCollection, $requestUri->getQuery());
+                $queryString = HttpDataCollector::collectQueryString($dataCollection, $requestUri->getQuery());
                 if ($queryString !== null) {
                     $spanAndBreadcrumbData['http.query'] = $queryString;
                 }
@@ -70,12 +71,10 @@ final class GuzzleTracingMiddleware
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
 
-                $collectedUri = $partialUri;
+                $collectedUrl = (string) $partialUri;
                 if ($dataCollection !== null) {
-                    $collectedUri = $collectedUri
-                        ->withQuery($queryString ?? '')
-                        ->withFragment($requestUri->getFragment());
-                    $spanAndBreadcrumbData['url.full'] = (string) $collectedUri;
+                    $collectedUrl = HttpDataCollector::collectUrl($dataCollection, (string) $requestUri);
+                    $spanAndBreadcrumbData['url.full'] = $collectedUrl;
                 }
 
                 $childSpan = null;
@@ -118,7 +117,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUri, $dataCollection) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUrl, $dataCollection) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
@@ -159,7 +158,11 @@ final class GuzzleTracingMiddleware
                                 self::collectResponseSpanData($dataCollection, $response)
                             );
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
-                            $childSpan->setData($spanData);
+                            if ($dataCollection === null) {
+                                $childSpan->setData($spanData);
+                            } else {
+                                HttpDataCollector::setMissingSpanData($childSpan, $spanData);
+                            }
                         } else {
                             $childSpan->setStatus(SpanStatus::internalError());
                         }
@@ -171,7 +174,7 @@ final class GuzzleTracingMiddleware
                         'http',
                         null,
                         array_merge([
-                            'url' => (string) $collectedUri,
+                            'url' => $collectedUrl,
                         ], $spanAndBreadcrumbData)
                     ));
 
@@ -187,19 +190,6 @@ final class GuzzleTracingMiddleware
         };
     }
 
-    private static function collectQueryString(?DataCollectionOptions $dataCollection, string $queryString): ?string
-    {
-        if ($queryString === '') {
-            return null;
-        }
-
-        if ($dataCollection === null) {
-            return $queryString;
-        }
-
-        return KeyValueDataFilter::filterQueryString($queryString, $dataCollection->getUrlQueryParams());
-    }
-
     /**
      * @param 'none'|'never'|'small'|'medium'|'always' $maxRequestBodySize
      *
@@ -211,7 +201,7 @@ final class GuzzleTracingMiddleware
         RequestInterface $request,
         StreamInterface $body
     ): array {
-        $data = self::collectHeaders($dataCollection, $request->getHeaders(), 'request');
+        $data = HttpDataCollector::collectHeaders($dataCollection, $request->getHeaders(), 'request');
 
         if (!\in_array('outgoingRequest', $dataCollection->getHttpBodies(), true)) {
             return $data;
@@ -236,7 +226,7 @@ final class GuzzleTracingMiddleware
             return [];
         }
 
-        $data = self::collectHeaders($dataCollection, $response->getHeaders(), 'response');
+        $data = HttpDataCollector::collectHeaders($dataCollection, $response->getHeaders(), 'response');
 
         if (!\in_array('incomingResponse', $dataCollection->getHttpBodies(), true)) {
             return $data;
@@ -253,43 +243,6 @@ final class GuzzleTracingMiddleware
         }
 
         return $data;
-    }
-
-    /**
-     * @param array<array-key, string[]> $headers
-     * @param 'request'|'response'       $direction
-     *
-     * @return array<string, string[]>
-     */
-    private static function collectHeaders(DataCollectionOptions $dataCollection, array $headers, string $direction): array
-    {
-        $headerBehavior = $dataCollection->getHttpHeaders()[$direction];
-        $cookieBehavior = $dataCollection->getCookies();
-        $prefix = 'http.' . $direction . '.header.';
-        $regularHeaders = [];
-        $attributes = [];
-
-        foreach ($headers as $name => $values) {
-            $name = strtolower((string) $name);
-
-            if ($name === 'cookie' || $name === 'set-cookie') {
-                if ($cookieBehavior['mode'] !== 'off' && $values !== []) {
-                    // PSR-7 exposes cookies as raw header strings, so use the safe fallback required by the data collection spec.
-                    $attributes[$prefix . $name] = array_fill(0, \count($values), KeyValueDataFilter::FILTERED_VALUE);
-                }
-
-                continue;
-            }
-
-            $regularHeaders[$name] = $values;
-        }
-
-        $filteredHeaders = KeyValueDataFilter::filterHeaders($regularHeaders, $headerBehavior);
-        foreach ($filteredHeaders ?? [] as $name => $values) {
-            $attributes[$prefix . $name] = $values;
-        }
-
-        return $attributes;
     }
 
     /**

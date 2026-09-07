@@ -502,7 +502,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertSame(0, $response->getBody()->tell());
 
         $expectedSharedData = [
-            'url.full' => 'https://www.example.com/path?search=hello%20world&password=%5BFiltered%5D#fragment',
+            'url.full' => 'https://www.example.com/path?search=hello%20world&password=[Filtered]#fragment',
             'http.query' => 'search=hello%20world&password=[Filtered]',
         ];
         $expectedSpanData = [
@@ -538,6 +538,43 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertSame($expectedSharedData['url.full'], $breadcrumbData['url']);
         $this->assertStringNotContainsString('request-secret', json_encode($spanData));
         $this->assertStringNotContainsString('response-secret', json_encode($spanData));
+    }
+
+    public function testTracePreservesExplicitSpanData(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options([
+            'traces_sample_rate' => 1,
+            'data_collection' => [],
+        ]));
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+
+        $middleware = GuzzleTracingMiddleware::trace($hub);
+        $function = $middleware(function () use ($hub): PromiseInterface {
+            $span = $hub->getSpan();
+            $this->assertNotNull($span);
+            $span->setData([
+                'http.query' => 'explicit',
+                'http.response.header.x-test' => ['explicit'],
+                'http.response.body.data' => ['password' => 'explicit'],
+            ]);
+
+            return new FulfilledPromise(new Response(200, [
+                'Content-Type' => 'application/json',
+                'X-Test' => 'automatic',
+            ], '{"name":"automatic"}'));
+        });
+        /** @var PromiseInterface $promise */
+        $promise = $function(new Request('GET', 'https://www.example.com/?token=secret'), []);
+        $promise->wait();
+
+        $data = $this->getHttpSpan($transaction)->getData();
+        $this->assertSame('explicit', $data['http.query']);
+        $this->assertSame(['explicit'], $data['http.response.header.x-test']);
+        $this->assertSame(['password' => 'explicit'], $data['http.response.body.data']);
+        $this->assertSame(['application/json'], $data['http.response.header.content-type']);
     }
 
     public function testTraceDoesNotConsumeNonSeekableBodies(): void

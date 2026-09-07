@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
+use Sentry\DataCollection\HttpDataCollector;
 use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
 use Sentry\Exception\JsonException;
@@ -124,9 +125,7 @@ final class RequestIntegration implements IntegrationInterface
         $queryString = $collector->collectQueryString($request->getUri()->getQuery());
 
         $requestData = [
-            'url' => $collector->usesDataCollection()
-                ? (string) $request->getUri()->withQuery($queryString ?? '')
-                : (string) $request->getUri(),
+            'url' => HttpDataCollector::collectUrl($options->getDataCollection(), (string) $request->getUri()),
             'method' => $request->getMethod(),
         ];
 

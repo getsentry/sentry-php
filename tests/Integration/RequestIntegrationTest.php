@@ -531,7 +531,7 @@ final class RequestIntegrationTest extends TestCase
                 ->withHeader('Authorization', 'Bearer secret')
                 ->withHeader('X-Request-Id', 'request-id'),
             [
-                'url' => 'http://www.example.com/foo?token=%5BFiltered%5D&page=%5BFiltered%5D',
+                'url' => 'http://www.example.com/foo?token=[Filtered]&page=[Filtered]',
                 'method' => 'GET',
                 'query_string' => 'token=[Filtered]&page=[Filtered]',
                 'cookies' => [
@@ -553,7 +553,7 @@ final class RequestIntegrationTest extends TestCase
                 'data_collection' => [],
                 'max_request_body_size' => 'always',
             ],
-            (new ServerRequest('POST', 'http://www.example.com/foo?api%5Ftoken=secret&q=a%20b%26c', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+            (new ServerRequest('POST', 'http://user:password@www.example.com/foo?api%5Ftoken=secret&q=a%20b%26c', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
                 ->withCookieParams([
                     'session_id' => 'secret',
                     'theme' => 'dark',
@@ -570,7 +570,7 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ]),
             [
-                'url' => 'http://www.example.com/foo?api%5Ftoken=%5BFiltered%5D&q=a%20b%26c',
+                'url' => 'http://www.example.com/foo?api%5Ftoken=[Filtered]&q=a%20b%26c',
                 'method' => 'POST',
                 'query_string' => 'api%5Ftoken=[Filtered]&q=a%20b%26c',
                 'env' => [
