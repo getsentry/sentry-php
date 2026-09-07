@@ -204,6 +204,13 @@ final class RequestDataCollectorTest extends TestCase
         ]));
     }
 
+    public function testCollectRequestBodyPreservesScalarLists(): void
+    {
+        $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
+
+        $this->assertSame(['secret', 'foo'], $collector->collectRequestBody(['secret', 'foo']));
+    }
+
     public function testCollectRequestBodyFiltersRawData(): void
     {
         $collector = $this->collector(['http_bodies' => ['incomingRequest']]);

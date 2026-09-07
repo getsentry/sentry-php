@@ -491,7 +491,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'Authorization' => 'Bearer request-secret',
                 'Cookie' => 'session_id=request-secret; theme=dark',
             ],
-            '[{"password":"request-secret","name":"Alice"},"unkeyed-request-secret"]'
+            '[{"password":"request-secret","name":"Alice"},"unkeyed-secret"]'
         );
 
         /** @var PromiseInterface $promise */
@@ -514,7 +514,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                     'password' => '[Filtered]',
                     'name' => 'Alice',
                 ],
-                '[Filtered]',
+                'unkeyed-secret',
             ],
             'http.response.header.content-type' => ['application/x-www-form-urlencoded'],
             'http.response.header.x-response-id' => ['response-123'],
@@ -662,7 +662,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     /**
      * @dataProvider httpBodySafetyLimitDataProvider
      */
-    public function testTraceAppliesHttpBodySafetyLimit(int $bodySize, bool $shouldCollect): void
+    public function testTraceAppliesHttpBodySafetyLimit(int $bodySize, bool $shouldCollect, ?int $reportedSize): void
     {
         $client = $this->createMock(ClientInterface::class);
         $client->expects($this->atLeastOnce())
@@ -679,18 +679,20 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $transaction = $hub->startTransaction(new TransactionContext());
         $hub->setSpan($transaction);
 
-        $rawBody = str_repeat('a', $bodySize);
+        $expectedBody = ['value' => str_repeat('a', $bodySize - 12)];
+        $rawBody = '{"value":"' . $expectedBody['value'] . '"}';
         $requestBody = FnStream::decorate(Utils::streamFor($rawBody), [
-            'getSize' => static function (): ?int {
-                return null;
+            'getSize' => static function () use ($reportedSize): ?int {
+                return $reportedSize;
             },
         ]);
         $responseBody = FnStream::decorate(Utils::streamFor($rawBody), [
-            'getSize' => static function (): ?int {
-                return null;
+            'getSize' => static function () use ($reportedSize): ?int {
+                return $reportedSize;
             },
         ]);
-        $response = new Response(200, ['Content-Type' => 'application/json'], $responseBody);
+        $headers = ['Content-Type' => 'application/json', 'Content-Length' => '1'];
+        $response = new Response(200, $headers, $responseBody);
         $middleware = GuzzleTracingMiddleware::trace($hub);
         $function = $middleware(static function () use ($response): PromiseInterface {
             return new FulfilledPromise($response);
@@ -700,7 +702,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $promise = $function(new Request(
             'POST',
             'https://www.example.com',
-            ['Content-Type' => 'application/json'],
+            $headers,
             $requestBody
         ), []);
         $promise->wait();
@@ -710,8 +712,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $spanData = $this->getHttpSpan($transaction)->getData();
         if ($shouldCollect) {
-            $this->assertSame('[Filtered]', $spanData['http.request.body.data']);
-            $this->assertSame('[Filtered]', $spanData['http.response.body.data']);
+            $this->assertSame($expectedBody, $spanData['http.request.body.data']);
+            $this->assertSame($expectedBody, $spanData['http.response.body.data']);
         } else {
             $this->assertArrayNotHasKey('http.request.body.data', $spanData);
             $this->assertArrayNotHasKey('http.response.body.data', $spanData);
@@ -720,8 +722,12 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
     public static function httpBodySafetyLimitDataProvider(): iterable
     {
-        yield 'at 100 KB safety limit' => [100000, true];
-        yield 'over 100 KB safety limit' => [100001, false];
+        yield 'unknown size at limit' => [100000, true, null];
+        yield 'unknown size over limit' => [100001, false, null];
+        yield 'reported size at limit' => [100000, true, 100000];
+        yield 'reported size over limit' => [100001, false, 100001];
+        yield 'underreported size at limit' => [100000, true, 1];
+        yield 'underreported size over limit' => [100001, false, 1];
     }
 
     public function testTraceRespectsDisabledOutgoingHttpDataCollection(): void

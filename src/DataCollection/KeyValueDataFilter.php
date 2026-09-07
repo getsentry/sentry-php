@@ -119,7 +119,7 @@ final class KeyValueDataFilter
     }
 
     /**
-     * Filters structured HTTP body data while replacing unkeyed top-level values.
+     * Filters HTTP body fields by key name while retaining scalar list values.
      *
      * @param array<array-key, mixed> $data
      *
@@ -135,9 +135,13 @@ final class KeyValueDataFilter
 
         /** @mago-ignore analysis:mixed-assignment */
         foreach ($data as $value) {
-            $filtered[] = \is_array($value)
-                ? self::filterHttpBodyData($value)
-                : self::FILTERED_VALUE;
+            if (\is_array($value)) {
+                $value = self::filterHttpBodyData($value);
+            } elseif ($value !== null && !\is_scalar($value)) {
+                $value = self::FILTERED_VALUE;
+            }
+
+            $filtered[] = $value;
         }
 
         return $filtered;

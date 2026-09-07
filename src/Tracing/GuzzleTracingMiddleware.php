@@ -5,20 +5,18 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
-use GuzzleHttp\Psr7\Query;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Sentry\Breadcrumb;
-use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpDataCollector;
 use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
-use Sentry\Util\JSON;
 
 use function Sentry\getBaggage;
 use function Sentry\getTraceparent;
@@ -28,17 +26,6 @@ use function Sentry\getTraceparent;
  */
 final class GuzzleTracingMiddleware
 {
-    // Avoid reading arbitrarily large or unknown-sized streams into memory.
-    private const HTTP_BODY_MAX_CONTENT_LENGTH = 10 ** 5;
-
-    private const MAX_REQUEST_BODY_SIZE_TO_LENGTH = [
-        'none' => 0,
-        'never' => 0,
-        'small' => 10 ** 3,
-        'medium' => 10 ** 4,
-        'always' => self::HTTP_BODY_MAX_CONTENT_LENGTH,
-    ];
-
     public static function trace(?HubInterface $hub = null): \Closure
     {
         return static function (callable $handler) use ($hub): \Closure {
@@ -86,8 +73,7 @@ final class GuzzleTracingMiddleware
                         $spanData = array_merge(
                             $spanData,
                             self::collectRequestSpanData(
-                                $dataCollection,
-                                $sdkOptions->getMaxRequestBodySize(),
+                                $sdkOptions,
                                 $request,
                                 $requestBody
                             )
@@ -117,7 +103,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUrl, $dataCollection) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUrl, $dataCollection, $sdkOptions) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
@@ -155,7 +141,7 @@ final class GuzzleTracingMiddleware
                             $spanData = array_merge(
                                 $spanData,
                                 $spanAndBreadcrumbData,
-                                self::collectResponseSpanData($dataCollection, $response)
+                                self::collectResponseSpanData($sdkOptions, $response)
                             );
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             if ($dataCollection === null) {
@@ -191,23 +177,21 @@ final class GuzzleTracingMiddleware
     }
 
     /**
-     * @param 'none'|'never'|'small'|'medium'|'always' $maxRequestBodySize
-     *
      * @return array<string, mixed>
      */
-    private static function collectRequestSpanData(
-        DataCollectionOptions $dataCollection,
-        string $maxRequestBodySize,
-        RequestInterface $request,
-        StreamInterface $body
-    ): array {
-        $data = HttpDataCollector::collectHeaders($dataCollection, $request->getHeaders(), 'request');
+    private static function collectRequestSpanData(Options $options, RequestInterface $request, StreamInterface $body): array
+    {
+        $dataCollection = $options->getDataCollection();
+        if ($dataCollection === null) {
+            return [];
+        }
 
-        if (!\in_array('outgoingRequest', $dataCollection->getHttpBodies(), true)) {
+        $data = HttpDataCollector::collectHeaders($dataCollection, $request->getHeaders(), 'request');
+        $maxBodyLength = HttpBodyCollector::getMaxBodyLength($options, 'outgoingRequest');
+        if ($maxBodyLength === 0) {
             return $data;
         }
 
-        $maxBodyLength = self::MAX_REQUEST_BODY_SIZE_TO_LENGTH[$maxRequestBodySize];
         $collectedBody = self::collectBody($body, $request->getHeaderLine('Content-Type'), $maxBodyLength);
 
         if ($collectedBody !== null) {
@@ -220,23 +204,25 @@ final class GuzzleTracingMiddleware
     /**
      * @return array<string, mixed>
      */
-    private static function collectResponseSpanData(?DataCollectionOptions $dataCollection, ResponseInterface $response): array
+    private static function collectResponseSpanData(?Options $options, ResponseInterface $response): array
     {
+        if ($options === null) {
+            return [];
+        }
+
+        $dataCollection = $options->getDataCollection();
         if ($dataCollection === null) {
             return [];
         }
 
         $data = HttpDataCollector::collectHeaders($dataCollection, $response->getHeaders(), 'response');
 
-        if (!\in_array('incomingResponse', $dataCollection->getHttpBodies(), true)) {
+        $maxBodyLength = HttpBodyCollector::getMaxBodyLength($options, 'incomingResponse');
+        if ($maxBodyLength === 0) {
             return $data;
         }
 
-        $collectedBody = self::collectBody(
-            $response->getBody(),
-            $response->getHeaderLine('Content-Type'),
-            self::HTTP_BODY_MAX_CONTENT_LENGTH
-        );
+        $collectedBody = self::collectBody($response->getBody(), $response->getHeaderLine('Content-Type'), $maxBodyLength);
 
         if ($collectedBody !== null) {
             $data['http.response.body.data'] = $collectedBody;
@@ -259,40 +245,19 @@ final class GuzzleTracingMiddleware
             return null;
         }
 
-        $mediaType = strtolower(trim(explode(';', $contentType, 2)[0]));
-
-        $isJson = $mediaType === 'application/json'
-            // RFC 6839 structured syntax suffix, e.g. application/problem+json.
-            || substr($mediaType, -5) === '+json';
-        $isForm = $mediaType === 'application/x-www-form-urlencoded';
-
-        if (!$isJson && !$isForm) {
+        if (!HttpBodyCollector::isSupportedContentType($contentType)) {
             return KeyValueDataFilter::FILTERED_VALUE;
         }
 
         // The size can be unknown (a null body size), so readBody() enforces the limit again after reading.
-        $bodyContents = self::readBody($body, $maxBodyLength);
-        if ($bodyContents === null) {
+        $contents = self::readBody($body, $maxBodyLength);
+        if ($contents === null) {
             return null;
         }
 
-        try {
-            if ($isJson) {
-                /** @mago-ignore analysis:mixed-assignment */
-                $decodedBody = JSON::decode($bodyContents);
-            } else {
-                /** @var array<string, mixed> $decodedBody */
-                $decodedBody = Query::parse($bodyContents);
-            }
-        } catch (\Throwable $exception) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
+        $parsedBody = HttpBodyCollector::parse($contents, $contentType);
 
-        if (!\is_array($decodedBody)) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
-
-        return KeyValueDataFilter::filterHttpBodyData($decodedBody);
+        return $parsedBody === null ? KeyValueDataFilter::FILTERED_VALUE : HttpBodyCollector::collect($parsedBody);
     }
 
     private static function readBody(StreamInterface $body, int $maxBodyLength): ?string

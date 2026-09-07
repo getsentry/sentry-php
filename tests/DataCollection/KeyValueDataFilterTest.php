@@ -96,14 +96,14 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
-    public function testFilterHttpBodyDataFiltersSensitiveAndUnkeyedValues(): void
+    public function testFilterHttpBodyDataFiltersSensitiveKeysWithinLists(): void
     {
         $this->assertSame([
             [
                 'password' => '[Filtered]',
                 'name' => 'alice',
             ],
-            '[Filtered]',
+            'unkeyed secret',
         ], KeyValueDataFilter::filterHttpBodyData([
             [
                 'password' => 'secret',
@@ -111,6 +111,31 @@ final class KeyValueDataFilterTest extends TestCase
             ],
             'unkeyed secret',
         ]));
+    }
+
+    public function testFilterHttpBodyDataPreservesScalarListValues(): void
+    {
+        $data = ['secret', 'foo', false, null, 123, ['token', 'password']];
+
+        $this->assertSame($data, KeyValueDataFilter::filterHttpBodyData($data));
+    }
+
+    public function testFilterHttpBodyDataKeepsKeysAndFiltersSensitiveParentValues(): void
+    {
+        $this->assertSame([
+            2 => 'secret',
+            'items' => ['secret', ['PaSsWoRd' => '[Filtered]', 'name' => 'secret']],
+            'token' => '[Filtered]',
+        ], KeyValueDataFilter::filterHttpBodyData([
+            2 => 'secret',
+            'items' => ['secret', ['PaSsWoRd' => 'value', 'name' => 'secret']],
+            'token' => ['foo'],
+        ]));
+    }
+
+    public function testFilterHttpBodyDataStillFiltersOpaqueListValues(): void
+    {
+        $this->assertSame(['[Filtered]'], KeyValueDataFilter::filterHttpBodyData([new \stdClass()]));
     }
 
     public function testFilterHeadersReturnsNullWhenCollectionIsOff(): void
