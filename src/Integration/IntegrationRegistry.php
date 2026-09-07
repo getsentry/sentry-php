@@ -147,6 +147,10 @@ final class IntegrationRegistry
             new ModulesIntegration(),
         ];
 
+        if (\function_exists('Sentry\\setStartCallback') && \function_exists('Sentry\\setEndCallback')) {
+            $integrations[] = new FunctionTracingIntegration();
+        }
+
         if ($options->getDsn() !== null || $options->isSpotlightEnabled()) {
             array_unshift($integrations, new ExceptionListenerIntegration(), new ErrorListenerIntegration(), new FatalErrorListenerIntegration());
         }
