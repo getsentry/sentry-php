@@ -11,7 +11,6 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
-use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\Transport\Result;
@@ -22,29 +21,21 @@ use function Sentry\logger;
 
 final class LogsTest extends TestCase
 {
-    public function testLogNotSentWhenDisabled(): void
+    public function testLogSentWhenEnableLogsIsFalse(): void
     {
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->any())
-               ->method('getOptions')
-               ->willReturn(new Options([
-                   'dsn' => 'https://public@example.com/1',
-                   'enable_logs' => false,
-               ]));
-
-        $client->expects($this->never())
-               ->method('captureEvent');
-
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        $this->assertEvent(function (Event $event) {
+            $this->assertCount(1, $event->getLogs());
+            $this->assertSame('Some info message', $event->getLogs()[0]->getBody());
+        }, [
+            'enable_logs' => false,
+        ]);
 
         logger()->info('Some info message');
 
-        $this->assertNull(logger()->flush());
+        $this->assertNotNull(logger()->flush());
     }
 
-    public function testLogSentWhenEnabled(): void
+    public function testLogSentWithoutEnableLogsOption(): void
     {
         $this->assertEvent(function (Event $event) {
             $this->assertCount(1, $event->getLogs());
@@ -180,11 +171,7 @@ final class LogsTest extends TestCase
                       return new Result(ResultStatus::success(), $event);
                   });
 
-        $clientOptions = array_merge([
-            'enable_logs' => true,
-        ], $options);
-
-        $client = ClientBuilder::create($clientOptions)->setTransport($transport)->getClient();
+        $client = ClientBuilder::create($options)->setTransport($transport)->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);

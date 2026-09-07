@@ -442,4 +442,29 @@ final class FrameBuilderTest extends TestCase
         $this->assertArrayHasKey('rest', $result);
         $this->assertSame(['extra1', 'extra2', 'extra3'], $result['rest']);
     }
+
+    public function testGetFunctionArgumentsWithNonFiniteFloatValues(): void
+    {
+        $options = new Options([]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $backtraceFrame = [
+            'function' => 'testNonFiniteFloatFunction',
+            'args' => [\INF, -\INF, \NAN, 1e20, 1.0],
+        ];
+
+        $reflectionClass = new \ReflectionClass($frameBuilder);
+        $getFunctionArgumentsMethod = $reflectionClass->getMethod('getFunctionArguments');
+        if (\PHP_VERSION_ID < 80100) {
+            $getFunctionArgumentsMethod->setAccessible(true);
+        }
+
+        $result = $getFunctionArgumentsMethod->invoke($frameBuilder, $backtraceFrame);
+
+        $this->assertSame('INF', $result['param0']);
+        $this->assertSame('-INF', $result['param1']);
+        $this->assertSame('NAN', $result['param2']);
+        $this->assertSame('1.0E+20', $result['param3']);
+        $this->assertSame('1.0', $result['param4']);
+    }
 }

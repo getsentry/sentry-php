@@ -9,7 +9,7 @@ use Sentry\Util\JSON;
 
 /**
  * @phpstan-type AttributeType 'string'|'boolean'|'integer'|'double'
- * @phpstan-type AttributeValue string|bool|int|float
+ * @phpstan-type AttributeValue string|bool|int|float|null
  */
 class Attribute
 {

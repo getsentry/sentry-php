@@ -18,8 +18,10 @@ trait PrefixStripper
         }
 
         foreach ($options->getPrefixes() as $prefix) {
-            if (mb_substr($filePath, 0, mb_strlen($prefix)) === $prefix) {
-                return mb_substr($filePath, mb_strlen($prefix));
+            $prefixLength = \strlen($prefix);
+
+            if (strncmp($filePath, $prefix, $prefixLength) === 0) {
+                return substr($filePath, $prefixLength);
             }
         }
 

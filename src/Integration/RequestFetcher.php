@@ -22,6 +22,10 @@ final class RequestFetcher implements RequestFetcherInterface
             return null;
         }
 
-        return ServerRequest::fromGlobals();
+        try {
+            return ServerRequest::fromGlobals();
+        } catch (\InvalidArgumentException $e) {
+            return null;
+        }
     }
 }

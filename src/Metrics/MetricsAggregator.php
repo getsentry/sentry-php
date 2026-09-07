@@ -41,8 +41,8 @@ final class MetricsAggregator
     private $metrics;
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function add(
         string $type,
@@ -66,10 +66,6 @@ final class MetricsAggregator
         if ($client !== null) {
             $options = $client->getOptions();
             $metricFlushThreshold = $options->getMetricFlushThreshold();
-
-            if ($options->getEnableMetrics() === false) {
-                return;
-            }
 
             $defaultAttributes = [
                 'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,

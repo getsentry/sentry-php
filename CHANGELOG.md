@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## 4.31.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.31.0.
+
+### Features
+
+- Always capture logs and metrics when their APIs or integrations are used. The deprecated `enable_logs` and `enable_metrics` options no longer have any effect. To disable sending, return `null` from `before_send_log` or `before_send_metric`. [(#2187)](https://github.com/getsentry/sentry-php/pull/2187)
+
+### Misc
+
+- Accept `null` metric attribute values in public type declarations. [(#2185)](https://github.com/getsentry/sentry-php/pull/2185)
+- Add the missing `enable_metrics` option to the `init()` PHPDoc. [(#2184)](https://github.com/getsentry/sentry-php/pull/2184)
+- Add the Yii3 community integration to the README. [(#2180)](https://github.com/getsentry/sentry-php/pull/2180)
+
+## 4.30.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.30.0.
+
+### Features
+
+- Add support for `guzzlehttp/psr7` 3.x and `guzzlehttp/promises` 3.x. [(#2164)](https://github.com/getsentry/sentry-php/pull/2164)
+
+### Bug Fixes
+
+- Strip breadcrumb metadata when capturing out-of-memory errors to prevent events with large breadcrumbs from being silently dropped. [(#2150)](https://github.com/getsentry/sentry-php/pull/2150)
+
+### Misc
+
+- Use the SDK's internal options resolver and fall back to safe defaults when option values are invalid. [(#2151)](https://github.com/getsentry/sentry-php/pull/2151)
+- Improve `RingBuffer` performance by using native PHP arrays. [(#2159)](https://github.com/getsentry/sentry-php/pull/2159)
+- Improve stack trace construction performance. [(#2160)](https://github.com/getsentry/sentry-php/pull/2160)
+- Correct `BreadcrumbHandler` PHPDoc parameter types for static analysis tools. [(#2152)](https://github.com/getsentry/sentry-php/pull/2152)
+
 ## 4.29.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.29.0.

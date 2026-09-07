@@ -46,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 2
 
@@ -79,9 +79,8 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
         run: composer remove spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
 
-      - name: Remove OpenTelemetry dependencies on unsupported PHP versions
-        if: ${{ matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
-        run: composer remove open-telemetry/api open-telemetry/exporter-otlp open-telemetry/sem-conv open-telemetry/sdk --dev --no-interaction --no-update
+      - name: Remove OpenTelemetry dependencies
+        run: composer remove open-telemetry/api open-telemetry/context open-telemetry/exporter-otlp open-telemetry/sem-conv open-telemetry/sdk --dev --no-interaction --no-update
 
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'${{ matrix.php.phpunit }}' --dev --no-interaction --no-update
@@ -116,13 +115,77 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  opentelemetry-tests:
+    name: OpenTelemetry tests (PHP ${{ matrix.php }}, ${{ matrix.dependencies }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.1'
+            dependencies: lowest
+          - php: '8.5'
+            dependencies: highest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Determine Composer cache directory
+        id: composer-cache
+        run: echo "directory=$(composer config cache-dir)" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v5
+        with:
+          path: ${{ steps.composer-cache.outputs.directory }}
+          key: ${{ runner.os }}-${{ matrix.php }}-composer-${{ matrix.dependencies }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.php }}-${{ matrix.dependencies }}-composer-
+
+      - name: Remove unused dependencies
+        run: composer remove carthage-software/mago friendsofphp/php-cs-fixer monolog/monolog phpstan/phpstan spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
+
+      - name: Set phpunit/phpunit version constraint
+        run: composer require phpunit/phpunit:'^9.6.34' --dev --no-interaction --no-update
+
+      - name: Resolve highest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --no-install --no-plugins --no-scripts --no-audit
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Resolve lowest dependencies
+        run: composer update --no-progress --no-interaction --prefer-dist --prefer-lowest --no-install --no-plugins --no-scripts --no-audit
+        if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Audit highest dependencies
+        run: composer audit --locked --no-interaction --format=table
+        if: ${{ matrix.dependencies == 'highest' }}
+
+      - name: Audit lowest dependencies
+        run: composer audit --locked --no-interaction --format=table --abandoned=report
+        if: ${{ matrix.dependencies == 'lowest' }}
+
+      - name: Install dependencies
+        run: composer install --no-progress --no-interaction --prefer-dist --no-plugins --no-scripts
+
+      - name: Run OpenTelemetry tests
+        run: vendor/bin/phpunit --testsuite opentelemetry --no-coverage
+
   runtime-tests-frankenphp:
     name: Runtime tests (FrankenPHP)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 2
 
@@ -193,7 +256,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 2
 

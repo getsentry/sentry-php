@@ -199,12 +199,6 @@ message = "Reference created from a previously undefined variable `$matches`."
 count = 1
 
 [[issues]]
-file = "src/ErrorHandler.php"
-code = "write-only-property"
-message = "Property `$reservedMemory` is written to but never read."
-count = 1
-
-[[issues]]
 file = "src/Event.php"
 code = "impossible-condition"
 message = "This condition (type `false`) will always evaluate to false."

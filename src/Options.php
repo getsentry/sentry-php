@@ -152,7 +152,12 @@ final class Options
     /**
      * Sets if logs should be enabled or not.
      *
+     * This option no longer gates the manual logging API or logging integrations.
+     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
+     *
      * @param bool|null $enableLogs Boolean if logs should be enabled or not
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function setEnableLogs(?bool $enableLogs): self
     {
@@ -161,6 +166,11 @@ final class Options
 
     /**
      * Gets if logs is enabled or not.
+     *
+     * This option no longer gates the manual logging API or logging integrations.
+     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function getEnableLogs(): bool
     {
@@ -213,14 +223,24 @@ final class Options
 
     /**
      * Sets if metrics should be enabled or not.
+     *
+     * This option no longer gates the manual metrics API or metrics integrations.
+     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
-    public function setEnableMetrics(bool $enableTracing): self
+    public function setEnableMetrics(bool $enableMetrics): self
     {
-        return $this->updateOptions(['enable_metrics' => $enableTracing]);
+        return $this->updateOptions(['enable_metrics' => $enableMetrics]);
     }
 
     /**
      * Returns whether metrics are enabled or not.
+     *
+     * This option no longer gates the manual metrics API or metrics integrations.
+     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function getEnableMetrics(): bool
     {

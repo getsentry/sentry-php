@@ -273,7 +273,7 @@ final class RequestIntegrationTest extends TestCase
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', 10 ** 3)
+                ->withHeader('Content-Length', (string) (10 ** 3))
                 ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
             [
                 'url' => 'http://www.example.com/foo',
