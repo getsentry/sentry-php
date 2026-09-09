@@ -4,18 +4,15 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UploadedFileInterface;
+use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpDataCollector;
 use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
-use Sentry\Exception\JsonException;
 use Sentry\Options;
 use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\UserDataBag;
-use Sentry\Util\JSON;
 
 /**
  * This integration collects information from the request and attaches them to
@@ -25,31 +22,6 @@ use Sentry\Util\JSON;
  */
 final class RequestIntegration implements IntegrationInterface
 {
-    /**
-     * This constant represents the size limit in bytes beyond which the body
-     * of the request is not captured when the `max_request_body_size` option
-     * is set to `small`.
-     */
-    private const REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH = 10 ** 3;
-
-    /**
-     * This constant represents the size limit in bytes beyond which the body
-     * of the request is not captured when the `max_request_body_size` option
-     * is set to `medium`.
-     */
-    private const REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH = 10 ** 4;
-
-    /**
-     * This constant is a map of maximum allowed sizes for each value of the
-     * `max_request_body_size` option.
-     */
-    private const MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP = [
-        'never' => 0,
-        'small' => self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH,
-        'medium' => self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH,
-        'always' => \PHP_INT_MAX,
-    ];
-
     /**
      * @var RequestFetcherInterface PSR-7 request fetcher
      */
@@ -160,10 +132,9 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['headers'] = $headers;
         }
 
-        // Preserve existing body collection only when using the legacy configuration.
-        if (!$collector->usesDataCollection() && !\array_key_exists('data', $event->getRequest())) {
-            $requestBody = $this->captureRequestBody($options, $request);
-            if (!empty($requestBody)) {
+        if (!\array_key_exists('data', $event->getRequest())) {
+            $requestBody = HttpBodyCollector::collectServerRequest($options, $request);
+            if ($requestBody !== null) {
                 $requestData['data'] = $requestBody;
             }
         }
@@ -188,111 +159,6 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         $event->setUser($user);
-    }
-
-    /**
-     * Gets the decoded body of the request, if available. If the Content-Type
-     * header contains "application/json" then the content is decoded and if
-     * the parsing fails then the raw data is returned. If there are submitted
-     * fields or files, all of their information are parsed and returned.
-     *
-     * @param Options                $options The options of the client
-     * @param ServerRequestInterface $request The server request
-     *
-     * @return mixed
-     */
-    private function captureRequestBody(Options $options, ServerRequestInterface $request)
-    {
-        $maxRequestBodySize = $options->getMaxRequestBodySize();
-        $requestBodySize = (int) $request->getHeaderLine('Content-Length');
-
-        if (!$this->isRequestBodySizeWithinReadBounds($requestBodySize, $maxRequestBodySize)) {
-            return null;
-        }
-
-        $requestData = $request->getParsedBody();
-        $requestData = array_replace(
-            $this->parseUploadedFiles($request->getUploadedFiles()),
-            \is_array($requestData) ? $requestData : []
-        );
-
-        if (!empty($requestData)) {
-            return $requestData;
-        }
-
-        $requestBody = '';
-        $maxLength = self::MAX_REQUEST_BODY_SIZE_OPTION_TO_MAX_LENGTH_MAP[$maxRequestBodySize];
-
-        if ($maxLength > 0) {
-            $stream = $request->getBody();
-            while ($maxLength > 0 && !$stream->eof()) {
-                if ('' === $buffer = $stream->read(min($maxLength, self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH))) {
-                    break;
-                }
-                $requestBody .= $buffer;
-                $maxLength -= \strlen($buffer);
-            }
-        }
-
-        if ($request->getHeaderLine('Content-Type') === 'application/json') {
-            try {
-                return JSON::decode($requestBody);
-            } catch (JsonException $exception) {
-                // Fallback to returning the raw data from the request body
-            }
-        }
-
-        return $requestBody;
-    }
-
-    /**
-     * Create an array with the same structure as $uploadedFiles, but replacing
-     * each UploadedFileInterface with an array of info.
-     *
-     * @param array<array-key, mixed> $uploadedFiles The uploaded files info from a PSR-7 server request
-     *
-     * @return array<array-key, mixed>
-     */
-    private function parseUploadedFiles(array $uploadedFiles): array
-    {
-        $result = [];
-
-        foreach ($uploadedFiles as $key => $item) {
-            if ($item instanceof UploadedFileInterface) {
-                $result[$key] = [
-                    'client_filename' => $item->getClientFilename(),
-                    'client_media_type' => $item->getClientMediaType(),
-                    'size' => $item->getSize(),
-                ];
-            } elseif (\is_array($item)) {
-                $result[$key] = $this->parseUploadedFiles($item);
-            } else {
-                throw new \UnexpectedValueException(\sprintf('Expected either an object implementing the "%s" interface or an array. Got: "%s".', UploadedFileInterface::class, \is_object($item) ? \get_class($item) : \gettype($item)));
-            }
-        }
-
-        return $result;
-    }
-
-    private function isRequestBodySizeWithinReadBounds(int $requestBodySize, string $maxRequestBodySize): bool
-    {
-        if ($requestBodySize <= 0) {
-            return false;
-        }
-
-        if ($maxRequestBodySize === 'none' || $maxRequestBodySize === 'never') {
-            return false;
-        }
-
-        if ($maxRequestBodySize === 'small' && $requestBodySize > self::REQUEST_BODY_SMALL_MAX_CONTENT_LENGTH) {
-            return false;
-        }
-
-        if ($maxRequestBodySize === 'medium' && $requestBodySize > self::REQUEST_BODY_MEDIUM_MAX_CONTENT_LENGTH) {
-            return false;
-        }
-
-        return true;
     }
 
     /**

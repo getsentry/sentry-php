@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Uri;
+use Sentry\Options;
 use Sentry\Tracing\Span;
 
 /**
@@ -13,6 +14,19 @@ use Sentry\Tracing\Span;
  */
 final class HttpDataCollector
 {
+    /**
+     * @param mixed $body
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectBodyData(?Options $options, string $bodyType, $body, string $contentType = ''): array
+    {
+        $body = HttpBodyCollector::collect($options, $bodyType, $body, $contentType);
+        $direction = $bodyType === 'incomingRequest' || $bodyType === 'outgoingRequest' ? 'request' : 'response';
+
+        return $body === null ? [] : ['http.' . $direction . '.body.data' => $body];
+    }
+
     private function __construct()
     {
     }

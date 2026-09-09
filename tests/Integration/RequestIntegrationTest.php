@@ -66,6 +66,19 @@ final class RequestIntegrationTest extends TestCase
 
     public static function invokeDataProvider(): iterable
     {
+        foreach ([null, [], ['password' => 'explicit']] as $explicit) {
+            foreach ([[], ['http_bodies' => []]] as $collection) {
+                yield [
+                    ['data_collection' => $collection, 'max_request_body_size' => 'none'],
+                    new ServerRequest('POST', 'https://example.com', [], str_repeat('x', 100001)),
+                    ['data' => $explicit, 'url' => 'https://example.com', 'method' => 'POST', 'cookies' => [], 'headers' => ['Host' => ['example.com']]],
+                    null,
+                    null,
+                    ['data' => $explicit],
+                ];
+            }
+        }
+
         yield 'explicit header restrictions remain active with data collection' => [
             ['data_collection' => [], 'send_default_pii' => true],
             (new ServerRequest('GET', 'https://example.com/'))
@@ -654,6 +667,7 @@ final class RequestIntegrationTest extends TestCase
                     'X-Forwarded-For' => ['203.0.113.7'],
                     'Content-Length' => ['100'],
                 ],
+                'data' => ['password' => '[Filtered]', 'user' => ['api_token' => '[Filtered]', 'name' => 'alice']],
             ],
             null,
             UserDataBag::createFromUserIpAddress('127.0.0.1'),
