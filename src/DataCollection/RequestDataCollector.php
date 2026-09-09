@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-/**
- * @internal
- */
+use Sentry\Options;
+
 final class RequestDataCollector
 {
     /**
@@ -40,16 +39,54 @@ final class RequestDataCollector
     /**
      * @param DataCollectionOptions|null $dataCollection     The data collection configuration, or null to preserve legacy behavior
      * @param bool                       $sendDefaultPii     The legacy `send_default_pii` value
-     * @param string[]                   $piiSanitizeHeaders Lowercase header names sanitized in legacy mode
+     * @param string[]|null              $piiSanitizeHeaders Explicit lowercase header restrictions; null uses legacy defaults only in legacy mode
      */
     public function __construct(
         ?DataCollectionOptions $dataCollection,
         bool $sendDefaultPii,
-        array $piiSanitizeHeaders = self::DEFAULT_PII_SANITIZE_HEADERS
+        ?array $piiSanitizeHeaders = null
     ) {
         $this->dataCollection = $dataCollection;
         $this->sendDefaultPii = $sendDefaultPii;
-        $this->piiSanitizeHeaders = $piiSanitizeHeaders;
+        $this->piiSanitizeHeaders = $piiSanitizeHeaders ?? ($dataCollection === null ? self::DEFAULT_PII_SANITIZE_HEADERS : []);
+    }
+
+    /**
+     * @param string[]|null $piiSanitizeHeaders
+     */
+    public static function fromOptions(?Options $options, ?array $piiSanitizeHeaders = null): self
+    {
+        return new self(
+            DataCollectionOptions::fromOptions($options),
+            $options !== null && $options->shouldSendDefaultPii(),
+            $piiSanitizeHeaders
+        );
+    }
+
+    /**
+     * @template T
+     *
+     * @param array<string, T> $data
+     *
+     * @return array<string, T>
+     */
+    public function collectUserInfo(array $data): array
+    {
+        return $this->shouldCollectUserInfo() ? $data : [];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function collectClientIpData(?string $ipAddress): array
+    {
+        if ($ipAddress === null) {
+            return [];
+        }
+
+        $data = $this->collectUserInfo(['ip_address' => $ipAddress]);
+
+        return isset($data['ip_address']) ? ['net.peer.ip' => $data['ip_address']] : [];
     }
 
     public function usesDataCollection(): bool
@@ -82,7 +119,7 @@ final class RequestDataCollector
             return $this->sendDefaultPii ? $cookies : null;
         }
 
-        return KeyValueDataFilter::filterKeyValueData(
+        return KeyValueDataFilter::filterCookies(
             $cookies,
             $this->dataCollection->getCookies()
         );
@@ -96,45 +133,15 @@ final class RequestDataCollector
     public function collectHeaders(array $headers): ?array
     {
         if ($this->dataCollection === null) {
-            return $this->sendDefaultPii ? $headers : $this->sanitizeLegacyHeaders($headers);
+            return $this->sendDefaultPii ? $headers : $this->sanitizeHeaders($headers);
         }
 
-        return KeyValueDataFilter::filterHeaders(
+        $headers = KeyValueDataFilter::filterHeaders(
             $headers,
             $this->dataCollection->getHttpHeaders()['request']
         );
-    }
 
-    public function shouldCollectRequestBody(): bool
-    {
-        if ($this->dataCollection === null) {
-            // Legacy request body collection is controlled by max_request_body_size.
-            return true;
-        }
-
-        return \in_array('incomingRequest', $this->dataCollection->getHttpBodies(), true);
-    }
-
-    /**
-     * @param mixed $body
-     *
-     * @return mixed
-     */
-    public function collectRequestBody($body)
-    {
-        if (empty($body) || !$this->shouldCollectRequestBody()) {
-            return null;
-        }
-
-        if ($this->dataCollection === null) {
-            return $body;
-        }
-
-        if (!\is_array($body)) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
-
-        return KeyValueDataFilter::filterHttpBodyData($body);
+        return $headers === null ? null : $this->sanitizeHeaders($headers);
     }
 
     /**
@@ -142,7 +149,7 @@ final class RequestDataCollector
      *
      * @return array<string, string[]>
      */
-    private function sanitizeLegacyHeaders(array $headers): array
+    private function sanitizeHeaders(array $headers): array
     {
         $sanitized = [];
 

@@ -7,9 +7,54 @@ namespace Sentry\Tests\DataCollection;
 use PHPUnit\Framework\TestCase;
 use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\RequestDataCollector;
+use Sentry\Options;
 
 final class RequestDataCollectorTest extends TestCase
 {
+    /**
+     * @dataProvider userCollectionProvider
+     *
+     * @param array<string, mixed>|null $configuration
+     */
+    public function testCollectUserInfoAndClientIpFollowConfiguration(?array $configuration, bool $enabled): void
+    {
+        $collector = RequestDataCollector::fromOptions($configuration === null ? null : new Options($configuration));
+        $data = ['id' => 'alice', 'ip_address' => '203.0.113.7', 'impersonator_username' => 'admin'];
+
+        $this->assertSame($enabled ? $data : [], $collector->collectUserInfo($data));
+        $this->assertSame($enabled ? ['net.peer.ip' => '203.0.113.7'] : [], $collector->collectClientIpData('203.0.113.7'));
+        $this->assertSame([], $collector->collectClientIpData(null));
+    }
+
+    /**
+     * @return \Generator<string, array{array<string, mixed>|null, bool}>
+     */
+    public function userCollectionProvider(): \Generator
+    {
+        yield 'no options' => [null, false];
+        foreach ([false, true] as $pii) {
+            $legacy = ['send_default_pii' => $pii];
+            $suffix = ' pii=' . (int) $pii;
+            yield 'legacy' . $suffix => [$legacy, $pii];
+            yield 'null collection' . $suffix => [$legacy + ['data_collection' => null], $pii];
+            yield 'configured defaults' . $suffix => [$legacy + ['data_collection' => []], true];
+            yield 'unrelated override' . $suffix => [$legacy + ['data_collection' => ['http_headers' => ['mode' => 'off']]], true];
+            yield 'user info enabled' . $suffix => [$legacy + ['data_collection' => ['user_info' => true]], true];
+            yield 'user info disabled' . $suffix => [$legacy + ['data_collection' => ['user_info' => false]], false];
+        }
+    }
+
+    public function testFactoryPreservesHeaderRestrictions(): void
+    {
+        foreach ([[], ['data_collection' => []]] as $configuration) {
+            $collector = RequestDataCollector::fromOptions(new Options($configuration), ['x-tenant-id']);
+            $this->assertSame([
+                'X-Tenant-ID' => ['[Filtered]'],
+                'X-Test' => ['visible'],
+            ], $collector->collectHeaders(['X-Tenant-ID' => ['private'], 'X-Test' => ['visible']]));
+        }
+    }
+
     public function testUsesDataCollectionDistinguishesConfiguredAndLegacyModes(): void
     {
         $this->assertFalse($this->legacyCollector(false)->usesDataCollection());
@@ -99,6 +144,20 @@ final class RequestDataCollectorTest extends TestCase
         $this->assertNull($collector->collectCookies(['theme' => 'dark']));
     }
 
+    public function testCookieAllowListPreservesRepeatedValues(): void
+    {
+        $collector = $this->collector(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'session']]]);
+        $this->assertSame([
+            'theme' => ['dark', 'light'],
+            'session' => '[Filtered]',
+            'language' => '[Filtered]',
+        ], $collector->collectCookies([
+            'theme' => ['dark', 'light'],
+            'session' => ['one', 'two'],
+            'language' => ['en', 'de'],
+        ]));
+    }
+
     public function testCollectHeadersPreservesLegacyBehaviorWhenPiiIsEnabled(): void
     {
         $headers = ['Authorization' => ['secret']];
@@ -152,6 +211,42 @@ final class RequestDataCollectorTest extends TestCase
         ]));
     }
 
+    public function testCookieCollectionIsIndependentOfHeaders(): void
+    {
+        foreach (['off', 'denyList', 'allowList'] as $mode) {
+            $collector = $this->collector([
+                'cookies' => ['mode' => $mode, 'terms' => ['theme']],
+                'http_headers' => ['mode' => 'allowList', 'terms' => ['cookie', 'x-test']],
+            ]);
+            $this->assertSame(['X-Test' => ['visible']], $collector->collectHeaders([
+                'CoOkIe' => ['theme=dark'],
+                'SET-COOKIE' => ['malformed'],
+                'X-Test' => ['visible'],
+            ]));
+        }
+
+        $collector = $this->collector(['http_headers' => ['mode' => 'off']]);
+        $this->assertNull($collector->collectHeaders(['Cookie' => ['theme=dark']]));
+        $this->assertSame(['theme' => 'dark', 'session_id' => '[Filtered]'], $collector->collectCookies([
+            'theme' => 'dark',
+            'session_id' => 'secret',
+        ]));
+    }
+
+    public function testExplicitHeaderRestrictionsArePreservedWithDataCollection(): void
+    {
+        $collector = new RequestDataCollector(new DataCollectionOptions(), true, ['x-tenant-id']);
+        $this->assertSame([
+            'X-Tenant-ID' => ['[Filtered]'],
+            'X-Forwarded-For' => ['203.0.113.7'],
+            'X-Tenant-ID-Label' => ['visible'],
+        ], $collector->collectHeaders([
+            'X-Tenant-ID' => ['tenant'],
+            'X-Forwarded-For' => ['203.0.113.7'],
+            'X-Tenant-ID-Label' => ['visible'],
+        ]));
+    }
+
     public function testCollectHeadersReturnsNullWhenRequestHeadersAreDisabled(): void
     {
         $collector = $this->collector([
@@ -162,71 +257,6 @@ final class RequestDataCollectorTest extends TestCase
         ]);
 
         $this->assertNull($collector->collectHeaders(['X-Request-Id' => ['request-id']]));
-    }
-
-    public function testShouldCollectRequestBodyPreservesLegacyBehavior(): void
-    {
-        $this->assertTrue($this->legacyCollector(false)->shouldCollectRequestBody());
-        $this->assertTrue($this->legacyCollector(true)->shouldCollectRequestBody());
-    }
-
-    public function testShouldCollectRequestBodyUsesIncomingRequestBodyType(): void
-    {
-        $this->assertTrue($this->collector(['http_bodies' => ['incomingRequest']])->shouldCollectRequestBody());
-        $this->assertFalse($this->collector(['http_bodies' => []])->shouldCollectRequestBody());
-        $this->assertFalse($this->collector(['http_bodies' => ['outgoingRequest']])->shouldCollectRequestBody());
-    }
-
-    public function testCollectRequestBodyPreservesLegacyBehavior(): void
-    {
-        $body = ['password' => 'secret'];
-
-        $this->assertSame($body, $this->legacyCollector(false)->collectRequestBody($body));
-        $this->assertSame('raw body', $this->legacyCollector(true)->collectRequestBody('raw body'));
-    }
-
-    public function testCollectRequestBodyFiltersStructuredSensitiveDataRecursively(): void
-    {
-        $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $this->assertSame([
-            'password' => '[Filtered]',
-            'user' => [
-                'api_token' => '[Filtered]',
-                'name' => 'alice',
-            ],
-        ], $collector->collectRequestBody([
-            'password' => 'secret',
-            'user' => [
-                'api_token' => 'token',
-                'name' => 'alice',
-            ],
-        ]));
-    }
-
-    public function testCollectRequestBodyPreservesScalarLists(): void
-    {
-        $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $this->assertSame(['secret', 'foo'], $collector->collectRequestBody(['secret', 'foo']));
-    }
-
-    public function testCollectRequestBodyFiltersRawData(): void
-    {
-        $collector = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $this->assertSame('[Filtered]', $collector->collectRequestBody('raw body'));
-    }
-
-    public function testCollectRequestBodyReturnsNullWhenDisabledOrEmpty(): void
-    {
-        $disabled = $this->collector(['http_bodies' => []]);
-        $enabled = $this->collector(['http_bodies' => ['incomingRequest']]);
-
-        $this->assertNull($disabled->collectRequestBody('raw body'));
-        $this->assertNull($enabled->collectRequestBody(''));
-        $this->assertNull($enabled->collectRequestBody([]));
-        $this->assertNull($enabled->collectRequestBody(null));
     }
 
     /**

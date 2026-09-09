@@ -111,7 +111,7 @@ final class HttpHeaderNormalizerTest extends TestCase
 
     public function testEmptyAndMalformedHeadersAreIgnored(): void
     {
-        $this->assertSame([], HttpHeaderNormalizer::normalize([
+        $this->assertSame(['x-removed' => []], HttpHeaderNormalizer::normalize([
             'Invalid',
             ': empty header name',
             'X-Removed' => [],
@@ -127,9 +127,8 @@ final class HttpHeaderNormalizerTest extends TestCase
             'X-Request-ID' => 'request-id',
         ]);
         $this->assertSame([
-            'http.request.header.cookie' => ['[Filtered]'],
             'http.request.header.authorization' => ['[Filtered]'],
             'http.request.header.x-request-id' => ['request-id'],
-        ], HttpDataCollector::collectHeaders(new DataCollectionOptions(), $headers, 'request'));
+        ], HttpDataCollector::collectRequestHeaders(new DataCollectionOptions(), $headers));
     }
 }

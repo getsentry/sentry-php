@@ -6,14 +6,12 @@ namespace Sentry\Tracing;
 
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
 use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use Sentry\Breadcrumb;
-use Sentry\DataCollection\HttpBodyCollector;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\HttpDataCollector;
-use Sentry\DataCollection\KeyValueDataFilter;
+use Sentry\DataCollection\HttpHeaderNormalizer;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -44,16 +42,13 @@ final class GuzzleTracingMiddleware
                 ]);
 
                 $sdkOptions = $client !== null ? $client->getOptions() : null;
-                $dataCollection = $sdkOptions !== null ? $sdkOptions->getDataCollection() : null;
+                $dataCollection = DataCollectionOptions::fromOptions($sdkOptions);
                 $spanAndBreadcrumbData = [
                     'http.request.method' => $request->getMethod(),
                     'http.request.body.size' => $requestBody->getSize(),
                 ];
 
-                $queryString = HttpDataCollector::collectQueryString($dataCollection, $requestUri->getQuery());
-                if ($queryString !== null) {
-                    $spanAndBreadcrumbData['http.query'] = $queryString;
-                }
+                $spanAndBreadcrumbData += HttpDataCollector::collectQueryData($dataCollection, $requestUri->getQuery());
                 if ($requestUri->getFragment() !== '') {
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
@@ -68,14 +63,13 @@ final class GuzzleTracingMiddleware
                 $spanData = $spanAndBreadcrumbData;
 
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
-                    if ($dataCollection !== null && $sdkOptions !== null) {
-                        // Headers and bodies can be sizeable, so keep them on the recorded span instead of duplicating them on its breadcrumb.
+                    if ($dataCollection !== null) {
+                        // Headers and cookies can be sizeable, so keep them on the recorded span instead of duplicating them on its breadcrumb.
                         $spanData = array_merge(
                             $spanData,
-                            self::collectRequestSpanData(
-                                $sdkOptions,
-                                $request,
-                                $requestBody
+                            HttpDataCollector::collectRequestData(
+                                $dataCollection,
+                                HttpHeaderNormalizer::normalize($request->getHeaders())
                             )
                         );
                     }
@@ -103,7 +97,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUrl, $dataCollection, $sdkOptions) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $spanData, $childSpan, $parentSpan, $collectedUrl, $dataCollection) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
@@ -141,7 +135,7 @@ final class GuzzleTracingMiddleware
                             $spanData = array_merge(
                                 $spanData,
                                 $spanAndBreadcrumbData,
-                                self::collectResponseSpanData($sdkOptions, $response)
+                                self::collectResponseSpanData($dataCollection, $response)
                             );
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             if ($dataCollection === null) {
@@ -179,123 +173,12 @@ final class GuzzleTracingMiddleware
     /**
      * @return array<string, mixed>
      */
-    private static function collectRequestSpanData(Options $options, RequestInterface $request, StreamInterface $body): array
+    private static function collectResponseSpanData(?DataCollectionOptions $options, ResponseInterface $response): array
     {
-        $dataCollection = $options->getDataCollection();
-        if ($dataCollection === null) {
-            return [];
-        }
-
-        $data = HttpDataCollector::collectHeaders($dataCollection, $request->getHeaders(), 'request');
-        $maxBodyLength = HttpBodyCollector::getMaxBodyLength($options, 'outgoingRequest');
-        if ($maxBodyLength === 0) {
-            return $data;
-        }
-
-        $collectedBody = self::collectBody($body, $request->getHeaderLine('Content-Type'), $maxBodyLength);
-
-        if ($collectedBody !== null) {
-            $data['http.request.body.data'] = $collectedBody;
-        }
-
-        return $data;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function collectResponseSpanData(?Options $options, ResponseInterface $response): array
-    {
-        if ($options === null) {
-            return [];
-        }
-
-        $dataCollection = $options->getDataCollection();
-        if ($dataCollection === null) {
-            return [];
-        }
-
-        $data = HttpDataCollector::collectHeaders($dataCollection, $response->getHeaders(), 'response');
-
-        $maxBodyLength = HttpBodyCollector::getMaxBodyLength($options, 'incomingResponse');
-        if ($maxBodyLength === 0) {
-            return $data;
-        }
-
-        $collectedBody = self::collectBody($response->getBody(), $response->getHeaderLine('Content-Type'), $maxBodyLength);
-
-        if ($collectedBody !== null) {
-            $data['http.response.body.data'] = $collectedBody;
-        }
-
-        return $data;
-    }
-
-    /**
-     * @return array<array-key, mixed>|string|null
-     */
-    private static function collectBody(StreamInterface $body, string $contentType, int $maxBodyLength)
-    {
-        if ($maxBodyLength === 0) {
-            return null;
-        }
-
-        $bodySize = $body->getSize();
-        if ($bodySize === 0 || ($bodySize !== null && $bodySize > $maxBodyLength)) {
-            return null;
-        }
-
-        if (!HttpBodyCollector::isSupportedContentType($contentType)) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
-
-        // The size can be unknown (a null body size), so readBody() enforces the limit again after reading.
-        $contents = self::readBody($body, $maxBodyLength);
-        if ($contents === null) {
-            return null;
-        }
-
-        $parsedBody = HttpBodyCollector::parse($contents, $contentType);
-
-        return $parsedBody === null ? KeyValueDataFilter::FILTERED_VALUE : HttpBodyCollector::collect($parsedBody);
-    }
-
-    private static function readBody(StreamInterface $body, int $maxBodyLength): ?string
-    {
-        if (!$body->isReadable() || !$body->isSeekable()) {
-            return null;
-        }
-
-        $position = null;
-
-        try {
-            $position = $body->tell();
-            $body->rewind();
-
-            // Read one byte past the limit to detect bodies of unknown size that exceed it.
-            $contents = Utils::copyToString($body, $maxBodyLength + 1);
-
-            if ($contents === '' || \strlen($contents) > $maxBodyLength) {
-                return null;
-            }
-
-            return $contents;
-        } catch (\Throwable $exception) {
-            return null;
-        } finally {
-            if ($position !== null) {
-                self::restoreBodyPosition($body, $position);
-            }
-        }
-    }
-
-    private static function restoreBodyPosition(StreamInterface $body, int $position): void
-    {
-        try {
-            $body->seek($position);
-        } catch (\Throwable $exception) {
-            // Ignore streams that report themselves as seekable but cannot be restored.
-        }
+        return HttpDataCollector::collectResponseData(
+            $options,
+            HttpHeaderNormalizer::normalize($response->getHeaders())
+        );
     }
 
     private static function shouldAttachTracingHeaders(?Options $options, RequestInterface $request): bool

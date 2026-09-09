@@ -5,10 +5,70 @@ declare(strict_types=1);
 namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\ClientInterface;
 use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\Options;
+use Sentry\State\HubInterface;
 
 final class DataCollectionOptionsTest extends TestCase
 {
+    public function testFromHubWithoutClientReturnsNull(): void
+    {
+        $hub = $this->createMock(HubInterface::class);
+        $hub->expects($this->once())->method('getClient')->willReturn(null);
+
+        $this->assertNull(DataCollectionOptions::fromHub($hub));
+    }
+
+    public function testFromHubPreservesLegacyConfiguration(): void
+    {
+        foreach ([new Options(), new Options(['data_collection' => null]), new Options(['send_default_pii' => true])] as $options) {
+            $client = $this->createMock(ClientInterface::class);
+            $client->method('getOptions')->willReturn($options);
+            $hub = $this->createMock(HubInterface::class);
+            $hub->method('getClient')->willReturn($client);
+
+            $this->assertNull(DataCollectionOptions::fromHub($hub));
+            $this->assertNull($options->getDataCollection());
+        }
+    }
+
+    public function testFromHubReturnsExistingCollectionOptions(): void
+    {
+        foreach ([[], ['user_info' => false]] as $configuration) {
+            $options = new Options(['data_collection' => $configuration]);
+            $client = $this->createMock(ClientInterface::class);
+            $client->method('getOptions')->willReturn($options);
+            $hub = $this->createMock(HubInterface::class);
+            $hub->method('getClient')->willReturn($client);
+
+            $collection = DataCollectionOptions::fromHub($hub);
+            $this->assertNotNull($collection);
+            $this->assertSame($options->getDataCollection(), $collection);
+        }
+    }
+
+    public function testFromOptionsPreservesMissingCollection(): void
+    {
+        foreach ([null, new Options(), new Options(['data_collection' => null]), new Options(['send_default_pii' => true])] as $options) {
+            $this->assertNull(DataCollectionOptions::fromOptions($options));
+            if ($options !== null) {
+                $this->assertNull($options->getDataCollection());
+            }
+        }
+    }
+
+    public function testFromOptionsReturnsExistingCollection(): void
+    {
+        foreach ([[], ['user_info' => false]] as $configuration) {
+            $options = new Options(['data_collection' => $configuration]);
+            $collection = DataCollectionOptions::fromOptions($options);
+
+            $this->assertNotNull($collection);
+            $this->assertSame($options->getDataCollection(), $collection);
+        }
+    }
+
     public function testDefaults(): void
     {
         $options = new DataCollectionOptions();

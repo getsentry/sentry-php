@@ -26,12 +26,13 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser): void
+    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser, array $initialRequest = [], array $integrationOptions = []): void
     {
         $event = Event::createEvent();
         $event->setUser($initialUser);
+        $event->setRequest($initialRequest);
 
-        $integration = new RequestIntegration($this->createRequestFetcher($request));
+        $integration = new RequestIntegration($this->createRequestFetcher($request), $integrationOptions);
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -65,6 +66,72 @@ final class RequestIntegrationTest extends TestCase
 
     public static function invokeDataProvider(): iterable
     {
+        yield 'explicit header restrictions remain active with data collection' => [
+            ['data_collection' => [], 'send_default_pii' => true],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('X-Tenant-ID', 'tenant')
+                ->withHeader('X-Forwarded-For', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'X-Tenant-ID' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                ],
+            ],
+            null,
+            null,
+            [],
+            ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
+        ];
+
+        foreach ([
+            'legacy' => [],
+            'defaults' => ['data_collection' => []],
+            'disabled' => ['data_collection' => [
+                'user_info' => false,
+                'http_headers' => ['mode' => 'off'],
+                'cookies' => ['mode' => 'off'],
+                'url_query_params' => ['mode' => 'off'],
+                'http_bodies' => [],
+            ]],
+        ] as $name => $options) {
+            foreach ([
+                'values' => [
+                    'url' => 'https://manual.example/?token=explicit',
+                    'query_string' => 'token=explicit',
+                    'headers' => ['Authorization' => ['explicit']],
+                    'cookies' => ['session_id' => 'explicit'],
+                    'data' => ['password' => 'explicit'],
+                    'env' => ['CUSTOM' => 'explicit'],
+                    'custom' => 'explicit',
+                ],
+                'empty values' => [
+                    'url' => '',
+                    'query_string' => null,
+                    'headers' => [],
+                    'cookies' => null,
+                    'data' => [],
+                    'env' => [],
+                ],
+            ] as $case => $initialRequest) {
+                yield 'explicit request ' . $name . ' ' . $case => [
+                    $options + ['max_request_body_size' => 'always'],
+                    (new ServerRequest('POST', 'https://automatic.example/?token=automatic'))
+                        ->withHeader('Content-Length', '20')
+                        ->withHeader('Authorization', 'automatic')
+                        ->withCookieParams(['session_id' => 'automatic'])
+                        ->withParsedBody(['password' => 'automatic']),
+                    $initialRequest + ['method' => 'POST'],
+                    null,
+                    null,
+                    $initialRequest,
+                ];
+            }
+        }
+
         yield [
             [
                 'send_default_pii' => true,
@@ -560,6 +627,7 @@ final class RequestIntegrationTest extends TestCase
                 ])
                 ->withHeader('Authorization', 'Bearer secret')
                 ->withHeader('Cookie', 'session_id=secret; theme=dark')
+                ->withHeader('Set-Cookie', 'theme=light')
                 ->withHeader('X-Forwarded-For', '203.0.113.7')
                 ->withHeader('Content-Length', '100')
                 ->withParsedBody([
@@ -583,16 +651,8 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Authorization' => ['[Filtered]'],
-                    'Cookie' => ['[Filtered]'],
                     'X-Forwarded-For' => ['203.0.113.7'],
                     'Content-Length' => ['100'],
-                ],
-                'data' => [
-                    'password' => '[Filtered]',
-                    'user' => [
-                        'api_token' => '[Filtered]',
-                        'name' => 'alice',
-                    ],
                 ],
             ],
             null,

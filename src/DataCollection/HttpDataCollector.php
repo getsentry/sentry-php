@@ -10,13 +10,23 @@ use Sentry\Tracing\Span;
 /**
  * Collects transport-independent HTTP data. Integrations provide normalized
  * inputs without consuming streams or invoking application callbacks.
- *
- * @internal
  */
 final class HttpDataCollector
 {
     private function __construct()
     {
+    }
+
+    /**
+     * Collects the HTTP query attribute for spans and breadcrumbs.
+     *
+     * @return array<string, string>
+     */
+    public static function collectQueryData(?DataCollectionOptions $dataCollection, string $queryString): array
+    {
+        $queryString = self::collectQueryString($dataCollection, $queryString);
+
+        return $queryString === null ? [] : ['http.query' => $queryString];
     }
 
     public static function collectQueryString(?DataCollectionOptions $dataCollection, string $queryString): ?string
@@ -30,10 +40,10 @@ final class HttpDataCollector
             : KeyValueDataFilter::filterQueryString($queryString, $dataCollection->getUrlQueryParams());
     }
 
-    public static function collectUrl(?DataCollectionOptions $dataCollection, string $url): string
+    public static function collectUrl(?DataCollectionOptions $dataCollection, string $url, ?string $legacyUrl = null): string
     {
         if ($dataCollection === null) {
-            return $url;
+            return $legacyUrl ?? $url;
         }
 
         $uri = new Uri($url);
@@ -52,40 +62,205 @@ final class HttpDataCollector
     }
 
     /**
+     * Collects HTTP request headers and cookies.
+     *
+     * @param array<array-key, string[]>   $headers Normalized lowercase header names
+     * @param array<array-key, mixed>|null $cookies Parsed cookies
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectRequestData(?DataCollectionOptions $dataCollection, array $headers, ?array $cookies = null): array
+    {
+        if ($dataCollection === null) {
+            return [];
+        }
+
+        $data = self::collectRequestHeaders($dataCollection, $headers);
+        if ($dataCollection->getCookies()['mode'] !== 'off') {
+            $cookies = $cookies ?? self::parseRequestCookies($headers['cookie'] ?? []);
+            $data = array_merge($data, self::collectRequestCookies($dataCollection, $cookies));
+        }
+
+        return $data;
+    }
+
+    /**
+     * Collects HTTP response attributes from normalized inputs.
+     *
+     * @param array<array-key, string[]>                $headers Normalized lowercase header names
+     * @param iterable<array{string, string|null}>|null $cookies Parsed cookie name/value pairs
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectResponseData(?DataCollectionOptions $dataCollection, array $headers, ?iterable $cookies = null): array
+    {
+        if ($dataCollection === null) {
+            return [];
+        }
+
+        $data = self::collectResponseHeaders($dataCollection, $headers);
+        if ($dataCollection->getCookies()['mode'] !== 'off') {
+            $cookies = $cookies === null
+                ? self::parseResponseCookies($headers['set-cookie'] ?? [])
+                : self::groupCookieValues($cookies);
+            $data = array_merge($data, self::collectResponseCookies($dataCollection, $cookies));
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array<array-key, string[]> $headers Normalized lowercase header names
+     *
+     * @return array<string, string[]>
+     */
+    public static function collectRequestHeaders(DataCollectionOptions $dataCollection, array $headers): array
+    {
+        return self::collectHeaders($dataCollection, $headers, 'request');
+    }
+
+    /**
+     * @param array<array-key, string[]> $headers Normalized lowercase header names
+     *
+     * @return array<string, string[]>
+     */
+    public static function collectResponseHeaders(DataCollectionOptions $dataCollection, array $headers): array
+    {
+        return self::collectHeaders($dataCollection, $headers, 'response');
+    }
+
+    /**
+     * Collects regular headers, excluding Cookie and Set-Cookie.
+     *
      * @param array<array-key, string[]> $headers
      * @param 'request'|'response'       $direction
      *
      * @return array<string, string[]>
      */
-    public static function collectHeaders(DataCollectionOptions $dataCollection, array $headers, string $direction): array
+    private static function collectHeaders(DataCollectionOptions $dataCollection, array $headers, string $direction): array
     {
         $headerBehavior = $dataCollection->getHttpHeaders()[$direction];
-        $cookieBehavior = $dataCollection->getCookies();
         $prefix = 'http.' . $direction . '.header.';
-        $regularHeaders = [];
         $attributes = [];
 
-        foreach ($headers as $name => $values) {
-            $name = strtolower((string) $name);
-
-            if ($name === 'cookie' || $name === 'set-cookie') {
-                if ($cookieBehavior['mode'] !== 'off' && $values !== []) {
-                    // Raw cookie headers cannot be filtered by individual cookie name.
-                    $attributes[$prefix . $name] = array_fill(0, \count($values), KeyValueDataFilter::FILTERED_VALUE);
-                }
-
-                continue;
-            }
-
-            $regularHeaders[$name] = $values;
-        }
-
-        $filteredHeaders = KeyValueDataFilter::filterHeaders($regularHeaders, $headerBehavior);
+        $filteredHeaders = KeyValueDataFilter::filterHeaders($headers, $headerBehavior);
         foreach ($filteredHeaders ?? [] as $name => $values) {
-            $attributes[$prefix . $name] = $values;
+            if ($values !== []) {
+                $attributes[$prefix . $name] = $values;
+            }
         }
 
         return $attributes;
+    }
+
+    /**
+     * @param array<array-key, mixed> $cookies
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectRequestCookies(DataCollectionOptions $dataCollection, array $cookies): array
+    {
+        return self::collectCookies($dataCollection, $cookies, 'request');
+    }
+
+    /**
+     * @param array<array-key, mixed> $cookies
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectResponseCookies(DataCollectionOptions $dataCollection, array $cookies): array
+    {
+        return self::collectCookies($dataCollection, $cookies, 'response');
+    }
+
+    /**
+     * Collects parsed cookies by name, independently of regular headers.
+     *
+     * @param array<array-key, mixed> $cookies
+     * @param 'request'|'response'    $direction
+     *
+     * @return array<string, mixed>
+     */
+    private static function collectCookies(DataCollectionOptions $dataCollection, array $cookies, string $direction): array
+    {
+        $filtered = KeyValueDataFilter::filterCookies($cookies, $dataCollection->getCookies());
+        $prefix = $direction === 'request' ? 'http.request.header.cookie.' : 'http.response.header.set_cookie.';
+        $attributes = [];
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($filtered ?? [] as $name => $value) {
+            $attributes[$prefix . $name] = $value;
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @param string[] $headers Cookie header values
+     *
+     * @return array<string, string|string[]>
+     */
+    public static function parseRequestCookies(array $headers): array
+    {
+        return self::parseCookies($headers, false);
+    }
+
+    /**
+     * @param string[] $headers Set-Cookie header values
+     *
+     * @return array<string, string|string[]>
+     */
+    public static function parseResponseCookies(array $headers): array
+    {
+        return self::parseCookies($headers, true);
+    }
+
+    /**
+     * @param string[] $headers
+     *
+     * @return array<string, string|string[]>
+     */
+    private static function parseCookies(array $headers, bool $response): array
+    {
+        $pairs = [];
+        foreach ($headers as $header) {
+            $parts = $response ? [explode(';', $header, 2)[0]] : explode(';', $header);
+            foreach ($parts as $part) {
+                $pair = explode('=', $part, 2);
+                if (\count($pair) !== 2 || trim($pair[0]) === '') {
+                    continue;
+                }
+                $pairs[] = [trim($pair[0]), trim($pair[1])];
+            }
+        }
+
+        return self::groupCookieValues($pairs);
+    }
+
+    /**
+     * Groups framework cookie name/value pairs without serializing cookie objects.
+     *
+     * @template T of string|null
+     *
+     * @param iterable<array{string, T}> $cookies
+     *
+     * @return array<string, T|T[]>
+     */
+    public static function groupCookieValues(iterable $cookies): array
+    {
+        /** @var array<string, T|T[]> $grouped */
+        $grouped = [];
+        foreach ($cookies as [$name, $value]) {
+            if (\array_key_exists($name, $grouped)) {
+                $previous = $grouped[$name];
+                $values = \is_array($previous) ? $previous : [$previous];
+                $values[] = $value;
+                $grouped[$name] = $values;
+            } else {
+                $grouped[$name] = $value;
+            }
+        }
+
+        return $grouped;
     }
 
     /**

@@ -65,6 +65,11 @@ final class RequestIntegration implements IntegrationInterface
     private $options;
 
     /**
+     * @var bool Whether the application explicitly supplied header restrictions
+     */
+    private $hasConfiguredSanitizeHeaders;
+
+    /**
      * Constructor.
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
@@ -81,6 +86,7 @@ final class RequestIntegration implements IntegrationInterface
         $this->configureOptions($resolver);
 
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
+        $this->hasConfiguredSanitizeHeaders = \array_key_exists('pii_sanitize_headers', $options);
 
         /** @var array{pii_sanitize_headers: string[]} $resolvedOptions */
         $resolvedOptions = $resolver->resolve($options);
@@ -117,10 +123,9 @@ final class RequestIntegration implements IntegrationInterface
             return;
         }
 
-        $collector = new RequestDataCollector(
-            $options->getDataCollection(),
-            $options->shouldSendDefaultPii(),
-            $this->options['pii_sanitize_headers']
+        $collector = RequestDataCollector::fromOptions(
+            $options,
+            $this->hasConfiguredSanitizeHeaders ? $this->options['pii_sanitize_headers'] : null
         );
         $queryString = $collector->collectQueryString($request->getUri()->getQuery());
 
@@ -133,8 +138,14 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['query_string'] = $queryString;
         }
 
-        if ($collector->shouldCollectUserInfo()) {
-            $this->addRequestUserInfo($event, $request, $requestData);
+        $serverParams = $request->getServerParams();
+        if (!empty($serverParams['REMOTE_ADDR'])) {
+            /** @var string $ipAddress */
+            $ipAddress = $serverParams['REMOTE_ADDR'];
+            $userData = $collector->collectUserInfo(['ip_address' => $ipAddress]);
+            if ($userData !== []) {
+                $this->addRequestUserInfo($event, $userData, $requestData);
+            }
         }
 
         $cookies = $collector->collectCookies($request->getCookieParams());
@@ -149,35 +160,31 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['headers'] = $headers;
         }
 
-        if ($collector->shouldCollectRequestBody()) {
-            $requestBody = $collector->collectRequestBody($this->captureRequestBody($options, $request));
-
-            if ($requestBody !== null) {
+        // Preserve existing body collection only when using the legacy configuration.
+        if (!$collector->usesDataCollection() && !\array_key_exists('data', $event->getRequest())) {
+            $requestBody = $this->captureRequestBody($options, $request);
+            if (!empty($requestBody)) {
                 $requestData['data'] = $requestBody;
             }
         }
 
-        $event->setRequest($requestData);
+        // Explicit request fields take precedence, including null and empty values.
+        $event->setRequest($event->getRequest() + $requestData);
     }
 
     /**
-     * @param array<string, mixed> $requestData
+     * @param array<string, string> $userData
+     * @param array<string, mixed>  $requestData
      */
-    private function addRequestUserInfo(Event $event, ServerRequestInterface $request, array &$requestData): void
+    private function addRequestUserInfo(Event $event, array $userData, array &$requestData): void
     {
-        $serverParams = $request->getServerParams();
-
-        if (empty($serverParams['REMOTE_ADDR'])) {
-            return;
-        }
-
         $user = $event->getUser();
-        $requestData['env'] = ['REMOTE_ADDR' => $serverParams['REMOTE_ADDR']];
+        $requestData['env'] = ['REMOTE_ADDR' => $userData['ip_address']];
 
         if ($user === null) {
-            $user = UserDataBag::createFromUserIpAddress($serverParams['REMOTE_ADDR']);
+            $user = UserDataBag::createFromUserIpAddress($userData['ip_address']);
         } elseif ($user->getIpAddress() === null) {
-            $user->setIpAddress($serverParams['REMOTE_ADDR']);
+            $user->setIpAddress($userData['ip_address']);
         }
 
         $event->setUser($user);
@@ -242,9 +249,9 @@ final class RequestIntegration implements IntegrationInterface
      * Create an array with the same structure as $uploadedFiles, but replacing
      * each UploadedFileInterface with an array of info.
      *
-     * @param array<string, mixed> $uploadedFiles The uploaded files info from a PSR-7 server request
+     * @param array<array-key, mixed> $uploadedFiles The uploaded files info from a PSR-7 server request
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function parseUploadedFiles(array $uploadedFiles): array
     {

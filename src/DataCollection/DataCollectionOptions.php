@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Sentry\Options;
 use Sentry\OptionsResolver;
+use Sentry\State\HubInterface;
 
 /**
  * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
@@ -43,9 +45,6 @@ final class DataCollectionOptions implements \ArrayAccess
         'terms' => [],
     ];
 
-    /**
-     * @internal
-     */
     public const HTTP_BODY_TYPES = [
         'incomingRequest',
         'outgoingRequest',
@@ -95,6 +94,18 @@ final class DataCollectionOptions implements \ArrayAccess
         /** @var ResolvedDataCollectionOptions $resolvedOptions */
         $resolvedOptions = $this->resolver->resolve($options);
         $this->options = $resolvedOptions;
+    }
+
+    public static function fromHub(HubInterface $hub): ?self
+    {
+        $client = $hub->getClient();
+
+        return self::fromOptions($client === null ? null : $client->getOptions());
+    }
+
+    public static function fromOptions(?Options $options): ?self
+    {
+        return $options === null ? null : $options->getDataCollection();
     }
 
     public function shouldCollectUserInfo(): bool

@@ -8,9 +8,7 @@ use Sentry\Util\Http;
 
 /**
  * Prepares header lines and maps for collection without invoking application
- * callbacks. Already normalized PSR-7 headers do not require this step.
- *
- * @internal
+ * callbacks. Collection helpers accept the resulting lowercase header maps.
  */
 final class HttpHeaderNormalizer
 {
@@ -30,6 +28,7 @@ final class HttpHeaderNormalizer
     {
         $normalized = [];
 
+        /** @mago-ignore analysis:mixed-assignment */
         foreach ($headers as $name => $values) {
             // Numeric keys with array values can be valid header names in a
             // header map; only scalar entries are interpreted as raw lines.
@@ -64,6 +63,8 @@ final class HttpHeaderNormalizer
             return;
         }
 
+        $normalized[$name] = $normalized[$name] ?? [];
+        /** @mago-ignore analysis:mixed-assignment */
         foreach ($values as $value) {
             // Header bags may contain nulls or objects. Do not call
             // __toString or retain objects for later serialization.
