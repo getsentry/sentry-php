@@ -7,12 +7,9 @@ namespace Sentry\Tests\Tracing;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
-use GuzzleHttp\Psr7\FnStream;
-use GuzzleHttp\Psr7\NoSeekStream;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
-use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -412,330 +409,182 @@ final class GuzzleTracingMiddlewareTest extends TestCase
      *
      * @param array<string, mixed> $options
      */
-    public function testTraceFiltersQueryString(array $options, ?string $expectedQueryString): void
+    public function testTraceFiltersQueryString(array $options, string $expectedQueryString): void
     {
-        $rawQueryString = 'search=hello%20world&password=s%2Becret&custom=value';
-        $sdkOptions = new Options(array_merge([
-            'traces_sample_rate' => 1,
-        ], $options));
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn($sdkOptions);
+        [$spanData, $breadcrumbData] = $this->traceQueryExchange($options);
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
-        $transaction = $hub->startTransaction(new TransactionContext());
-        $hub->setSpan($transaction);
-
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(function (Request $request) use ($rawQueryString): PromiseInterface {
-            $this->assertSame($rawQueryString, $request->getUri()->getQuery());
-
-            return new FulfilledPromise(new Response());
-        });
-
-        /** @var PromiseInterface $promise */
-        $promise = $function(new Request('GET', 'https://www.example.com?' . $rawQueryString), []);
-        $promise->wait();
-
-        $spanData = $this->getHttpSpan($transaction)->getData();
-        $breadcrumbData = $this->getBreadcrumbData($hub);
-
-        if ($expectedQueryString === null) {
-            $this->assertArrayNotHasKey('http.query', $spanData);
-            $this->assertArrayNotHasKey('http.query', $breadcrumbData);
-        } else {
-            $this->assertSame($expectedQueryString, $spanData['http.query']);
-            $this->assertSame($expectedQueryString, $breadcrumbData['http.query']);
-        }
+        $this->assertSame($expectedQueryString, $spanData['http.query']);
+        $this->assertSame($expectedQueryString, $breadcrumbData['http.query']);
     }
 
-    public function testTraceCollectsConfiguredOutgoingHttpData(): void
+    public function testTraceOmitsDisabledQueryString(): void
     {
-        $sdkOptions = new Options([
-            'traces_sample_rate' => 1,
-            'data_collection' => [],
-        ]);
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn($sdkOptions);
-
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
-        $transaction = $hub->startTransaction(new TransactionContext());
-        $hub->setSpan($transaction);
-
-        $response = new Response(200, [
-            'Content-Type' => 'application/x-www-form-urlencoded',
-            'X-Response-Id' => 'response-123',
-            'Set-Cookie' => [
-                'session_id=response-secret; Path=/; HttpOnly',
-                'theme=light; Path=/',
-            ],
-        ], 'token=response-secret&status=ok');
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(function (Request $request) use ($response): PromiseInterface {
-            $this->assertSame(0, $request->getBody()->tell());
-
-            return new FulfilledPromise($response);
-        });
-        $request = new Request(
-            'POST',
-            'https://www.example.com/path?search=hello%20world&password=request-secret#fragment',
-            [
-                'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer request-secret',
-                'Cookie' => 'session_id=request-secret; theme=dark',
-            ],
-            '[{"password":"request-secret","name":"Alice"},"unkeyed-request-secret"]'
+        [$spanData, $breadcrumbData] = $this->traceExchange(
+            ['data_collection' => ['url_query_params' => ['mode' => 'off']]],
+            new Request('GET', 'https://www.example.com?password=secret'),
+            new Response()
         );
 
-        /** @var PromiseInterface $promise */
-        $promise = $function($request, []);
-        $promise->wait();
+        $this->assertArrayNotHasKey('http.query', $spanData);
+        $this->assertArrayNotHasKey('http.query', $breadcrumbData);
+    }
 
-        $this->assertSame(0, $request->getBody()->tell());
-        $this->assertSame(0, $response->getBody()->tell());
+    public function testTraceCollectsConfiguredUrlAndQueryString(): void
+    {
+        [$spanData, $breadcrumbData] = $this->traceConfiguredExchange();
 
-        $expectedSharedData = [
-            'url.full' => 'https://www.example.com/path?search=hello%20world&password=%5BFiltered%5D#fragment',
-            'http.query' => 'search=hello%20world&password=[Filtered]',
-        ];
-        $expectedSpanData = [
+        $this->assertSame('https://www.example.com/path?search=hello%20world&password=[Filtered]', $spanData['url.full']);
+        $this->assertSame('search=hello%20world&password=[Filtered]', $spanData['http.query']);
+        $this->assertSame($spanData['url.full'], $breadcrumbData['url.full']);
+        $this->assertSame($spanData['url.full'], $breadcrumbData['url']);
+        $this->assertSame($spanData['http.query'], $breadcrumbData['http.query']);
+    }
+
+    public function testTraceCollectsConfiguredHeaders(): void
+    {
+        [$spanData, $breadcrumbData] = $this->traceConfiguredExchange();
+        $expected = [
             'http.request.header.content-type' => ['application/json'],
             'http.request.header.authorization' => ['[Filtered]'],
-            'http.request.header.cookie' => ['[Filtered]'],
-            'http.request.body.data' => [
-                [
-                    'password' => '[Filtered]',
-                    'name' => 'Alice',
-                ],
-                '[Filtered]',
-            ],
             'http.response.header.content-type' => ['application/x-www-form-urlencoded'],
             'http.response.header.x-response-id' => ['response-123'],
-            'http.response.header.set-cookie' => ['[Filtered]', '[Filtered]'],
-            'http.response.body.data' => [
-                'token' => '[Filtered]',
-                'status' => 'ok',
-            ],
         ];
-        $spanData = $this->getHttpSpan($transaction)->getData();
-        $breadcrumbData = $this->getBreadcrumbData($hub);
 
-        foreach ($expectedSharedData as $key => $value) {
-            $this->assertSame($value, $spanData[$key]);
-            $this->assertSame($value, $breadcrumbData[$key]);
-        }
-        foreach ($expectedSpanData as $key => $value) {
-            $this->assertSame($value, $spanData[$key]);
-            $this->assertArrayNotHasKey($key, $breadcrumbData);
-        }
-        $this->assertSame($expectedSharedData['url.full'], $breadcrumbData['url']);
-        $this->assertStringNotContainsString('request-secret', json_encode($spanData));
-        $this->assertStringNotContainsString('response-secret', json_encode($spanData));
+        $this->assertSame($expected, array_intersect_key($spanData, $expected));
+        $this->assertSame([], array_intersect_key($breadcrumbData, $expected));
     }
 
-    public function testTraceDoesNotConsumeNonSeekableBodies(): void
+    public function testTraceCollectsConfiguredCookies(): void
     {
-        $sdkOptions = new Options([
-            'traces_sample_rate' => 1,
-            'data_collection' => [],
-        ]);
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn($sdkOptions);
+        [$spanData, $breadcrumbData] = $this->traceConfiguredExchange();
+        $expected = [
+            'http.request.header.cookie.session_id' => '[Filtered]',
+            'http.request.header.cookie.theme' => 'dark',
+            'http.response.header.set_cookie.session_id' => '[Filtered]',
+            'http.response.header.set_cookie.theme' => 'light',
+        ];
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
-        $transaction = $hub->startTransaction(new TransactionContext());
-        $hub->setSpan($transaction);
-
-        $requestBody = new NoSeekStream(Utils::streamFor('{"request":"body"}'));
-        $responseBody = new NoSeekStream(Utils::streamFor('{"response":"body"}'));
-        $response = new Response(200, ['Content-Type' => 'application/json'], $responseBody);
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(function (Request $request) use ($response): PromiseInterface {
-            $this->assertSame('{"request":"body"}', $request->getBody()->getContents());
-
-            return new FulfilledPromise($response);
-        });
-
-        /** @var PromiseInterface $promise */
-        $promise = $function(new Request(
-            'POST',
-            'https://www.example.com',
-            ['Content-Type' => 'application/json'],
-            $requestBody
-        ), []);
-        $promiseResult = $promise->wait();
-
-        $this->assertSame($response, $promiseResult);
-        $this->assertSame('{"response":"body"}', $promiseResult->getBody()->getContents());
-
-        $spanData = $this->getHttpSpan($transaction)->getData();
-        $this->assertArrayNotHasKey('http.request.body.data', $spanData);
-        $this->assertArrayNotHasKey('http.response.body.data', $spanData);
+        $this->assertSame($expected, array_intersect_key($spanData, $expected));
+        $this->assertSame([], array_intersect_key($breadcrumbData, $expected));
+        $this->assertArrayNotHasKey('http.request.header.cookie', $spanData);
+        $this->assertArrayNotHasKey('http.response.header.set-cookie', $spanData);
+        $this->assertArrayNotHasKey('http.request.header.cookie', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.header.set-cookie', $breadcrumbData);
     }
 
-    public function testTraceSkipsBodiesLargerThanTheirLimits(): void
+    public function testTraceDoesNotCollectBodiesOrConsumeStreams(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1,
-                'data_collection' => [],
-            ]));
+        $request = $this->configuredRequest();
+        $response = $this->configuredResponse();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        [$spanData] = $this->traceExchange(['data_collection' => []], $request, $response);
 
-        $transaction = $hub->startTransaction(new TransactionContext());
-        $hub->setSpan($transaction);
-
-        $oversizedRequestBody = str_repeat('a', 10001);
-        $oversizedResponseBody = str_repeat('a', 100001);
-        $response = new Response(200, ['Content-Type' => 'application/json'], $oversizedResponseBody);
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(static function () use ($response): PromiseInterface {
-            return new FulfilledPromise($response);
-        });
-
-        /** @var PromiseInterface $promise */
-        $promise = $function(new Request(
-            'POST',
-            'https://www.example.com',
-            ['Content-Type' => 'application/json'],
-            $oversizedRequestBody
-        ), []);
-        $promise->wait();
-
-        $spanData = $this->getHttpSpan($transaction)->getData();
         $this->assertArrayNotHasKey('http.request.body.data', $spanData);
         $this->assertArrayNotHasKey('http.response.body.data', $spanData);
+        $this->assertSame(0, $request->getBody()->tell());
+        $this->assertSame(0, $response->getBody()->tell());
+        $this->assertSame('session_id=request-secret; theme=dark', $request->getHeaderLine('Cookie'));
+        $this->assertSame([
+            'session_id=response-secret; Path=/; HttpOnly',
+            'theme=light; Path=/',
+        ], $response->getHeader('Set-Cookie'));
+    }
+
+    public function testTraceDoesNotExposeSensitiveConfiguredData(): void
+    {
+        [$spanData] = $this->traceConfiguredExchange();
+        $encodedData = json_encode($spanData);
+
+        $this->assertStringNotContainsString('request-secret', $encodedData);
+        $this->assertStringNotContainsString('response-secret', $encodedData);
     }
 
     /**
-     * @dataProvider httpBodySafetyLimitDataProvider
+     * @dataProvider parsedCookieCollectionProvider
+     *
+     * @param array<string, mixed> $options
+     * @param array<string, mixed> $expectedCookies
      */
-    public function testTraceAppliesHttpBodySafetyLimit(int $bodySize, bool $shouldCollect): void
+    public function testParsedCookieCollectionIsIndependentOfHeaders(array $options, array $expectedCookies): void
     {
+        [$data] = $this->traceExchange(
+            $options,
+            new Request('GET', 'https://example.com', ['Cookie' => 'theme=dark; session_id=secret']),
+            new Response(200, ['Set-Cookie' => ['theme=light; Path=/', 'session_id=secret; HttpOnly']])
+        );
+        $cookieKeys = array_fill_keys([
+            'http.request.header.cookie.theme',
+            'http.request.header.cookie.session_id',
+            'http.response.header.set_cookie.theme',
+            'http.response.header.set_cookie.session_id',
+        ], true);
+
+        $this->assertSame($expectedCookies, array_intersect_key($data, $cookieKeys));
+        $this->assertArrayNotHasKey('http.request.header.cookie', $data);
+        $this->assertArrayNotHasKey('http.response.header.set-cookie', $data);
+    }
+
+    public function parsedCookieCollectionProvider(): \Generator
+    {
+        $cookies = [
+            'http.request.header.cookie.theme' => 'dark',
+            'http.request.header.cookie.session_id' => '[Filtered]',
+            'http.response.header.set_cookie.theme' => 'light',
+            'http.response.header.set_cookie.session_id' => '[Filtered]',
+        ];
+
+        yield 'legacy with PII disabled' => [['send_default_pii' => false], []];
+        yield 'legacy with PII enabled' => [['send_default_pii' => true], []];
+        yield 'configured with PII disabled' => [['send_default_pii' => false, 'data_collection' => ['http_headers' => ['mode' => 'off']]], $cookies];
+        yield 'configured with PII enabled' => [['send_default_pii' => true, 'data_collection' => ['http_headers' => ['mode' => 'off']]], $cookies];
+        yield 'cookies disabled with PII disabled' => [['send_default_pii' => false, 'data_collection' => ['cookies' => ['mode' => 'off'], 'http_headers' => ['mode' => 'off']]], []];
+        yield 'cookies disabled with PII enabled' => [['send_default_pii' => true, 'data_collection' => ['cookies' => ['mode' => 'off'], 'http_headers' => ['mode' => 'off']]], []];
+    }
+
+    public function testTraceUsesCurrentOptionsForResponseCollection(): void
+    {
+        $options = new Options([
+            'traces_sample_rate' => 1,
+            'data_collection' => ['http_headers' => ['mode' => 'off']],
+        ]);
         $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1,
-                'max_request_body_size' => 'always',
-                'data_collection' => [],
-            ]));
-
+        $client->method('getOptions')->willReturn($options);
         $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
         $transaction = $hub->startTransaction(new TransactionContext());
         $hub->setSpan($transaction);
 
-        $rawBody = str_repeat('a', $bodySize);
-        $requestBody = FnStream::decorate(Utils::streamFor($rawBody), [
-            'getSize' => static function (): ?int {
-                return null;
-            },
-        ]);
-        $responseBody = FnStream::decorate(Utils::streamFor($rawBody), [
-            'getSize' => static function (): ?int {
-                return null;
-            },
-        ]);
-        $response = new Response(200, ['Content-Type' => 'application/json'], $responseBody);
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(static function () use ($response): PromiseInterface {
-            return new FulfilledPromise($response);
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function () use ($options): PromiseInterface {
+            $options->updateOptions(['data_collection' => ['http_headers' => ['request' => ['mode' => 'off']]]]);
+
+            return new FulfilledPromise(new Response(200, ['X-Response' => 'visible']));
         });
+        $function(new Request('GET', 'https://example.com', ['X-Request' => 'hidden']), [])->wait();
 
-        /** @var PromiseInterface $promise */
-        $promise = $function(new Request(
-            'POST',
-            'https://www.example.com',
-            ['Content-Type' => 'application/json'],
-            $requestBody
-        ), []);
-        $promise->wait();
-
-        $this->assertSame(0, $requestBody->tell());
-        $this->assertSame(0, $responseBody->tell());
-
-        $spanData = $this->getHttpSpan($transaction)->getData();
-        if ($shouldCollect) {
-            $this->assertSame('[Filtered]', $spanData['http.request.body.data']);
-            $this->assertSame('[Filtered]', $spanData['http.response.body.data']);
-        } else {
-            $this->assertArrayNotHasKey('http.request.body.data', $spanData);
-            $this->assertArrayNotHasKey('http.response.body.data', $spanData);
-        }
+        $data = $this->getHttpSpan($transaction)->getData();
+        $this->assertArrayNotHasKey('http.request.header.x-request', $data);
+        $this->assertSame(['visible'], $data['http.response.header.x-response']);
     }
 
-    public static function httpBodySafetyLimitDataProvider(): iterable
+    public function testTracePreservesExplicitSpanData(): void
     {
-        yield 'at 100 KB safety limit' => [100000, true];
-        yield 'over 100 KB safety limit' => [100001, false];
+        $data = $this->traceWithExplicitSpanData();
+
+        $this->assertSame('explicit', $data['http.query']);
+        $this->assertSame(['explicit'], $data['http.response.header.x-test']);
+        $this->assertSame(['password' => 'explicit'], $data['http.response.body.data']);
+        $this->assertSame(['application/json'], $data['http.response.header.content-type']);
     }
 
     public function testTraceRespectsDisabledOutgoingHttpDataCollection(): void
     {
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->atLeastOnce())
-            ->method('getOptions')
-            ->willReturn(new Options([
-                'traces_sample_rate' => 1,
-                'data_collection' => [
-                    'cookies' => ['mode' => 'off'],
-                    'http_headers' => [
-                        'request' => ['mode' => 'off'],
-                        'response' => ['mode' => 'off'],
-                    ],
-                    'http_bodies' => [],
-                    'url_query_params' => ['mode' => 'off'],
-                ],
-            ]));
-
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
-
-        $transaction = $hub->startTransaction(new TransactionContext());
-        $hub->setSpan($transaction);
-
-        $response = new Response(200, [
-            'Content-Type' => 'application/json',
-            'Set-Cookie' => 'session_id=response-secret',
-        ], '{"token":"response-secret"}');
-        $middleware = GuzzleTracingMiddleware::trace($hub);
-        $function = $middleware(static function () use ($response): PromiseInterface {
-            return new FulfilledPromise($response);
-        });
-
-        /** @var PromiseInterface $promise */
-        $promise = $function(new Request(
-            'POST',
-            'https://www.example.com?password=request-secret',
-            [
-                'Content-Type' => 'application/json',
-                'Cookie' => 'session_id=request-secret',
-            ],
-            '{"password":"request-secret"}'
-        ), []);
-        $promise->wait();
-
-        $spanData = $this->getHttpSpan($transaction)->getData();
-        $breadcrumbData = $this->getBreadcrumbData($hub);
-
-        foreach ([
+        $options = ['data_collection' => [
+            'cookies' => ['mode' => 'off'],
+            'http_headers' => ['mode' => 'off'],
+            'http_bodies' => [],
+            'url_query_params' => ['mode' => 'off'],
+        ]];
+        [$spanData, $breadcrumbData] = $this->traceExchange($options, $this->configuredRequest(), $this->configuredResponse());
+        $collectionKeys = array_fill_keys([
             'http.query',
             'http.request.header.content-type',
             'http.request.header.cookie',
@@ -743,10 +592,122 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             'http.response.header.content-type',
             'http.response.header.set-cookie',
             'http.response.body.data',
-        ] as $key) {
-            $this->assertArrayNotHasKey($key, $spanData);
-            $this->assertArrayNotHasKey($key, $breadcrumbData);
-        }
+        ], true);
+
+        $this->assertSame([], array_intersect_key($spanData, $collectionKeys));
+        $this->assertSame([], array_intersect_key($breadcrumbData, $collectionKeys));
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array{array<string, mixed>, array<string, mixed>}
+     */
+    private function traceQueryExchange(array $options): array
+    {
+        $query = 'search=hello%20world&password=s%2Becret&custom=value';
+        $request = new Request('GET', 'https://www.example.com?' . $query);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options($options + ['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+        $function = (GuzzleTracingMiddleware::trace($hub))(function (Request $forwardedRequest) use ($query): PromiseInterface {
+            $this->assertSame($query, $forwardedRequest->getUri()->getQuery());
+
+            return new FulfilledPromise(new Response());
+        });
+
+        $function($request, [])->wait();
+
+        return [$this->getHttpSpan($transaction)->getData(), $this->getBreadcrumbData($hub)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function traceWithExplicitSpanData(): array
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1, 'data_collection' => []]));
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+        $function = (GuzzleTracingMiddleware::trace($hub))(function () use ($hub): PromiseInterface {
+            $span = $hub->getSpan();
+            $this->assertNotNull($span);
+            $span->setData([
+                'http.query' => 'explicit',
+                'http.response.header.x-test' => ['explicit'],
+                'http.response.body.data' => ['password' => 'explicit'],
+            ]);
+
+            return new FulfilledPromise(new Response(200, [
+                'Content-Type' => 'application/json',
+                'X-Test' => 'automatic',
+            ], '{"name":"automatic"}'));
+        });
+
+        $function(new Request('GET', 'https://www.example.com/?token=secret'), [])->wait();
+
+        return $this->getHttpSpan($transaction)->getData();
+    }
+
+    /**
+     * @return array{array<string, mixed>, array<string, mixed>}
+     */
+    private function traceConfiguredExchange(): array
+    {
+        return $this->traceExchange(['data_collection' => []], $this->configuredRequest(), $this->configuredResponse());
+    }
+
+    private function configuredRequest(): Request
+    {
+        return new Request(
+            'POST',
+            'https://www.example.com/path?search=hello%20world&password=request-secret#fragment',
+            [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer request-secret',
+                'Cookie' => 'session_id=request-secret; theme=dark',
+            ],
+            '[{"password":"request-secret","name":"Alice"},"unkeyed-secret"]'
+        );
+    }
+
+    private function configuredResponse(): Response
+    {
+        return new Response(200, [
+            'Content-Type' => 'application/x-www-form-urlencoded',
+            'X-Response-Id' => 'response-123',
+            'Set-Cookie' => [
+                'session_id=response-secret; Path=/; HttpOnly',
+                'theme=light; Path=/',
+            ],
+        ], 'token=response-secret&status=ok');
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array{array<string, mixed>, array<string, mixed>}
+     */
+    private function traceExchange(array $options, Request $request, Response $response): array
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options($options + ['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function () use ($response): PromiseInterface {
+            return new FulfilledPromise($response);
+        });
+
+        $function($request, [])->wait();
+
+        return [$this->getHttpSpan($transaction)->getData(), $this->getBreadcrumbData($hub)];
     }
 
     /**
@@ -787,17 +748,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         yield 'default data collection filters mandatory sensitive values' => [
             ['data_collection' => []],
             'search=hello%20world&password=[Filtered]&custom=value',
-        ];
-
-        yield 'collection can be disabled' => [
-            [
-                'data_collection' => [
-                    'url_query_params' => [
-                        'mode' => 'off',
-                    ],
-                ],
-            ],
-            null,
         ];
 
         yield 'allow list filters values not matching configured terms' => [

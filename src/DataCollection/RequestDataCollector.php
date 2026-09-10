@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 /**
- * @internal
+ * Collects event request data while preserving the temporary legacy mode.
+ *
+ * This is shared infrastructure for first-party SDK integrations. It is
+ * public in PHP terms so framework SDKs can reuse the same behavior.
  */
 final class RequestDataCollector
 {
@@ -23,63 +26,56 @@ final class RequestDataCollector
     ];
 
     /**
-     * @var DataCollectionOptions|null
+     * @var DataCollectionPolicy
      */
-    private $dataCollection;
+    private $policy;
 
     /**
-     * @var bool
-     */
-    private $sendDefaultPii;
-
-    /**
-     * @var string[]
+     * @var string[]|null
      */
     private $piiSanitizeHeaders;
 
     /**
-     * @param DataCollectionOptions|null $dataCollection     The data collection configuration, or null to preserve legacy behavior
-     * @param bool                       $sendDefaultPii     The legacy `send_default_pii` value
-     * @param string[]                   $piiSanitizeHeaders Lowercase header names sanitized in legacy mode
+     * @param string[]|null $piiSanitizeHeaders Explicit lowercase header restrictions; null uses legacy defaults only in legacy mode
      */
-    public function __construct(
-        ?DataCollectionOptions $dataCollection,
-        bool $sendDefaultPii,
-        array $piiSanitizeHeaders = self::DEFAULT_PII_SANITIZE_HEADERS
-    ) {
-        $this->dataCollection = $dataCollection;
-        $this->sendDefaultPii = $sendDefaultPii;
+    public function __construct(DataCollectionPolicy $policy, ?array $piiSanitizeHeaders = null)
+    {
+        $this->policy = $policy;
         $this->piiSanitizeHeaders = $piiSanitizeHeaders;
     }
 
-    public function usesDataCollection(): bool
+    /**
+     * @template T
+     *
+     * @param array<string, T> $data
+     *
+     * @return array<string, T>
+     */
+    public function collectUserInfo(array $data): array
     {
-        return $this->dataCollection !== null;
+        return $this->policy->shouldCollectUserInfo() ? $data : [];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function collectClientIpData(?string $ipAddress): array
+    {
+        if ($ipAddress === null || !$this->policy->shouldCollectUserInfo()) {
+            return [];
+        }
+
+        return ['net.peer.ip' => $ipAddress];
     }
 
     public function shouldCollectUserInfo(): bool
     {
-        if ($this->dataCollection === null) {
-            return $this->sendDefaultPii;
-        }
-
-        return $this->dataCollection->shouldCollectUserInfo();
+        return $this->policy->shouldCollectUserInfo();
     }
 
     public function collectQueryString(string $queryString): ?string
     {
-        if ($this->dataCollection === null) {
-            return $queryString !== '' ? $queryString : null;
-        }
-
-        if ($queryString === '') {
-            return null;
-        }
-
-        return KeyValueDataFilter::filterQueryString(
-            $queryString,
-            $this->dataCollection->getUrlQueryParams()
-        );
+        return HttpDataCollector::collectQueryString($this->policy, $queryString);
     }
 
     /**
@@ -89,14 +85,32 @@ final class RequestDataCollector
      */
     public function collectCookies(array $cookies): ?array
     {
-        if ($this->dataCollection === null) {
-            return $this->sendDefaultPii ? $cookies : null;
+        $dataCollection = $this->policy->getDataCollection();
+        if ($dataCollection === null) {
+            return $this->policy->shouldCollectUserInfo() ? $cookies : null;
         }
 
-        return KeyValueDataFilter::filterKeyValueData(
-            $cookies,
-            $this->dataCollection->getCookies()
-        );
+        return KeyValueDataFilter::filterCookies($cookies, $dataCollection->getCookies());
+    }
+
+    /**
+     * Returns the safe fallback required when a raw Cookie header cannot be parsed.
+     *
+     * @param string[] $cookieHeaders
+     *
+     * @return array<string, string[]>
+     */
+    public function collectMalformedCookieHeader(array $cookieHeaders): array
+    {
+        $dataCollection = $this->policy->getDataCollection();
+        if ($dataCollection === null || $dataCollection->getCookies()['mode'] === 'off') {
+            return [];
+        }
+
+        $malformed = false;
+        HttpDataCollector::parseRequestCookies($cookieHeaders, $malformed);
+
+        return $malformed ? ['Cookie' => [KeyValueDataFilter::FILTERED_VALUE]] : [];
     }
 
     /**
@@ -106,46 +120,14 @@ final class RequestDataCollector
      */
     public function collectHeaders(array $headers): ?array
     {
-        if ($this->dataCollection === null) {
-            return $this->sendDefaultPii ? $headers : $this->sanitizeLegacyHeaders($headers);
+        $dataCollection = $this->policy->getDataCollection();
+        if ($dataCollection === null) {
+            return $this->policy->shouldCollectUserInfo() ? $headers : $this->sanitizeHeaders($headers);
         }
 
-        return KeyValueDataFilter::filterHeaders(
-            $headers,
-            $this->dataCollection->getHttpHeaders()['request']
-        );
-    }
+        $headers = KeyValueDataFilter::filterHeaders($headers, $dataCollection->getHttpHeaders()['request']);
 
-    public function shouldCollectRequestBody(): bool
-    {
-        if ($this->dataCollection === null) {
-            // Legacy request body collection is controlled by max_request_body_size.
-            return true;
-        }
-
-        return \in_array('incomingRequest', $this->dataCollection->getHttpBodies(), true);
-    }
-
-    /**
-     * @param mixed $body
-     *
-     * @return mixed
-     */
-    public function collectRequestBody($body)
-    {
-        if (empty($body) || !$this->shouldCollectRequestBody()) {
-            return null;
-        }
-
-        if ($this->dataCollection === null) {
-            return $body;
-        }
-
-        if (!\is_array($body)) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
-
-        return KeyValueDataFilter::filterHttpBodyData($body);
+        return $headers === null ? null : $this->sanitizeHeaders($headers);
     }
 
     /**
@@ -153,14 +135,15 @@ final class RequestDataCollector
      *
      * @return array<string, string[]>
      */
-    private function sanitizeLegacyHeaders(array $headers): array
+    private function sanitizeHeaders(array $headers): array
     {
         $sanitized = [];
+        $restrictedHeaders = $this->piiSanitizeHeaders ?? ($this->policy->isLegacyMode() ? self::DEFAULT_PII_SANITIZE_HEADERS : []);
 
         foreach ($headers as $name => $values) {
             $name = (string) $name;
 
-            if (\in_array(strtolower($name), $this->piiSanitizeHeaders, true)) {
+            if (\in_array(strtolower($name), $restrictedHeaders, true)) {
                 foreach ($values as $headerLine => $headerValue) {
                     $values[$headerLine] = KeyValueDataFilter::FILTERED_VALUE;
                 }
