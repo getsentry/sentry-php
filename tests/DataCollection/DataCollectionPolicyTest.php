@@ -21,6 +21,7 @@ final class DataCollectionPolicyTest extends TestCase
 
         $this->assertTrue($policy->isLegacyMode());
         $this->assertFalse($policy->shouldCollectUserInfo());
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
         $this->assertNull($policy->getOptions());
     }
 
@@ -42,6 +43,49 @@ final class DataCollectionPolicyTest extends TestCase
         yield 'configured default ignores disabled legacy option' => [['data_collection' => [], 'send_default_pii' => false], true];
         yield 'configured default ignores enabled legacy option' => [['data_collection' => [], 'send_default_pii' => true], true];
         yield 'configured disabled' => [['data_collection' => ['user_info' => false], 'send_default_pii' => true], false];
+    }
+
+    /**
+     * @dataProvider databaseQueryDataProvider
+     */
+    public function testDatabaseQueryDataRequiresConfiguredMode(array $configuration, bool $expected): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options($configuration));
+
+        $this->assertSame($expected, $policy->shouldCollectDatabaseQueryData());
+    }
+
+    public function databaseQueryDataProvider(): \Generator
+    {
+        foreach ([false, true] as $sendDefaultPii) {
+            $pii = $sendDefaultPii ? 'PII enabled' : 'PII disabled';
+
+            yield 'absent with ' . $pii => [['send_default_pii' => $sendDefaultPii], false];
+            yield 'null with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => null], false];
+            yield 'configured default with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => []], true];
+            yield 'explicitly enabled with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => ['database_query_data' => true]], true];
+            yield 'explicitly disabled with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => ['database_query_data' => false]], false];
+        }
+    }
+
+    public function testDatabasePolicyObservesMutableAndReplacedConfiguration(): void
+    {
+        $options = new Options(['data_collection' => ['database_query_data' => false]]);
+        $policy = DataCollectionPolicy::fromOptions($options);
+        $dataCollection = $policy->getDataCollection();
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
+
+        $dataCollection->setDatabaseQueryData(true);
+        $this->assertTrue($policy->shouldCollectDatabaseQueryData());
+
+        $options->updateOptions(['data_collection' => ['database_query_data' => false]]);
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
+
+        $options->updateOptions(['data_collection' => []]);
+        $this->assertTrue($policy->shouldCollectDatabaseQueryData());
+
+        $options->updateOptions(['data_collection' => null, 'send_default_pii' => true]);
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
     }
 
     public function testPolicyObservesLegacyPiiUpdates(): void

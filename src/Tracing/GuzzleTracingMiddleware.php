@@ -11,7 +11,6 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpDataCollector;
-use Sentry\DataCollection\HttpHeaderNormalizer;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -67,10 +66,7 @@ final class GuzzleTracingMiddleware
                         // Headers and cookies can be sizeable, so keep them on the recorded span instead of duplicating them on its breadcrumb.
                         $spanData = array_merge(
                             $spanData,
-                            HttpDataCollector::collectRequestData(
-                                $policy,
-                                HttpHeaderNormalizer::normalize($request->getHeaders())
-                            )
+                            HttpDataCollector::collectPsr7RequestData($policy, $request)
                         );
                     }
 
@@ -175,10 +171,7 @@ final class GuzzleTracingMiddleware
      */
     private static function collectResponseSpanData(DataCollectionPolicy $policy, ResponseInterface $response): array
     {
-        return HttpDataCollector::collectResponseData(
-            $policy,
-            HttpHeaderNormalizer::normalize($response->getHeaders())
-        );
+        return HttpDataCollector::collectPsr7ResponseData($policy, $response);
     }
 
     private static function shouldAttachTracingHeaders(?Options $options, RequestInterface $request): bool

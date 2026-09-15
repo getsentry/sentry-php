@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Query;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\Exception\JsonException;
@@ -132,6 +133,33 @@ final class HttpBodyCollector
     }
 
     /**
+     * Collects a PSR-7 message body without consuming its stream.
+     *
+     * @return array<array-key, mixed>|string|null Null means omission
+     */
+    public static function collectPsr7Message(DataCollectionPolicy $policy, string $bodyType, MessageInterface $message)
+    {
+        $limit = self::getMaxBodyLength($policy, $bodyType);
+        $length = $message->getHeaderLine('Content-Length');
+        if ($limit === 0 || (is_numeric($length) && (float) $length > $limit)) {
+            return null;
+        }
+
+        $stream = $message->getBody();
+        $size = $stream->getSize();
+        if ($size !== null && $size > $limit) {
+            return null;
+        }
+
+        $body = Psr7BodyReader::read($stream, $limit);
+        if ($body === null) {
+            return null;
+        }
+
+        return self::collect($policy, $bodyType, $body, $message->getHeaderLine('Content-Type'));
+    }
+
+    /**
      * Collects event request data, preserving the historical behavior in legacy mode.
      * New collection only reads seekable streams, restoring their original position.
      *
@@ -156,36 +184,13 @@ final class HttpBodyCollector
         if ($limit === 0 || (is_numeric($length) && (float) $length > $limit)) {
             return null;
         }
+
         $body = $request->getParsedBody();
         if ($body !== null) {
             return self::collect($policy, DataCollectionOptions::HTTP_BODY_INCOMING_REQUEST, $body);
         }
 
-        $stream = $request->getBody();
-        if (!$stream->isReadable() || !$stream->isSeekable()) {
-            return null;
-        }
-
-        try {
-            $position = $stream->tell();
-            try {
-                $stream->rewind();
-                $body = '';
-                while (\strlen($body) <= $limit && !$stream->eof()) {
-                    $buffer = $stream->read(min(10000, $limit + 1 - \strlen($body)));
-                    if ($buffer === '') {
-                        break;
-                    }
-                    $body .= $buffer;
-                }
-            } finally {
-                $stream->seek($position);
-            }
-        } catch (\RuntimeException $exception) {
-            return null;
-        }
-
-        return self::collect($policy, DataCollectionOptions::HTTP_BODY_INCOMING_REQUEST, $body, $request->getHeaderLine('Content-Type'));
+        return self::collectPsr7Message($policy, DataCollectionOptions::HTTP_BODY_INCOMING_REQUEST, $request);
     }
 
     /**

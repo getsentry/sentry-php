@@ -66,4 +66,11 @@ final class DataCollectionPolicy
 
         return $this->options !== null && $this->options->shouldSendDefaultPii();
     }
+
+    public function shouldCollectDatabaseQueryData(): bool
+    {
+        $dataCollection = $this->getDataCollection();
+
+        return $dataCollection !== null && $dataCollection->shouldCollectDatabaseQueryData();
+    }
 }

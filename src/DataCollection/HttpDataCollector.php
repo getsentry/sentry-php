@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Collects transport-independent HTTP data. Integrations provide normalized
@@ -19,7 +22,26 @@ final class HttpDataCollector
      */
     public static function collectBodyData(DataCollectionPolicy $policy, string $bodyType, $body, string $contentType = ''): array
     {
-        $body = HttpBodyCollector::collect($policy, $bodyType, $body, $contentType);
+        return self::bodyDataToAttribute($bodyType, HttpBodyCollector::collect($policy, $bodyType, $body, $contentType));
+    }
+
+    /**
+     * Collects body data from a PSR-7 message without consuming its stream.
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectPsr7BodyData(DataCollectionPolicy $policy, string $bodyType, MessageInterface $message): array
+    {
+        return self::bodyDataToAttribute($bodyType, HttpBodyCollector::collectPsr7Message($policy, $bodyType, $message));
+    }
+
+    /**
+     * @param mixed $body
+     *
+     * @return array<string, mixed>
+     */
+    private static function bodyDataToAttribute(string $bodyType, $body): array
+    {
         $direction = $bodyType === DataCollectionOptions::HTTP_BODY_INCOMING_REQUEST || $bodyType === DataCollectionOptions::HTTP_BODY_OUTGOING_REQUEST ? 'request' : 'response';
 
         return $body === null ? [] : ['http.' . $direction . '.body.data' => $body];
@@ -69,6 +91,50 @@ final class HttpDataCollector
         }
 
         return $result;
+    }
+
+    public static function shouldCollectRequestHeadersOrCookies(DataCollectionPolicy $policy): bool
+    {
+        $dataCollection = $policy->getDataCollection();
+
+        return $dataCollection !== null
+            && ($dataCollection->getHttpHeaders()['request']['mode'] !== 'off' || $dataCollection->getCookies()['mode'] !== 'off');
+    }
+
+    public static function shouldCollectResponseHeadersOrCookies(DataCollectionPolicy $policy): bool
+    {
+        $dataCollection = $policy->getDataCollection();
+
+        return $dataCollection !== null
+            && ($dataCollection->getHttpHeaders()['response']['mode'] !== 'off' || $dataCollection->getCookies()['mode'] !== 'off');
+    }
+
+    /**
+     * Collects headers and cookies from a PSR-7 request when enabled.
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectPsr7RequestData(DataCollectionPolicy $policy, RequestInterface $request): array
+    {
+        if (!self::shouldCollectRequestHeadersOrCookies($policy)) {
+            return [];
+        }
+
+        return self::collectRequestData($policy, HttpHeaderNormalizer::normalize($request->getHeaders()));
+    }
+
+    /**
+     * Collects headers and cookies from a PSR-7 response when enabled.
+     *
+     * @return array<string, mixed>
+     */
+    public static function collectPsr7ResponseData(DataCollectionPolicy $policy, ResponseInterface $response): array
+    {
+        if (!self::shouldCollectResponseHeadersOrCookies($policy)) {
+            return [];
+        }
+
+        return self::collectResponseData($policy, HttpHeaderNormalizer::normalize($response->getHeaders()));
     }
 
     /**

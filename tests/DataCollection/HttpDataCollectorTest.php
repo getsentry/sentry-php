@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\DataCollection;
 
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpDataCollector;
@@ -12,6 +16,75 @@ use Sentry\Options;
 
 final class HttpDataCollectorTest extends TestCase
 {
+    public function testPsr7BodyDataIsCollectedWithoutChangingTheStreamPosition(): void
+    {
+        $response = new Response(
+            200,
+            ['Content-Type' => 'application/json'],
+            '{"name":"Alice","token":"secret"}'
+        );
+        $response->getBody()->seek(4);
+
+        $this->assertSame([
+            'http.response.body.data' => ['name' => 'Alice', 'token' => '[Filtered]'],
+        ], HttpDataCollector::collectPsr7BodyData(
+            $this->policy([]),
+            DataCollectionOptions::HTTP_BODY_INCOMING_RESPONSE,
+            $response
+        ));
+        $this->assertSame(4, $response->getBody()->tell());
+    }
+
+    public function testDisabledPsr7BodyDataIsNotRead(): void
+    {
+        $response = new Response(200, [], 'response body');
+        $response->getBody()->seek(4);
+
+        $this->assertSame([], HttpDataCollector::collectPsr7BodyData(
+            $this->policy(['http_bodies' => []]),
+            DataCollectionOptions::HTTP_BODY_INCOMING_RESPONSE,
+            $response
+        ));
+        $this->assertSame(4, $response->getBody()->tell());
+    }
+
+    public function testPsr7RequestAndResponseDataAreCollected(): void
+    {
+        $policy = $this->policy([]);
+        $request = new Request('GET', '/', [
+            'X-Request-Id' => 'request-id',
+            'Cookie' => 'theme=dark',
+        ]);
+        $response = new Response(200, [
+            'X-Response-Id' => 'response-id',
+            'Set-Cookie' => 'theme=light',
+        ]);
+
+        $this->assertSame([
+            'http.request.header.x-request-id' => ['request-id'],
+            'http.request.header.cookie.theme' => 'dark',
+        ], HttpDataCollector::collectPsr7RequestData($policy, $request));
+        $this->assertSame([
+            'http.response.header.x-response-id' => ['response-id'],
+            'http.response.header.set_cookie.theme' => 'light',
+        ], HttpDataCollector::collectPsr7ResponseData($policy, $response));
+    }
+
+    public function testDisabledPsr7HeaderAndCookieDataAreNotAcquired(): void
+    {
+        $policy = $this->policy([
+            'cookies' => ['mode' => 'off'],
+            'http_headers' => ['mode' => 'off'],
+        ]);
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getHeaders');
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->never())->method('getHeaders');
+
+        $this->assertSame([], HttpDataCollector::collectPsr7RequestData($policy, $request));
+        $this->assertSame([], HttpDataCollector::collectPsr7ResponseData($policy, $response));
+    }
+
     public function testRequestDataCollectsHeadersAndCookies(): void
     {
         $data = HttpDataCollector::collectRequestData($this->policy([]), [
