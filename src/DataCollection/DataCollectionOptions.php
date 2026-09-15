@@ -22,15 +22,8 @@ use Sentry\OptionsResolver;
  *     stack_frame_variables: KeyValueCollectionBehavior,
  *     frame_context_lines: int
  * }
- *
- * @phpstan-implements \ArrayAccess<
- *     key-of<ResolvedDataCollectionOptions>,
- *     value-of<ResolvedDataCollectionOptions>
- * >
- *
- * @mago-ignore analysis:missing-template-parameter
  */
-final class DataCollectionOptions implements \ArrayAccess
+final class DataCollectionOptions
 {
     private const COLLECTION_MODES = [
         'off',
@@ -43,14 +36,16 @@ final class DataCollectionOptions implements \ArrayAccess
         'terms' => [],
     ];
 
-    /**
-     * @internal
-     */
+    public const HTTP_BODY_INCOMING_REQUEST = 'incomingRequest';
+    public const HTTP_BODY_OUTGOING_REQUEST = 'outgoingRequest';
+    public const HTTP_BODY_INCOMING_RESPONSE = 'incomingResponse';
+    public const HTTP_BODY_OUTGOING_RESPONSE = 'outgoingResponse';
+
     public const HTTP_BODY_TYPES = [
-        'incomingRequest',
-        'outgoingRequest',
-        'incomingResponse',
-        'outgoingResponse',
+        self::HTTP_BODY_INCOMING_REQUEST,
+        self::HTTP_BODY_OUTGOING_REQUEST,
+        self::HTTP_BODY_INCOMING_RESPONSE,
+        self::HTTP_BODY_OUTGOING_RESPONSE,
     ];
 
     private const DEFAULTS = [
@@ -251,66 +246,6 @@ final class DataCollectionOptions implements \ArrayAccess
     public function setFrameContextLines(int $frameContextLines): self
     {
         return $this->updateOptions(['frame_context_lines' => $frameContextLines]);
-    }
-
-    /**
-     * @param mixed $offset
-     */
-    public function offsetExists($offset): bool
-    {
-        return \is_string($offset) && \array_key_exists($offset, $this->options);
-    }
-
-    /**
-     * @phpstan-template TKey of key-of<ResolvedDataCollectionOptions>
-     *
-     * @param mixed $offset
-     *
-     * @phpstan-param TKey $offset
-     *
-     * @return mixed
-     *
-     * @phpstan-return ResolvedDataCollectionOptions[TKey]
-     *
-     * @mago-ignore analysis:incompatible-parameter-type
-     * @mago-ignore analysis:invalid-return-statement
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($offset)
-    {
-        if (!$this->offsetExists($offset)) {
-            /** @phpstan-ignore-next-line Runtime access to unknown offsets is intentionally non-throwing. */
-            return null;
-        }
-
-        return $this->options[$offset];
-    }
-
-    /**
-     * @param mixed $offset
-     * @param mixed $value
-     */
-    public function offsetSet($offset, $value): void
-    {
-        if (!\is_string($offset)) {
-            return;
-        }
-
-        $this->updateOptions([$offset => $value]);
-    }
-
-    /**
-     * @param mixed $offset
-     */
-    public function offsetUnset($offset): void
-    {
-        if (!\is_string($offset) || !\array_key_exists($offset, self::DEFAULTS)) {
-            return;
-        }
-
-        /** @var mixed $default */
-        $default = self::DEFAULTS[$offset];
-        $this->updateOptions([$offset => $default]);
     }
 
     private function configureOptions(OptionsResolver $resolver): void

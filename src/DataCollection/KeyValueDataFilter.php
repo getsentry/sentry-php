@@ -4,21 +4,12 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-use Sentry\Util\Arr;
-
 /**
- * @internal
- *
  * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
  */
 final class KeyValueDataFilter
 {
     public const FILTERED_VALUE = '[Filtered]';
-
-    private const DEFAULT_BODY_FILTER_BEHAVIOR = [
-        'mode' => 'denyList',
-        'terms' => [],
-    ];
 
     private const SENSITIVE_DATA_DENYLIST = [
         'auth',
@@ -41,9 +32,9 @@ final class KeyValueDataFilter
     ];
 
     /**
-     * Cookie headers that must always be filtered when headers are collected.
+     * Cookie headers are collected separately as cookie data.
      */
-    private const SENSITIVE_HEADERS = [
+    private const EXCLUDED_HEADERS = [
         'cookie',
         'set-cookie',
     ];
@@ -75,7 +66,11 @@ final class KeyValueDataFilter
         foreach ($headers as $name => $values) {
             $name = (string) $name;
 
-            if (\in_array(strtolower($name), self::SENSITIVE_HEADERS, true) || self::shouldFilterValue($name, $behavior)) {
+            if (\in_array(strtolower($name), self::EXCLUDED_HEADERS, true)) {
+                continue;
+            }
+
+            if (self::shouldFilterValue($name, $behavior)) {
                 foreach ($values as $headerLine => $headerValue) {
                     $values[$headerLine] = self::FILTERED_VALUE;
                 }
@@ -119,25 +114,24 @@ final class KeyValueDataFilter
     }
 
     /**
-     * Filters structured HTTP body data while replacing unkeyed top-level values.
+     * Applies cookie policy to names, preserving all values of a repeated cookie.
      *
-     * @param array<array-key, mixed> $data
+     * @param array<array-key, mixed> $cookies
      *
-     * @return array<array-key, mixed>
+     * @phpstan-param KeyValueCollectionBehavior $behavior
+     *
+     * @return array<array-key, mixed>|null
      */
-    public static function filterHttpBodyData(array $data): array
+    public static function filterCookies(array $cookies, array $behavior): ?array
     {
-        if (!Arr::isList($data)) {
-            return self::filterKeyValueData($data, self::DEFAULT_BODY_FILTER_BEHAVIOR) ?? [];
+        if ($behavior['mode'] === 'off') {
+            return null;
         }
 
         $filtered = [];
-
         /** @mago-ignore analysis:mixed-assignment */
-        foreach ($data as $value) {
-            $filtered[] = \is_array($value)
-                ? self::filterHttpBodyData($value)
-                : self::FILTERED_VALUE;
+        foreach ($cookies as $name => $value) {
+            $filtered[$name] = self::shouldFilterValue((string) $name, $behavior) ? self::FILTERED_VALUE : $value;
         }
 
         return $filtered;
@@ -177,10 +171,10 @@ final class KeyValueDataFilter
         }
 
         if ($behavior['mode'] === 'allowList') {
-            return !self::matchesAnyTerm($key, $behavior['terms']);
+            return !self::matchesAnyTerm($key, $behavior['terms'], false);
         }
 
-        return self::matchesAnyTerm($key, $behavior['terms']);
+        return self::matchesAnyTerm($key, $behavior['terms'], true);
     }
 
     private static function matchesMandatoryDenyList(string $key): bool
@@ -197,12 +191,16 @@ final class KeyValueDataFilter
     /**
      * @param string[] $terms
      */
-    private static function matchesAnyTerm(string $key, array $terms): bool
+    private static function matchesAnyTerm(string $key, array $terms, bool $partial): bool
     {
         $key = strtolower($key);
 
         foreach ($terms as $term) {
-            if (strpos($key, strtolower($term)) !== false) {
+            $term = strtolower($term);
+            if ($term === '') {
+                continue;
+            }
+            if ($partial ? strpos($key, $term) !== false : $key === $term) {
                 return true;
             }
         }

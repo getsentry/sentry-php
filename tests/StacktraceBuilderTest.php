@@ -156,56 +156,58 @@ final class StacktraceBuilderTest extends TestCase
             ],
         ];
 
-        yield 'allow list filters values not matching configured terms' => [
-            [
-                'data_collection' => [
-                    'stack_frame_variables' => [
-                        'mode' => 'allowList',
-                        'terms' => ['request'],
+        foreach (['request', 'requestId', 'REQUESTID'] as $term) {
+            yield 'allow list term: ' . $term => [
+                [
+                    'data_collection' => [
+                        'stack_frame_variables' => [
+                            'mode' => 'allowList',
+                            'terms' => [$term],
+                        ],
                     ],
                 ],
-            ],
-            [
-                'stackFrameInner' => [
-                    'apiToken' => '[Filtered]',
-                    'safeValue' => '[Filtered]',
+                [
+                    'stackFrameInner' => [
+                        'apiToken' => '[Filtered]',
+                        'safeValue' => '[Filtered]',
+                    ],
+                    'stackFrameMiddle' => [
+                        'metadata' => '[Filtered]',
+                    ],
+                    'stackFrameOuter' => [
+                        'requestId' => $term === 'request' ? '[Filtered]' : 'request-123',
+                        'password' => '[Filtered]',
+                    ],
                 ],
-                'stackFrameMiddle' => [
-                    'metadata' => '[Filtered]',
-                ],
-                'stackFrameOuter' => [
-                    'requestId' => 'request-123',
-                    'password' => '[Filtered]',
-                ],
-            ],
-        ];
+            ];
 
-        yield 'deny list combines mandatory and custom terms' => [
-            [
-                'data_collection' => [
-                    'stack_frame_variables' => [
-                        'mode' => 'denyList',
-                        'terms' => ['request'],
+            yield 'deny list term: ' . $term => [
+                [
+                    'data_collection' => [
+                        'stack_frame_variables' => [
+                            'mode' => 'denyList',
+                            'terms' => [$term],
+                        ],
                     ],
                 ],
-            ],
-            [
-                'stackFrameInner' => [
-                    'apiToken' => '[Filtered]',
-                    'safeValue' => 'safe',
-                ],
-                'stackFrameMiddle' => [
-                    'metadata' => [
-                        'api_token' => '[Filtered]',
-                        'name' => 'alice',
+                [
+                    'stackFrameInner' => [
+                        'apiToken' => '[Filtered]',
+                        'safeValue' => 'safe',
+                    ],
+                    'stackFrameMiddle' => [
+                        'metadata' => [
+                            'api_token' => '[Filtered]',
+                            'name' => 'alice',
+                        ],
+                    ],
+                    'stackFrameOuter' => [
+                        'requestId' => '[Filtered]',
+                        'password' => '[Filtered]',
                     ],
                 ],
-                'stackFrameOuter' => [
-                    'requestId' => '[Filtered]',
-                    'password' => '[Filtered]',
-                ],
-            ],
-        ];
+            ];
+        }
     }
 
     private static function createNestedException(): \RuntimeException

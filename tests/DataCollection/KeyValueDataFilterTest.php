@@ -36,7 +36,7 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterKeyValueDataCombinesMandatoryAndCustomDenyListTerms(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['custom']];
+        $behavior = ['mode' => 'denyList', 'terms' => ['custom-field']];
 
         $filtered = KeyValueDataFilter::filterKeyValueData([
             'authorization' => 'secret',
@@ -56,12 +56,12 @@ final class KeyValueDataFilterTest extends TestCase
         $behavior = ['mode' => 'allowList', 'terms' => ['theme']];
 
         $filtered = KeyValueDataFilter::filterKeyValueData([
-            'preferred-theme' => 'dark',
+            'theme' => 'dark',
             'tracking_id' => '12345',
         ], $behavior);
 
         $this->assertSame([
-            'preferred-theme' => 'dark',
+            'theme' => 'dark',
             'tracking_id' => '[Filtered]',
         ], $filtered);
     }
@@ -96,23 +96,6 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
-    public function testFilterHttpBodyDataFiltersSensitiveAndUnkeyedValues(): void
-    {
-        $this->assertSame([
-            [
-                'password' => '[Filtered]',
-                'name' => 'alice',
-            ],
-            '[Filtered]',
-        ], KeyValueDataFilter::filterHttpBodyData([
-            [
-                'password' => 'secret',
-                'name' => 'alice',
-            ],
-            'unkeyed secret',
-        ]));
-    }
-
     public function testFilterHeadersReturnsNullWhenCollectionIsOff(): void
     {
         $behavior = ['mode' => 'off', 'terms' => ['x-request-id']];
@@ -138,19 +121,17 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
-    public function testFilterHeadersAlwaysFiltersCookieHeaders(): void
+    public function testFilterHeadersAlwaysExcludesCookieHeaders(): void
     {
         $behavior = ['mode' => 'allowList', 'terms' => ['cookie', 'set-cookie', 'x-request-id']];
 
         $filtered = KeyValueDataFilter::filterHeaders([
-            'Cookie' => ['session_id=secret; theme=dark'],
-            'Set-Cookie' => ['session_id=secret'],
+            'CoOkIe' => ['session_id=secret; theme=dark'],
+            'SET-COOKIE' => ['session_id=secret'],
             'X-Request-Id' => ['request-id'],
         ], $behavior);
 
         $this->assertSame([
-            'Cookie' => ['[Filtered]'],
-            'Set-Cookie' => ['[Filtered]'],
             'X-Request-Id' => ['request-id'],
         ], $filtered);
     }
@@ -158,7 +139,7 @@ final class KeyValueDataFilterTest extends TestCase
     public function testFilterHeadersAppliesExtendedDenyTerms(): void
     {
         $defaultBehavior = ['mode' => 'denyList', 'terms' => []];
-        $extendedBehavior = ['mode' => 'denyList', 'terms' => ['forwarded', '-ip', 'remote-', 'via', '-user']];
+        $extendedBehavior = ['mode' => 'denyList', 'terms' => ['x-forwarded-for', 'x-real-ip']];
         $headers = [
             'X-Forwarded-For' => ['203.0.113.7'],
             'X-Real-IP' => ['203.0.113.7'],
@@ -173,7 +154,7 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterHeadersAppliesAllowList(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['request-id']];
+        $behavior = ['mode' => 'allowList', 'terms' => ['x-request-id']];
 
         $filtered = KeyValueDataFilter::filterHeaders([
             'X-Request-Id' => ['request-id'],
@@ -184,6 +165,81 @@ final class KeyValueDataFilterTest extends TestCase
             'X-Request-Id' => ['request-id'],
             'Host' => ['[Filtered]'],
         ], $filtered);
+    }
+
+    public function testCustomCookieAllowTermsMatchWholeNames(): void
+    {
+        $behavior = ['mode' => 'allowList', 'terms' => ['THEME', 'api_token']];
+
+        $this->assertSame([
+            'theme' => 'dark',
+            'user_theme' => '[Filtered]',
+            'api_token' => '[Filtered]',
+        ], KeyValueDataFilter::filterCookies($this->customTermInput(), $behavior));
+    }
+
+    public function testCustomCookieDenyTermsMatchSubstrings(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => ['THEME', 'api_token']];
+
+        $this->assertSame([
+            'theme' => '[Filtered]',
+            'user_theme' => '[Filtered]',
+            'api_token' => '[Filtered]',
+        ], KeyValueDataFilter::filterCookies($this->customTermInput(), $behavior));
+    }
+
+    public function testCustomTermsAreUsedForKeyValueData(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => ['THEME']];
+
+        $this->assertSame([
+            'theme' => '[Filtered]',
+            'user_theme' => '[Filtered]',
+            'api_token' => '[Filtered]',
+        ], KeyValueDataFilter::filterKeyValueData($this->customTermInput(), $behavior));
+    }
+
+    public function testCustomTermsAreUsedForHeaders(): void
+    {
+        $behavior = ['mode' => 'denyList', 'terms' => ['THEME']];
+        $headers = array_map(static function (string $value): array { return [$value]; }, $this->customTermInput());
+
+        $this->assertSame([
+            'theme' => ['[Filtered]'],
+            'user_theme' => ['[Filtered]'],
+            'api_token' => ['[Filtered]'],
+        ], KeyValueDataFilter::filterHeaders($headers, $behavior));
+    }
+
+    /**
+     * @dataProvider customQueryTermProvider
+     *
+     * @param array<string, mixed> $behavior
+     */
+    public function testCustomTermsAreUsedForQueryStrings(array $behavior, string $expected): void
+    {
+        $query = '%74heme=dark&user_theme=light&api_token=secret&q=a%20b';
+
+        $this->assertSame($expected, KeyValueDataFilter::filterQueryString($query, $behavior));
+    }
+
+    public function customQueryTermProvider(): \Generator
+    {
+        yield 'allow list uses whole names' => [
+            ['mode' => 'allowList', 'terms' => ['THEME', 'api_token']],
+            '%74heme=dark&user_theme=[Filtered]&api_token=[Filtered]&q=[Filtered]',
+        ];
+        yield 'deny list uses partial names' => [
+            ['mode' => 'denyList', 'terms' => ['THEME', 'api_token']],
+            '%74heme=[Filtered]&user_theme=[Filtered]&api_token=[Filtered]&q=a%20b',
+        ];
+    }
+
+    public function testEmptyCustomTermDoesNotMatchEveryName(): void
+    {
+        $this->assertSame(['theme' => 'dark'], KeyValueDataFilter::filterCookies(['theme' => 'dark'], ['mode' => 'denyList', 'terms' => ['']]));
+        $this->assertSame(['theme' => '[Filtered]'], KeyValueDataFilter::filterCookies(['theme' => 'dark'], ['mode' => 'allowList', 'terms' => ['']]));
     }
 
     public function testFilterQueryStringReturnsNullWhenCollectionIsOff(): void
@@ -233,5 +289,13 @@ final class KeyValueDataFilterTest extends TestCase
         $filtered = KeyValueDataFilter::filterQueryString('cookie=foo&set-cookie=bar', $behavior);
 
         $this->assertSame('cookie=foo&set-cookie=bar', $filtered);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function customTermInput(): array
+    {
+        return ['theme' => 'dark', 'user_theme' => 'light', 'api_token' => 'secret'];
     }
 }
