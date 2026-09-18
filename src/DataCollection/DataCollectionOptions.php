@@ -1,0 +1,348 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sentry\DataCollection;
+
+use Sentry\OptionsResolver;
+
+/**
+ * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
+ * @phpstan-type HttpHeaders array{request: KeyValueCollectionBehavior, response: KeyValueCollectionBehavior}
+ * @phpstan-type GenAi array{inputs: bool, outputs: bool}
+ * @phpstan-type ResolvedDataCollectionOptions array{
+ *     user_info: bool,
+ *     cookies: KeyValueCollectionBehavior,
+ *     http_headers: HttpHeaders,
+ *     http_bodies: HttpMessageType[],
+ *     url_query_params: KeyValueCollectionBehavior,
+ *     gen_ai: GenAi,
+ *     database_query_data: bool,
+ *     queues: bool,
+ *     stack_frame_variables: KeyValueCollectionBehavior,
+ *     frame_context_lines: int
+ * }
+ */
+final class DataCollectionOptions
+{
+    private const COLLECTION_MODES = [
+        'off',
+        'denyList',
+        'allowList',
+    ];
+
+    public const HTTP_BODY_TYPES = HttpMessageType::TYPES;
+
+    private const DEFAULTS = [
+        'user_info' => true,
+        'cookies' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+        'http_headers' => [
+            'request' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+            'response' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+        ],
+        'http_bodies' => self::HTTP_BODY_TYPES,
+        'url_query_params' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+        'gen_ai' => [
+            'inputs' => true,
+            'outputs' => true,
+        ],
+        'database_query_data' => true,
+        'queues' => true,
+        'stack_frame_variables' => true,
+        'frame_context_lines' => 5,
+    ];
+
+    /**
+     * @var array<string, mixed>
+     *
+     * @phpstan-var ResolvedDataCollectionOptions
+     */
+    private $options;
+
+    /**
+     * @var OptionsResolver
+     */
+    private $resolver;
+
+    /**
+     * @param array<string, mixed> $options
+     */
+    public function __construct(array $options = [])
+    {
+        $this->resolver = new OptionsResolver();
+        $this->configureOptions($this->resolver);
+
+        /** @var ResolvedDataCollectionOptions $resolvedOptions */
+        $resolvedOptions = $this->resolver->resolve($options);
+        $this->options = $resolvedOptions;
+    }
+
+    public function shouldCollectUserInfo(): bool
+    {
+        return $this->options['user_info'];
+    }
+
+    public function setUserInfo(bool $userInfo): self
+    {
+        return $this->updateOptions(['user_info' => $userInfo]);
+    }
+
+    /**
+     * @phpstan-return KeyValueCollectionBehavior
+     */
+    public function getCookies(): array
+    {
+        return $this->options['cookies'];
+    }
+
+    /**
+     * @param array<string, mixed> $cookies
+     *
+     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $cookies
+     */
+    public function setCookies(array $cookies): self
+    {
+        return $this->updateOptions(['cookies' => $cookies]);
+    }
+
+    /**
+     * @phpstan-return HttpHeaders
+     */
+    public function getHttpHeaders(): array
+    {
+        return $this->options['http_headers'];
+    }
+
+    /**
+     * @param array<string, mixed> $httpHeaders
+     *
+     * @phpstan-param array{
+     *     mode?: 'off'|'denyList'|'allowList',
+     *     terms?: string[],
+     *     request?: array{mode?: 'off'|'denyList'|'allowList', terms?: string[]},
+     *     response?: array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
+     * } $httpHeaders
+     */
+    public function setHttpHeaders(array $httpHeaders): self
+    {
+        return $this->updateOptions(['http_headers' => $httpHeaders]);
+    }
+
+    /**
+     * @return HttpMessageType[]
+     */
+    public function getHttpBodies(): array
+    {
+        return $this->options['http_bodies'];
+    }
+
+    public function shouldCollectHttpBody(HttpMessageType $messageType): bool
+    {
+        return \in_array($messageType, $this->options['http_bodies'], true);
+    }
+
+    /**
+     * @param string[]|HttpMessageType[] $httpBodies
+     */
+    public function setHttpBodies(array $httpBodies): self
+    {
+        return $this->updateOptions(['http_bodies' => $httpBodies]);
+    }
+
+    /**
+     * @phpstan-return KeyValueCollectionBehavior
+     */
+    public function getUrlQueryParams(): array
+    {
+        return $this->options['url_query_params'];
+    }
+
+    /**
+     * @param array<string, mixed> $urlQueryParams
+     *
+     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $urlQueryParams
+     */
+    public function setUrlQueryParams(array $urlQueryParams): self
+    {
+        return $this->updateOptions(['url_query_params' => $urlQueryParams]);
+    }
+
+    /**
+     * @phpstan-return GenAi
+     */
+    public function getGenAi(): array
+    {
+        return $this->options['gen_ai'];
+    }
+
+    /**
+     * @param array<string, mixed> $genAi
+     *
+     * @phpstan-param array{inputs?: bool, outputs?: bool} $genAi
+     */
+    public function setGenAi(array $genAi): self
+    {
+        return $this->updateOptions(['gen_ai' => $genAi]);
+    }
+
+    public function shouldCollectDatabaseQueryData(): bool
+    {
+        return $this->options['database_query_data'];
+    }
+
+    public function setDatabaseQueryData(bool $databaseQueryData): self
+    {
+        return $this->updateOptions(['database_query_data' => $databaseQueryData]);
+    }
+
+    public function shouldCollectQueues(): bool
+    {
+        return $this->options['queues'];
+    }
+
+    public function setQueues(bool $queues): self
+    {
+        return $this->updateOptions(['queues' => $queues]);
+    }
+
+    /**
+     * @phpstan-return KeyValueCollectionBehavior
+     */
+    public function getStackFrameVariables(): array
+    {
+        return $this->options['stack_frame_variables'];
+    }
+
+    public function shouldCollectStackFrameVariables(): bool
+    {
+        return $this->options['stack_frame_variables']['mode'] !== 'off';
+    }
+
+    /**
+     * @param bool|array<string, mixed> $stackFrameVariables
+     *
+     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $stackFrameVariables
+     */
+    public function setStackFrameVariables($stackFrameVariables): self
+    {
+        return $this->updateOptions(['stack_frame_variables' => $stackFrameVariables]);
+    }
+
+    public function getFrameContextLines(): int
+    {
+        return $this->options['frame_context_lines'];
+    }
+
+    public function setFrameContextLines(int $frameContextLines): self
+    {
+        return $this->updateOptions(['frame_context_lines' => $frameContextLines]);
+    }
+
+    private function configureOptions(OptionsResolver $resolver): void
+    {
+        $resolver->setAllowedTypes('user_info', 'bool');
+        $resolver->setAllowedTypes('cookies', 'array');
+        $resolver->setAllowedTypes('cookies.mode', 'string');
+        $resolver->setAllowedTypes('cookies.terms', 'string[]');
+        $resolver->setAllowedTypes('http_headers', 'array');
+        $resolver->setAllowedTypes('http_headers.request', 'array');
+        $resolver->setAllowedTypes('http_headers.request.mode', 'string');
+        $resolver->setAllowedTypes('http_headers.request.terms', 'string[]');
+        $resolver->setAllowedTypes('http_headers.response', 'array');
+        $resolver->setAllowedTypes('http_headers.response.mode', 'string');
+        $resolver->setAllowedTypes('http_headers.response.terms', 'string[]');
+        $resolver->setAllowedTypes('http_bodies', ['string[]', HttpMessageType::class . '[]']);
+        $resolver->setAllowedTypes('url_query_params', 'array');
+        $resolver->setAllowedTypes('url_query_params.mode', 'string');
+        $resolver->setAllowedTypes('url_query_params.terms', 'string[]');
+        $resolver->setAllowedTypes('gen_ai', 'array');
+        $resolver->setAllowedTypes('gen_ai.inputs', 'bool');
+        $resolver->setAllowedTypes('gen_ai.outputs', 'bool');
+        $resolver->setAllowedTypes('database_query_data', 'bool');
+        $resolver->setAllowedTypes('queues', 'bool');
+        $resolver->setAllowedTypes('stack_frame_variables', ['bool', 'array']);
+        $resolver->setAllowedTypes('stack_frame_variables.mode', 'string');
+        $resolver->setAllowedTypes('stack_frame_variables.terms', 'string[]');
+        $resolver->setAllowedTypes('frame_context_lines', 'int');
+
+        $resolver->setAllowedValues('cookies.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('http_headers.request.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('http_headers.response.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('url_query_params.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('stack_frame_variables.mode', self::COLLECTION_MODES);
+        $resolver->setAllowedValues('http_bodies', static function (array $value): bool {
+            return array_diff($value, self::HTTP_BODY_TYPES) === [];
+        });
+        $resolver->setAllowedValues('frame_context_lines', static function (int $value): bool {
+            return $value >= 0;
+        });
+
+        $resolver->setNormalizer('http_headers', static function (array $value): array {
+            if (!\array_key_exists('request', $value) && !\array_key_exists('response', $value)) {
+                return [
+                    'request' => $value,
+                    'response' => $value,
+                ];
+            }
+
+            return $value;
+        });
+        $resolver->setNormalizer(
+            'http_bodies',
+            \Closure::fromCallable([$this, 'normalizeHttpBodies'])
+        );
+        $resolver->setNormalizer(
+            'stack_frame_variables',
+            \Closure::fromCallable([$this, 'normalizeStackFrameVariables'])
+        );
+        $resolver->setDefaults(self::DEFAULTS);
+    }
+
+    /**
+     * @param string[]|HttpMessageType[] $value
+     *
+     * @return HttpMessageType[]
+     */
+    private function normalizeHttpBodies(array $value): array
+    {
+        $messageTypes = [];
+        foreach ($value as $key => $messageType) {
+            $messageTypes[$key] = $messageType instanceof HttpMessageType ? $messageType : HttpMessageType::from($messageType);
+        }
+
+        return $messageTypes;
+    }
+
+    /**
+     * @param bool|array<string, mixed> $value
+     *
+     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $value
+     *
+     * @phpstan-return array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
+     */
+    private function normalizeStackFrameVariables($value): array
+    {
+        if ($value === true) {
+            return KeyValueDataFilter::DEFAULT_BEHAVIOR;
+        }
+
+        if ($value === false) {
+            return ['mode' => 'off', 'terms' => []];
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $override
+     */
+    private function updateOptions(array $override): self
+    {
+        $resolved = $this->resolver->resolveOnly($override, $this->options);
+        /** @var ResolvedDataCollectionOptions $options */
+        $options = array_merge($this->options, $resolved);
+        $this->options = $options;
+
+        return $this;
+    }
+}
