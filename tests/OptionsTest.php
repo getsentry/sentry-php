@@ -7,6 +7,8 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Sentry\ClientBuilder;
+use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\DataCollection\HttpMessageType;
 use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClient;
@@ -377,6 +379,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'data_collection',
+            (new DataCollectionOptions())->setUserInfo(false),
+            'getDataCollection',
+            null,
+        ];
+
+        yield [
             'default_integrations',
             false,
             'hasDefaultIntegrations',
@@ -625,6 +634,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'data_collection' => null,
             'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
@@ -667,6 +677,50 @@ final class OptionsTest extends TestCase
         $resolver->resolve($resolver->getConfiguredDefaults(), $logger);
 
         $this->assertSame([], StubLogger::$logs);
+    }
+
+    public function testDataCollectionOptionNormalizesNestedArray(): void
+    {
+        $dataCollection = (new Options([
+            'data_collection' => [
+                'user_info' => false,
+                'http_headers' => [
+                    'request' => ['mode' => 'off'],
+                ],
+                'http_bodies' => ['incomingRequest', 'outgoingResponse'],
+                'url_query_params' => ['terms' => ['private']],
+                'gen_ai' => ['outputs' => false],
+                'database_query_data' => false,
+                'queues' => false,
+                'stack_frame_variables' => ['mode' => 'allowList', 'terms' => ['request_id']],
+            ],
+        ]))->getDataCollection();
+
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
+        $this->assertFalse($dataCollection->shouldCollectUserInfo());
+        $this->assertSame('off', $dataCollection->getHttpHeaders()['request']['mode']);
+        $this->assertSame('denyList', $dataCollection->getHttpHeaders()['response']['mode']);
+        $this->assertSame([HttpMessageType::incomingRequest(), HttpMessageType::outgoingResponse()], $dataCollection->getHttpBodies());
+        $this->assertSame(['mode' => 'denyList', 'terms' => ['private']], $dataCollection->getUrlQueryParams());
+        $this->assertSame(['inputs' => true, 'outputs' => false], $dataCollection->getGenAi());
+        $this->assertFalse($dataCollection->shouldCollectDatabaseQueryData());
+        $this->assertFalse($dataCollection->shouldCollectQueues());
+        $this->assertSame([
+            'mode' => 'allowList',
+            'terms' => ['request_id'],
+        ], $dataCollection->getStackFrameVariables());
+    }
+
+    public function testDataCollectionOptionPreservesObjectIdentityAndCanBeUpdatedThroughGetter(): void
+    {
+        $dataCollection = (new DataCollectionOptions())->setUserInfo(false);
+        $options = new Options(['data_collection' => $dataCollection]);
+
+        $this->assertSame($dataCollection, $options->getDataCollection());
+        $resolvedDataCollection = $options->getDataCollection();
+        $this->assertNotNull($resolvedDataCollection);
+        $resolvedDataCollection->setFrameContextLines(0);
+        $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
 
     /**
