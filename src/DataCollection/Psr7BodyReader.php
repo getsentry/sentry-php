@@ -17,9 +17,14 @@ final class Psr7BodyReader
     {
     }
 
-    public static function read(StreamInterface $stream, int $limit): ?string
+    /**
+     * @param int  $limit    -1 means unlimited
+     * @param bool $truncate Return the body up to the limit instead of omitting oversized bodies
+     */
+    public static function read(StreamInterface $stream, int $limit, bool $truncate = false): ?string
     {
-        if ($limit <= 0 || !$stream->isReadable() || !$stream->isSeekable()) {
+        $unlimited = $limit === -1;
+        if ((!$unlimited && $limit <= 0) || !$stream->isReadable() || !$stream->isSeekable()) {
             return null;
         }
 
@@ -28,8 +33,9 @@ final class Psr7BodyReader
             try {
                 $stream->rewind();
                 $body = '';
-                while (\strlen($body) <= $limit && !$stream->eof()) {
-                    $buffer = $stream->read(min(10000, $limit + 1 - \strlen($body)));
+                $readLimit = $truncate ? $limit : $limit + 1;
+                while (($unlimited || \strlen($body) < $readLimit) && !$stream->eof()) {
+                    $buffer = $stream->read($unlimited ? 10000 : min(10000, $readLimit - \strlen($body)));
                     if ($buffer === '') {
                         break;
                     }
@@ -42,6 +48,6 @@ final class Psr7BodyReader
             return null;
         }
 
-        return \strlen($body) > $limit ? null : $body;
+        return !$unlimited && !$truncate && \strlen($body) > $limit ? null : $body;
     }
 }
