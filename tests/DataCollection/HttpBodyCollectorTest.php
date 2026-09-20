@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace Sentry\Tests\DataCollection;
 
 use GuzzleHttp\Psr7\NoSeekStream;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpBodySourceInterface;
 use Sentry\DataCollection\HttpMessageType;
+use Sentry\DataCollection\Psr7MessageBodySource;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\Serializer\PayloadSerializer;
@@ -505,6 +509,79 @@ final class HttpBodyCollectorTest extends TestCase
         yield 'legacy none' => [['max_request_body_size' => 'none']];
         yield 'legacy never' => [['max_request_body_size' => 'never']];
         yield 'configured bodies disabled' => [['data_collection' => ['http_bodies' => []]]];
+    }
+
+    public function testPsr7BodyIsCollectedWithoutChangingTheStreamPosition(): void
+    {
+        $response = new Response(
+            200,
+            ['Content-Type' => 'application/json'],
+            '{"name":"Alice","token":"secret"}'
+        );
+        $response->getBody()->seek(4);
+
+        $this->assertSame(['name' => 'Alice', 'token' => '[Filtered]'], HttpBodyCollector::collectPsr7Message(
+            $this->options(),
+            HttpMessageType::incomingResponse(),
+            $response
+        ));
+        $this->assertSame(4, $response->getBody()->tell());
+    }
+
+    /**
+     * @dataProvider disabledSourceProvider
+     *
+     * @param array<string, mixed>|null $options
+     */
+    public function testDisabledPsr7MessagesAreNotAccessed(?array $options, HttpMessageType $messageType): void
+    {
+        $policy = DataCollectionPolicy::fromOptions($options === null ? null : new Options($options));
+        $message = $this->createMock(MessageInterface::class);
+        $message->expects($this->never())->method('getHeaderLine');
+        $message->expects($this->never())->method('getBody');
+
+        $this->assertNull(HttpBodyCollector::collectPsr7Message($policy, $messageType, $message));
+    }
+
+    public function testDeclaredOversizedPsr7MessagesAreNotRead(): void
+    {
+        $message = $this->createMock(MessageInterface::class);
+        $message->expects($this->once())->method('getHeaderLine')->with('Content-Length')->willReturn('100001');
+        $message->expects($this->never())->method('getBody');
+
+        $this->assertNull(HttpBodyCollector::collectSource($this->options(), HttpMessageType::incomingResponse(), new Psr7MessageBodySource($message)));
+    }
+
+    public function testOversizedPsr7StreamsAreNotRead(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->expects($this->once())->method('getSize')->willReturn(100001);
+        $stream->expects($this->never())->method('read');
+        $stream->expects($this->never())->method('rewind');
+        $message = $this->createMock(MessageInterface::class);
+        $message->expects($this->once())->method('getHeaderLine')->with('Content-Length')->willReturn('1');
+        $message->expects($this->once())->method('getBody')->willReturn($stream);
+
+        $this->assertNull(HttpBodyCollector::collectSource($this->options(), HttpMessageType::incomingResponse(), new Psr7MessageBodySource($message)));
+    }
+
+    public function testPsr7StreamsWithUnknownSizeUseTheConfiguredReadLimit(): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->method('getSize')->willReturn(null);
+        $stream->method('tell')->willReturn(4);
+        $stream->method('eof')->willReturn(false);
+        $stream->expects($this->once())->method('read')->with(1001)->willReturn(str_repeat('a', 1001));
+        $stream->expects($this->once())->method('seek')->with(4);
+        $message = $this->createMock(MessageInterface::class);
+        $message->expects($this->once())->method('getHeaderLine')->with('Content-Length')->willReturn('');
+        $message->expects($this->once())->method('getBody')->willReturn($stream);
+
+        $this->assertNull(HttpBodyCollector::collectSource($this->options(['max_request_body_size' => 'small']), HttpMessageType::outgoingRequest(), new Psr7MessageBodySource($message)));
     }
 
     /**
