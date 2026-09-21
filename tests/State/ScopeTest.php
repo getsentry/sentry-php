@@ -11,6 +11,7 @@ use Sentry\EventHint;
 use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -440,6 +441,24 @@ final class ScopeTest extends TestCase
         $this->assertNull($scope->applyToEvent($event));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
+    }
+
+    public function testEventProcessorExceptionDropsEventAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $scope = new Scope();
+        $scope->addEventProcessor(static function (): void {
+            throw new \RuntimeException('test');
+        });
+
+        $this->assertNull($scope->applyToEvent(Event::createEvent(), null, new Options([
+            'logger' => StubLogger::getInstance(),
+        ])));
+        $this->assertSame([[
+            'level' => 'error',
+            'message' => 'The event processor failed with exception: "test".',
+            'context' => [],
+        ]], StubLogger::$logs);
     }
 
     public function testEventProcessorReceivesTheEventAndEventHint(): void
