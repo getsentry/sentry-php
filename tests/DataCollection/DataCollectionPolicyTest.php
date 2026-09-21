@@ -6,7 +6,6 @@ namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
-use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\Options;
@@ -47,46 +46,31 @@ final class DataCollectionPolicyTest extends TestCase
         yield 'configured disabled' => [['data_collection' => ['user_info' => false], 'send_default_pii' => true], false];
     }
 
-    /**
-     * @dataProvider databaseQueryDataProvider
-     */
-    public function testDatabaseQueryDataRequiresConfiguredMode(array $configuration, bool $expected): void
+    public function testDatabaseQueryDataIsDisabledByDefault(): void
     {
-        $policy = DataCollectionPolicy::fromOptions(new Options($configuration));
+        $policy = DataCollectionPolicy::fromOptions(new Options());
 
-        $this->assertSame($expected, $policy->shouldCollectDatabaseQueryData());
-    }
-
-    public function databaseQueryDataProvider(): \Generator
-    {
-        foreach ([false, true] as $sendDefaultPii) {
-            $pii = $sendDefaultPii ? 'PII enabled' : 'PII disabled';
-
-            yield 'absent with ' . $pii => [['send_default_pii' => $sendDefaultPii], false];
-            yield 'null with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => null], false];
-            yield 'configured default with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => []], true];
-            yield 'explicitly enabled with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => ['database_query_data' => true]], true];
-            yield 'explicitly disabled with ' . $pii => [['send_default_pii' => $sendDefaultPii, 'data_collection' => ['database_query_data' => false]], false];
-        }
-    }
-
-    public function testDatabasePolicyObservesMutableAndReplacedConfiguration(): void
-    {
-        $options = new Options(['data_collection' => ['database_query_data' => false]]);
-        $policy = DataCollectionPolicy::fromOptions($options);
-        $dataCollection = $policy->getDataCollection();
-        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
-
-        $dataCollection->setDatabaseQueryData(true);
-        $this->assertTrue($policy->shouldCollectDatabaseQueryData());
-
-        $options->updateOptions(['data_collection' => ['database_query_data' => false]]);
         $this->assertFalse($policy->shouldCollectDatabaseQueryData());
+    }
 
-        $options->updateOptions(['data_collection' => []]);
+    public function testSendDefaultPiiDoesNotEnableDatabaseQueryData(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
+
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
+    }
+
+    public function testDatabaseQueryDataIsEnabledWithDataCollection(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['data_collection' => []]));
+
         $this->assertTrue($policy->shouldCollectDatabaseQueryData());
+    }
 
-        $options->updateOptions(['data_collection' => null, 'send_default_pii' => true]);
+    public function testDatabaseQueryDataCanBeDisabled(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['data_collection' => ['database_query_data' => false]]));
+
         $this->assertFalse($policy->shouldCollectDatabaseQueryData());
     }
 
