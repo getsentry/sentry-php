@@ -6,7 +6,6 @@ namespace Sentry\DataCollection;
 
 use Sentry\Options;
 use Sentry\Serializer\Serializer;
-use Sentry\Util\Arr;
 
 final class DatabaseDataCollector
 {
@@ -17,9 +16,6 @@ final class DatabaseDataCollector
     }
 
     /**
-     * Collects DB bindings that are not nested arrays. It will use the SDK serializer to
-     * create displayable values for objects such as \DateTime.
-     *
      * @param array<array-key, mixed> $bindings
      *
      * @return array<string, mixed>
@@ -46,43 +42,11 @@ final class DatabaseDataCollector
 
             $data[self::ATTRIBUTE_PREFIX . $key] = KeyValueDataFilter::filterKeyValue(
                 $key,
-                self::serializeBinding($value, $serializer),
+                $serializer->serialize($value),
                 KeyValueDataFilter::DEFAULT_BEHAVIOR
             );
         }
 
         return $data;
-    }
-
-    /**
-     * @param mixed $value
-     *
-     * @return mixed
-     */
-    private static function serializeBinding($value, Serializer $serializer)
-    {
-        if (!\is_array($value)) {
-            return \is_object($value) ? $serializer->serialize($value) : $value;
-        }
-
-        if (!Arr::isList($value)) {
-            return KeyValueDataFilter::FILTERED_VALUE;
-        }
-
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($value as $item) {
-            if (\is_array($item)) {
-                return KeyValueDataFilter::FILTERED_VALUE;
-            }
-        }
-
-        $serialized = [];
-
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($value as $item) {
-            $serialized[] = \is_object($item) ? $serializer->serialize($item) : $item;
-        }
-
-        return $serialized;
     }
 }

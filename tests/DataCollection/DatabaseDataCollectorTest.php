@@ -18,14 +18,30 @@ final class DatabaseDataCollectorTest extends TestCase
             'db.query.parameter.2' => false,
             'db.query.parameter.7' => 0,
             'db.query.parameter.9' => '',
+            'db.query.parameter.11' => 1.5,
             'db.query.parameter.:name' => 'Alice',
+            'db.query.parameter.:code' => '00123',
         ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
             0 => null,
             2 => false,
             7 => 0,
             9 => '',
+            11 => 1.5,
             ':name' => 'Alice',
+            ':code' => '00123',
         ]));
+    }
+
+    public function testStringBindingsRespectMaxValueLength(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options([
+            'data_collection' => [],
+            'max_value_length' => 20,
+        ]));
+
+        $this->assertSame([
+            'db.query.parameter.value' => 'xxxxxxxxxx {clipped}',
+        ], DatabaseDataCollector::collectQueryData($policy, ['value' => str_repeat('x', 25)]));
     }
 
     public function testSensitiveBindingNamesAreFiltered(): void
@@ -50,13 +66,13 @@ final class DatabaseDataCollectorTest extends TestCase
         ]));
     }
 
-    public function testConfiguredObjectSerializationIsFiltered(): void
+    public function testSensitiveFieldsIntroducedBySerializationAreFiltered(): void
     {
         $policy = DataCollectionPolicy::fromOptions(new Options([
             'data_collection' => [],
             'class_serializers' => [
                 \stdClass::class => static function (\stdClass $value): array {
-                    return ['name' => $value->name, 'password' => $value->password];
+                    return ['name' => $value->name, 'password' => 'secret'];
                 },
             ],
         ]));
@@ -67,54 +83,11 @@ final class DatabaseDataCollectorTest extends TestCase
                 'data' => ['name' => 'Alice', 'password' => '[Filtered]'],
             ],
         ], DatabaseDataCollector::collectQueryData($policy, [
-            'profile' => (object) ['name' => 'Alice', 'password' => 'secret'],
+            'profile' => (object) ['name' => 'Alice'],
         ]));
     }
 
-    public function testFlatListsPreserveValuesAndSerializeObjects(): void
-    {
-        $date = new \DateTimeImmutable('2026-01-02 03:04:05', new \DateTimeZone('UTC'));
-
-        $this->assertSame([
-            'db.query.parameter.values' => [null, false, 0, 1.5, '', 'Alice'],
-            'db.query.parameter.empty' => [],
-            'db.query.parameter.dates' => ['DateTimeImmutable(2026-01-02 03:04:05)'],
-            'db.query.parameter.callable' => ['DateTimeImmutable(2026-01-02 03:04:05)', 'format'],
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
-            'values' => [null, false, 0, 1.5, '', 'Alice'],
-            'empty' => [],
-            'dates' => [$date],
-            'callable' => [$date, 'format'],
-        ]));
-    }
-
-    /**
-     * @dataProvider unsupportedArrayProvider
-     *
-     * @param array<array-key, mixed> $value
-     */
-    public function testAssociativeAndNestedArrayValuesAreFiltered(array $value): void
-    {
-        $this->assertSame([
-            'db.query.parameter.value' => '[Filtered]',
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), ['value' => $value]));
-    }
-
-    public function unsupportedArrayProvider(): \Generator
-    {
-        yield 'associative' => [['name' => 'Alice']];
-        yield 'sparse numeric' => [[0 => 'Alice', 2 => 'Bob']];
-        yield 'one based' => [[1 => 'Alice']];
-        yield 'nested list' => [[[1, 2]]];
-        yield 'nested associative' => [[['name' => 'Alice']]];
-
-        $recursive = [];
-        $recursive[] = &$recursive;
-
-        yield 'recursive list' => [$recursive];
-    }
-
-    public function testRejectedBindingsDoNotInvokeObjectSerializers(): void
+    public function testSensitiveBindingsDoNotInvokeObjectSerializers(): void
     {
         $calls = 0;
         $policy = DataCollectionPolicy::fromOptions(new Options([
@@ -131,31 +104,10 @@ final class DatabaseDataCollectorTest extends TestCase
 
         $this->assertSame([
             'db.query.parameter.password' => '[Filtered]',
-            'db.query.parameter.associative' => '[Filtered]',
-            'db.query.parameter.nested' => '[Filtered]',
         ], DatabaseDataCollector::collectQueryData($policy, [
             'password' => $object,
-            'associative' => ['value' => $object],
-            'nested' => [$object, []],
         ]));
         $this->assertSame(0, $calls);
-    }
-
-    public function testResourcesAreFiltered(): void
-    {
-        $resource = fopen('php://temp', 'w+');
-
-        try {
-            $this->assertSame([
-                'db.query.parameter.resource' => '[Filtered]',
-                'db.query.parameter.values' => ['[Filtered]'],
-            ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
-                'resource' => $resource,
-                'values' => [$resource],
-            ]));
-        } finally {
-            fclose($resource);
-        }
     }
 
     public function testNonFiniteFloatsAreFiltered(): void
