@@ -533,7 +533,15 @@ class Scope
         }
 
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
-            $event = $processor($event, $hint);
+            try {
+                $event = $processor($event, $hint);
+            } catch (\Throwable $exception) {
+                if ($options !== null) {
+                    $options->getLoggerOrNullLogger()->error(\sprintf('The event processor failed with exception: "%s".', $exception->getMessage()));
+                }
+
+                return null;
+            }
 
             if ($event === null) {
                 return null;

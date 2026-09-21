@@ -924,6 +924,33 @@ final class ClientTest extends TestCase
         ];
     }
 
+    public function testProcessEventDiscardsEventWhenBeforeSendCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send',
+            Event::createEvent(),
+            'The "before_send" callback failed with exception: "test".'
+        );
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendTransactionCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send_transaction',
+            Event::createTransaction(),
+            'The "before_send_transaction" callback failed with exception: "test".'
+        );
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCheckInCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send_check_in',
+            Event::createCheckIn(),
+            'The "before_send_check_in" callback failed with exception: "test".'
+        );
+    }
+
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
     {
         /** @var LoggerInterface&MockObject $logger */
@@ -1000,6 +1027,28 @@ final class ClientTest extends TestCase
                                ->getClient();
 
         $client->captureEvent(Event::createCheckIn());
+    }
+
+    private function assertCallbackFailureDropsEvent(string $option, Event $event, string $message): void
+    {
+        StubLogger::$logs = [];
+        StubTransport::$events = [];
+
+        $client = ClientBuilder::create([
+            $option => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'default_integrations' => false,
+            'logger' => StubLogger::getInstance(),
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        $this->assertNull($client->captureEvent($event));
+        $this->assertEmpty(StubTransport::$events);
+        $this->assertContains([
+            'level' => 'error',
+            'message' => $message,
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void
