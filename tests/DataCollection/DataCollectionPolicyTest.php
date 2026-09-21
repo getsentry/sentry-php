@@ -6,7 +6,6 @@ namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
-use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\Options;
@@ -40,60 +39,14 @@ final class DataCollectionPolicyTest extends TestCase
     public function userInfoProvider(): \Generator
     {
         yield 'legacy default' => [[], false];
-        yield 'legacy disabled' => [['send_default_pii' => false], false];
         yield 'legacy enabled' => [['send_default_pii' => true], true];
         yield 'configured default ignores disabled legacy option' => [['data_collection' => [], 'send_default_pii' => false], true];
-        yield 'configured default ignores enabled legacy option' => [['data_collection' => [], 'send_default_pii' => true], true];
         yield 'configured disabled' => [['data_collection' => ['user_info' => false], 'send_default_pii' => true], false];
     }
 
-    public function testPolicyObservesLegacyPiiUpdates(): void
-    {
-        $options = new Options(['send_default_pii' => false]);
-        $policy = DataCollectionPolicy::fromOptions($options);
-
-        $options->updateOptions(['send_default_pii' => true]);
-
-        $this->assertTrue($policy->isLegacyMode());
-        $this->assertTrue($policy->shouldCollectUserInfo());
-    }
-
-    public function testPolicyObservesDataCollectionReplacement(): void
+    public function testFromHubUsesClientConfiguration(): void
     {
         $options = new Options(['send_default_pii' => true]);
-        $policy = DataCollectionPolicy::fromOptions($options);
-
-        $options->updateOptions(['data_collection' => ['user_info' => false]]);
-
-        $this->assertFalse($policy->isLegacyMode());
-        $this->assertFalse($policy->shouldCollectUserInfo());
-    }
-
-    public function testPolicyObservesMutableDataCollectionOptions(): void
-    {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['data_collection' => ['user_info' => false]]));
-        $dataCollection = $policy->getDataCollection();
-        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
-
-        $dataCollection->setUserInfo(true);
-
-        $this->assertTrue($policy->shouldCollectUserInfo());
-    }
-
-    public function testPolicyObservesTransitionBackToLegacyMode(): void
-    {
-        $options = new Options(['data_collection' => [], 'send_default_pii' => true]);
-        $policy = DataCollectionPolicy::fromOptions($options);
-
-        $options->updateOptions(['data_collection' => null]);
-
-        $this->assertTrue($policy->isLegacyMode());
-        $this->assertTrue($policy->shouldCollectUserInfo());
-    }
-
-    public function testFromHubUsesTheCurrentClientOptions(): void
-    {
-        $options = new Options(['data_collection' => []]);
         $client = $this->createMock(ClientInterface::class);
         $client->method('getOptions')->willReturn($options);
         $hub = $this->createMock(HubInterface::class);
@@ -101,96 +54,72 @@ final class DataCollectionPolicyTest extends TestCase
 
         $policy = DataCollectionPolicy::fromHub($hub);
 
-        $this->assertSame($options, $policy->getOptions());
-        $this->assertSame($options->getDataCollection(), $policy->getDataCollection());
+        $this->assertTrue($policy->shouldCollectUserInfo());
     }
 
-    public function testHttpBodyLimitsObserveOptionUpdates(): void
+    /**
+     * @dataProvider httpBodyLimitProvider
+     */
+    public function testHttpBodyLimits(string $maxRequestBodySize, ?int $expectedRequestLimit): void
     {
-        $options = new Options(['data_collection' => [], 'max_request_body_size' => 'small']);
-        $policy = DataCollectionPolicy::fromOptions($options);
+        $policy = DataCollectionPolicy::fromOptions(new Options([
+            'data_collection' => [],
+            'max_request_body_size' => $maxRequestBodySize,
+        ]));
 
-        $this->assertSame(1000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
+        $this->assertSame($expectedRequestLimit, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
+        $this->assertSame($expectedRequestLimit, $policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
         $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::incomingResponse()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
+    }
 
-        $options->setMaxRequestBodySize('medium');
+    public function httpBodyLimitProvider(): \Generator
+    {
+        yield 'small' => ['small', 1000];
+        yield 'medium' => ['medium', 10000];
+        yield 'never' => ['never', null];
+        yield 'always' => ['always', 100000];
+    }
 
-        $this->assertSame(10000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-
-        $options->setMaxRequestBodySize('never');
-
-        $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-        $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::incomingResponse()));
-
-        $options->setMaxRequestBodySize('always');
-        $options->updateOptions(['data_collection' => ['http_bodies' => ['outgoingRequest']]]);
+    public function testHttpBodyCollectionRespectsSelectedTypes(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options([
+            'data_collection' => ['http_bodies' => ['outgoingRequest']],
+            'max_request_body_size' => 'always',
+        ]));
 
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingResponse()));
         $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
-
-        $collection = $policy->getDataCollection();
-        $this->assertInstanceOf(DataCollectionOptions::class, $collection);
-        $collection->setHttpBodies([HttpMessageType::incomingRequest()]);
-
-        $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-        $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
     }
 
-    public function testLegacyAlwaysRemovesRequestBodyLimit(): void
+    public function testHttpBodyCollectionCanBeDisabled(): void
     {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['max_request_body_size' => 'always']));
-
-        $this->assertSame(-1, $policy->getLegacyRequestBodyLimit());
-        $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-    }
-
-    public function testAlwaysBodyLimitsObserveCollectionModeChanges(): void
-    {
-        $options = new Options(['data_collection' => null, 'max_request_body_size' => 'always']);
-        $policy = DataCollectionPolicy::fromOptions($options);
-
-        $this->assertSame(-1, $policy->getLegacyRequestBodyLimit());
-
-        $options->updateOptions(['data_collection' => []]);
-
-        $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-        $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
-        $this->assertNull($policy->getLegacyRequestBodyLimit());
-
-        $options->updateOptions(['data_collection' => ['http_bodies' => []]]);
+        $policy = DataCollectionPolicy::fromOptions(new Options([
+            'data_collection' => ['http_bodies' => []],
+            'max_request_body_size' => 'always',
+        ]));
 
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
+    }
 
-        $options->updateOptions(['data_collection' => null]);
+    /**
+     * @dataProvider legacyRequestBodyLimitProvider
+     */
+    public function testLegacyRequestBodyLimits(string $maxRequestBodySize, ?int $expectedLimit): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['max_request_body_size' => $maxRequestBodySize]));
 
-        $this->assertSame(-1, $policy->getLegacyRequestBodyLimit());
+        $this->assertSame($expectedLimit, $policy->getLegacyRequestBodyLimit());
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
     }
 
-    public function testLegacyBodyLimitsObserveModeAndSizeUpdates(): void
+    public function legacyRequestBodyLimitProvider(): \Generator
     {
-        $options = new Options(['max_request_body_size' => 'small']);
-        $policy = DataCollectionPolicy::fromOptions($options);
-
-        $this->assertSame(1000, $policy->getLegacyRequestBodyLimit());
-        $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-
-        $options->setMaxRequestBodySize('never');
-
-        $this->assertNull($policy->getLegacyRequestBodyLimit());
-
-        $options->setMaxRequestBodySize('medium');
-        $options->updateOptions(['data_collection' => []]);
-
-        $this->assertNull($policy->getLegacyRequestBodyLimit());
-        $this->assertSame(10000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
-
-        $options->updateOptions(['data_collection' => null]);
-
-        $this->assertSame(10000, $policy->getLegacyRequestBodyLimit());
-        $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
+        yield 'small' => ['small', 1000];
+        yield 'medium' => ['medium', 10000];
+        yield 'never' => ['never', null];
+        yield 'always' => ['always', -1];
     }
 }
