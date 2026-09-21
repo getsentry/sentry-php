@@ -64,7 +64,37 @@ final class DataCollectionPolicy
         return $this->getDataCollection() === null;
     }
 
-    public function getMaxHttpBodyLength(HttpMessageType $messageType): int
+    public function getHttpBodyLimit(HttpMessageType $messageType): ?int
+    {
+        $collection = $this->getDataCollection();
+        if ($collection === null || !$collection->shouldCollectHttpBody($messageType)) {
+            return null;
+        }
+
+        return $this->calculateMaxHttpBodyLength($messageType) ?: null;
+    }
+
+    public function getLegacyRequestBodyLimit(): ?int
+    {
+        if (!$this->isLegacyMode()) {
+            return null;
+        }
+
+        return $this->calculateMaxHttpBodyLength(HttpMessageType::incomingRequest()) ?: null;
+    }
+
+    public function shouldCollectUserInfo(): bool
+    {
+        $dataCollection = $this->getDataCollection();
+
+        if ($dataCollection !== null) {
+            return $dataCollection->shouldCollectUserInfo();
+        }
+
+        return $this->options !== null && $this->options->shouldSendDefaultPii();
+    }
+
+    private function calculateMaxHttpBodyLength(HttpMessageType $messageType): int
     {
         if ($this->options === null) {
             return 0;
@@ -82,35 +112,5 @@ final class DataCollectionPolicy
         }
 
         return self::MAX_HTTP_BODY_LENGTH;
-    }
-
-    public function getHttpBodyLimit(HttpMessageType $messageType): ?int
-    {
-        $collection = $this->getDataCollection();
-        if ($collection === null || !$collection->shouldCollectHttpBody($messageType)) {
-            return null;
-        }
-
-        return $this->getMaxHttpBodyLength($messageType) ?: null;
-    }
-
-    public function getLegacyRequestBodyLimit(): ?int
-    {
-        if (!$this->isLegacyMode()) {
-            return null;
-        }
-
-        return $this->getMaxHttpBodyLength(HttpMessageType::incomingRequest()) ?: null;
-    }
-
-    public function shouldCollectUserInfo(): bool
-    {
-        $dataCollection = $this->getDataCollection();
-
-        if ($dataCollection !== null) {
-            return $dataCollection->shouldCollectUserInfo();
-        }
-
-        return $this->options !== null && $this->options->shouldSendDefaultPii();
     }
 }

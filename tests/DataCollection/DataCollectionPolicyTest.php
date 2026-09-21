@@ -138,14 +138,10 @@ final class DataCollectionPolicyTest extends TestCase
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
     }
 
-    public function testLegacyAlwaysOnlyRemovesRequestBodyLimit(): void
+    public function testLegacyAlwaysRemovesRequestBodyLimit(): void
     {
         $policy = DataCollectionPolicy::fromOptions(new Options(['max_request_body_size' => 'always']));
 
-        $this->assertSame(-1, $policy->getMaxHttpBodyLength(HttpMessageType::incomingRequest()));
-        $this->assertSame(-1, $policy->getMaxHttpBodyLength(HttpMessageType::outgoingRequest()));
-        $this->assertSame(100000, $policy->getMaxHttpBodyLength(HttpMessageType::incomingResponse()));
-        $this->assertSame(100000, $policy->getMaxHttpBodyLength(HttpMessageType::outgoingResponse()));
         $this->assertSame(-1, $policy->getLegacyRequestBodyLimit());
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
     }
@@ -159,20 +155,17 @@ final class DataCollectionPolicyTest extends TestCase
 
         $options->updateOptions(['data_collection' => []]);
 
-        $this->assertSame(100000, $policy->getMaxHttpBodyLength(HttpMessageType::incomingRequest()));
         $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertSame(100000, $policy->getHttpBodyLimit(HttpMessageType::outgoingRequest()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
 
         $options->updateOptions(['data_collection' => ['http_bodies' => []]]);
 
-        $this->assertSame(100000, $policy->getMaxHttpBodyLength(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
 
         $options->updateOptions(['data_collection' => null]);
 
-        $this->assertSame(-1, $policy->getMaxHttpBodyLength(HttpMessageType::incomingRequest()));
         $this->assertSame(-1, $policy->getLegacyRequestBodyLimit());
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
     }
