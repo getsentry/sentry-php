@@ -9,7 +9,10 @@ use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
-use Sentry\ClientInterface;
+use Sentry\DataCollection\DataCollectionPolicy;
+use Sentry\DataCollection\HttpSpanDataCollector;
+use Sentry\DataCollection\HttpUrlCollector;
+use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
@@ -28,24 +31,31 @@ final class GuzzleTracingMiddleware
                 $hub = $hub ?? SentrySdk::getCurrentHub();
                 $client = $hub->getClient();
                 $parentSpan = $hub->getSpan();
+                $requestUri = $request->getUri();
 
                 $partialUri = Uri::fromParts([
-                    'scheme' => $request->getUri()->getScheme(),
-                    'host' => $request->getUri()->getHost(),
-                    'port' => $request->getUri()->getPort(),
-                    'path' => $request->getUri()->getPath(),
+                    'scheme' => $requestUri->getScheme(),
+                    'host' => $requestUri->getHost(),
+                    'port' => $requestUri->getPort(),
+                    'path' => $requestUri->getPath(),
                 ]);
 
+                $sdkOptions = $client !== null ? $client->getOptions() : null;
+                $policy = DataCollectionPolicy::fromOptions($sdkOptions);
                 $spanAndBreadcrumbData = [
                     'http.request.method' => $request->getMethod(),
                     'http.request.body.size' => $request->getBody()->getSize(),
                 ];
 
-                if ($request->getUri()->getQuery() !== '') {
-                    $spanAndBreadcrumbData['http.query'] = $request->getUri()->getQuery();
+                $spanAndBreadcrumbData += HttpSpanDataCollector::collectQueryData($policy, $requestUri->getQuery());
+                if ($requestUri->getFragment() !== '') {
+                    $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
-                if ($request->getUri()->getFragment() !== '') {
-                    $spanAndBreadcrumbData['http.fragment'] = $request->getUri()->getFragment();
+
+                $collectedUrl = (string) $partialUri;
+                if (!$policy->isLegacyMode()) {
+                    $collectedUrl = HttpUrlCollector::collect($policy, (string) $requestUri);
+                    $spanAndBreadcrumbData['url.full'] = $collectedUrl;
                 }
 
                 $childSpan = null;
@@ -53,7 +63,10 @@ final class GuzzleTracingMiddleware
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
-                    $spanContext->setData($spanAndBreadcrumbData);
+                    $spanContext->setData(array_merge(
+                        $spanAndBreadcrumbData,
+                        HttpSpanDataCollector::collectPsr7RequestData($policy, $request)
+                    ));
                     $spanContext->setOrigin('auto.http.guzzle');
                     $spanContext->setDescription($request->getMethod() . ' ' . $partialUri);
 
@@ -62,7 +75,7 @@ final class GuzzleTracingMiddleware
                     $hub->setSpan($childSpan);
                 }
 
-                if (self::shouldAttachTracingHeaders($client, $request)) {
+                if (self::shouldAttachTracingHeaders($sdkOptions, $request)) {
                     $traceParent = getTraceparent();
                     if ($traceParent !== '') {
                         $request = $request->withHeader('sentry-trace', $traceParent);
@@ -74,7 +87,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $partialUri) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $collectedUrl, $policy) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
@@ -93,21 +106,30 @@ final class GuzzleTracingMiddleware
 
                     $breadcrumbLevel = Breadcrumb::LEVEL_INFO;
 
-                    if ($response !== null) {
+                    if ($response instanceof ResponseInterface) {
+                        $statusCode = $response->getStatusCode();
                         $spanAndBreadcrumbData['http.response.body.size'] = $response->getBody()->getSize();
-                        $spanAndBreadcrumbData['http.response.status_code'] = $response->getStatusCode();
+                        $spanAndBreadcrumbData['http.response.status_code'] = $statusCode;
 
-                        if ($response->getStatusCode() >= 400 && $response->getStatusCode() < 500) {
+                        if ($statusCode >= 400 && $statusCode < 500) {
                             $breadcrumbLevel = Breadcrumb::LEVEL_WARNING;
-                        } elseif ($response->getStatusCode() >= 500) {
+                        } elseif ($statusCode >= 500) {
                             $breadcrumbLevel = Breadcrumb::LEVEL_ERROR;
                         }
                     }
 
                     if ($childSpan !== null) {
-                        if ($response !== null) {
+                        if ($response instanceof ResponseInterface) {
+                            $spanData = array_merge(
+                                $spanAndBreadcrumbData,
+                                HttpSpanDataCollector::collectPsr7ResponseData($policy, $response)
+                            );
+                            if (!$policy->isLegacyMode()) {
+                                $spanData = array_merge($spanData, $childSpan->getData());
+                            }
+
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
-                            $childSpan->setData($spanAndBreadcrumbData);
+                            $childSpan->setData($spanData);
                         } else {
                             $childSpan->setStatus(SpanStatus::internalError());
                         }
@@ -119,7 +141,7 @@ final class GuzzleTracingMiddleware
                         'http',
                         null,
                         array_merge([
-                            'url' => (string) $partialUri,
+                            'url' => $collectedUrl,
                         ], $spanAndBreadcrumbData)
                     ));
 
@@ -135,16 +157,14 @@ final class GuzzleTracingMiddleware
         };
     }
 
-    private static function shouldAttachTracingHeaders(?ClientInterface $client, RequestInterface $request): bool
+    private static function shouldAttachTracingHeaders(?Options $options, RequestInterface $request): bool
     {
-        if ($client === null) {
+        if ($options === null) {
             return false;
         }
 
-        $sdkOptions = $client->getOptions();
-
         // Check if the request destination is allow listed in the trace_propagation_targets option.
-        return $sdkOptions->getTracePropagationTargets() === null
-               || \in_array($request->getUri()->getHost(), $sdkOptions->getTracePropagationTargets());
+        return $options->getTracePropagationTargets() === null
+               || \in_array($request->getUri()->getHost(), $options->getTracePropagationTargets());
     }
 }
