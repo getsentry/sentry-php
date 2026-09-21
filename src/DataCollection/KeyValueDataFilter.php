@@ -6,6 +6,7 @@ namespace Sentry\DataCollection;
 
 /**
  * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
+ * @phpstan-type KeyValueFilterBehavior array{mode: 'denyList'|'allowList', terms: string[]}
  */
 final class KeyValueDataFilter
 {
@@ -119,7 +120,7 @@ final class KeyValueDataFilter
     /**
      * @param mixed $value
      *
-     * @phpstan-param KeyValueCollectionBehavior $behavior
+     * @phpstan-param KeyValueFilterBehavior $behavior
      *
      * @return mixed
      */
@@ -161,11 +162,11 @@ final class KeyValueDataFilter
     }
 
     /**
-     * @phpstan-param KeyValueCollectionBehavior $behavior
+     * @phpstan-param KeyValueFilterBehavior $behavior
      */
     public static function shouldFilterValue(string $key, array $behavior): bool
     {
-        if ($behavior['mode'] === 'off' || self::matchesMandatoryDenyList($key)) {
+        if (self::matchesMandatoryDenyList($key)) {
             return true;
         }
 
@@ -180,7 +181,7 @@ final class KeyValueDataFilter
      * @param mixed               $value
      * @param array<string, true> $references References on the current recursion path
      *
-     * @phpstan-param KeyValueCollectionBehavior $behavior
+     * @phpstan-param KeyValueFilterBehavior $behavior
      *
      * @return mixed
      */
@@ -226,7 +227,7 @@ final class KeyValueDataFilter
     /**
      * @param mixed $value
      *
-     * @phpstan-param KeyValueCollectionBehavior $behavior
+     * @phpstan-param KeyValueFilterBehavior $behavior
      *
      * @return mixed
      */
