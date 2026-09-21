@@ -285,6 +285,102 @@ final class FrameBuilderTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider serializedFunctionArgumentsDataProvider
+     *
+     * @param mixed $argument
+     * @param mixed $expectedArgument
+     */
+    public function testFunctionArgumentsAreSerializedBeforeFiltering($argument, $expectedArgument): void
+    {
+        $options = new Options(['data_collection' => []]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+        $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, [
+            'function' => '{closure}',
+            'args' => [$argument],
+        ]);
+
+        $this->assertSame(['param0' => $expectedArgument], $frame->getVars());
+    }
+
+    public static function serializedFunctionArgumentsDataProvider(): \Generator
+    {
+        $recursiveArray = ['name' => 'alice', 'password' => 'secret'];
+        $recursiveArray['self'] = &$recursiveArray;
+
+        yield 'recursive array' => [
+            $recursiveArray,
+            [
+                'name' => 'alice',
+                'password' => '[Filtered]',
+                'self' => [
+                    'name' => 'alice',
+                    'password' => '[Filtered]',
+                    'self' => [
+                        'name' => 'alice',
+                        'password' => '[Filtered]',
+                        'self' => 'Array of length 3',
+                    ],
+                ],
+            ],
+        ];
+
+        $recursiveObject = (object) ['name' => 'alice', 'password' => 'secret'];
+        $recursiveObject->self = $recursiveObject;
+
+        yield 'recursive object' => [
+            $recursiveObject,
+            [
+                'name' => 'alice',
+                'password' => '[Filtered]',
+                'self' => 'Object stdClass',
+            ],
+        ];
+
+        yield 'date object' => [
+            new \DateTimeImmutable('2026-01-02 03:04:05', new \DateTimeZone('UTC')),
+            'DateTimeImmutable(2026-01-02 03:04:05)',
+        ];
+    }
+
+    public function testFunctionArgumentsFilterCustomSerializerOutput(): void
+    {
+        $options = new Options([
+            'data_collection' => [],
+            'class_serializers' => [
+                \ArrayObject::class => static function (\ArrayObject $value): array {
+                    return ['name' => 'alice', 'password' => 'basad'];
+                },
+            ],
+        ]);
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+        $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, [
+            'function' => '{closure}',
+            'args' => [new \ArrayObject()],
+        ]);
+
+        $this->assertSame([
+            'param0' => [
+                'class' => \ArrayObject::class,
+                'data' => ['name' => 'alice', 'password' => '[Filtered]'],
+            ],
+        ], $frame->getVars());
+    }
+
+    public function testDisabledFunctionArgumentsSkipSerialization(): void
+    {
+        $options = new Options(['data_collection' => ['stack_frame_variables' => false]]);
+        $serializer = $this->createMock(RepresentationSerializer::class);
+        $serializer->expects($this->never())->method('representationSerialize');
+        $frameBuilder = new FrameBuilder($options, $serializer);
+        $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, [
+            'function' => '{closure}',
+            'args' => [new \stdClass()],
+        ]);
+
+        $this->assertSame([], $frame->getVars());
+    }
+
     public function testGetFunctionArgumentsWithVariadicParameters(): void
     {
         $options = new Options([]);

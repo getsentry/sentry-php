@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Util\PrefixStripper;
 
@@ -201,8 +202,21 @@ final class FrameBuilder
             }
         }
 
+        $dataCollection = $this->options->getDataCollection();
+
+        if ($dataCollection !== null && $dataCollection->getStackFrameVariables()['mode'] === 'off') {
+            return [];
+        }
+
         foreach ($argumentValues as $argumentName => $argumentValue) {
             $argumentValues[$argumentName] = $this->representationSerializer->representationSerialize($argumentValue);
+        }
+
+        if ($dataCollection !== null) {
+            $argumentValues = KeyValueDataFilter::filterKeyValueData(
+                $argumentValues,
+                $dataCollection->getStackFrameVariables()
+            ) ?? [];
         }
 
         return $argumentValues;
