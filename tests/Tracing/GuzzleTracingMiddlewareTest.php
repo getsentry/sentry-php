@@ -434,6 +434,58 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         ], $breadcrumbData);
     }
 
+    public function testTraceCollectsCookiesWhenHeadersAreDisabled(): void
+    {
+        [$spanData] = $this->traceExchange(
+            ['data_collection' => ['http_headers' => ['mode' => 'off']]],
+            new Request('GET', 'https://www.example.com', [
+                'Authorization' => 'Bearer secret',
+                'Cookie' => 'theme=dark',
+            ]),
+            new Response(200, [
+                'Content-Type' => 'application/json',
+                'Set-Cookie' => 'theme=light; Path=/',
+            ])
+        );
+
+        $this->assertSame('dark', $spanData['http.request.header.cookie.theme']);
+        $this->assertSame('light', $spanData['http.response.header.set_cookie.theme']);
+        $this->assertArrayNotHasKey('http.request.header.authorization', $spanData);
+        $this->assertArrayNotHasKey('http.response.header.content-type', $spanData);
+    }
+
+    public function testTraceUsesSeparateRequestAndResponseHeaderRules(): void
+    {
+        [$spanData] = $this->traceExchange(
+            ['data_collection' => [
+                'http_headers' => [
+                    'request' => ['mode' => 'allowList', 'terms' => ['x-request-id']],
+                    'response' => ['mode' => 'allowList', 'terms' => ['x-response-id']],
+                ],
+                'cookies' => ['mode' => 'off'],
+            ]],
+            new Request('GET', 'https://www.example.com', [
+                'X-Request-ID' => ['request-id', 'second-request-id'],
+                'X-Response-ID' => 'request-value',
+                'Cookie' => 'theme=dark',
+            ]),
+            new Response(200, [
+                'X-Request-ID' => 'response-value',
+                'X-Response-ID' => ['response-id', 'second-response-id'],
+                'Set-Cookie' => 'theme=light',
+            ])
+        );
+
+        $this->assertSame(['request-id', 'second-request-id'], $spanData['http.request.header.x-request-id']);
+        $this->assertSame(['[Filtered]'], $spanData['http.request.header.x-response-id']);
+        $this->assertSame(['[Filtered]'], $spanData['http.response.header.x-request-id']);
+        $this->assertSame(['response-id', 'second-response-id'], $spanData['http.response.header.x-response-id']);
+        $this->assertArrayNotHasKey('http.request.header.cookie', $spanData);
+        $this->assertArrayNotHasKey('http.request.header.cookie.theme', $spanData);
+        $this->assertArrayNotHasKey('http.response.header.set-cookie', $spanData);
+        $this->assertArrayNotHasKey('http.response.header.set_cookie.theme', $spanData);
+    }
+
     public function testTraceUsesConfiguredQueryFiltering(): void
     {
         [$spanData, $breadcrumbData] = $this->traceExchange(

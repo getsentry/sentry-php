@@ -10,8 +10,10 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
-use Sentry\DataCollection\HttpSpanDataCollector;
+use Sentry\DataCollection\HttpCookieCollector;
+use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpUrlCollector;
+use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -47,7 +49,11 @@ final class GuzzleTracingMiddleware
                     'http.request.body.size' => $request->getBody()->getSize(),
                 ];
 
-                $spanAndBreadcrumbData += HttpSpanDataCollector::collectQueryData($policy, $requestUri->getQuery());
+                $queryString = HttpUrlCollector::collectQueryString($policy, $requestUri->getQuery());
+                if ($queryString !== null) {
+                    $spanAndBreadcrumbData['http.query'] = $queryString;
+                }
+
                 if ($requestUri->getFragment() !== '') {
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
@@ -61,12 +67,27 @@ final class GuzzleTracingMiddleware
                 $childSpan = null;
 
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
+                    $spanData = $spanAndBreadcrumbData;
+                    $dataCollection = $policy->getDataCollection();
+                    if ($dataCollection !== null) {
+                        $headers = KeyValueDataFilter::filterHeaders($request->getHeaders(), $dataCollection->getHttpHeaders()['request']);
+                        foreach ($headers ?? [] as $name => $value) {
+                            $spanData['http.request.header.' . strtolower($name)] = $value;
+                        }
+                        $cookies = HttpCookieCollector::collectPsr7Request($dataCollection, $request);
+                        if (\is_array($cookies)) {
+                            /** @mago-ignore analysis:mixed-assignment */
+                            foreach ($cookies as $name => $value) {
+                                $spanData['http.request.header.cookie.' . $name] = $value;
+                            }
+                        } elseif ($cookies !== null) {
+                            $spanData['http.request.header.cookie'] = $cookies;
+                        }
+                    }
+
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
-                    $spanContext->setData(array_merge(
-                        $spanAndBreadcrumbData,
-                        HttpSpanDataCollector::collectPsr7RequestData($policy, $request)
-                    ));
+                    $spanContext->setData($spanData);
                     $spanContext->setOrigin('auto.http.guzzle');
                     $spanContext->setDescription($request->getMethod() . ' ' . $partialUri);
 
@@ -120,11 +141,26 @@ final class GuzzleTracingMiddleware
 
                     if ($childSpan !== null) {
                         if ($response instanceof ResponseInterface) {
-                            $spanData = array_merge(
-                                $spanAndBreadcrumbData,
-                                HttpSpanDataCollector::collectPsr7ResponseData($policy, $response)
-                            );
-                            if (!$policy->isLegacyMode()) {
+                            $spanData = $spanAndBreadcrumbData;
+                            $dataCollection = $policy->getDataCollection();
+                            if ($dataCollection !== null) {
+                                $headers = KeyValueDataFilter::filterHeaders($response->getHeaders(), $dataCollection->getHttpHeaders()['response']);
+                                foreach ($headers ?? [] as $name => $values) {
+                                    if ($values !== []) {
+                                        $spanData['http.response.header.' . strtolower((string) $name)] = $values;
+                                    }
+                                }
+
+                                $cookies = HttpCookieCollector::collectPsr7Response($dataCollection, $response);
+                                if (\is_array($cookies)) {
+                                    /** @mago-ignore analysis:mixed-assignment */
+                                    foreach ($cookies as $name => $value) {
+                                        $spanData['http.response.header.set_cookie.' . $name] = $value;
+                                    }
+                                } elseif ($cookies !== null) {
+                                    $spanData['http.response.header.set_cookie'] = $cookies;
+                                }
+
                                 $spanData = array_merge($spanData, $childSpan->getData());
                             }
 
