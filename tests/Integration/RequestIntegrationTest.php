@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Sentry\Tests\Integration;
 
 use GuzzleHttp\Psr7\ServerRequest;
-use GuzzleHttp\Psr7\UploadedFile;
+use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\ClientInterface;
+use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
 use Sentry\Integration\RequestFetcherInterface;
 use Sentry\Integration\RequestIntegration;
@@ -26,25 +27,12 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser): void
+    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser, array $integrationOptions = []): void
     {
         $event = Event::createEvent();
         $event->setUser($initialUser);
 
-        $integration = new RequestIntegration($this->createRequestFetcher($request));
-        $integration->setupOnce();
-
-        /** @var ClientInterface&MockObject $client */
-        $client = $this->createMock(ClientInterface::class);
-        $client->expects($this->once())
-            ->method('getIntegration')
-            ->willReturn($integration);
-
-        $client->expects($this->once())
-            ->method('getOptions')
-            ->willReturn(new Options($options));
-
-        SentrySdk::getCurrentHub()->bindClient($client);
+        $this->setupIntegration($request, $options, $integrationOptions);
 
         withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
             $event = $scope->applyToEvent($event);
@@ -65,6 +53,85 @@ final class RequestIntegrationTest extends TestCase
 
     public static function invokeDataProvider(): iterable
     {
+        yield 'explicit header restrictions remain active with data collection' => [
+            ['data_collection' => [], 'send_default_pii' => true],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('X-Tenant-ID', 'tenant')
+                ->withHeader('X-Forwarded-For', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'X-Tenant-ID' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                ],
+            ],
+            null,
+            null,
+            ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
+        ];
+
+        yield 'explicit empty header restrictions disable legacy sanitization' => [
+            [],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Forwarded-For', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'Authorization' => ['Bearer secret'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                ],
+            ],
+            null,
+            null,
+            ['pii_sanitize_headers' => []],
+        ];
+
+        yield 'explicit default header restrictions apply with data collection' => [
+            ['data_collection' => []],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('X-Forwarded-For', '203.0.113.7')
+                ->withHeader('X-Real-IP', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'X-Forwarded-For' => ['[Filtered]'],
+                    'X-Real-IP' => ['[Filtered]'],
+                ],
+            ],
+            null,
+            null,
+            ['pii_sanitize_headers' => RequestDataCollector::DEFAULT_PII_SANITIZE_HEADERS],
+        ];
+
+        foreach (['absent' => null, 'conflicting' => 'theme=raw', 'malformed' => 'malformed'] as $name => $cookieHeader) {
+            $request = (new ServerRequest('GET', 'https://example.com/'))
+                ->withCookieParams(['theme' => 'parsed', 'session_id' => 'secret']);
+            if ($cookieHeader !== null) {
+                $request = $request->withHeader('Cookie', $cookieHeader);
+            }
+
+            yield 'parsed cookies with ' . $name . ' header' => [
+                ['data_collection' => ['http_headers' => ['mode' => 'off']]],
+                $request,
+                [
+                    'url' => 'https://example.com/',
+                    'method' => 'GET',
+                    'cookies' => ['theme' => 'parsed', 'session_id' => '[Filtered]'],
+                ],
+                null,
+                null,
+            ];
+        }
+
         yield [
             [
                 'send_default_pii' => true,
@@ -211,27 +278,6 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
-                'send_default_pii' => false,
-                'integrations' => [
-                    new RequestIntegration(null, ['pii_sanitize_headers' => ['aUthOrIzAtIoN']]),
-                ],
-            ],
-            (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
-                ->withHeader('Authorization', 'foo'),
-            [
-                'url' => 'http://www.example.com',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Authorization' => ['[Filtered]'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
                 'max_request_body_size' => 'none',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -249,32 +295,13 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
-            [
-                'max_request_body_size' => 'never',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', '3')
-                ->withBody(Utils::streamFor('foo')),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['3'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
+        yield 'legacy request bodies use the configured limit' => [
             [
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 3))
-                ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
+                ->withBody(Utils::streamFor(str_repeat('a', 1001))),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -282,141 +309,7 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['1000'],
                 ],
-                'data' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravid',
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'small',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', (string) (10 ** 3))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['1000'],
-                ],
-                'data' => [
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'small',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', (string) (10 ** 3 + 1))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['1001'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'medium',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', (string) (10 ** 4))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['10000'],
-                ],
-                'data' => [
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'medium',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', (string) (10 ** 4 + 1))
-                ->withParsedBody([
-                    'foo' => 'foo value',
-                    'bar' => 'bar value',
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['10001'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'max_request_body_size' => 'always',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', '444')
-                ->withUploadedFiles([
-                    'foo' => [
-                        new UploadedFile('foo content', 123, \UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
-                        new UploadedFile('bar content', 321, \UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
-                    ],
-                ]),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Length' => ['444'],
-                ],
-                'data' => [
-                    'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
-                        [
-                            'client_filename' => 'bar.ext',
-                            'client_media_type' => 'application/octet-stream',
-                            'size' => 321,
-                        ],
-                    ],
-                ],
+                'data' => str_repeat('a', 1000),
             ],
             null,
             null,
@@ -453,7 +346,6 @@ final class RequestIntegrationTest extends TestCase
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Content-Length', '13')
                 ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
                 'url' => 'http://www.example.com/foo',
@@ -461,33 +353,113 @@ final class RequestIntegrationTest extends TestCase
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Type' => ['application/json'],
-                    'Content-Length' => ['13'],
-                ],
-                'data' => [
-                    'foo' => 'bar',
                 ],
             ],
             null,
             null,
         ];
 
-        yield [
+        yield 'data collection can disable all incoming request data' => [
             [
-                'max_request_body_size' => 'always',
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'off'],
+                    'http_headers' => ['request' => ['mode' => 'off']],
+                    'http_bodies' => [],
+                    'url_query_params' => ['mode' => 'off'],
+                ],
             ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Type', 'application/json')
-                ->withBody(Utils::streamFor('{"foo":"bar"}')),
+            (new ServerRequest('POST', 'http://www.example.com/foo?token=secret', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams(['session_id' => 'secret'])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+            ],
+            UserDataBag::createFromUserIdentifier('explicit-user'),
+            UserDataBag::createFromUserIdentifier('explicit-user'),
+        ];
+
+        yield 'data collection applies per-category filtering' => [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'cookies' => ['mode' => 'allowList', 'terms' => ['theme']],
+                    'http_headers' => ['request' => ['mode' => 'allowList', 'terms' => ['x-request-id']]],
+                    'http_bodies' => [],
+                    'url_query_params' => ['mode' => 'denyList', 'terms' => ['page']],
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com/foo?token=secret&page=5'))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Request-Id', 'request-id'),
+            [
+                'url' => 'http://www.example.com/foo?token=[Filtered]&page=[Filtered]',
+                'method' => 'GET',
+                'query_string' => 'token=[Filtered]&page=[Filtered]',
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
                 'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Type' => ['application/json'],
+                    'Host' => ['[Filtered]'],
+                    'Authorization' => ['[Filtered]'],
+                    'X-Request-Id' => ['request-id'],
                 ],
             ],
             null,
             null,
+        ];
+
+        yield 'data collection defaults filter sensitive request data' => [
+            [
+                'data_collection' => [],
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://user:password@www.example.com/foo?api%5Ftoken=secret&q=a%20b%26c', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withCookieParams([
+                    'session_id' => 'secret',
+                    'theme' => 'dark',
+                ])
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('Cookie', 'session_id=secret; theme=dark')
+                ->withHeader('Set-Cookie', 'theme=light')
+                ->withHeader('X-Forwarded-For', '203.0.113.7')
+                ->withHeader('Content-Length', '100')
+                ->withParsedBody([
+                    'password' => 'secret',
+                    'user' => [
+                        'api_token' => 'secret',
+                        'name' => 'alice',
+                    ],
+                ]),
+            [
+                'url' => 'http://www.example.com/foo?api%5Ftoken=[Filtered]&q=a%20b%26c',
+                'method' => 'POST',
+                'query_string' => 'api%5Ftoken=[Filtered]&q=a%20b%26c',
+                'env' => [
+                    'REMOTE_ADDR' => '127.0.0.1',
+                ],
+                'cookies' => [
+                    'session_id' => '[Filtered]',
+                    'theme' => 'dark',
+                ],
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                    'Content-Length' => ['100'],
+                ],
+                'data' => ['password' => '[Filtered]', 'user' => ['api_token' => '[Filtered]', 'name' => 'alice']],
+            ],
+            null,
+            UserDataBag::createFromUserIpAddress('127.0.0.1'),
         ];
 
         yield [
@@ -505,6 +477,173 @@ final class RequestIntegrationTest extends TestCase
             null,
             null,
         ];
+    }
+
+    /**
+     * @dataProvider explicitRequestDataProvider
+     */
+    public function testExplicitRequestFieldsArePreserved(array $options, array $initialRequest, array $expectedRequest): void
+    {
+        $request = (new ServerRequest('POST', 'https://automatic.example/?token=automatic'))
+            ->withHeader('Content-Length', '20')
+            ->withHeader('Authorization', 'automatic')
+            ->withCookieParams(['session_id' => 'automatic'])
+            ->withParsedBody(['password' => 'automatic']);
+
+        $event = Event::createEvent();
+        $event->setRequest($initialRequest);
+
+        $this->setupIntegration($request, $options);
+
+        withScope(function (Scope $scope) use ($event, $expectedRequest): void {
+            $event = $scope->applyToEvent($event);
+
+            $this->assertNotNull($event);
+            $this->assertSame($expectedRequest, $event->getRequest());
+            $this->assertNull($event->getUser());
+        });
+    }
+
+    public static function explicitRequestDataProvider(): iterable
+    {
+        $explicitRequest = [
+            'url' => 'https://manual.example/?token=explicit',
+            'query_string' => 'token=explicit',
+            'headers' => ['Authorization' => ['explicit']],
+            'cookies' => ['session_id' => 'explicit'],
+            'data' => ['password' => 'explicit'],
+            'env' => ['CUSTOM' => 'explicit'],
+            'custom' => 'explicit',
+        ];
+        $expectedExplicitRequest = [
+            'url' => 'https://manual.example/?token=explicit',
+            'query_string' => 'token=explicit',
+            'headers' => ['Authorization' => ['explicit']],
+            'cookies' => ['session_id' => 'explicit'],
+            'data' => ['password' => 'explicit'],
+            'env' => ['CUSTOM' => 'explicit'],
+            'custom' => 'explicit',
+            'method' => 'POST',
+        ];
+        $emptyRequest = [
+            'url' => '',
+            'query_string' => null,
+            'headers' => [],
+            'cookies' => null,
+            'data' => [],
+            'env' => [],
+        ];
+        $expectedEmptyRequest = [
+            'url' => '',
+            'query_string' => null,
+            'headers' => [],
+            'cookies' => null,
+            'data' => [],
+            'env' => [],
+            'method' => 'POST',
+        ];
+
+        yield 'legacy with explicit values' => [
+            ['max_request_body_size' => 'always'],
+            $explicitRequest,
+            $expectedExplicitRequest,
+        ];
+
+        yield 'legacy with empty values' => [
+            ['max_request_body_size' => 'always'],
+            $emptyRequest,
+            $expectedEmptyRequest,
+        ];
+
+        yield 'default data collection with explicit values' => [
+            [
+                'data_collection' => [],
+                'max_request_body_size' => 'always',
+            ],
+            $explicitRequest,
+            $expectedExplicitRequest,
+        ];
+
+        yield 'default data collection with empty values' => [
+            [
+                'data_collection' => [],
+                'max_request_body_size' => 'always',
+            ],
+            $emptyRequest,
+            $expectedEmptyRequest,
+        ];
+
+        yield 'disabled data collection with explicit values' => [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'http_headers' => ['mode' => 'off'],
+                    'cookies' => ['mode' => 'off'],
+                    'url_query_params' => ['mode' => 'off'],
+                    'http_bodies' => [],
+                ],
+                'max_request_body_size' => 'always',
+            ],
+            $explicitRequest,
+            $expectedExplicitRequest,
+        ];
+
+        yield 'disabled data collection with empty values' => [
+            [
+                'data_collection' => [
+                    'user_info' => false,
+                    'http_headers' => ['mode' => 'off'],
+                    'cookies' => ['mode' => 'off'],
+                    'url_query_params' => ['mode' => 'off'],
+                    'http_bodies' => [],
+                ],
+                'max_request_body_size' => 'always',
+            ],
+            $emptyRequest,
+            $expectedEmptyRequest,
+        ];
+    }
+
+    public function testExplicitNullBodySkipsAutomaticBodyCollection(): void
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getUri')->willReturn(new Uri('https://example.com/'));
+        $request->method('getMethod')->willReturn('POST');
+        $request->method('getHeaderLine')->with('Content-Length')->willReturn('20');
+        $request->expects($this->never())->method('getParsedBody');
+        $request->expects($this->never())->method('getUploadedFiles');
+        $request->expects($this->never())->method('getBody');
+
+        $this->setupIntegration($request, ['data_collection' => [], 'max_request_body_size' => 'always']);
+
+        $event = Event::createEvent();
+        $event->setRequest(['data' => null]);
+
+        withScope(function (Scope $scope) use ($event): void {
+            $event = $scope->applyToEvent($event);
+
+            $this->assertNotNull($event);
+            $this->assertArrayHasKey('data', $event->getRequest());
+            $this->assertNull($event->getRequest()['data']);
+        });
+    }
+
+    private function setupIntegration(ServerRequestInterface $request, array $options, array $integrationOptions = []): void
+    {
+        $integration = new RequestIntegration($this->createRequestFetcher($request), $integrationOptions);
+        $integration->setupOnce();
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getIntegration')
+            ->willReturn($integration);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options($options));
+
+        SentrySdk::getCurrentHub()->bindClient($client);
     }
 
     private function createRequestFetcher(ServerRequestInterface $request): RequestFetcherInterface
