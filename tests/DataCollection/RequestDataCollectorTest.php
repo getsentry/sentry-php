@@ -262,6 +262,14 @@ final class RequestDataCollectorTest extends TestCase
         $this->assertNull($collector->collectHeaders(['X-Request-Id' => ['request-id']]));
     }
 
+    public function testNullCookiesAndHeadersAreNotCollected()
+    {
+        $collector = $this->collector([]);
+
+        $this->assertNull($collector->collectCookies(null));
+        $this->assertNull($collector->collectHeaders(null));
+    }
+
     private function legacyCollector(bool $sendDefaultPii): RequestDataCollector
     {
         $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => $sendDefaultPii]));
