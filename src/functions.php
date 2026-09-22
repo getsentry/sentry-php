@@ -517,12 +517,17 @@ function addFeatureFlag(string $name, bool $result): void
     });
 }
 
-function addAttachment(Attachment $attachment): void
+/**
+ * Adds an attachment to the current scope. For large attachments, it might be helpful
+ * to use the SDK Sidecar Transport: https://docs.sentry.io/platforms/php/agent/
+ */
+function addAttachment(Attachment $attachment): bool
 {
-    $hub = SentrySdk::getCurrentHub();
-    if (method_exists($hub, 'addAttachment')) {
-        $hub->addAttachment($attachment);
-    }
+    $returnValue = false;
+    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($attachment, &$returnValue) {
+        $returnValue = $scope->addAttachment($attachment);
+    });
+    return $returnValue;
 }
 
 /**
