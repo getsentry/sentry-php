@@ -11,7 +11,6 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpCookieCollector;
-use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Options;
