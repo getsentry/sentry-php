@@ -13,31 +13,72 @@ final class HttpCookieCollector
     /**
      * @param array<array-key, mixed> $cookies PHP/PSR-7 cookie parameters
      *
-     * @return array<array-key, mixed>|null
+     * @return array<array-key, mixed>|null `null` if cookies are not collected
      */
-    public static function collect(DataCollectionOptions $options, array $cookies): ?array
+    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, array $cookies): ?array
     {
-        return KeyValueDataFilter::filterKeyValueData($cookies, $options->getCookies());
+        $dataCollection = $policy->getDataCollection();
+        if ($dataCollection === null) {
+            return self::shouldCollectLegacyCookies($policy, $type) ? $cookies : null;
+        }
+
+        return (new KeyValueDataFilter($dataCollection->getCookies()))->filterKeyValueData($cookies);
     }
 
     /**
-     * @param iterable<array{string, mixed}> $cookies Parsed cookie name/value pairs
+     * @param array<int, array{string, mixed}> $cookies
      *
-     * @return array<int, array{string, mixed}>|null
+     * @return array<int, array{string, mixed}>|null `null` if cookies are not collected
      */
-    public static function collectPairs(DataCollectionOptions $options, iterable $cookies): ?array
+    public static function collectPairs(DataCollectionPolicy $policy, HttpMessageType $type, array $cookies): ?array
     {
-        $behavior = $options->getCookies();
-        if ($behavior['mode'] === 'off') {
+        $dataCollection = $policy->getDataCollection();
+        if ($dataCollection === null) {
+            if (!self::shouldCollectLegacyCookies($policy, $type)) {
+                return null;
+            }
+
+            return $cookies;
+        }
+
+        return (new KeyValueDataFilter($dataCollection->getCookies()))->filterPairs($cookies);
+    }
+
+    /**
+     * @param array<int, array{string, mixed}>|null $cookies
+     *
+     * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
+     *                                             could not be parsed
+     */
+    public static function collectGroupedPairs(DataCollectionPolicy $policy, HttpMessageType $type, ?array $cookies)
+    {
+        $filtered = self::collectPairs($policy, $type, $cookies ?? []);
+        if ($filtered === null) {
             return null;
         }
 
-        $filtered = [];
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($cookies as [$name, $value]) {
-            $filtered[] = [$name, KeyValueDataFilter::filterKeyValue($name, $value, $behavior)];
+        if ($cookies === null) {
+            return KeyValueDataFilter::FILTERED_VALUE;
         }
 
-        return $filtered;
+        $grouped = [];
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($filtered as [$name, $value]) {
+            $grouped[$name][] = $value;
+        }
+
+        foreach ($grouped as $name => $values) {
+            $grouped[$name] = \count($values) === 1 ? $values[0] : $values;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * The legacy options only collected the cookies of incoming requests, and only with `send_default_pii`.
+     */
+    private static function shouldCollectLegacyCookies(DataCollectionPolicy $policy, HttpMessageType $type): bool
+    {
+        return $type === HttpMessageType::incomingRequest() && $policy->shouldCollectUserInfo();
     }
 }
