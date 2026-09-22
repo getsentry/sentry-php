@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Integration;
 
 use GuzzleHttp\Psr7\ServerRequest;
+use GuzzleHttp\Psr7\UploadedFile;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -278,7 +279,47 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'send_default_pii' => false,
+                'integrations' => [
+                    new RequestIntegration(null, ['pii_sanitize_headers' => ['aUthOrIzAtIoN']]),
+                ],
+            ],
+            (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
+                ->withHeader('Authorization', 'foo'),
+            [
+                'url' => 'http://www.example.com',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Authorization' => ['[Filtered]'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
                 'max_request_body_size' => 'none',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['3'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'never',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', '3')
@@ -317,6 +358,140 @@ final class RequestIntegrationTest extends TestCase
 
         yield [
             [
+                'max_request_body_size' => 'small',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', (string) (10 ** 3))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['1000'],
+                ],
+                'data' => [
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'small',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', (string) (10 ** 3 + 1))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['1001'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'medium',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', (string) (10 ** 4))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['10000'],
+                ],
+                'data' => [
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'medium',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', (string) (10 ** 4 + 1))
+                ->withParsedBody([
+                    'foo' => 'foo value',
+                    'bar' => 'bar value',
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['10001'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Length', '444')
+                ->withUploadedFiles([
+                    'foo' => [
+                        new UploadedFile('foo content', 123, \UPLOAD_ERR_OK, 'foo.ext', 'application/text'),
+                        new UploadedFile('bar content', 321, \UPLOAD_ERR_OK, 'bar.ext', 'application/octet-stream'),
+                    ],
+                ]),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Length' => ['444'],
+                ],
+                'data' => [
+                    'foo' => [
+                        [
+                            'client_filename' => 'foo.ext',
+                            'client_media_type' => 'application/text',
+                            'size' => 123,
+                        ],
+                        [
+                            'client_filename' => 'bar.ext',
+                            'client_media_type' => 'application/octet-stream',
+                            'size' => 321,
+                        ],
+                    ],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
@@ -334,6 +509,30 @@ final class RequestIntegrationTest extends TestCase
                 'data' => [
                     '1' => 'foo',
                     'bar' => 'baz',
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield [
+            [
+                'max_request_body_size' => 'always',
+            ],
+            (new ServerRequest('POST', 'http://www.example.com/foo'))
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Content-Length', '13')
+                ->withBody(Utils::streamFor('{"foo":"bar"}')),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'POST',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    'Content-Type' => ['application/json'],
+                    'Content-Length' => ['13'],
+                ],
+                'data' => [
+                    'foo' => 'bar',
                 ],
             ],
             null,
