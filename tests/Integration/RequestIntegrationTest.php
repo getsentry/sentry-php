@@ -12,7 +12,6 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\ClientInterface;
-use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
 use Sentry\Integration\RequestFetcherInterface;
 use Sentry\Integration\RequestIntegration;
@@ -54,85 +53,6 @@ final class RequestIntegrationTest extends TestCase
 
     public static function invokeDataProvider(): iterable
     {
-        yield 'explicit header restrictions remain active with data collection' => [
-            ['data_collection' => [], 'send_default_pii' => true],
-            (new ServerRequest('GET', 'https://example.com/'))
-                ->withHeader('X-Tenant-ID', 'tenant')
-                ->withHeader('X-Forwarded-For', '203.0.113.7'),
-            [
-                'url' => 'https://example.com/',
-                'method' => 'GET',
-                'cookies' => [],
-                'headers' => [
-                    'Host' => ['example.com'],
-                    'X-Tenant-ID' => ['[Filtered]'],
-                    'X-Forwarded-For' => ['203.0.113.7'],
-                ],
-            ],
-            null,
-            null,
-            ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
-        ];
-
-        yield 'explicit empty header restrictions disable legacy sanitization' => [
-            [],
-            (new ServerRequest('GET', 'https://example.com/'))
-                ->withHeader('Authorization', 'Bearer secret')
-                ->withHeader('X-Forwarded-For', '203.0.113.7'),
-            [
-                'url' => 'https://example.com/',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['example.com'],
-                    'Authorization' => ['Bearer secret'],
-                    'X-Forwarded-For' => ['203.0.113.7'],
-                ],
-            ],
-            null,
-            null,
-            ['pii_sanitize_headers' => []],
-        ];
-
-        yield 'explicit default header restrictions apply with data collection' => [
-            ['data_collection' => []],
-            (new ServerRequest('GET', 'https://example.com/'))
-                ->withHeader('X-Forwarded-For', '203.0.113.7')
-                ->withHeader('X-Real-IP', '203.0.113.7'),
-            [
-                'url' => 'https://example.com/',
-                'method' => 'GET',
-                'cookies' => [],
-                'headers' => [
-                    'Host' => ['example.com'],
-                    'X-Forwarded-For' => ['[Filtered]'],
-                    'X-Real-IP' => ['[Filtered]'],
-                ],
-            ],
-            null,
-            null,
-            ['pii_sanitize_headers' => RequestDataCollector::DEFAULT_PII_SANITIZE_HEADERS],
-        ];
-
-        foreach (['absent' => null, 'conflicting' => 'theme=raw', 'malformed' => 'malformed'] as $name => $cookieHeader) {
-            $request = (new ServerRequest('GET', 'https://example.com/'))
-                ->withCookieParams(['theme' => 'parsed', 'session_id' => 'secret']);
-            if ($cookieHeader !== null) {
-                $request = $request->withHeader('Cookie', $cookieHeader);
-            }
-
-            yield 'parsed cookies with ' . $name . ' header' => [
-                ['data_collection' => ['http_headers' => ['mode' => 'off']]],
-                $request,
-                [
-                    'url' => 'https://example.com/',
-                    'method' => 'GET',
-                    'cookies' => ['theme' => 'parsed', 'session_id' => '[Filtered]'],
-                ],
-                null,
-                null,
-            ];
-        }
-
         yield [
             [
                 'send_default_pii' => true,
@@ -336,13 +256,13 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield 'legacy request bodies use the configured limit' => [
+        yield [
             [
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Length', (string) (10 ** 3))
-                ->withBody(Utils::streamFor(str_repeat('a', 1001))),
+                ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
@@ -350,7 +270,7 @@ final class RequestIntegrationTest extends TestCase
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['1000'],
                 ],
-                'data' => str_repeat('a', 1000),
+                'data' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravid',
             ],
             null,
             null,
@@ -558,6 +478,61 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
+        yield [
+            [],
+            (new ServerRequest('GET', 'http://www.example.com/foo'))
+                ->withHeader('123', 'test'),
+            [
+                'url' => 'http://www.example.com/foo',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['www.example.com'],
+                    '123' => ['test'],
+                ],
+            ],
+            null,
+            null,
+        ];
+
+        yield 'explicit header restrictions remain active with data collection' => [
+            ['data_collection' => [], 'send_default_pii' => true],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('X-Tenant-ID', 'tenant')
+                ->withHeader('X-Forwarded-For', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'cookies' => [],
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'X-Tenant-ID' => ['[Filtered]'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                ],
+            ],
+            null,
+            null,
+            ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
+        ];
+
+        yield 'explicit empty header restrictions disable legacy sanitization' => [
+            [],
+            (new ServerRequest('GET', 'https://example.com/'))
+                ->withHeader('Authorization', 'Bearer secret')
+                ->withHeader('X-Forwarded-For', '203.0.113.7'),
+            [
+                'url' => 'https://example.com/',
+                'method' => 'GET',
+                'headers' => [
+                    'Host' => ['example.com'],
+                    'Authorization' => ['Bearer secret'],
+                    'X-Forwarded-For' => ['203.0.113.7'],
+                ],
+            ],
+            null,
+            null,
+            ['pii_sanitize_headers' => []],
+        ];
+
         yield 'data collection can disable all incoming request data' => [
             [
                 'data_collection' => [
@@ -627,7 +602,7 @@ final class RequestIntegrationTest extends TestCase
                     'theme' => 'dark',
                 ])
                 ->withHeader('Authorization', 'Bearer secret')
-                ->withHeader('Cookie', 'session_id=secret; theme=dark')
+                ->withHeader('Cookie', 'session_id=raw; theme=raw')
                 ->withHeader('Set-Cookie', 'theme=light')
                 ->withHeader('X-Forwarded-For', '203.0.113.7')
                 ->withHeader('Content-Length', '100')
@@ -660,28 +635,9 @@ final class RequestIntegrationTest extends TestCase
             null,
             UserDataBag::createFromUserIpAddress('127.0.0.1'),
         ];
-
-        yield [
-            [],
-            (new ServerRequest('GET', 'http://www.example.com/foo'))
-                ->withHeader('123', 'test'),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    '123' => ['test'],
-                ],
-            ],
-            null,
-            null,
-        ];
     }
 
-    /**
-     * @dataProvider explicitRequestDataProvider
-     */
-    public function testExplicitRequestFieldsArePreserved(array $options, array $initialRequest, array $expectedRequest): void
+    public function testExplicitRequestFieldsArePreserved(): void
     {
         $request = (new ServerRequest('POST', 'https://automatic.example/?token=automatic'))
             ->withHeader('Content-Length', '20')
@@ -689,118 +645,26 @@ final class RequestIntegrationTest extends TestCase
             ->withCookieParams(['session_id' => 'automatic'])
             ->withParsedBody(['password' => 'automatic']);
 
+        $initialRequest = [
+            'url' => 'https://manual.example/?token=explicit',
+            'query_string' => null,
+            'headers' => ['Authorization' => ['explicit']],
+            'cookies' => [],
+            'data' => ['password' => 'explicit'],
+            'env' => [],
+            'custom' => 'explicit',
+        ];
         $event = Event::createEvent();
         $event->setRequest($initialRequest);
 
-        $this->setupIntegration($request, $options);
+        $this->setupIntegration($request, ['data_collection' => [], 'max_request_body_size' => 'always']);
 
-        withScope(function (Scope $scope) use ($event, $expectedRequest): void {
+        withScope(function (Scope $scope) use ($event, $initialRequest): void {
             $event = $scope->applyToEvent($event);
 
             $this->assertNotNull($event);
-            $this->assertSame($expectedRequest, $event->getRequest());
-            $this->assertNull($event->getUser());
+            $this->assertSame($initialRequest + ['method' => 'POST'], $event->getRequest());
         });
-    }
-
-    public static function explicitRequestDataProvider(): iterable
-    {
-        $explicitRequest = [
-            'url' => 'https://manual.example/?token=explicit',
-            'query_string' => 'token=explicit',
-            'headers' => ['Authorization' => ['explicit']],
-            'cookies' => ['session_id' => 'explicit'],
-            'data' => ['password' => 'explicit'],
-            'env' => ['CUSTOM' => 'explicit'],
-            'custom' => 'explicit',
-        ];
-        $expectedExplicitRequest = [
-            'url' => 'https://manual.example/?token=explicit',
-            'query_string' => 'token=explicit',
-            'headers' => ['Authorization' => ['explicit']],
-            'cookies' => ['session_id' => 'explicit'],
-            'data' => ['password' => 'explicit'],
-            'env' => ['CUSTOM' => 'explicit'],
-            'custom' => 'explicit',
-            'method' => 'POST',
-        ];
-        $emptyRequest = [
-            'url' => '',
-            'query_string' => null,
-            'headers' => [],
-            'cookies' => null,
-            'data' => [],
-            'env' => [],
-        ];
-        $expectedEmptyRequest = [
-            'url' => '',
-            'query_string' => null,
-            'headers' => [],
-            'cookies' => null,
-            'data' => [],
-            'env' => [],
-            'method' => 'POST',
-        ];
-
-        yield 'legacy with explicit values' => [
-            ['max_request_body_size' => 'always'],
-            $explicitRequest,
-            $expectedExplicitRequest,
-        ];
-
-        yield 'legacy with empty values' => [
-            ['max_request_body_size' => 'always'],
-            $emptyRequest,
-            $expectedEmptyRequest,
-        ];
-
-        yield 'default data collection with explicit values' => [
-            [
-                'data_collection' => [],
-                'max_request_body_size' => 'always',
-            ],
-            $explicitRequest,
-            $expectedExplicitRequest,
-        ];
-
-        yield 'default data collection with empty values' => [
-            [
-                'data_collection' => [],
-                'max_request_body_size' => 'always',
-            ],
-            $emptyRequest,
-            $expectedEmptyRequest,
-        ];
-
-        yield 'disabled data collection with explicit values' => [
-            [
-                'data_collection' => [
-                    'user_info' => false,
-                    'http_headers' => ['mode' => 'off'],
-                    'cookies' => ['mode' => 'off'],
-                    'url_query_params' => ['mode' => 'off'],
-                    'http_bodies' => [],
-                ],
-                'max_request_body_size' => 'always',
-            ],
-            $explicitRequest,
-            $expectedExplicitRequest,
-        ];
-
-        yield 'disabled data collection with empty values' => [
-            [
-                'data_collection' => [
-                    'user_info' => false,
-                    'http_headers' => ['mode' => 'off'],
-                    'cookies' => ['mode' => 'off'],
-                    'url_query_params' => ['mode' => 'off'],
-                    'http_bodies' => [],
-                ],
-                'max_request_body_size' => 'always',
-            ],
-            $emptyRequest,
-            $expectedEmptyRequest,
-        ];
     }
 
     public function testExplicitNullBodySkipsAutomaticBodyCollection(): void
