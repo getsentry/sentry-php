@@ -95,8 +95,9 @@ final class HttpCookieCollectorTest extends TestCase
         ], HttpCookieCollector::collectPairs($options, $cookies));
     }
 
-    public function testDictionariesAndPairsApplyTheSameFilteringRules(): void
+    public function testDictionariesAndPairsApplyTheSameDenyListRules(): void
     {
+        $options = new DataCollectionOptions(['cookies' => ['mode' => 'denyList']]);
         $resource = fopen('php://memory', 'r+');
         $object = new class {
             public function __toString(): string
@@ -113,27 +114,74 @@ final class HttpCookieCollectorTest extends TestCase
             'float' => \INF,
             'empty' => null,
         ];
-        $pairs = [];
-        foreach ($cookies as $name => $value) {
-            $pairs[] = [$name, $value];
-        }
+        $pairs = [
+            ['theme', 'dark'],
+            ['preferences', ['name' => 'Alice', 'password' => 'secret', 0 => 'numeric']],
+            ['session_id', 'secret'],
+            ['object', $object],
+            ['resource', $resource],
+            ['float', \INF],
+            ['empty', null],
+        ];
+        $expected = [
+            'theme' => 'dark',
+            'preferences' => ['name' => 'Alice', 'password' => '[Filtered]', 0 => 'numeric'],
+            'session_id' => '[Filtered]',
+            'object' => '[Filtered]',
+            'resource' => '[Filtered]',
+            'float' => '[Filtered]',
+            'empty' => null,
+        ];
 
         try {
-            foreach ([['mode' => 'denyList'], ['mode' => 'allowList', 'terms' => ['theme', 'preferences', 'name', '0', 'object', 'resource', 'float', 'empty']]] as $behavior) {
-                $options = new DataCollectionOptions(['cookies' => $behavior]);
-                $expected = [
-                    'theme' => 'dark',
-                    'preferences' => ['name' => 'Alice', 'password' => '[Filtered]', 0 => 'numeric'],
-                    'session_id' => '[Filtered]',
-                    'object' => '[Filtered]',
-                    'resource' => '[Filtered]',
-                    'float' => '[Filtered]',
-                    'empty' => null,
-                ];
+            $this->assertSame($expected, HttpCookieCollector::collect($options, $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, $pairs), 1, 0));
+        } finally {
+            fclose($resource);
+        }
+    }
 
-                $this->assertSame($expected, HttpCookieCollector::collect($options, $cookies));
-                $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, $pairs), 1, 0));
+    public function testDictionariesAndPairsApplyTheSameAllowListRules(): void
+    {
+        $options = new DataCollectionOptions(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'preferences', 'name', '0', 'object', 'resource', 'float', 'empty']]]);
+        $resource = fopen('php://memory', 'r+');
+        $object = new class {
+            public function __toString(): string
+            {
+                throw new \LogicException('Cookie filtering must not invoke application code.');
             }
+        };
+        $cookies = [
+            'theme' => 'dark',
+            'preferences' => ['name' => 'Alice', 'password' => 'secret', 0 => 'numeric'],
+            'session_id' => 'secret',
+            'object' => $object,
+            'resource' => $resource,
+            'float' => \INF,
+            'empty' => null,
+        ];
+        $pairs = [
+            ['theme', 'dark'],
+            ['preferences', ['name' => 'Alice', 'password' => 'secret', 0 => 'numeric']],
+            ['session_id', 'secret'],
+            ['object', $object],
+            ['resource', $resource],
+            ['float', \INF],
+            ['empty', null],
+        ];
+        $expected = [
+            'theme' => 'dark',
+            'preferences' => ['name' => 'Alice', 'password' => '[Filtered]', 0 => 'numeric'],
+            'session_id' => '[Filtered]',
+            'object' => '[Filtered]',
+            'resource' => '[Filtered]',
+            'float' => '[Filtered]',
+            'empty' => null,
+        ];
+
+        try {
+            $this->assertSame($expected, HttpCookieCollector::collect($options, $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, $pairs), 1, 0));
         } finally {
             fclose($resource);
         }
