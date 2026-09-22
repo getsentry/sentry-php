@@ -262,7 +262,7 @@ final class RequestDataCollectorTest extends TestCase
         $this->assertNull($collector->collectHeaders(['X-Request-Id' => ['request-id']]));
     }
 
-    public function testNullCookiesAndHeadersAreNotCollected()
+    public function testNullCookiesAndHeadersAreNotCollected(): void
     {
         $collector = $this->collector([]);
 
