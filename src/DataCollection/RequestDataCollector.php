@@ -29,7 +29,7 @@ final class RequestDataCollector
     private $piiSanitizeHeaders;
 
     /**
-     * @param string[]|null $piiSanitizeHeaders Case-insensitive header names; null uses the defaults for the active mode
+     * @param string[]|null $piiSanitizeHeaders
      */
     public function __construct(DataCollectionPolicy $policy, ?array $piiSanitizeHeaders = null)
     {
