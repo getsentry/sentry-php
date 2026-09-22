@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment\Attachment;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
@@ -514,6 +515,14 @@ function addFeatureFlag(string $name, bool $result): void
     SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
         $scope->addFeatureFlag($name, $result);
     });
+}
+
+function addAttachment(Attachment $attachment): void
+{
+    $hub = SentrySdk::getCurrentHub();
+    if (method_exists($hub, 'addAttachment')) {
+        $hub->addAttachment($attachment);
+    }
 }
 
 /**
