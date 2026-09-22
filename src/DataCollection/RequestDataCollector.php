@@ -72,12 +72,15 @@ final class RequestDataCollector
     }
 
     /**
-     * @param array<array-key, mixed> $cookies
+     * @param array<array-key, mixed>|null $cookies
      *
      * @return array<array-key, mixed>|null
      */
-    public function collectCookies(array $cookies): ?array
+    public function collectCookies(?array $cookies): ?array
     {
+        if ($cookies === null) {
+            return null;
+        }
         $dataCollection = $this->policy->getDataCollection();
         if ($dataCollection === null) {
             if ($this->policy->shouldCollectUserInfo()) {
@@ -91,12 +94,15 @@ final class RequestDataCollector
     }
 
     /**
-     * @param array<array-key, string[]> $headers
+     * @param array<array-key, string[]>|null $headers
      *
      * @return array<array-key, string[]>|null
      */
-    public function collectHeaders(array $headers): ?array
+    public function collectHeaders(?array $headers): ?array
     {
+        if ($headers === null) {
+            return null;
+        }
         $dataCollection = $this->policy->getDataCollection();
         if ($dataCollection === null) {
             if ($this->policy->shouldCollectUserInfo()) {
