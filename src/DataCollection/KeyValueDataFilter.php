@@ -68,11 +68,14 @@ final class KeyValueDataFilter
     /**
      * @template TKey of array-key
      *
-     * @param array<TKey, mixed> $data
+     * @param array<TKey, mixed>            $data
+     * @param (callable(mixed): mixed)|null $serializeValue Converts top-level values before they are filtered. It is
+     *                                                      only called for keys that are not filtered, so sensitive
+     *                                                      values are never passed to it.
      *
      * @return array<TKey, mixed>|null
      */
-    public function filterKeyValueData(array $data): ?array
+    public function filterKeyValueData(array $data, ?callable $serializeValue = null): ?array
     {
         if (!$this->isEnabled()) {
             return null;
@@ -82,7 +85,14 @@ final class KeyValueDataFilter
 
         /** @mago-ignore analysis:mixed-assignment */
         foreach ($data as $key => $value) {
-            $filtered[$key] = $this->filterValue((string) $key, $value);
+            $name = (string) $key;
+
+            if ($serializeValue !== null && !$this->shouldFilter($name)) {
+                /** @mago-ignore analysis:mixed-assignment */
+                $value = $serializeValue($value);
+            }
+
+            $filtered[$key] = $this->filterValue($name, $value);
         }
 
         return $filtered;

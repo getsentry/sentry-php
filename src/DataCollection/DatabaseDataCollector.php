@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-use Sentry\Options;
 use Sentry\Serializer\Serializer;
 
 final class DatabaseDataCollector
@@ -22,29 +21,17 @@ final class DatabaseDataCollector
      */
     public static function collectQueryData(DataCollectionPolicy $policy, array $bindings): array
     {
-        if (!$policy->shouldCollectDatabaseQueryData() || $bindings === []) {
+        $options = $policy->getOptions();
+        if ($options === null || $bindings === [] || !$policy->shouldCollectDatabaseQueryData()) {
             return [];
         }
 
-        /** @var Options $options */
-        $options = $policy->getOptions();
-        $serializer = new Serializer($options);
+        $filter = new KeyValueDataFilter(KeyValueCollectionBehavior::denyList());
         $data = [];
 
         /** @mago-ignore analysis:mixed-assignment */
-        foreach ($bindings as $key => $value) {
-            $key = (string) $key;
-            if (KeyValueDataFilter::shouldFilterValue($key, KeyValueDataFilter::DEFAULT_BEHAVIOR)) {
-                $data[self::ATTRIBUTE_PREFIX . $key] = KeyValueDataFilter::FILTERED_VALUE;
-
-                continue;
-            }
-
-            $data[self::ATTRIBUTE_PREFIX . $key] = KeyValueDataFilter::filterKeyValue(
-                $key,
-                $serializer->serialize($value),
-                KeyValueDataFilter::DEFAULT_BEHAVIOR
-            );
+        foreach ($filter->filterKeyValueData($bindings, [new Serializer($options), 'serialize']) ?? [] as $key => $value) {
+            $data[self::ATTRIBUTE_PREFIX . $key] = $value;
         }
 
         return $data;
