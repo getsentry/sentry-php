@@ -5,43 +5,72 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Uri;
+use Psr\Http\Message\UriInterface;
 
-/**
- * @internal
- */
 final class HttpUrlCollector
 {
     private function __construct()
     {
     }
 
-    public static function collect(DataCollectionPolicy $policy, string $url): string
+    /**
+     * @param UriInterface|string $url
+     *
+     * @return string|null `null` if the URL is not collected or cannot be parsed
+     */
+    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, $url): ?string
     {
+        // The legacy options only collected the full URL of incoming requests
         if ($policy->isLegacyMode()) {
-            return $url;
+            return $type === HttpMessageType::incomingRequest() ? (string) $url : null;
         }
 
-        $uri = new Uri($url);
-        $query = self::collectQueryString($policy, (string) parse_url($url, \PHP_URL_QUERY));
-        $result = (string) $uri->withUserInfo('')->withQuery('')->withFragment('');
+        if ($url instanceof UriInterface) {
+            $uri = $url;
+            $queryString = $url->getQuery();
+            $fragment = $url->getFragment();
+        } else {
+            try {
+                $uri = new Uri($url);
+            } catch (\InvalidArgumentException $exception) {
+                return null;
+            }
 
-        if ($query !== null && $query !== '') {
-            $result .= '?' . $query;
+            // Take the query string and fragment as they appear in the URL, the parsed URI encodes them
+            $queryString = (string) parse_url($url, \PHP_URL_QUERY);
+            $fragment = (string) parse_url($url, \PHP_URL_FRAGMENT);
         }
 
-        return $result;
+        $userInfo = $uri->getUserInfo();
+        $authority = $uri->withUserInfo('')->getAuthority();
+
+        if ($userInfo !== '') {
+            $authority = (strpos($userInfo, ':') === false ? '[Filtered]' : '[Filtered]:[Filtered]') . '@' . $authority;
+        }
+
+        return Uri::composeComponents(
+            $uri->getScheme(),
+            $authority,
+            $uri->getPath(),
+            self::collectQueryString($policy, $queryString),
+            $fragment
+        );
     }
 
+    /**
+     * @return string|null `null` if the query string is empty or not collected
+     */
     public static function collectQueryString(DataCollectionPolicy $policy, string $queryString): ?string
     {
         if ($queryString === '') {
             return null;
         }
 
-        $collection = $policy->getDataCollection();
+        $dataCollection = $policy->getDataCollection();
+        if ($dataCollection === null) {
+            return $queryString;
+        }
 
-        return $collection === null
-            ? $queryString
-            : KeyValueDataFilter::filterQueryString($queryString, $collection->getUrlQueryParams());
+        return (new KeyValueDataFilter($dataCollection->getUrlQueryParams()))->filterQueryString($queryString);
     }
 }
