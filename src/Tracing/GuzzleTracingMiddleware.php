@@ -11,8 +11,9 @@ use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpCookieCollector;
+use Sentry\DataCollection\HttpHeaderCollector;
+use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpUrlCollector;
-use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
@@ -57,32 +58,18 @@ final class GuzzleTracingMiddleware
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
 
-                $collectedUrl = (string) $partialUri;
-                if (!$policy->isLegacyMode()) {
-                    $collectedUrl = HttpUrlCollector::collect($policy, (string) $requestUri);
-                    $spanAndBreadcrumbData['url.full'] = $collectedUrl;
+                $fullUrl = HttpUrlCollector::collect($policy, HttpMessageType::outgoingRequest(), $requestUri);
+                if ($fullUrl !== null) {
+                    $spanAndBreadcrumbData['url.full'] = $fullUrl;
                 }
 
+                $breadcrumbUrl = $fullUrl ?? (string) $partialUri;
                 $childSpan = null;
 
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
                     $spanData = $spanAndBreadcrumbData;
-                    $dataCollection = $policy->getDataCollection();
-                    if ($dataCollection !== null) {
-                        $headers = KeyValueDataFilter::filterHeaders($request->getHeaders(), $dataCollection->getHttpHeaders()['request']);
-                        foreach ($headers ?? [] as $name => $value) {
-                            $spanData['http.request.header.' . strtolower($name)] = $value;
-                        }
-                        $cookies = HttpCookieCollector::collectPsr7Request($dataCollection, $request);
-                        if (\is_array($cookies)) {
-                            /** @mago-ignore analysis:mixed-assignment */
-                            foreach ($cookies as $name => $value) {
-                                $spanData['http.request.header.cookie.' . $name] = $value;
-                            }
-                        } elseif ($cookies !== null) {
-                            $spanData['http.request.header.cookie'] = $cookies;
-                        }
-                    }
+                    self::addHeaderData($spanData, 'http.request.header', HttpHeaderCollector::collect($policy, HttpMessageType::outgoingRequest(), $request->getHeaders()));
+                    self::addCookieData($spanData, 'http.request.header.cookie', HttpCookieCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
 
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
@@ -107,7 +94,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $collectedUrl, $policy) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $breadcrumbUrl, $policy) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
@@ -141,30 +128,11 @@ final class GuzzleTracingMiddleware
                     if ($childSpan !== null) {
                         if ($response instanceof ResponseInterface) {
                             $spanData = $spanAndBreadcrumbData;
-                            $dataCollection = $policy->getDataCollection();
-                            if ($dataCollection !== null) {
-                                $headers = KeyValueDataFilter::filterHeaders($response->getHeaders(), $dataCollection->getHttpHeaders()['response']);
-                                foreach ($headers ?? [] as $name => $values) {
-                                    if ($values !== []) {
-                                        $spanData['http.response.header.' . strtolower((string) $name)] = $values;
-                                    }
-                                }
-
-                                $cookies = HttpCookieCollector::collectPsr7Response($dataCollection, $response);
-                                if (\is_array($cookies)) {
-                                    /** @mago-ignore analysis:mixed-assignment */
-                                    foreach ($cookies as $name => $value) {
-                                        $spanData['http.response.header.set_cookie.' . $name] = $value;
-                                    }
-                                } elseif ($cookies !== null) {
-                                    $spanData['http.response.header.set_cookie'] = $cookies;
-                                }
-
-                                $spanData = array_merge($spanData, $childSpan->getData());
-                            }
+                            self::addHeaderData($spanData, 'http.response.header', HttpHeaderCollector::collect($policy, HttpMessageType::incomingResponse(), $response->getHeaders()));
+                            self::addCookieData($spanData, 'http.response.header.set_cookie', HttpCookieCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
 
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
-                            $childSpan->setData($spanData);
+                            $childSpan->setData(array_merge($spanData, $childSpan->getData()));
                         } else {
                             $childSpan->setStatus(SpanStatus::internalError());
                         }
@@ -176,7 +144,7 @@ final class GuzzleTracingMiddleware
                         'http',
                         null,
                         array_merge([
-                            'url' => $collectedUrl,
+                            'url' => $breadcrumbUrl,
                         ], $spanAndBreadcrumbData)
                     ));
 
@@ -190,6 +158,35 @@ final class GuzzleTracingMiddleware
                 return $handler($request, $options)->then($handlerPromiseCallback, $handlerPromiseCallback);
             };
         };
+    }
+
+    /**
+     * @param array<string, mixed>            $data
+     * @param array<array-key, string[]>|null $headers
+     */
+    private static function addHeaderData(array &$data, string $prefix, ?array $headers): void
+    {
+        foreach ($headers ?? [] as $name => $values) {
+            $data[$prefix . '.' . strtolower((string) $name)] = $values;
+        }
+    }
+
+    /**
+     * @param array<string, mixed>                $data
+     * @param array<array-key, mixed>|string|null $cookies Cookies grouped by name, or `[Filtered]` if they could not be parsed
+     */
+    private static function addCookieData(array &$data, string $prefix, $cookies): void
+    {
+        if (\is_string($cookies)) {
+            $data[$prefix] = $cookies;
+
+            return;
+        }
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($cookies ?? [] as $name => $value) {
+            $data[$prefix . '.' . $name] = $value;
+        }
     }
 
     private static function shouldAttachTracingHeaders(?Options $options, RequestInterface $request): bool
