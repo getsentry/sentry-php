@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\DataCollection;
 
+use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
 use Sentry\DataCollection\DataCollectionPolicy;
+use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\Options;
 
@@ -17,8 +19,8 @@ final class HttpUrlCollectorTest extends TestCase
         $url = 'https://user:password@example.com/a?tag[]=one&tag[]=two&q=a+b&q=a%20b&%74oken=secret&flag#fragment';
 
         $this->assertSame(
-            'https://example.com/a?tag[]=one&tag[]=two&q=a+b&q=a%20b&%74oken=[Filtered]&flag',
-            HttpUrlCollector::collect($policy, $url)
+            'https://[Filtered]:[Filtered]@example.com/a?tag[]=one&tag[]=two&q=a+b&q=a%20b&%74oken=[Filtered]&flag#fragment',
+            HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $url)
         );
     }
 
@@ -28,20 +30,20 @@ final class HttpUrlCollectorTest extends TestCase
         $policy = DataCollectionPolicy::fromOptions($options);
         $url = 'https://user:password@example.com/?token=secret&q=a+b#fragment';
 
-        $this->assertSame($url, HttpUrlCollector::collect($policy, $url));
+        $this->assertSame($url, HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $url));
 
         $options->updateOptions(['data_collection' => []]);
 
-        $this->assertSame('https://example.com/?token=[Filtered]&q=a+b', HttpUrlCollector::collect($policy, $url));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/?token=[Filtered]&q=a+b#fragment', HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $url));
 
         $options->updateOptions(['data_collection' => ['url_query_params' => ['mode' => 'off']]]);
 
-        $this->assertSame('https://example.com/', HttpUrlCollector::collect($policy, $url));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/#fragment', HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $url));
         $this->assertNull(HttpUrlCollector::collectQueryString($policy, 'q=a+b'));
 
         $options->updateOptions(['data_collection' => null]);
 
-        $this->assertSame($url, HttpUrlCollector::collect($policy, $url));
+        $this->assertSame($url, HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $url));
         $this->assertSame('q=a+b', HttpUrlCollector::collectQueryString($policy, 'q=a+b'));
     }
 
@@ -72,7 +74,7 @@ final class HttpUrlCollectorTest extends TestCase
      */
     public function testCollectUrl(string $url, string $expected): void
     {
-        $this->assertSame($expected, HttpUrlCollector::collect($this->policy([]), $url));
+        $this->assertSame($expected, HttpUrlCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), $url));
     }
 
     /**
@@ -80,8 +82,48 @@ final class HttpUrlCollectorTest extends TestCase
      */
     public function urlDataProvider(): \Generator
     {
-        yield 'remove credentials without a query' => ['https://user:password@example.com/a', 'https://example.com/a'];
+        yield 'replace credentials without a query' => ['https://user:password@example.com/a', 'https://[Filtered]:[Filtered]@example.com/a'];
+        yield 'replace a user name without a password' => ['https://user@example.com:8080/a', 'https://[Filtered]@example.com:8080/a'];
+        yield 'keep URLs without credentials' => ['https://example.com:8080/a#fragment', 'https://example.com:8080/a#fragment'];
+        yield 'keep the fragment as it appears' => ['https://example.com/a#tab[]=one', 'https://example.com/a#tab[]=one'];
         yield 'relative URL' => ['/a?token=secret', '/a?token=[Filtered]'];
+        yield 'query string that is falsy' => ['https://example.com/?0', 'https://example.com/?0'];
+        yield 'empty query string' => ['https://example.com/?', 'https://example.com/'];
+    }
+
+    public function testUriInstancesAreCollected(): void
+    {
+        $uri = new Uri('https://user:password@example.com/a?token=secret&q=1#fragment');
+
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a?token=[Filtered]&q=1#fragment', HttpUrlCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), $uri));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a#fragment', HttpUrlCollector::collect($this->policy(['url_query_params' => ['mode' => 'off']]), HttpMessageType::incomingRequest(), $uri));
+    }
+
+    public function testLegacyModeReturnsUriInstancesUnchanged(): void
+    {
+        $url = 'https://user:password@example.com/a?token=secret#fragment';
+
+        $this->assertSame($url, HttpUrlCollector::collect($this->policy(null), HttpMessageType::incomingRequest(), new Uri($url)));
+    }
+
+    /**
+     * @dataProvider legacyUncollectedTypeProvider
+     */
+    public function testLegacyModeOnlyCollectsTheUrlOfIncomingRequests(HttpMessageType $type): void
+    {
+        $this->assertNull(HttpUrlCollector::collect($this->policy(null), $type, 'https://example.com/a?token=secret'));
+    }
+
+    public static function legacyUncollectedTypeProvider(): \Generator
+    {
+        yield 'outgoing request' => [HttpMessageType::outgoingRequest()];
+        yield 'incoming response' => [HttpMessageType::incomingResponse()];
+        yield 'outgoing response' => [HttpMessageType::outgoingResponse()];
+    }
+
+    public function testUrlsThatCannotBeParsedAreNotCollected(): void
+    {
+        $this->assertNull(HttpUrlCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), 'http://exa mple.com:99999/'));
     }
 
     /**
