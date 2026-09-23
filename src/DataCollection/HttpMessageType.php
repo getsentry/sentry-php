@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
-final class HttpBodyType
+final class HttpMessageType
 {
     public const INCOMING_REQUEST = 'incomingRequest';
     public const OUTGOING_REQUEST = 'outgoingRequest';
@@ -57,7 +57,7 @@ final class HttpBodyType
     {
         if (!isset(self::$instances[$value])) {
             if (!\in_array($value, self::TYPES, true)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid HTTP body type "%s".', $value));
+                throw new \InvalidArgumentException(\sprintf('Invalid HTTP message type "%s".', $value));
             }
 
             self::$instances[$value] = new self($value);
