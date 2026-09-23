@@ -693,7 +693,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         [$spanData, $breadcrumbData] = $this->traceExchange(
             ['data_collection' => []],
             $request,
-            new RequestException('Service unavailable', $request, $response)
+            RequestException::create($request, $response)
         );
 
         $this->assertSame(['name' => 'Alice', 'password' => '[Filtered]'], $spanData['http.request.body.data']);
