@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
 final class HttpCookieCollector
 {
     private function __construct()
@@ -27,6 +30,32 @@ final class HttpCookieCollector
         }
 
         return (new KeyValueDataFilter($dataCollection->getCookies()))->filterKeyValueData($cookies);
+    }
+
+    /**
+     * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
+     *                                             could not be parsed
+     */
+    public static function collectPsr7Request(DataCollectionPolicy $policy, HttpMessageType $type, RequestInterface $request)
+    {
+        if (!self::shouldCollect($policy, $type)) {
+            return null;
+        }
+
+        return self::collectGroupedPairs($policy, $type, HttpCookieParser::parseCookieHeaders($request->getHeader('Cookie')));
+    }
+
+    /**
+     * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
+     *                                             could not be parsed
+     */
+    public static function collectPsr7Response(DataCollectionPolicy $policy, HttpMessageType $type, ResponseInterface $response)
+    {
+        if (!self::shouldCollect($policy, $type)) {
+            return null;
+        }
+
+        return self::collectGroupedPairs($policy, $type, HttpCookieParser::parseSetCookieHeaders($response->getHeader('Set-Cookie')));
     }
 
     /**
@@ -76,6 +105,16 @@ final class HttpCookieCollector
         }
 
         return $grouped;
+    }
+
+    private static function shouldCollect(DataCollectionPolicy $policy, HttpMessageType $type): bool
+    {
+        $dataCollection = $policy->getDataCollection();
+        if ($dataCollection === null) {
+            return self::shouldCollectLegacyCookies($policy, $type);
+        }
+
+        return !$dataCollection->getCookies()->isOff();
     }
 
     /**

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\DataCollection;
 
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpCookieCollector;
 use Sentry\DataCollection\HttpMessageType;
@@ -25,6 +29,69 @@ final class HttpCookieCollectorTest extends TestCase
             'empty' => '',
             'preferences' => ['name' => 'Alice', 'password' => 'secret'],
         ]));
+    }
+
+    public function testPsr7RequestCookiesAreParsedAndFiltered(): void
+    {
+        $request = new Request('GET', '/', ['Cookie' => 'theme=dark; session_id=secret; theme=light']);
+
+        $this->assertSame([
+            'theme' => 'light',
+            'session_id' => '[Filtered]',
+        ], HttpCookieCollector::collectPsr7Request($this->policy(), HttpMessageType::outgoingRequest(), $request));
+    }
+
+    public function testPsr7ResponseCookiesAreParsedAndGrouped(): void
+    {
+        $response = new Response(200, ['Set-Cookie' => [
+            'theme=dark; Path=/',
+            'theme=light; Path=/settings',
+            'session_id=secret; HttpOnly',
+        ]]);
+
+        $this->assertSame([
+            'theme' => ['dark', 'light'],
+            'session_id' => '[Filtered]',
+        ], HttpCookieCollector::collectPsr7Response($this->policy(), HttpMessageType::incomingResponse(), $response));
+    }
+
+    public function testDisabledPsr7RequestCookiesAreNotRead(): void
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getHeader');
+
+        $this->assertNull(HttpCookieCollector::collectPsr7Request($this->policy(['cookies' => ['mode' => 'off']]), HttpMessageType::outgoingRequest(), $request));
+    }
+
+    public function testDisabledPsr7ResponseCookiesAreNotRead(): void
+    {
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->never())->method('getHeader');
+
+        $this->assertNull(HttpCookieCollector::collectPsr7Response($this->policy(['cookies' => ['mode' => 'off']]), HttpMessageType::incomingResponse(), $response));
+    }
+
+    public function testLegacyModeWithPiiCollectsIncomingPsr7RequestCookiesUnfiltered(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
+        $request = new Request('GET', '/', ['Cookie' => 'theme=dark; session_id=secret']);
+
+        $this->assertSame(
+            ['theme' => 'dark', 'session_id' => 'secret'],
+            HttpCookieCollector::collectPsr7Request($policy, HttpMessageType::incomingRequest(), $request)
+        );
+    }
+
+    public function testLegacyModeDoesNotReadOutgoingPsr7Cookies(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
+        $request = $this->createMock(RequestInterface::class);
+        $request->expects($this->never())->method('getHeader');
+        $response = $this->createMock(ResponseInterface::class);
+        $response->expects($this->never())->method('getHeader');
+
+        $this->assertNull(HttpCookieCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
+        $this->assertNull(HttpCookieCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
     }
 
     public function testDisabledCollectionDoesNotCollectCookies(): void
