@@ -57,6 +57,8 @@ final class HttpBodyCollector
             return null;
         }
 
+        $isParsedBody = !\is_string($body);
+
         if (\is_string($body)) {
             if (\strlen($body) > $limit) {
                 return null;
@@ -68,7 +70,36 @@ final class HttpBodyCollector
             }
         }
 
-        return KeyValueDataFilter::filterKeyValueData($body, KeyValueDataFilter::DEFAULT_BEHAVIOR);
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($body);
+
+        // We might receive a body that is already parsed, to determine length we have to serialize it ourselves
+        // and then count it
+        if ($isParsedBody && $length === null) {
+            $encodedLength = self::getEncodedLength($filtered);
+
+            // A body that cannot be encoded is treated like a body that cannot be parsed
+            if ($encodedLength === null) {
+                return KeyValueDataFilter::FILTERED_VALUE;
+            }
+
+            if ($encodedLength > $limit) {
+                return null;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * @param array<array-key, mixed>|null $data
+     */
+    private static function getEncodedLength(?array $data): ?int
+    {
+        try {
+            return \strlen(JSON::encode($data));
+        } catch (JsonException $exception) {
+            return null;
+        }
     }
 
     /**
