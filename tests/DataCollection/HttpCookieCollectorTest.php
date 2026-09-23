@@ -208,6 +208,16 @@ final class HttpCookieCollectorTest extends TestCase
         }
     }
 
+    public function testUnavailableCookiesAreNotCollected(): void
+    {
+        $this->assertNull(HttpCookieCollector::collect($this->policy(), HttpMessageType::incomingRequest(), null));
+        $this->assertNull(HttpCookieCollector::collect(
+            DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true])),
+            HttpMessageType::incomingRequest(),
+            null
+        ));
+    }
+
     public function testLegacyModeWithoutPiiDoesNotCollectCookies(): void
     {
         $policy = DataCollectionPolicy::fromOptions(new Options());

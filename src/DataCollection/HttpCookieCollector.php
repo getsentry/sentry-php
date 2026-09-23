@@ -11,12 +11,16 @@ final class HttpCookieCollector
     }
 
     /**
-     * @param array<array-key, mixed> $cookies PHP/PSR-7 cookie parameters
+     * @param array<array-key, mixed>|null $cookies
      *
-     * @return array<array-key, mixed>|null `null` if cookies are not collected
+     * @return array<array-key, mixed>|null `null` if cookies are not collected or not available
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, array $cookies): ?array
+    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, ?array $cookies): ?array
     {
+        if ($cookies === null) {
+            return null;
+        }
+
         $dataCollection = $policy->getDataCollection();
         if ($dataCollection === null) {
             return self::shouldCollectLegacyCookies($policy, $type) ? $cookies : null;
