@@ -66,6 +66,8 @@ final class Options
             $options['strict_trace_continuation'] = $options['strict_trace_propagation'];
         }
 
+        // Make the logger available to normalizers of nested options such as `data_collection` while resolving
+        $this->options = ['logger' => $this->getLoggerOrNullLogger($options)];
         $this->options = $this->resolver->resolve($options, $this->getLoggerOrNullLogger($options));
 
         if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
@@ -372,12 +374,27 @@ final class Options
         return $this->updateOptions(['context_lines' => $contextLines]);
     }
 
+    /**
+     * Gets the data collection options. `null` means the legacy options such as
+     * `send_default_pii` are used instead.
+     */
     public function getDataCollection(): ?DataCollectionOptions
     {
         /** @var DataCollectionOptions|null $dataCollection */
         $dataCollection = $this->options['data_collection'];
 
         return $dataCollection;
+    }
+
+    /**
+     * Sets the data collection options. Any value other than `null` opts into the
+     * data collection options and ignores the legacy options such as `send_default_pii`.
+     *
+     * @param DataCollectionOptions|array<string, mixed>|null $dataCollection
+     */
+    public function setDataCollection($dataCollection): self
+    {
+        return $this->updateOptions(['data_collection' => $dataCollection]);
     }
 
     /**
@@ -1455,7 +1472,7 @@ final class Options
             return $value;
         }
 
-        return new DataCollectionOptions($value);
+        return new DataCollectionOptions($value, $this->getLoggerOrNullLogger());
     }
 
     /**
