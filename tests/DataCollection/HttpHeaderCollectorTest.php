@@ -173,6 +173,13 @@ final class HttpHeaderCollectorTest extends TestCase
         $this->assertNull(HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']], ['x-tenant-id']));
     }
 
+    public function testUnavailableHeadersAreNotCollected(): void
+    {
+        $this->assertNull(HttpHeaderCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), null));
+        $this->assertNull(HttpHeaderCollector::collect($this->legacyPolicy(true), HttpMessageType::incomingRequest(), null));
+        $this->assertNull(HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), null, ['x-tenant-id']));
+    }
+
     private function legacyPolicy(bool $sendDefaultPii): DataCollectionPolicy
     {
         return DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => $sendDefaultPii]));
