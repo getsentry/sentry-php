@@ -23,13 +23,17 @@ final class HttpHeaderCollector
     }
 
     /**
-     * @param array<array-key, string[]> $headers
-     * @param string[]|null              $piiSanitizeHeaders
+     * @param array<array-key, string[]>|null $headers
+     * @param string[]|null                   $piiSanitizeHeaders
      *
-     * @return array<array-key, string[]>|null `null` if headers are not collected
+     * @return array<array-key, string[]>|null `null` if headers are not collected or not available
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, array $headers, ?array $piiSanitizeHeaders = null): ?array
+    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, ?array $headers, ?array $piiSanitizeHeaders = null): ?array
     {
+        if ($headers === null) {
+            return null;
+        }
+
         $dataCollection = $policy->getDataCollection();
         if ($dataCollection === null) {
             return self::collectLegacy($policy, $type, $headers, $piiSanitizeHeaders);
