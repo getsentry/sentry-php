@@ -10,6 +10,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
+use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpCookieCollector;
 use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpMessageType;
@@ -71,6 +72,11 @@ final class GuzzleTracingMiddleware
                     self::addHeaderData($spanData, 'http.request.header', HttpHeaderCollector::collect($policy, HttpMessageType::outgoingRequest(), $request->getHeaders()));
                     self::addCookieData($spanData, 'http.request.header.cookie', HttpCookieCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
 
+                    $requestBody = HttpBodyCollector::collectPsr7Message($policy, HttpMessageType::outgoingRequest(), $request);
+                    if ($requestBody !== null) {
+                        $spanData['http.request.body.data'] = $requestBody;
+                    }
+
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
                     $spanContext->setData($spanData);
@@ -130,6 +136,11 @@ final class GuzzleTracingMiddleware
                             $spanData = $spanAndBreadcrumbData;
                             self::addHeaderData($spanData, 'http.response.header', HttpHeaderCollector::collect($policy, HttpMessageType::incomingResponse(), $response->getHeaders()));
                             self::addCookieData($spanData, 'http.response.header.set_cookie', HttpCookieCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
+
+                            $responseBody = HttpBodyCollector::collectPsr7Message($policy, HttpMessageType::incomingResponse(), $response);
+                            if ($responseBody !== null) {
+                                $spanData['http.response.body.data'] = $responseBody;
+                            }
 
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             $childSpan->setData(array_merge($spanData, $childSpan->getData()));
