@@ -5,26 +5,27 @@ declare(strict_types=1);
 namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\DataCollection\KeyValueCollectionBehavior;
 use Sentry\DataCollection\KeyValueDataFilter;
 
 final class KeyValueDataFilterTest extends TestCase
 {
     public function testFilterKeyValueDataReturnsNullWhenCollectionIsOff(): void
     {
-        $behavior = ['mode' => 'off', 'terms' => ['public']];
+        $behavior = KeyValueCollectionBehavior::off();
 
-        $this->assertNull(KeyValueDataFilter::filterKeyValueData([
+        $this->assertNull((new KeyValueDataFilter($behavior))->filterKeyValueData([
             'authorization' => 'secret',
             'public' => 'visible',
-        ], $behavior));
+        ]));
     }
 
     public function testFilterKeyValueDataAppliesMandatoryDenyList(): void
     {
-        $filtered = KeyValueDataFilter::filterKeyValueData([
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData([
             'AUTHORIZATION' => 'secret',
             'public' => 'visible',
-        ], KeyValueDataFilter::DEFAULT_BEHAVIOR);
+        ]);
 
         $this->assertSame([
             'AUTHORIZATION' => '[Filtered]',
@@ -34,13 +35,13 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterKeyValueDataCombinesMandatoryAndCustomDenyListTerms(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['custom-field']];
+        $behavior = KeyValueCollectionBehavior::denyList(['custom-field']);
 
-        $filtered = KeyValueDataFilter::filterKeyValueData([
+        $filtered = (new KeyValueDataFilter($behavior))->filterKeyValueData([
             'authorization' => 'secret',
             'custom-field' => 'private',
             'public' => 'visible',
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'authorization' => '[Filtered]',
@@ -51,12 +52,12 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterKeyValueDataAppliesAllowList(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['theme']];
+        $behavior = KeyValueCollectionBehavior::allowList(['theme']);
 
-        $filtered = KeyValueDataFilter::filterKeyValueData([
+        $filtered = (new KeyValueDataFilter($behavior))->filterKeyValueData([
             'theme' => 'dark',
             'tracking_id' => '12345',
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'theme' => 'dark',
@@ -66,25 +67,25 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterKeyValueDataAllowListCannotOverrideMandatoryDenyList(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['authorization']];
+        $behavior = KeyValueCollectionBehavior::allowList(['authorization']);
 
-        $filtered = KeyValueDataFilter::filterKeyValueData([
+        $filtered = (new KeyValueDataFilter($behavior))->filterKeyValueData([
             'authorization' => 'secret',
-        ], $behavior);
+        ]);
 
         $this->assertSame(['authorization' => '[Filtered]'], $filtered);
     }
 
     public function testFilterKeyValueDataFiltersNestedData(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => []];
+        $behavior = KeyValueCollectionBehavior::denyList();
 
-        $filtered = KeyValueDataFilter::filterKeyValueData([
+        $filtered = (new KeyValueDataFilter($behavior))->filterKeyValueData([
             'user' => [
                 'password' => 'secret',
                 'name' => 'alice',
             ],
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'user' => [
@@ -101,8 +102,8 @@ final class KeyValueDataFilterTest extends TestCase
             'profile' => ['enabled' => false, 'count' => 0, 'ratio' => 1.5, 'name' => ''],
         ];
 
-        $this->assertSame($data, KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR));
-        $this->assertSame([], KeyValueDataFilter::filterKeyValueData([], KeyValueDataFilter::DEFAULT_BEHAVIOR));
+        $this->assertSame($data, (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data));
+        $this->assertSame([], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData([]));
     }
 
     public function testFilteringDetachesReferences(): void
@@ -111,7 +112,7 @@ final class KeyValueDataFilterTest extends TestCase
         $profile = ['name' => &$name];
         $data = ['profile' => &$profile];
 
-        $filtered = KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR);
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data);
         $name = 'Bob';
         $profile['extra'] = 'changed';
 
@@ -142,7 +143,7 @@ final class KeyValueDataFilterTest extends TestCase
 
         try {
             $expected = array_fill_keys(array_keys($data), '[Filtered]');
-            $this->assertSame($expected, KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR));
+            $this->assertSame($expected, (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data));
             $this->assertIsResource($resource);
         } finally {
             fclose($resource);
@@ -162,8 +163,8 @@ final class KeyValueDataFilterTest extends TestCase
             $expected = ['child' => $expected];
         }
 
-        $this->assertSame($expected, KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR));
-        $this->assertSame($expected['child'], KeyValueDataFilter::filterKeyValue('child', $data['child'], KeyValueDataFilter::DEFAULT_BEHAVIOR));
+        $this->assertSame($expected, (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data));
+        $this->assertSame([['child', $expected['child']]], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterPairs([['child', $data['child']]]));
     }
 
     public function depthLimitProvider(): \Generator
@@ -188,8 +189,8 @@ final class KeyValueDataFilterTest extends TestCase
             $expected = ['name' => 'Alice', 'password' => '[Filtered]', 'child' => $expected];
         }
 
-        $this->assertSame($expected, KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR));
-        $this->assertSame($expected['child'], KeyValueDataFilter::filterKeyValue('child', $data['child'], KeyValueDataFilter::DEFAULT_BEHAVIOR));
+        $this->assertSame($expected, (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data));
+        $this->assertSame([['child', $expected['child']]], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterPairs([['child', $data['child']]]));
         $this->assertSame('secret', $data['child']['password']);
     }
 
@@ -206,8 +207,8 @@ final class KeyValueDataFilterTest extends TestCase
             $expected = ['name' => 'Alice', 'password' => '[Filtered]', 'child' => $expected];
         }
 
-        $this->assertSame($expected, KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR));
-        $this->assertSame($expected['child'], KeyValueDataFilter::filterKeyValue('child', $data['child'], KeyValueDataFilter::DEFAULT_BEHAVIOR));
+        $this->assertSame($expected, (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data));
+        $this->assertSame([['child', $expected['child']]], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterPairs([['child', $data['child']]]));
         $this->assertSame('secret', $data['child']['password']);
     }
 
@@ -221,8 +222,8 @@ final class KeyValueDataFilterTest extends TestCase
         $first['child'] = &$second;
         $expected = ['name' => 'Alice', 'child' => [['name' => 'Alice', 'child' => '[Filtered]']]];
 
-        $this->assertSame(['body' => $expected], KeyValueDataFilter::filterKeyValueData(['body' => $first], KeyValueDataFilter::DEFAULT_BEHAVIOR));
-        $this->assertSame($expected, KeyValueDataFilter::filterKeyValue('body', $first, KeyValueDataFilter::DEFAULT_BEHAVIOR));
+        $this->assertSame(['body' => $expected], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData(['body' => $first]));
+        $this->assertSame([['body', $expected]], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterPairs([['body', $first]]));
     }
 
     public function testFilteringPreservesSharedReferencesInSeparateBranches(): void
@@ -231,7 +232,7 @@ final class KeyValueDataFilterTest extends TestCase
         $shared = ['profile' => &$profile];
         $data = ['first' => &$shared, 'second' => &$shared, 'third' => ['profile' => &$profile]];
         $expected = array_fill_keys(['first', 'second', 'third'], ['profile' => ['name' => 'Alice', 'password' => '[Filtered]']]);
-        $filtered = KeyValueDataFilter::filterKeyValueData($data, KeyValueDataFilter::DEFAULT_BEHAVIOR);
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData($data);
         $profile['name'] = 'Bob';
 
         $this->assertSame($expected, $filtered);
@@ -242,38 +243,38 @@ final class KeyValueDataFilterTest extends TestCase
     {
         $this->assertSame([
             'items' => [0 => '[Filtered]', 1 => ['name' => 'Alice', 'password' => '[Filtered]']],
-        ], KeyValueDataFilter::filterKeyValueData([
+        ], (new KeyValueDataFilter(KeyValueCollectionBehavior::allowList(['items', '1', 'name', 'password'])))->filterKeyValueData([
             'items' => ['first', ['name' => 'Alice', 'password' => 'secret']],
-        ], ['mode' => 'allowList', 'terms' => ['items', '1', 'name', 'password']]));
+        ]));
     }
 
     public function testNamedValuesUseTheSameRulesAsDictionaries(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['theme', 'session']];
+        $behavior = KeyValueCollectionBehavior::allowList(['theme', 'session']);
 
-        $this->assertSame('dark', KeyValueDataFilter::filterKeyValue('theme', 'dark', $behavior));
-        $this->assertSame('[Filtered]', KeyValueDataFilter::filterKeyValue('session', 'secret', $behavior));
-        $this->assertSame(['[Filtered]', '[Filtered]'], KeyValueDataFilter::filterKeyValue('theme', ['dark', 'light'], $behavior));
+        $this->assertSame([['theme', 'dark']], (new KeyValueDataFilter($behavior))->filterPairs([['theme', 'dark']]));
+        $this->assertSame([['session', '[Filtered]']], (new KeyValueDataFilter($behavior))->filterPairs([['session', 'secret']]));
+        $this->assertSame([['theme', ['[Filtered]', '[Filtered]']]], (new KeyValueDataFilter($behavior))->filterPairs([['theme', ['dark', 'light']]]));
     }
 
     public function testFilterHeadersReturnsNullWhenCollectionIsOff(): void
     {
-        $behavior = ['mode' => 'off', 'terms' => ['x-request-id']];
+        $behavior = KeyValueCollectionBehavior::off();
 
-        $this->assertNull(KeyValueDataFilter::filterHeaders([
+        $this->assertNull((new KeyValueDataFilter($behavior))->filterHeaders([
             'Authorization' => ['secret'],
             'X-Request-Id' => ['request-id'],
-        ], $behavior));
+        ]));
     }
 
     public function testFilterHeadersAppliesDenyListToEveryHeaderLine(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => []];
+        $behavior = KeyValueCollectionBehavior::denyList();
 
-        $filtered = KeyValueDataFilter::filterHeaders([
+        $filtered = (new KeyValueDataFilter($behavior))->filterHeaders([
             'X-Api-Key' => ['first', 'second'],
             'X-Request-Id' => ['request-id'],
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'X-Api-Key' => ['[Filtered]', '[Filtered]'],
@@ -290,7 +291,7 @@ final class KeyValueDataFilterTest extends TestCase
             'X-Request-Id' => [&$requestId],
         ];
 
-        $filtered = KeyValueDataFilter::filterHeaders($headers, KeyValueDataFilter::DEFAULT_BEHAVIOR);
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterHeaders($headers);
 
         $this->assertSame([
             'Authorization' => ['secret'],
@@ -308,13 +309,13 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterHeadersAlwaysExcludesCookieHeaders(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['cookie', 'set-cookie', 'x-request-id']];
+        $behavior = KeyValueCollectionBehavior::allowList(['cookie', 'set-cookie', 'x-request-id']);
 
-        $filtered = KeyValueDataFilter::filterHeaders([
+        $filtered = (new KeyValueDataFilter($behavior))->filterHeaders([
             'CoOkIe' => ['session_id=secret; theme=dark'],
             'SET-COOKIE' => ['session_id=secret'],
             'X-Request-Id' => ['request-id'],
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'X-Request-Id' => ['request-id'],
@@ -323,28 +324,28 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterHeadersAppliesExtendedDenyTerms(): void
     {
-        $defaultBehavior = ['mode' => 'denyList', 'terms' => []];
-        $extendedBehavior = ['mode' => 'denyList', 'terms' => ['x-forwarded-for', 'x-real-ip']];
+        $defaultBehavior = KeyValueCollectionBehavior::denyList();
+        $extendedBehavior = KeyValueCollectionBehavior::denyList(['x-forwarded-for', 'x-real-ip']);
         $headers = [
             'X-Forwarded-For' => ['203.0.113.7'],
             'X-Real-IP' => ['203.0.113.7'],
         ];
 
-        $this->assertSame($headers, KeyValueDataFilter::filterHeaders($headers, $defaultBehavior));
+        $this->assertSame($headers, (new KeyValueDataFilter($defaultBehavior))->filterHeaders($headers));
         $this->assertSame([
             'X-Forwarded-For' => ['[Filtered]'],
             'X-Real-IP' => ['[Filtered]'],
-        ], KeyValueDataFilter::filterHeaders($headers, $extendedBehavior));
+        ], (new KeyValueDataFilter($extendedBehavior))->filterHeaders($headers));
     }
 
     public function testFilterHeadersAppliesAllowList(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['x-request-id']];
+        $behavior = KeyValueCollectionBehavior::allowList(['x-request-id']);
 
-        $filtered = KeyValueDataFilter::filterHeaders([
+        $filtered = (new KeyValueDataFilter($behavior))->filterHeaders([
             'X-Request-Id' => ['request-id'],
             'Host' => ['example.com'],
-        ], $behavior);
+        ]);
 
         $this->assertSame([
             'X-Request-Id' => ['request-id'],
@@ -354,103 +355,100 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testCustomAllowTermsMatchWholeNames(): void
     {
-        $behavior = ['mode' => 'allowList', 'terms' => ['THEME', 'api_token']];
+        $behavior = KeyValueCollectionBehavior::allowList(['THEME', 'api_token']);
 
         $this->assertSame([
             'theme' => 'dark',
             'user_theme' => '[Filtered]',
             'api_token' => '[Filtered]',
-        ], KeyValueDataFilter::filterKeyValueData($this->customTermInput(), $behavior));
+        ], (new KeyValueDataFilter($behavior))->filterKeyValueData($this->customTermInput()));
     }
 
     public function testCustomDenyTermsMatchSubstrings(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['THEME', 'api_token']];
+        $behavior = KeyValueCollectionBehavior::denyList(['THEME', 'api_token']);
 
         $this->assertSame([
             'theme' => '[Filtered]',
             'user_theme' => '[Filtered]',
             'api_token' => '[Filtered]',
-        ], KeyValueDataFilter::filterKeyValueData($this->customTermInput(), $behavior));
+        ], (new KeyValueDataFilter($behavior))->filterKeyValueData($this->customTermInput()));
     }
 
     public function testCustomTermsAreUsedForKeyValueData(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['THEME']];
+        $behavior = KeyValueCollectionBehavior::denyList(['THEME']);
 
         $this->assertSame([
             'theme' => '[Filtered]',
             'user_theme' => '[Filtered]',
             'api_token' => '[Filtered]',
-        ], KeyValueDataFilter::filterKeyValueData($this->customTermInput(), $behavior));
+        ], (new KeyValueDataFilter($behavior))->filterKeyValueData($this->customTermInput()));
     }
 
     public function testCustomTermsAreUsedForHeaders(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['THEME']];
+        $behavior = KeyValueCollectionBehavior::denyList(['THEME']);
         $headers = array_map(static function (string $value): array { return [$value]; }, $this->customTermInput());
 
         $this->assertSame([
             'theme' => ['[Filtered]'],
             'user_theme' => ['[Filtered]'],
             'api_token' => ['[Filtered]'],
-        ], KeyValueDataFilter::filterHeaders($headers, $behavior));
+        ], (new KeyValueDataFilter($behavior))->filterHeaders($headers));
     }
 
     /**
      * @dataProvider customQueryTermProvider
      *
-     * @param array<string, mixed> $behavior
      */
-    public function testCustomTermsAreUsedForQueryStrings(array $behavior, string $expected): void
+    public function testCustomTermsAreUsedForQueryStrings(KeyValueCollectionBehavior $behavior, string $expected): void
     {
         $query = '%74heme=dark&user_theme=light&api_token=secret&q=a%20b';
 
-        $this->assertSame($expected, KeyValueDataFilter::filterQueryString($query, $behavior));
+        $this->assertSame($expected, (new KeyValueDataFilter($behavior))->filterQueryString($query));
     }
 
     public function customQueryTermProvider(): \Generator
     {
         yield 'allow list uses whole names' => [
-            ['mode' => 'allowList', 'terms' => ['THEME', 'api_token']],
+            KeyValueCollectionBehavior::allowList(['THEME', 'api_token']),
             '%74heme=dark&user_theme=[Filtered]&api_token=[Filtered]&q=[Filtered]',
         ];
         yield 'deny list uses partial names' => [
-            ['mode' => 'denyList', 'terms' => ['THEME', 'api_token']],
+            KeyValueCollectionBehavior::denyList(['THEME', 'api_token']),
             '%74heme=[Filtered]&user_theme=[Filtered]&api_token=[Filtered]&q=a%20b',
         ];
     }
 
     public function testEmptyCustomTermDoesNotMatchEveryName(): void
     {
-        $this->assertSame('dark', KeyValueDataFilter::filterKeyValue('theme', 'dark', ['mode' => 'denyList', 'terms' => ['']]));
-        $this->assertSame('[Filtered]', KeyValueDataFilter::filterKeyValue('theme', 'dark', ['mode' => 'allowList', 'terms' => ['']]));
+        $this->assertSame([['theme', 'dark']], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList([''])))->filterPairs([['theme', 'dark']]));
+        $this->assertSame([['theme', '[Filtered]']], (new KeyValueDataFilter(KeyValueCollectionBehavior::allowList([''])))->filterPairs([['theme', 'dark']]));
     }
 
     public function testFilterQueryStringReturnsNullWhenCollectionIsOff(): void
     {
-        $behavior = ['mode' => 'off', 'terms' => ['page']];
+        $behavior = KeyValueCollectionBehavior::off();
 
-        $this->assertNull(KeyValueDataFilter::filterQueryString('token=secret&page=1', $behavior));
+        $this->assertNull((new KeyValueDataFilter($behavior))->filterQueryString('token=secret&page=1'));
     }
 
     public function testFilterQueryStringAppliesMandatoryAndCustomDenyListTerms(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => ['page']];
+        $behavior = KeyValueCollectionBehavior::denyList(['page']);
 
-        $filtered = KeyValueDataFilter::filterQueryString('token=secret&page=1&flag', $behavior);
+        $filtered = (new KeyValueDataFilter($behavior))->filterQueryString('token=secret&page=1&flag');
 
         $this->assertSame('token=[Filtered]&page=[Filtered]&flag', $filtered);
     }
 
     public function testFilterQueryStringDecodesKeysBeforeMatchingAndPreservesEncoding(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => []];
+        $behavior = KeyValueCollectionBehavior::denyList();
 
-        $filtered = KeyValueDataFilter::filterQueryString(
-            'api%5Ftoken=secret&q=a%20b%26c&encoded%20field=encoded%2Bvalue',
-            $behavior
-        );
+        $filtered = (new KeyValueDataFilter($behavior))->filterQueryString(
+            'api%5Ftoken=secret&q=a%20b%26c&encoded%20field=encoded%2Bvalue');
 
         $this->assertSame(
             'api%5Ftoken=[Filtered]&q=a%20b%26c&encoded%20field=encoded%2Bvalue',
@@ -460,20 +458,50 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function testFilterQueryStringPreservesValuelessParameters(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => []];
+        $behavior = KeyValueCollectionBehavior::denyList();
 
-        $filtered = KeyValueDataFilter::filterQueryString('token&token=&flag', $behavior);
+        $filtered = (new KeyValueDataFilter($behavior))->filterQueryString('token&token=&flag');
 
         $this->assertSame('token&token=[Filtered]&flag', $filtered);
     }
 
     public function testFilterQueryStringDoesNotTreatCookieNamesAsCookieHeaders(): void
     {
-        $behavior = ['mode' => 'denyList', 'terms' => []];
+        $behavior = KeyValueCollectionBehavior::denyList();
 
-        $filtered = KeyValueDataFilter::filterQueryString('cookie=foo&set-cookie=bar', $behavior);
+        $filtered = (new KeyValueDataFilter($behavior))->filterQueryString('cookie=foo&set-cookie=bar');
 
         $this->assertSame('cookie=foo&set-cookie=bar', $filtered);
+    }
+
+    public function testOffDoesNotCollectAnything(): void
+    {
+        $filter = new KeyValueDataFilter(KeyValueCollectionBehavior::off());
+
+        $this->assertFalse($filter->isEnabled());
+        $this->assertNull($filter->filterKeyValueData(['theme' => 'dark']));
+        $this->assertNull($filter->filterPairs([['theme', 'dark']]));
+        $this->assertNull($filter->filterHeaders(['X-Request-Id' => ['request-id']]));
+        $this->assertNull($filter->filterQueryString('page=1'));
+    }
+
+    public function testCollectingModesAreEnabled(): void
+    {
+        $this->assertTrue((new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->isEnabled());
+        $this->assertTrue((new KeyValueDataFilter(KeyValueCollectionBehavior::allowList()))->isEnabled());
+    }
+
+    public function testFilterPairsKeepsDuplicateNamesAndOrder(): void
+    {
+        $this->assertSame([
+            ['theme', 'dark'],
+            ['session_id', '[Filtered]'],
+            ['theme', 'light'],
+        ], (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterPairs([
+            ['theme', 'dark'],
+            ['session_id', 'secret'],
+            ['theme', 'light'],
+        ]));
     }
 
     /**

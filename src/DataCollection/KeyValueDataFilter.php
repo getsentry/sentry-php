@@ -5,20 +5,12 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 /**
- * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
- * @phpstan-type KeyValueFilterBehavior array{mode: 'denyList'|'allowList', terms: string[]}
+ * Applies a {@see KeyValueCollectionBehavior} together with the sensitive deny list to key-value data.
+ * Every filter method returns `null` if the category is not collected.
  */
 final class KeyValueDataFilter
 {
     public const FILTERED_VALUE = '[Filtered]';
-
-    /**
-     * Equivalent to `true`. Used when all items are collected.
-     */
-    public const DEFAULT_BEHAVIOR = [
-        'mode' => 'denyList',
-        'terms' => [],
-    ];
 
     /**
      * Values deeper than this limit are filtered. The top-level dictionary has depth 0.
@@ -55,20 +47,76 @@ final class KeyValueDataFilter
      */
     private static $sensitiveDataDenyListRegex;
 
-    private function __construct()
+    /**
+     * @var KeyValueCollectionBehavior
+     */
+    private $behavior;
+
+    public function __construct(KeyValueCollectionBehavior $behavior)
     {
+        $this->behavior = $behavior;
+    }
+
+    /**
+     * Whether the category is collected at all.
+     */
+    public function isEnabled(): bool
+    {
+        return !$this->behavior->isOff();
+    }
+
+    /**
+     * @template TKey of array-key
+     *
+     * @param array<TKey, mixed> $data
+     *
+     * @return array<TKey, mixed>|null
+     */
+    public function filterKeyValueData(array $data): ?array
+    {
+        if (!$this->isEnabled()) {
+            return null;
+        }
+
+        $filtered = [];
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($data as $key => $value) {
+            $filtered[$key] = $this->filterValue((string) $key, $value);
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * @param iterable<array{string, mixed}> $pairs
+     *
+     * @return array<int, array{string, mixed}>|null
+     */
+    public function filterPairs(iterable $pairs): ?array
+    {
+        if (!$this->isEnabled()) {
+            return null;
+        }
+
+        $filtered = [];
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($pairs as [$name, $value]) {
+            $filtered[] = [$name, $this->filterValue($name, $value)];
+        }
+
+        return $filtered;
     }
 
     /**
      * @param array<array-key, string[]> $headers
      *
-     * @phpstan-param KeyValueCollectionBehavior $behavior
-     *
-     * @return array<array-key, string[]>|null null means disabled
+     * @return array<array-key, string[]>|null
      */
-    public static function filterHeaders(array $headers, array $behavior): ?array
+    public function filterHeaders(array $headers): ?array
     {
-        if ($behavior['mode'] === 'off') {
+        if (!$this->isEnabled()) {
             return null;
         }
 
@@ -81,7 +129,7 @@ final class KeyValueDataFilter
                 continue;
             }
 
-            $shouldFilter = self::shouldFilterValue($name, $behavior);
+            $shouldFilter = $this->shouldFilter($name);
             $filtered[$name] = [];
 
             foreach ($values as $headerLine => $headerValue) {
@@ -93,52 +141,11 @@ final class KeyValueDataFilter
     }
 
     /**
-     * @template TKey of array-key
-     *
-     * @param array<TKey, mixed> $data
-     *
-     * @phpstan-param KeyValueCollectionBehavior $behavior
-     *
-     * @return array<TKey, mixed>|null null means disabled
+     * Filters the values of a raw query string while preserving its encoding.
      */
-    public static function filterKeyValueData(array $data, array $behavior): ?array
+    public function filterQueryString(string $queryString): ?string
     {
-        if ($behavior['mode'] === 'off') {
-            return null;
-        }
-
-        $filtered = [];
-
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($data as $key => $value) {
-            $filtered[$key] = self::filterKeyValue((string) $key, $value, $behavior);
-        }
-
-        return $filtered;
-    }
-
-    /**
-     * @param mixed $value
-     *
-     * @phpstan-param KeyValueFilterBehavior $behavior
-     *
-     * @return mixed
-     */
-    public static function filterKeyValue(string $key, $value, array $behavior)
-    {
-        if (\PHP_VERSION_ID >= 70400) {
-            return self::filterKeyValueWithCycleDetection($key, $value, $behavior, 1);
-        }
-
-        return self::filterKeyValueWithDepthLimit($key, $value, $behavior, 1);
-    }
-
-    /**
-     * @phpstan-param KeyValueCollectionBehavior $behavior
-     */
-    public static function filterQueryString(string $queryString, array $behavior): ?string
-    {
-        if ($behavior['mode'] === 'off') {
+        if (!$this->isEnabled()) {
             return null;
         }
 
@@ -153,7 +160,7 @@ final class KeyValueDataFilter
             $encodedKey = substr($part, 0, $separatorPosition);
             $key = urldecode($encodedKey);
 
-            if (self::shouldFilterValue($key, $behavior)) {
+            if ($this->shouldFilter($key)) {
                 $parts[$index] = $encodedKey . '=' . self::FILTERED_VALUE;
             }
         }
@@ -162,32 +169,28 @@ final class KeyValueDataFilter
     }
 
     /**
-     * @phpstan-param KeyValueFilterBehavior $behavior
+     * @param mixed $value
+     *
+     * @return mixed
      */
-    public static function shouldFilterValue(string $key, array $behavior): bool
+    private function filterValue(string $key, $value)
     {
-        if (self::matchesMandatoryDenyList($key)) {
-            return true;
+        if (\PHP_VERSION_ID >= 70400) {
+            return $this->filterValueWithCycleDetection($key, $value, 1);
         }
 
-        if ($behavior['mode'] === 'allowList') {
-            return !self::matchesAnyTerm($key, $behavior['terms'], false);
-        }
-
-        return self::matchesAnyTerm($key, $behavior['terms'], true);
+        return $this->filterValueWithDepthLimit($key, $value, 1);
     }
 
     /**
      * @param mixed               $value
      * @param array<string, true> $references References on the current recursion path
      *
-     * @phpstan-param KeyValueFilterBehavior $behavior
-     *
      * @return mixed
      */
-    private static function filterKeyValueWithCycleDetection(string $key, $value, array $behavior, int $depth, array $references = [])
+    private function filterValueWithCycleDetection(string $key, $value, int $depth, array $references = [])
     {
-        if ($depth > self::MAX_DEPTH || self::shouldFilterValue($key, $behavior)) {
+        if ($depth > self::MAX_DEPTH || $this->shouldFilter($key)) {
             return self::FILTERED_VALUE;
         }
 
@@ -211,7 +214,7 @@ final class KeyValueDataFilter
                     }
                 }
 
-                $filtered[$childKey] = self::filterKeyValueWithCycleDetection((string) $childKey, $childValue, $behavior, $depth + 1, $childReferences);
+                $filtered[$childKey] = $this->filterValueWithCycleDetection((string) $childKey, $childValue, $depth + 1, $childReferences);
             }
 
             return $filtered;
@@ -227,13 +230,11 @@ final class KeyValueDataFilter
     /**
      * @param mixed $value
      *
-     * @phpstan-param KeyValueFilterBehavior $behavior
-     *
      * @return mixed
      */
-    private static function filterKeyValueWithDepthLimit(string $key, $value, array $behavior, int $depth)
+    private function filterValueWithDepthLimit(string $key, $value, int $depth)
     {
-        if ($depth > self::MAX_DEPTH || self::shouldFilterValue($key, $behavior)) {
+        if ($depth > self::MAX_DEPTH || $this->shouldFilter($key)) {
             return self::FILTERED_VALUE;
         }
 
@@ -242,7 +243,7 @@ final class KeyValueDataFilter
 
             /** @mago-ignore analysis:mixed-assignment */
             foreach ($value as $childKey => $childValue) {
-                $filtered[$childKey] = self::filterKeyValueWithDepthLimit((string) $childKey, $childValue, $behavior, $depth + 1);
+                $filtered[$childKey] = $this->filterValueWithDepthLimit((string) $childKey, $childValue, $depth + 1);
             }
 
             return $filtered;
@@ -253,6 +254,19 @@ final class KeyValueDataFilter
         }
 
         return $value;
+    }
+
+    private function shouldFilter(string $key): bool
+    {
+        if (self::matchesMandatoryDenyList($key)) {
+            return true;
+        }
+
+        if ($this->behavior->getMode() === KeyValueCollectionBehavior::MODE_ALLOW_LIST) {
+            return !self::matchesAnyTerm($key, $this->behavior->getTerms(), false);
+        }
+
+        return self::matchesAnyTerm($key, $this->behavior->getTerms(), true);
     }
 
     private static function matchesMandatoryDenyList(string $key): bool
