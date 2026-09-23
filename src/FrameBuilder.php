@@ -174,6 +174,13 @@ final class FrameBuilder
             return [];
         }
 
+        $dataCollection = $this->options->getDataCollection();
+        $filter = $dataCollection === null ? null : new KeyValueDataFilter($dataCollection->getStackFrameVariables());
+
+        if ($filter !== null && !$filter->isEnabled()) {
+            return [];
+        }
+
         $reflectionFunction = null;
 
         try {
@@ -202,21 +209,12 @@ final class FrameBuilder
             }
         }
 
-        $dataCollection = $this->options->getDataCollection();
-
-        if ($dataCollection !== null && $dataCollection->getStackFrameVariables()['mode'] === 'off') {
-            return [];
+        if ($filter !== null) {
+            return $filter->filterKeyValueData($argumentValues, [$this->representationSerializer, 'representationSerialize']) ?? [];
         }
 
         foreach ($argumentValues as $argumentName => $argumentValue) {
             $argumentValues[$argumentName] = $this->representationSerializer->representationSerialize($argumentValue);
-        }
-
-        if ($dataCollection !== null) {
-            $argumentValues = KeyValueDataFilter::filterKeyValueData(
-                $argumentValues,
-                $dataCollection->getStackFrameVariables()
-            ) ?? [];
         }
 
         return $argumentValues;

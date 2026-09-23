@@ -367,6 +367,29 @@ final class FrameBuilderTest extends TestCase
         ], $frame->getVars());
     }
 
+    public function testSensitiveFunctionArgumentsAreNotSerialized(): void
+    {
+        $options = new Options(['data_collection' => []]);
+        $serializer = $this->createMock(RepresentationSerializer::class);
+        $serializer->expects($this->once())
+            ->method('representationSerialize')
+            ->with('alice')
+            ->willReturn('alice');
+        $frameBuilder = new FrameBuilder($options, $serializer);
+        $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, [
+            'class' => self::class,
+            'type' => '::',
+            'function' => 'functionWithSensitiveArgument',
+            'args' => ['alice', 'secret'],
+        ]);
+
+        $this->assertSame(['name' => 'alice', 'password' => '[Filtered]'], $frame->getVars());
+    }
+
+    public static function functionWithSensitiveArgument(string $name, string $password): void
+    {
+    }
+
     public function testDisabledFunctionArgumentsSkipSerialization(): void
     {
         $options = new Options(['data_collection' => ['stack_frame_variables' => false]]);
