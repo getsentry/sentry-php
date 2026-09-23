@@ -7,6 +7,9 @@ namespace Sentry\Tests;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Sentry\ClientBuilder;
+use Sentry\DataCollection\DataCollectionOptions;
+use Sentry\DataCollection\HttpMessageType;
+use Sentry\DataCollection\KeyValueCollectionBehavior;
 use Sentry\Dsn;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClient;
@@ -377,6 +380,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'data_collection',
+            (new DataCollectionOptions())->setUserInfo(false),
+            'getDataCollection',
+            'setDataCollection',
+        ];
+
+        yield [
             'default_integrations',
             false,
             'hasDefaultIntegrations',
@@ -625,6 +635,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'data_collection' => null,
             'max_value_length' => 1024,
             'transport' => null,
             'http_client' => null,
@@ -667,6 +678,47 @@ final class OptionsTest extends TestCase
         $resolver->resolve($resolver->getConfiguredDefaults(), $logger);
 
         $this->assertSame([], StubLogger::$logs);
+    }
+
+    public function testDataCollectionOptionNormalizesNestedArray(): void
+    {
+        $dataCollection = (new Options([
+            'data_collection' => [
+                'user_info' => false,
+                'http_headers' => [
+                    'request' => ['mode' => 'off'],
+                ],
+                'http_bodies' => ['incomingRequest', 'outgoingResponse'],
+                'url_query_params' => ['terms' => ['private']],
+                'gen_ai' => ['outputs' => false],
+                'database_query_data' => false,
+                'queues' => false,
+                'stack_frame_variables' => ['mode' => 'allowList', 'terms' => ['request_id']],
+            ],
+        ]))->getDataCollection();
+
+        $this->assertInstanceOf(DataCollectionOptions::class, $dataCollection);
+        $this->assertFalse($dataCollection->shouldCollectUserInfo());
+        $this->assertEquals(KeyValueCollectionBehavior::off(), $dataCollection->getHttpHeaders()['request']);
+        $this->assertEquals(KeyValueCollectionBehavior::denyList(), $dataCollection->getHttpHeaders()['response']);
+        $this->assertSame([HttpMessageType::incomingRequest(), HttpMessageType::outgoingResponse()], $dataCollection->getHttpBodies());
+        $this->assertEquals(KeyValueCollectionBehavior::denyList(['private']), $dataCollection->getUrlQueryParams());
+        $this->assertSame(['inputs' => true, 'outputs' => false], $dataCollection->getGenAi());
+        $this->assertFalse($dataCollection->shouldCollectDatabaseQueryData());
+        $this->assertFalse($dataCollection->shouldCollectQueues());
+        $this->assertEquals(KeyValueCollectionBehavior::allowList(['request_id']), $dataCollection->getStackFrameVariables());
+    }
+
+    public function testDataCollectionOptionPreservesObjectIdentityAndCanBeUpdatedThroughGetter(): void
+    {
+        $dataCollection = (new DataCollectionOptions())->setUserInfo(false);
+        $options = new Options(['data_collection' => $dataCollection]);
+
+        $this->assertSame($dataCollection, $options->getDataCollection());
+        $resolvedDataCollection = $options->getDataCollection();
+        $this->assertNotNull($resolvedDataCollection);
+        $resolvedDataCollection->setFrameContextLines(0);
+        $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
 
     /**
@@ -944,6 +996,37 @@ final class OptionsTest extends TestCase
         $this->assertSame([[
             'level' => 'debug',
             'message' => 'Invalid value for option "sample_rate". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testInvalidDataCollectionValuesAreLoggedWithTheOptionsLogger(): void
+    {
+        $options = new Options([
+            'logger' => StubLogger::getInstance(),
+            'data_collection' => ['cookies' => ['mode' => 'allowlist']],
+        ]);
+
+        $dataCollection = $options->getDataCollection();
+
+        $this->assertNotNull($dataCollection);
+        $this->assertEquals(KeyValueCollectionBehavior::denyList(), $dataCollection->getCookies());
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "cookies". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testSetDataCollectionLogsInvalidValuesWithTheCurrentLogger(): void
+    {
+        $options = new Options();
+        $options->setLogger(StubLogger::getInstance());
+        $options->setDataCollection(['cookies' => ['mode' => 'allowlist']]);
+
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "cookies". The value has been ignored.',
             'context' => [],
         ]], StubLogger::$logs);
     }

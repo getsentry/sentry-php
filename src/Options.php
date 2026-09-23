@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -65,6 +66,8 @@ final class Options
             $options['strict_trace_continuation'] = $options['strict_trace_propagation'];
         }
 
+        // Make the logger available to normalizers of nested options such as `data_collection` while resolving
+        $this->options = ['logger' => $this->getLoggerOrNullLogger($options)];
         $this->options = $this->resolver->resolve($options, $this->getLoggerOrNullLogger($options));
 
         if ($this->options['enable_tracing'] === true && $this->options['traces_sample_rate'] === null) {
@@ -369,6 +372,29 @@ final class Options
     public function setContextLines(?int $contextLines): self
     {
         return $this->updateOptions(['context_lines' => $contextLines]);
+    }
+
+    /**
+     * Gets the data collection options. `null` means the legacy options such as
+     * `send_default_pii` are used instead.
+     */
+    public function getDataCollection(): ?DataCollectionOptions
+    {
+        /** @var DataCollectionOptions|null $dataCollection */
+        $dataCollection = $this->options['data_collection'];
+
+        return $dataCollection;
+    }
+
+    /**
+     * Sets the data collection options. Any value other than `null` opts into the
+     * data collection options and ignores the legacy options such as `send_default_pii`.
+     *
+     * @param DataCollectionOptions|array<string, mixed>|null $dataCollection
+     */
+    public function setDataCollection($dataCollection): self
+    {
+        return $this->updateOptions(['data_collection' => $dataCollection]);
     }
 
     /**
@@ -1278,6 +1304,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('data_collection', ['null', 'array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
@@ -1288,6 +1315,7 @@ final class Options
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('data_collection', \Closure::fromCallable([$this, 'normalizeDataCollectionOption']));
 
         $resolver->setNormalizer('prefixes', function (array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1385,6 +1413,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'data_collection' => null,
         ]);
     }
 
@@ -1432,6 +1461,18 @@ final class Options
         }
 
         return $url;
+    }
+
+    /**
+     * @param array<string, mixed>|DataCollectionOptions|null $value
+     */
+    private function normalizeDataCollectionOption($value): ?DataCollectionOptions
+    {
+        if ($value === null || $value instanceof DataCollectionOptions) {
+            return $value;
+        }
+
+        return new DataCollectionOptions($value, $this->getLoggerOrNullLogger());
     }
 
     /**
