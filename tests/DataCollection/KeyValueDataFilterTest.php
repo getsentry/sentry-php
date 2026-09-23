@@ -400,7 +400,6 @@ final class KeyValueDataFilterTest extends TestCase
 
     /**
      * @dataProvider customQueryTermProvider
-     *
      */
     public function testCustomTermsAreUsedForQueryStrings(KeyValueCollectionBehavior $behavior, string $expected): void
     {

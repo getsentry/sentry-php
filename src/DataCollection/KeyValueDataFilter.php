@@ -89,11 +89,11 @@ final class KeyValueDataFilter
     }
 
     /**
-     * @param iterable<array{string, mixed}> $pairs
+     * @param array<int, array{string, mixed}> $pairs
      *
      * @return array<int, array{string, mixed}>|null
      */
-    public function filterPairs(iterable $pairs): ?array
+    public function filterPairs(array $pairs): ?array
     {
         if (!$this->isEnabled()) {
             return null;
