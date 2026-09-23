@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Tracing;
 
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\FulfilledPromise;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
@@ -11,6 +12,7 @@ use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
+use Psr\Http\Message\StreamInterface;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
@@ -592,11 +594,157 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     }
 
     /**
+     * @dataProvider enabledBodyCollectionProvider
+     *
      * @param array<string, mixed> $options
+     */
+    public function testTraceCollectsConfiguredBodies(array $options): void
+    {
+        $request = new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], '{"name":"Alice","password":"secret"}');
+        $response = new Response(200, ['Content-Type' => 'application/x-www-form-urlencoded'], 'status=ok&token=secret');
+        $request->getBody()->seek(4);
+        $response->getBody()->seek(5);
+
+        [$spanData, $breadcrumbData] = $this->traceExchange($options, $request, $response);
+
+        $this->assertSame(['name' => 'Alice', 'password' => '[Filtered]'], $spanData['http.request.body.data']);
+        $this->assertSame(['status' => 'ok', 'token' => '[Filtered]'], $spanData['http.response.body.data']);
+        $this->assertArrayNotHasKey('http.request.body.data', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.body.data', $breadcrumbData);
+        $this->assertSame(4, $request->getBody()->tell());
+        $this->assertSame(5, $response->getBody()->tell());
+    }
+
+    public static function enabledBodyCollectionProvider(): \Generator
+    {
+        yield 'configured defaults' => [['data_collection' => []]];
+        yield 'bodies independent of headers and cookies' => [['data_collection' => ['http_headers' => ['mode' => 'off'], 'cookies' => ['mode' => 'off']]]];
+    }
+
+    /**
+     * @dataProvider disabledBodyCollectionProvider
+     *
+     * @param array<string, mixed> $options
+     */
+    public function testTraceDoesNotCollectDisabledBodies(array $options): void
+    {
+        [$spanData, $breadcrumbData] = $this->traceExchange(
+            $options,
+            new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], '{"name":"Alice","password":"secret"}'),
+            new Response(200, ['Content-Type' => 'application/x-www-form-urlencoded'], 'status=ok&token=secret')
+        );
+
+        $this->assertArrayNotHasKey('http.request.body.data', $spanData);
+        $this->assertArrayNotHasKey('http.response.body.data', $spanData);
+        $this->assertArrayNotHasKey('http.request.body.data', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.body.data', $breadcrumbData);
+    }
+
+    public static function disabledBodyCollectionProvider(): \Generator
+    {
+        yield 'legacy with PII and unlimited request size' => [['send_default_pii' => true, 'max_request_body_size' => 'always']];
+        yield 'bodies disabled' => [['data_collection' => ['http_bodies' => []]]];
+    }
+
+    public function testTraceCollectsOnlyOutgoingRequestBody(): void
+    {
+        [$spanData, $breadcrumbData] = $this->traceExchange(
+            ['data_collection' => ['http_bodies' => ['outgoingRequest']]],
+            new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], '{"name":"Alice","password":"secret"}'),
+            new Response(200, ['Content-Type' => 'application/x-www-form-urlencoded'], 'status=ok&token=secret')
+        );
+
+        $this->assertSame(['name' => 'Alice', 'password' => '[Filtered]'], $spanData['http.request.body.data']);
+        $this->assertArrayNotHasKey('http.response.body.data', $spanData);
+        $this->assertArrayNotHasKey('http.request.body.data', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.body.data', $breadcrumbData);
+    }
+
+    /**
+     * @dataProvider responseOnlyBodyCollectionProvider
+     *
+     * @param array<string, mixed> $options
+     */
+    public function testTraceCollectsOnlyIncomingResponseBody(array $options): void
+    {
+        [$spanData, $breadcrumbData] = $this->traceExchange(
+            $options,
+            new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], '{"name":"Alice","password":"secret"}'),
+            new Response(200, ['Content-Type' => 'application/x-www-form-urlencoded'], 'status=ok&token=secret')
+        );
+
+        $this->assertArrayNotHasKey('http.request.body.data', $spanData);
+        $this->assertSame(['status' => 'ok', 'token' => '[Filtered]'], $spanData['http.response.body.data']);
+        $this->assertArrayNotHasKey('http.request.body.data', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.body.data', $breadcrumbData);
+    }
+
+    public static function responseOnlyBodyCollectionProvider(): \Generator
+    {
+        yield 'incoming response only' => [['data_collection' => ['http_bodies' => ['incomingResponse']]]];
+        yield 'request size never does not disable response bodies' => [['data_collection' => [], 'max_request_body_size' => 'never']];
+    }
+
+    public function testTraceCollectsBodiesFromRejectedRequests(): void
+    {
+        $request = new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], '{"name":"Alice","password":"secret"}');
+        $response = new Response(503, ['Content-Type' => 'application/json'], '{"error":"unavailable","token":"secret"}');
+
+        [$spanData, $breadcrumbData] = $this->traceExchange(
+            ['data_collection' => []],
+            $request,
+            RequestException::create($request, $response)
+        );
+
+        $this->assertSame(['name' => 'Alice', 'password' => '[Filtered]'], $spanData['http.request.body.data']);
+        $this->assertSame(['error' => 'unavailable', 'token' => '[Filtered]'], $spanData['http.response.body.data']);
+        $this->assertArrayNotHasKey('http.request.body.data', $breadcrumbData);
+        $this->assertArrayNotHasKey('http.response.body.data', $breadcrumbData);
+    }
+
+    /**
+     * @dataProvider unreadBodyProvider
+     *
+     * @param array<string, mixed> $options
+     */
+    public function testTraceDoesNotReadUncollectedBodies(array $options, bool $attachSpan): void
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('getSize')->willReturn(2);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->expects($this->never())->method('read');
+        $stream->expects($this->never())->method('getContents');
+        $stream->expects($this->never())->method('rewind');
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options($options + ['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        if ($attachSpan) {
+            $hub->setSpan($transaction);
+        }
+        $response = new Response(200, ['Content-Type' => 'application/json'], $stream);
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function () use ($response): PromiseInterface {
+            return new FulfilledPromise($response);
+        });
+
+        $this->assertSame($response, $function(new Request('POST', 'https://www.example.com', ['Content-Type' => 'application/json'], $stream), [])->wait());
+    }
+
+    public static function unreadBodyProvider(): \Generator
+    {
+        yield 'no parent span' => [['data_collection' => []], false];
+        yield 'unsampled parent' => [['data_collection' => [], 'traces_sample_rate' => 0], true];
+    }
+
+    /**
+     * @param array<string, mixed>      $options
+     * @param RequestException|Response $responseOrException
      *
      * @return array{array<string, mixed>, array<string, mixed>}
      */
-    private function traceExchange(array $options, Request $request, Response $response): array
+    private function traceExchange(array $options, Request $request, $responseOrException): array
     {
         $client = $this->createMock(ClientInterface::class);
         $client->method('getOptions')->willReturn(new Options($options + ['traces_sample_rate' => 1]));
@@ -604,14 +752,25 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         SentrySdk::setCurrentHub($hub);
         $transaction = $hub->startTransaction(new TransactionContext());
         $hub->setSpan($transaction);
-        $function = (GuzzleTracingMiddleware::trace($hub))(function (Request $forwardedRequest) use ($request, $response): PromiseInterface {
+        $requestPosition = $request->getBody()->tell();
+        $function = (GuzzleTracingMiddleware::trace($hub))(function (Request $forwardedRequest) use ($request, $responseOrException, $requestPosition): PromiseInterface {
+            $this->assertSame($requestPosition, $forwardedRequest->getBody()->tell());
             $this->assertSame((string) $request->getUri(), (string) $forwardedRequest->getUri());
             $this->assertSame($request->getHeader('Cookie'), $forwardedRequest->getHeader('Cookie'));
 
-            return new FulfilledPromise($response);
+            return $responseOrException instanceof RequestException ? new RejectedPromise($responseOrException) : new FulfilledPromise($responseOrException);
         });
 
-        $this->assertSame($response, $function($request, [])->wait());
+        try {
+            $response = $function($request, [])->wait();
+            if ($responseOrException instanceof RequestException) {
+                $this->fail('The original request exception must be rethrown.');
+            }
+
+            $this->assertSame($responseOrException, $response);
+        } catch (RequestException $exception) {
+            $this->assertSame($responseOrException, $exception);
+        }
 
         $event = Event::createEvent();
         $hub->configureScope(static function (Scope $scope) use ($event): void {
