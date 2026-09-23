@@ -7,29 +7,30 @@ namespace Sentry\Tests\DataCollection;
 use PHPUnit\Framework\TestCase;
 use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\DataCollection\HttpMessageType;
+use Sentry\DataCollection\KeyValueCollectionBehavior;
+use Sentry\Tests\StubLogger;
 
 final class DataCollectionOptionsTest extends TestCase
 {
     public function testDefaults(): void
     {
         $options = new DataCollectionOptions();
-        $collectionDefault = ['mode' => 'denyList', 'terms' => []];
+        $collectionDefault = KeyValueCollectionBehavior::denyList();
 
         $this->assertTrue($options->shouldCollectUserInfo());
-        $this->assertSame($collectionDefault, $options->getCookies());
-        $this->assertSame(['request' => $collectionDefault, 'response' => $collectionDefault], $options->getHttpHeaders());
+        $this->assertEquals($collectionDefault, $options->getCookies());
+        $this->assertEquals(['request' => $collectionDefault, 'response' => $collectionDefault], $options->getHttpHeaders());
         $this->assertSame([
             HttpMessageType::incomingRequest(),
             HttpMessageType::outgoingRequest(),
             HttpMessageType::incomingResponse(),
             HttpMessageType::outgoingResponse(),
         ], $options->getHttpBodies());
-        $this->assertSame($collectionDefault, $options->getUrlQueryParams());
+        $this->assertEquals($collectionDefault, $options->getUrlQueryParams());
         $this->assertSame(['inputs' => true, 'outputs' => true], $options->getGenAi());
         $this->assertTrue($options->shouldCollectDatabaseQueryData());
         $this->assertTrue($options->shouldCollectQueues());
-        $this->assertSame($collectionDefault, $options->getStackFrameVariables());
-        $this->assertTrue($options->shouldCollectStackFrameVariables());
+        $this->assertEquals($collectionDefault, $options->getStackFrameVariables());
         $this->assertSame(5, $options->getFrameContextLines());
     }
 
@@ -38,12 +39,12 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions([
             'http_headers' => ['mode' => 'allowList', 'terms' => ['x-request-id']],
         ]);
-        $expected = ['mode' => 'allowList', 'terms' => ['x-request-id']];
+        $expected = KeyValueCollectionBehavior::allowList(['x-request-id']);
 
-        $this->assertSame(['request' => $expected, 'response' => $expected], $options->getHttpHeaders());
+        $this->assertEquals(['request' => $expected, 'response' => $expected], $options->getHttpHeaders());
     }
 
-    public function testCookieSetterPreservesUnchangedNestedValues(): void
+    public function testCookieSetterReplacesTheWholeCollection(): void
     {
         $options = new DataCollectionOptions([
             'cookies' => ['mode' => 'allowList', 'terms' => ['first']],
@@ -52,7 +53,61 @@ final class DataCollectionOptionsTest extends TestCase
         $result = $options->setCookies(['terms' => ['second']]);
 
         $this->assertSame($options, $result);
-        $this->assertSame(['mode' => 'allowList', 'terms' => ['second']], $options->getCookies());
+        $this->assertEquals(KeyValueCollectionBehavior::denyList(['second']), $options->getCookies());
+    }
+
+    public function testHttpHeaderSetterOnlyReplacesTheGivenDirection(): void
+    {
+        $options = new DataCollectionOptions([
+            'http_headers' => ['mode' => 'allowList', 'terms' => ['x-request-id']],
+        ]);
+        $response = $options->getHttpHeaders()['response'];
+
+        $options->setHttpHeaders(['request' => ['mode' => 'off']]);
+
+        $this->assertTrue($options->getHttpHeaders()['request']->isOff());
+        $this->assertSame($response, $options->getHttpHeaders()['response']);
+    }
+
+    public function testKeyValueCollectionsAreOnlyCreatedWhenTheirValueChanges(): void
+    {
+        $options = new DataCollectionOptions();
+        $cookies = $options->getCookies();
+        $requestHeaders = $options->getHttpHeaders()['request'];
+
+        $this->assertSame($cookies, $options->getCookies());
+        $this->assertSame($requestHeaders, $options->getHttpHeaders()['request']);
+
+        $options->setUserInfo(false);
+
+        $this->assertSame($cookies, $options->getCookies());
+        $this->assertSame($requestHeaders, $options->getHttpHeaders()['request']);
+
+        $options->setCookies(['mode' => 'off']);
+
+        $this->assertNotSame($cookies, $options->getCookies());
+        $this->assertTrue($options->getCookies()->isOff());
+    }
+
+    public function testInvalidValuesAreLogged(): void
+    {
+        StubLogger::$logs = [];
+
+        $options = new DataCollectionOptions(['cookies' => ['mode' => 'allowlist']], StubLogger::getInstance());
+        $options->setUrlQueryParams(['mode' => 'denylist']);
+
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "cookies". The value has been ignored.',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "url_query_params". The value has been ignored.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
 
     public function testUserInfoSetter(): void
@@ -68,7 +123,7 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions();
 
         $this->assertSame($options, $options->setCookies(['mode' => 'off']));
-        $this->assertSame(['mode' => 'off', 'terms' => []], $options->getCookies());
+        $this->assertEquals(KeyValueCollectionBehavior::off(), $options->getCookies());
     }
 
     public function testHttpHeaderSetter(): void
@@ -76,8 +131,8 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions();
 
         $this->assertSame($options, $options->setHttpHeaders(['request' => ['mode' => 'off']]));
-        $this->assertSame('off', $options->getHttpHeaders()['request']['mode']);
-        $this->assertSame('denyList', $options->getHttpHeaders()['response']['mode']);
+        $this->assertTrue($options->getHttpHeaders()['request']->isOff());
+        $this->assertSame('denyList', $options->getHttpHeaders()['response']->getMode());
     }
 
     public function testHttpBodySetter(): void
@@ -144,7 +199,7 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions();
 
         $this->assertSame($options, $options->setUrlQueryParams(['mode' => 'allowList', 'terms' => ['page']]));
-        $this->assertSame(['mode' => 'allowList', 'terms' => ['page']], $options->getUrlQueryParams());
+        $this->assertEquals(KeyValueCollectionBehavior::allowList(['page']), $options->getUrlQueryParams());
     }
 
     public function testGenAiSetter(): void
@@ -176,7 +231,7 @@ final class DataCollectionOptionsTest extends TestCase
         $options = new DataCollectionOptions();
 
         $this->assertSame($options, $options->setStackFrameVariables(false));
-        $this->assertFalse($options->shouldCollectStackFrameVariables());
+        $this->assertTrue($options->getStackFrameVariables()->isOff());
     }
 
     public function testFrameContextLineSetter(): void
@@ -205,11 +260,10 @@ final class DataCollectionOptionsTest extends TestCase
             'stack_frame_variables' => ['mode' => 'allowList', 'terms' => ['request_id']],
         ]);
 
-        $this->assertSame(['mode' => 'allowList', 'terms' => ['request_id']], $options->getStackFrameVariables());
-        $this->assertTrue($options->shouldCollectStackFrameVariables());
+        $this->assertEquals(KeyValueCollectionBehavior::allowList(['request_id']), $options->getStackFrameVariables());
     }
 
-    public function testStackFrameVariableSetterPreservesMode(): void
+    public function testStackFrameVariableSetterReplacesTheWholeCollection(): void
     {
         $options = new DataCollectionOptions([
             'stack_frame_variables' => ['mode' => 'allowList', 'terms' => ['request_id']],
@@ -217,26 +271,26 @@ final class DataCollectionOptionsTest extends TestCase
 
         $options->setStackFrameVariables(['terms' => ['trace_id']]);
 
-        $this->assertSame(['mode' => 'allowList', 'terms' => ['trace_id']], $options->getStackFrameVariables());
+        $this->assertEquals(KeyValueCollectionBehavior::denyList(['trace_id']), $options->getStackFrameVariables());
     }
 
     /**
      * @dataProvider stackFrameVariableBooleanProvider
      */
-    public function testStackFrameVariablesAcceptBooleanShorthand(bool $value, array $expected): void
+    public function testStackFrameVariablesAcceptBooleanShorthand(bool $value, KeyValueCollectionBehavior $expected): void
     {
         $options = new DataCollectionOptions();
 
         $options->setStackFrameVariables($value);
 
-        $this->assertSame($expected, $options->getStackFrameVariables());
-        $this->assertSame($value, $options->shouldCollectStackFrameVariables());
+        $this->assertEquals($expected, $options->getStackFrameVariables());
+        $this->assertSame(!$value, $options->getStackFrameVariables()->isOff());
     }
 
     public function stackFrameVariableBooleanProvider(): \Generator
     {
-        yield 'enabled' => [true, ['mode' => 'denyList', 'terms' => []]];
-        yield 'disabled' => [false, ['mode' => 'off', 'terms' => []]];
+        yield 'enabled' => [true, KeyValueCollectionBehavior::denyList()];
+        yield 'disabled' => [false, KeyValueCollectionBehavior::off()];
     }
 
     /**
@@ -249,17 +303,23 @@ final class DataCollectionOptionsTest extends TestCase
     {
         $options = new DataCollectionOptions($configuration);
 
-        $this->assertSame($expected, $options->{$getter}());
+        $this->assertEquals($expected, $options->{$getter}());
     }
 
     public function invalidConstructorValueProvider(): \Generator
     {
-        yield 'cookies' => [['cookies' => ['mode' => 'invalid', 'terms' => [42]]], 'getCookies', ['mode' => 'denyList', 'terms' => []]];
+        yield 'cookies' => [['cookies' => ['mode' => 'invalid', 'terms' => [42]]], 'getCookies', KeyValueCollectionBehavior::denyList()];
+        yield 'cookies with an invalid mode keep none of the terms' => [['cookies' => ['mode' => 'allowlist', 'terms' => ['theme']]], 'getCookies', KeyValueCollectionBehavior::denyList()];
+        yield 'cookies with an unknown key' => [['cookies' => ['mode' => 'allowList', 'term' => ['theme']]], 'getCookies', KeyValueCollectionBehavior::denyList()];
+        yield 'cookies with terms that are not a list of strings' => [['cookies' => ['terms' => 'theme']], 'getCookies', KeyValueCollectionBehavior::denyList()];
+        yield 'cookies with a null mode' => [['cookies' => ['mode' => null, 'terms' => ['theme']]], 'getCookies', KeyValueCollectionBehavior::denyList()];
+        yield 'HTTP request headers' => [['http_headers' => ['request' => ['mode' => 'invalid']]], 'getHttpHeaders', ['request' => KeyValueCollectionBehavior::denyList(), 'response' => KeyValueCollectionBehavior::denyList()]];
+        yield 'URL query parameters' => [['url_query_params' => 'off'], 'getUrlQueryParams', KeyValueCollectionBehavior::denyList()];
         yield 'HTTP bodies' => [['http_bodies' => ['invalid']], 'getHttpBodies', [HttpMessageType::incomingRequest(), HttpMessageType::outgoingRequest(), HttpMessageType::incomingResponse(), HttpMessageType::outgoingResponse()]];
         yield 'GenAI' => [['gen_ai' => ['inputs' => 'invalid']], 'getGenAi', ['inputs' => true, 'outputs' => true]];
         yield 'database query data' => [['database_query_data' => 'invalid'], 'shouldCollectDatabaseQueryData', true];
         yield 'queues' => [['queues' => 'invalid'], 'shouldCollectQueues', true];
-        yield 'stack frame variables' => [['stack_frame_variables' => ['mode' => 'invalid']], 'getStackFrameVariables', ['mode' => 'denyList', 'terms' => []]];
+        yield 'stack frame variables' => [['stack_frame_variables' => ['mode' => 'invalid']], 'getStackFrameVariables', KeyValueCollectionBehavior::denyList()];
         yield 'frame context lines' => [['frame_context_lines' => -1], 'getFrameContextLines', 5];
     }
 
@@ -276,14 +336,14 @@ final class DataCollectionOptionsTest extends TestCase
         $options->{$setter}($valid);
 
         $this->assertSame($options, $options->{$setter}($invalid));
-        $this->assertSame($expected, $options->{$getter}());
+        $this->assertEquals($expected, $options->{$getter}());
     }
 
     public function invalidSetterValueProvider(): \Generator
     {
-        yield 'cookies' => ['setCookies', 'getCookies', ['mode' => 'allowList'], ['mode' => 'invalid'], ['mode' => 'allowList', 'terms' => []]];
+        yield 'cookies' => ['setCookies', 'getCookies', ['mode' => 'allowList'], ['mode' => 'invalid'], KeyValueCollectionBehavior::allowList()];
         yield 'HTTP bodies' => ['setHttpBodies', 'getHttpBodies', ['incomingRequest'], ['invalid'], [HttpMessageType::incomingRequest()]];
-        yield 'stack frame variables' => ['setStackFrameVariables', 'getStackFrameVariables', ['mode' => 'allowList'], ['terms' => [42]], ['mode' => 'allowList', 'terms' => []]];
+        yield 'stack frame variables' => ['setStackFrameVariables', 'getStackFrameVariables', ['mode' => 'allowList'], ['terms' => [42]], KeyValueCollectionBehavior::allowList()];
         yield 'frame context lines' => ['setFrameContextLines', 'getFrameContextLines', 2, -1, 2];
     }
 }

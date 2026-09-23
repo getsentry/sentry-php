@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Psr\Log\LoggerInterface;
 use Sentry\OptionsResolver;
 
 /**
- * @phpstan-type KeyValueCollectionBehavior array{mode: 'off'|'denyList'|'allowList', terms: string[]}
+ * @phpstan-type KeyValueCollectionConfig array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
  * @phpstan-type HttpHeaders array{request: KeyValueCollectionBehavior, response: KeyValueCollectionBehavior}
  * @phpstan-type GenAi array{inputs: bool, outputs: bool}
  * @phpstan-type ResolvedDataCollectionOptions array{
@@ -26,22 +27,25 @@ use Sentry\OptionsResolver;
 final class DataCollectionOptions
 {
     private const COLLECTION_MODES = [
-        'off',
-        'denyList',
-        'allowList',
+        KeyValueCollectionBehavior::MODE_OFF,
+        KeyValueCollectionBehavior::MODE_DENY_LIST,
+        KeyValueCollectionBehavior::MODE_ALLOW_LIST,
     ];
 
-    public const HTTP_BODY_TYPES = HttpMessageType::TYPES;
+    private const KEY_VALUE_COLLECTION_DEFAULT = [
+        'mode' => KeyValueCollectionBehavior::MODE_DENY_LIST,
+        'terms' => [],
+    ];
 
     private const DEFAULTS = [
         'user_info' => true,
-        'cookies' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+        'cookies' => self::KEY_VALUE_COLLECTION_DEFAULT,
         'http_headers' => [
-            'request' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
-            'response' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+            'request' => self::KEY_VALUE_COLLECTION_DEFAULT,
+            'response' => self::KEY_VALUE_COLLECTION_DEFAULT,
         ],
-        'http_bodies' => self::HTTP_BODY_TYPES,
-        'url_query_params' => KeyValueDataFilter::DEFAULT_BEHAVIOR,
+        'http_bodies' => HttpMessageType::TYPES,
+        'url_query_params' => self::KEY_VALUE_COLLECTION_DEFAULT,
         'gen_ai' => [
             'inputs' => true,
             'outputs' => true,
@@ -65,15 +69,21 @@ final class DataCollectionOptions
     private $resolver;
 
     /**
+     * @var LoggerInterface|null
+     */
+    private $logger;
+
+    /**
      * @param array<string, mixed> $options
      */
-    public function __construct(array $options = [])
+    public function __construct(array $options = [], ?LoggerInterface $logger = null)
     {
+        $this->logger = $logger;
         $this->resolver = new OptionsResolver();
         $this->configureOptions($this->resolver);
 
         /** @var ResolvedDataCollectionOptions $resolvedOptions */
-        $resolvedOptions = $this->resolver->resolve($options);
+        $resolvedOptions = $this->resolver->resolve($options, $this->logger);
         $this->options = $resolvedOptions;
     }
 
@@ -87,10 +97,7 @@ final class DataCollectionOptions
         return $this->updateOptions(['user_info' => $userInfo]);
     }
 
-    /**
-     * @phpstan-return KeyValueCollectionBehavior
-     */
-    public function getCookies(): array
+    public function getCookies(): KeyValueCollectionBehavior
     {
         return $this->options['cookies'];
     }
@@ -98,7 +105,7 @@ final class DataCollectionOptions
     /**
      * @param array<string, mixed> $cookies
      *
-     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $cookies
+     * @phpstan-param KeyValueCollectionConfig $cookies
      */
     public function setCookies(array $cookies): self
     {
@@ -116,11 +123,9 @@ final class DataCollectionOptions
     /**
      * @param array<string, mixed> $httpHeaders
      *
-     * @phpstan-param array{
-     *     mode?: 'off'|'denyList'|'allowList',
-     *     terms?: string[],
-     *     request?: array{mode?: 'off'|'denyList'|'allowList', terms?: string[]},
-     *     response?: array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
+     * @phpstan-param KeyValueCollectionConfig|array{
+     *     request?: KeyValueCollectionConfig,
+     *     response?: KeyValueCollectionConfig
      * } $httpHeaders
      */
     public function setHttpHeaders(array $httpHeaders): self
@@ -149,10 +154,7 @@ final class DataCollectionOptions
         return $this->updateOptions(['http_bodies' => $httpBodies]);
     }
 
-    /**
-     * @phpstan-return KeyValueCollectionBehavior
-     */
-    public function getUrlQueryParams(): array
+    public function getUrlQueryParams(): KeyValueCollectionBehavior
     {
         return $this->options['url_query_params'];
     }
@@ -160,7 +162,7 @@ final class DataCollectionOptions
     /**
      * @param array<string, mixed> $urlQueryParams
      *
-     * @phpstan-param array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $urlQueryParams
+     * @phpstan-param KeyValueCollectionConfig $urlQueryParams
      */
     public function setUrlQueryParams(array $urlQueryParams): self
     {
@@ -205,23 +207,15 @@ final class DataCollectionOptions
         return $this->updateOptions(['queues' => $queues]);
     }
 
-    /**
-     * @phpstan-return KeyValueCollectionBehavior
-     */
-    public function getStackFrameVariables(): array
+    public function getStackFrameVariables(): KeyValueCollectionBehavior
     {
         return $this->options['stack_frame_variables'];
     }
 
-    public function shouldCollectStackFrameVariables(): bool
-    {
-        return $this->options['stack_frame_variables']['mode'] !== 'off';
-    }
-
     /**
-     * @param bool|array<string, mixed> $stackFrameVariables
+     * @param bool|array<string, mixed> $stackFrameVariables `true` collects all variables, `false` none
      *
-     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $stackFrameVariables
+     * @phpstan-param bool|KeyValueCollectionConfig $stackFrameVariables
      */
     public function setStackFrameVariables($stackFrameVariables): self
     {
@@ -241,42 +235,38 @@ final class DataCollectionOptions
     private function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setAllowedTypes('user_info', 'bool');
-        $resolver->setAllowedTypes('cookies', 'array');
-        $resolver->setAllowedTypes('cookies.mode', 'string');
-        $resolver->setAllowedTypes('cookies.terms', 'string[]');
+        $resolver->setAllowedTypes('cookies', ['array', KeyValueCollectionBehavior::class]);
         $resolver->setAllowedTypes('http_headers', 'array');
-        $resolver->setAllowedTypes('http_headers.request', 'array');
-        $resolver->setAllowedTypes('http_headers.request.mode', 'string');
-        $resolver->setAllowedTypes('http_headers.request.terms', 'string[]');
-        $resolver->setAllowedTypes('http_headers.response', 'array');
-        $resolver->setAllowedTypes('http_headers.response.mode', 'string');
-        $resolver->setAllowedTypes('http_headers.response.terms', 'string[]');
+        $resolver->setAllowedTypes('http_headers.request', ['array', KeyValueCollectionBehavior::class]);
+        $resolver->setAllowedTypes('http_headers.response', ['array', KeyValueCollectionBehavior::class]);
         $resolver->setAllowedTypes('http_bodies', ['string[]', HttpMessageType::class . '[]']);
-        $resolver->setAllowedTypes('url_query_params', 'array');
-        $resolver->setAllowedTypes('url_query_params.mode', 'string');
-        $resolver->setAllowedTypes('url_query_params.terms', 'string[]');
+        $resolver->setAllowedTypes('url_query_params', ['array', KeyValueCollectionBehavior::class]);
         $resolver->setAllowedTypes('gen_ai', 'array');
         $resolver->setAllowedTypes('gen_ai.inputs', 'bool');
         $resolver->setAllowedTypes('gen_ai.outputs', 'bool');
         $resolver->setAllowedTypes('database_query_data', 'bool');
         $resolver->setAllowedTypes('queues', 'bool');
-        $resolver->setAllowedTypes('stack_frame_variables', ['bool', 'array']);
-        $resolver->setAllowedTypes('stack_frame_variables.mode', 'string');
-        $resolver->setAllowedTypes('stack_frame_variables.terms', 'string[]');
+        $resolver->setAllowedTypes('stack_frame_variables', ['bool', 'array', KeyValueCollectionBehavior::class]);
         $resolver->setAllowedTypes('frame_context_lines', 'int');
 
-        $resolver->setAllowedValues('cookies.mode', self::COLLECTION_MODES);
-        $resolver->setAllowedValues('http_headers.request.mode', self::COLLECTION_MODES);
-        $resolver->setAllowedValues('http_headers.response.mode', self::COLLECTION_MODES);
-        $resolver->setAllowedValues('url_query_params.mode', self::COLLECTION_MODES);
-        $resolver->setAllowedValues('stack_frame_variables.mode', self::COLLECTION_MODES);
+        $isValidKeyValueCollection = \Closure::fromCallable([$this, 'isValidKeyValueCollection']);
+        $resolver->setAllowedValues('cookies', $isValidKeyValueCollection);
+        $resolver->setAllowedValues('http_headers.request', $isValidKeyValueCollection);
+        $resolver->setAllowedValues('http_headers.response', $isValidKeyValueCollection);
+        $resolver->setAllowedValues('url_query_params', $isValidKeyValueCollection);
+        $resolver->setAllowedValues('stack_frame_variables', $isValidKeyValueCollection);
         $resolver->setAllowedValues('http_bodies', static function (array $value): bool {
-            return array_diff($value, self::HTTP_BODY_TYPES) === [];
+            return array_diff($value, HttpMessageType::TYPES) === [];
         });
         $resolver->setAllowedValues('frame_context_lines', static function (int $value): bool {
             return $value >= 0;
         });
 
+        $normalizeKeyValueCollection = \Closure::fromCallable([$this, 'normalizeKeyValueCollection']);
+        $resolver->setNormalizer('cookies', $normalizeKeyValueCollection);
+        $resolver->setNormalizer('http_headers.request', $normalizeKeyValueCollection);
+        $resolver->setNormalizer('http_headers.response', $normalizeKeyValueCollection);
+        $resolver->setNormalizer('url_query_params', $normalizeKeyValueCollection);
         $resolver->setNormalizer('http_headers', static function (array $value): array {
             if (!\array_key_exists('request', $value) && !\array_key_exists('response', $value)) {
                 return [
@@ -314,23 +304,69 @@ final class DataCollectionOptions
     }
 
     /**
-     * @param bool|array<string, mixed> $value
+     * @param bool|KeyValueCollectionBehavior|array<string, mixed> $value
      *
-     * @phpstan-param bool|array{mode?: 'off'|'denyList'|'allowList', terms?: string[]} $value
-     *
-     * @phpstan-return array{mode?: 'off'|'denyList'|'allowList', terms?: string[]}
+     * @phpstan-param bool|KeyValueCollectionBehavior|KeyValueCollectionConfig $value
      */
-    private function normalizeStackFrameVariables($value): array
+    private function normalizeStackFrameVariables($value): KeyValueCollectionBehavior
     {
-        if ($value === true) {
-            return KeyValueDataFilter::DEFAULT_BEHAVIOR;
+        if (\is_bool($value)) {
+            return $value ? KeyValueCollectionBehavior::denyList() : KeyValueCollectionBehavior::off();
         }
 
-        if ($value === false) {
-            return ['mode' => 'off', 'terms' => []];
+        return $this->normalizeKeyValueCollection($value);
+    }
+
+    /**
+     * @param KeyValueCollectionBehavior|array<string, mixed> $value
+     *
+     * @phpstan-param KeyValueCollectionBehavior|KeyValueCollectionConfig $value
+     */
+    private function normalizeKeyValueCollection($value): KeyValueCollectionBehavior
+    {
+        if ($value instanceof KeyValueCollectionBehavior) {
+            return $value;
         }
 
-        return $value;
+        return KeyValueCollectionBehavior::fromArray($value + ['mode' => KeyValueCollectionBehavior::MODE_DENY_LIST]);
+    }
+
+    /**
+     * An omitted mode defaults to `denyList`. Unknown keys, modes or terms that are not strings
+     * make the whole value invalid.
+     *
+     * @param mixed $value
+     */
+    private function isValidKeyValueCollection($value): bool
+    {
+        if (!\is_array($value)) {
+            return true;
+        }
+
+        if (array_diff(array_keys($value), ['mode', 'terms']) !== []) {
+            return false;
+        }
+
+        if (\array_key_exists('mode', $value) && !\in_array($value['mode'], self::COLLECTION_MODES, true)) {
+            return false;
+        }
+
+        if (!\array_key_exists('terms', $value)) {
+            return true;
+        }
+
+        if (!\is_array($value['terms'])) {
+            return false;
+        }
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($value['terms'] as $term) {
+            if (!\is_string($term)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -338,7 +374,7 @@ final class DataCollectionOptions
      */
     private function updateOptions(array $override): self
     {
-        $resolved = $this->resolver->resolveOnly($override, $this->options);
+        $resolved = $this->resolver->resolveOnly($override, $this->options, $this->logger);
         /** @var ResolvedDataCollectionOptions $options */
         $options = array_merge($this->options, $resolved);
         $this->options = $options;
