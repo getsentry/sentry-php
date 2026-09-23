@@ -237,12 +237,53 @@ final class HttpBodyCollectorTest extends TestCase
         $this->assertNull(HttpBodyCollector::collect($options, HttpMessageType::incomingRequest(), str_repeat('é', 501), 'text/plain'));
     }
 
-    public function testParsedArraysAreNotSerializedForSizeChecks(): void
+    public function testParsedBodiesWithoutKnownLengthAreMeasured(): void
     {
-        $body = ['name' => str_repeat('a', 100001), 'password' => 'secret'];
-        $expected = ['name' => $body['name'], 'password' => '[Filtered]'];
+        $policy = $this->options(['max_request_body_size' => 'small']);
 
-        $this->assertSame($expected, HttpBodyCollector::collect($this->options(['max_request_body_size' => 'small']), HttpMessageType::incomingRequest(), $body));
+        $this->assertNull(HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), ['name' => str_repeat('a', 1000)]));
+        $this->assertSame(
+            ['name' => 'Alice', 'password' => '[Filtered]'],
+            HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), ['name' => 'Alice', 'password' => 'secret'])
+        );
+    }
+
+    public function testKnownLengthOfParsedBodiesIsTrusted(): void
+    {
+        $body = ['name' => str_repeat('a', 100001)];
+
+        $this->assertSame($body, HttpBodyCollector::collect($this->options(['max_request_body_size' => 'small']), HttpMessageType::incomingRequest(), $body, '', 100));
+    }
+
+    public function testParsedServerBodiesWithoutContentLengthAreMeasured(): void
+    {
+        $policy = $this->options(['max_request_body_size' => 'small']);
+        $request = new ServerRequest('POST', '/', ['Transfer-Encoding' => 'chunked']);
+
+        $this->assertNull(HttpBodyCollector::collectServerRequest($policy, $request->withParsedBody(['name' => str_repeat('a', 1000)])));
+        $this->assertSame(['name' => 'Alice'], HttpBodyCollector::collectServerRequest($policy, $request->withParsedBody(['name' => 'Alice'])));
+    }
+
+    public function testParsedBodiesWithInvalidUtf8AreMeasuredAndCollected(): void
+    {
+        $body = ['name' => "Alice \xB1\x31"];
+
+        $this->assertSame($body, HttpBodyCollector::collect($this->options(['max_request_body_size' => 'small']), HttpMessageType::incomingRequest(), $body));
+    }
+
+    public function testMeasuringParsedBodiesDoesNotInvokeApplicationCode(): void
+    {
+        $object = new class implements \JsonSerializable {
+            public function jsonSerialize(): array
+            {
+                throw new \LogicException('Measuring the body must not serialize application objects.');
+            }
+        };
+
+        $this->assertSame(
+            ['name' => 'Alice', 'object' => '[Filtered]', 'infinite' => '[Filtered]'],
+            HttpBodyCollector::collect($this->options(), HttpMessageType::incomingRequest(), ['name' => 'Alice', 'object' => $object, 'infinite' => \INF])
+        );
     }
 
     public function testFilteringDoesNotRecheckTheResultSize(): void
