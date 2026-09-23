@@ -614,7 +614,7 @@ final class RequestIntegrationTest extends TestCase
                     ],
                 ]),
             [
-                'url' => 'http://www.example.com/foo?api%5Ftoken=[Filtered]&q=a%20b%26c',
+                'url' => 'http://[Filtered]:[Filtered]@www.example.com/foo?api%5Ftoken=[Filtered]&q=a%20b%26c',
                 'method' => 'POST',
                 'query_string' => 'api%5Ftoken=[Filtered]&q=a%20b%26c',
                 'env' => [

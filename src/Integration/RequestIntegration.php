@@ -6,8 +6,10 @@ namespace Sentry\Integration;
 
 use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpBodyCollector;
+use Sentry\DataCollection\HttpCookieCollector;
+use Sentry\DataCollection\HttpHeaderCollector;
+use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpUrlCollector;
-use Sentry\DataCollection\RequestDataCollector;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\OptionsResolver;
@@ -91,35 +93,36 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         $policy = DataCollectionPolicy::fromOptions($options);
-        $collector = new RequestDataCollector($policy, $this->options['pii_sanitize_headers'] ?? null);
+        $uri = $request->getUri();
 
         $requestData = [
-            'url' => HttpUrlCollector::collect($policy, (string) $request->getUri()),
+            'url' => HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $uri),
             'method' => $request->getMethod(),
         ];
 
-        $queryString = $collector->collectQueryString($request->getUri()->getQuery());
+        $queryString = HttpUrlCollector::collectQueryString($policy, $uri->getQuery());
         if ($queryString !== null) {
             $requestData['query_string'] = $queryString;
         }
 
         $serverParams = $request->getServerParams();
-        if (!empty($serverParams['REMOTE_ADDR'])) {
+        if (!empty($serverParams['REMOTE_ADDR']) && $policy->shouldCollectUserInfo()) {
             /** @var string $ipAddress */
             $ipAddress = $serverParams['REMOTE_ADDR'];
-            $userData = $collector->collectUserInfo(['ip_address' => $ipAddress]);
-            if ($userData !== []) {
-                $this->addRequestUserInfo($event, $userData, $requestData);
-            }
+            $this->addRequestUserInfo($event, $ipAddress, $requestData);
         }
 
-        $cookies = $collector->collectCookies($request->getCookieParams());
-
+        $cookies = HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), $request->getCookieParams());
         if ($cookies !== null) {
             $requestData['cookies'] = $cookies;
         }
 
-        $headers = $collector->collectHeaders($request->getHeaders());
+        $headers = HttpHeaderCollector::collect(
+            $policy,
+            HttpMessageType::incomingRequest(),
+            $request->getHeaders(),
+            $this->options['pii_sanitize_headers'] ?? null
+        );
         if ($headers !== null) {
             $requestData['headers'] = $headers;
         }
@@ -135,18 +138,17 @@ final class RequestIntegration implements IntegrationInterface
     }
 
     /**
-     * @param array<string, string> $userData
-     * @param array<string, mixed>  $requestData
+     * @param array<string, mixed> $requestData
      */
-    private function addRequestUserInfo(Event $event, array $userData, array &$requestData): void
+    private function addRequestUserInfo(Event $event, string $ipAddress, array &$requestData): void
     {
         $user = $event->getUser();
-        $requestData['env'] = ['REMOTE_ADDR' => $userData['ip_address']];
+        $requestData['env'] = ['REMOTE_ADDR' => $ipAddress];
 
         if ($user === null) {
-            $user = UserDataBag::createFromUserIpAddress($userData['ip_address']);
+            $user = UserDataBag::createFromUserIpAddress($ipAddress);
         } elseif ($user->getIpAddress() === null) {
-            $user->setIpAddress($userData['ip_address']);
+            $user->setIpAddress($ipAddress);
         }
 
         $event->setUser($user);
@@ -163,6 +165,6 @@ final class RequestIntegration implements IntegrationInterface
         $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
             return array_map('strtolower', $value);
         });
-        $resolver->setDefault('pii_sanitize_headers', RequestDataCollector::DEFAULT_PII_SANITIZE_HEADERS);
+        $resolver->setDefault('pii_sanitize_headers', HttpHeaderCollector::DEFAULT_PII_SANITIZE_HEADERS);
     }
 }
