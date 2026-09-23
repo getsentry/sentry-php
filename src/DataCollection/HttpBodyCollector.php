@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Query;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Exception\JsonException;
 use Sentry\Util\JSON;
@@ -35,6 +36,14 @@ final class HttpBodyCollector
         }
 
         return self::collectSource($policy, HttpMessageType::incomingRequest(), new ServerRequestBodySource($request));
+    }
+
+    /**
+     * @return array<array-key, mixed>|string|null
+     */
+    public static function collectPsr7Message(DataCollectionPolicy $policy, HttpMessageType $messageType, MessageInterface $message)
+    {
+        return self::collectSource($policy, $messageType, new Psr7MessageBodySource($message));
     }
 
     /**
