@@ -412,7 +412,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ])
         );
 
-        $this->assertSame('https://www.example.com/path?search=hello%20world&password=[Filtered]', $spanData['url.full']);
+        $this->assertSame('https://[Filtered]:[Filtered]@www.example.com/path?search=hello%20world&password=[Filtered]#fragment', $spanData['url.full']);
         $this->assertSame('search=hello%20world&password=[Filtered]', $spanData['http.query']);
         $this->assertSame(['[Filtered]'], $spanData['http.request.header.authorization']);
         $this->assertSame(['application/json'], $spanData['http.response.header.content-type']);
@@ -525,6 +525,41 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         ];
         $this->assertSame($expected, $spanData);
         $this->assertSame(array_merge(['url' => 'https://www.example.com'], $expected), $breadcrumbData);
+    }
+
+    public function testTraceSupportsNumericHeaderNames(): void
+    {
+        [$spanData] = $this->traceExchange(
+            ['data_collection' => []],
+            new Request('GET', 'https://www.example.com/', ['123' => 'request']),
+            new Response(200, ['456' => 'response'])
+        );
+
+        $this->assertSame(['request'], $spanData['http.request.header.123']);
+        $this->assertSame(['response'], $spanData['http.response.header.456']);
+    }
+
+    public function testTracePreservesExplicitSpanDataInLegacyMode(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+        $function = (GuzzleTracingMiddleware::trace($hub))(function () use ($hub): PromiseInterface {
+            $span = $hub->getSpan();
+            $this->assertNotNull($span);
+            $span->setData(['http.query' => 'explicit']);
+
+            return new FulfilledPromise(new Response(200));
+        });
+
+        $function(new Request('GET', 'https://www.example.com/?token=secret'), [])->wait();
+
+        $data = $this->getHttpSpan($transaction)->getData();
+        $this->assertSame('explicit', $data['http.query']);
+        $this->assertSame(200, $data['http.response.status_code']);
+        $this->assertArrayNotHasKey('url.full', $data);
     }
 
     public function testTracePreservesExplicitSpanData(): void
