@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -32,6 +33,7 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
+use function Sentry\addAttachment;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
@@ -333,6 +335,21 @@ final class FunctionsTest extends TestCase
             $this->assertNotNull($event);
             $this->assertSame([$breadcrumb], $event->getBreadcrumbs());
         });
+    }
+
+    public function testAddAttachment(): void
+    {
+        $attachment = Attachment::fromBytes('test.txt', 'test');
+        $scope = new Scope();
+        SentrySdk::setCurrentHub(new Hub(null, $scope));
+
+        addAttachment($attachment);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$attachment], $event->getAttachments());
+        $this->assertSame('void', (string) (new \ReflectionFunction('Sentry\addAttachment'))->getReturnType());
     }
 
     public function testWithScope(): void
