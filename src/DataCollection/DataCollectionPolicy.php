@@ -94,6 +94,21 @@ final class DataCollectionPolicy
         return $this->options !== null && $this->options->shouldSendDefaultPii();
     }
 
+    /**
+     * Returns the number of source code lines to include above and below each stack frame,
+     * or `null` if no source code context should be collected.
+     */
+    public function getFrameContextLines(): ?int
+    {
+        $dataCollection = $this->getDataCollection();
+
+        if ($dataCollection !== null) {
+            return $dataCollection->getFrameContextLines();
+        }
+
+        return $this->options === null ? null : $this->options->getContextLines();
+    }
+
     private function calculateMaxHttpBodyLength(HttpMessageType $messageType): int
     {
         if ($this->options === null) {

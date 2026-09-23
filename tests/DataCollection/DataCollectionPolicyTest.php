@@ -24,6 +24,7 @@ final class DataCollectionPolicyTest extends TestCase
         $this->assertNull($policy->getOptions());
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
+        $this->assertNull($policy->getFrameContextLines());
     }
 
     /**
@@ -121,5 +122,26 @@ final class DataCollectionPolicyTest extends TestCase
         yield 'medium' => ['medium', 10000];
         yield 'never' => ['never', null];
         yield 'always' => ['always', -1];
+    }
+
+    /**
+     * @dataProvider frameContextLinesProvider
+     *
+     * @param array<string, mixed> $configuration
+     */
+    public function testFrameContextLinesUseOnlyTheActiveMode(array $configuration, ?int $expected): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options($configuration));
+
+        $this->assertSame($expected, $policy->getFrameContextLines());
+    }
+
+    public function frameContextLinesProvider(): \Generator
+    {
+        yield 'legacy default' => [[], 5];
+        yield 'legacy configured' => [['context_lines' => 3], 3];
+        yield 'legacy disabled' => [['context_lines' => null], null];
+        yield 'configured default ignores legacy option' => [['data_collection' => [], 'context_lines' => null], 5];
+        yield 'configured' => [['data_collection' => ['frame_context_lines' => 0], 'context_lines' => 3], 0];
     }
 }
