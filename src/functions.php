@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment\Attachment;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
@@ -513,6 +514,17 @@ function addFeatureFlag(string $name, bool $result): void
 {
     SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
         $scope->addFeatureFlag($name, $result);
+    });
+}
+
+/**
+ * Adds an attachment to the current scope. For large attachments, it might be helpful
+ * to use the SDK Sidecar Transport: https://docs.sentry.io/platforms/php/agent/.
+ */
+function addAttachment(Attachment $attachment): void
+{
+    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($attachment) {
+        $scope->addAttachment($attachment);
     });
 }
 
