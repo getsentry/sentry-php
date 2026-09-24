@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 4.32.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.32.0.
+
+### Features
+
+- Support concurrent runtime contexts with `RuntimeContextStorageInterface` and `SentrySdk::setRuntimeContextStorage()`, allowing integrations to isolate telemetry from overlapping executions. [(#2190)](https://github.com/getsentry/sentry-php/pull/2190)
+- Allow passing a `HubInterface` to `startContext()` when starting an isolated runtime context. [(#2191)](https://github.com/getsentry/sentry-php/pull/2191)
+- Handle exceptions thrown by user-provided callbacks without crashing the application. [(#2199)](https://github.com/getsentry/sentry-php/pull/2199)
+
+### Bug Fixes
+
+- Avoid PHP 8.5 warnings when serializing `INF`, `NAN`, and floats outside the integer range. [(#2192)](https://github.com/getsentry/sentry-php/pull/2192)
+
 ## 4.31.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.31.0.
