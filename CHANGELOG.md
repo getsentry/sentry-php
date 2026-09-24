@@ -6,6 +6,7 @@ The Sentry SDK team is happy to announce the immediate availability of Sentry PH
 
 ### Features
 
+- Add attachment support (backport from v5). [(#2217)](https://github.com/getsentry/sentry-php/pull/2217)
 - Support concurrent runtime contexts with `RuntimeContextStorageInterface` and `SentrySdk::setRuntimeContextStorage()`, allowing integrations to isolate telemetry from overlapping executions. [(#2190)](https://github.com/getsentry/sentry-php/pull/2190)
 - Allow passing a `HubInterface` to `startContext()` when starting an isolated runtime context. [(#2191)](https://github.com/getsentry/sentry-php/pull/2191)
 - Handle exceptions thrown by user-provided callbacks without crashing the application. [(#2199)](https://github.com/getsentry/sentry-php/pull/2199)
