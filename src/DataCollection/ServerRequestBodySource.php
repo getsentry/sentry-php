@@ -39,8 +39,8 @@ final class ServerRequestBodySource implements HttpBodySourceInterface
     public function read(int $limit)
     {
         $body = $this->request->getParsedBody();
-        if ($body !== null) {
-            return \is_array($body) ? $body : null;
+        if ($body !== null && $body !== []) {
+            return $body;
         }
 
         return $this->readStream($limit);
