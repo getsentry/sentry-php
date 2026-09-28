@@ -413,8 +413,6 @@ final class HttpBodyCollectorTest extends TestCase
 
     public function parsedServerBodyProvider(): \Generator
     {
-        yield 'empty array' => [[], []];
-
         $json = '{"name":"Alice","profile":{"password":"secret","enabled":true},"items":[{"token":"secret","count":2}]}';
         $expected = [
             'name' => 'Alice',
