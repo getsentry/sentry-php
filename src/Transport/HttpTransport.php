@@ -130,6 +130,10 @@ class HttpTransport implements TransportInterface
             return new Result(ResultStatus::failed());
         }
 
+        // Sentry replies to rate limited requests with an error body, so the rate limits
+        // must be recorded before bailing out on error responses.
+        $this->rateLimiter->handleResponse($response);
+
         if ($response->hasError()) {
             $this->logger->error(
                 \sprintf('Failed to send %s to %s. Reason: "%s".', $eventDescription, $targetDescription, $response->getError()),
@@ -138,8 +142,6 @@ class HttpTransport implements TransportInterface
 
             return new Result(ResultStatus::unknown());
         }
-
-        $this->rateLimiter->handleResponse($response);
 
         $resultStatus = ResultStatus::createFromHttpStatusCode($response->getStatusCode());
 
