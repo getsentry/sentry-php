@@ -85,6 +85,17 @@ final class RateLimiterTest extends TestCase
         ];
     }
 
+    public function testHandleResponseWithMultipleCommaSpaceSeparatedLimits(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        // Relay joins multiple rate limits with ", "
+        $this->rateLimiter->handleResponse(new Response(429, ['X-Sentry-Rate-Limits' => ['60:transaction:key, 2700:default;error;security:organization']], ''));
+
+        $this->assertSame(1644105600 + 60, $this->rateLimiter->getDisabledUntil(EventType::transaction()));
+        $this->assertSame(1644105600 + 2700, $this->rateLimiter->getDisabledUntil(EventType::event()));
+    }
+
     public function testIsRateLimited(): void
     {
         // Events should not be rate-limited at all

@@ -77,7 +77,7 @@ final class RateLimiter
                  * $parameters[3] - reason_code (not used)
                  * $parameters[4] - namespaces (only returned if categories contains "metric_bucket").
                  */
-                $parameters = explode(':', $limit, 5);
+                $parameters = explode(':', trim($limit), 5);
 
                 $retryAfter = $now + (ctype_digit($parameters[0]) ? (int) $parameters[0] : self::DEFAULT_RETRY_AFTER_SECONDS);
 
