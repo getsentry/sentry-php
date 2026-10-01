@@ -21,6 +21,7 @@ final class DataCollectionPolicyTest extends TestCase
 
         $this->assertTrue($policy->isLegacyMode());
         $this->assertFalse($policy->shouldCollectUserInfo());
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
         $this->assertNull($policy->getOptions());
         $this->assertNull($policy->getHttpBodyLimit(HttpMessageType::incomingRequest()));
         $this->assertNull($policy->getLegacyRequestBodyLimit());
@@ -43,6 +44,34 @@ final class DataCollectionPolicyTest extends TestCase
         yield 'legacy enabled' => [['send_default_pii' => true], true];
         yield 'configured default ignores disabled legacy option' => [['data_collection' => [], 'send_default_pii' => false], true];
         yield 'configured disabled' => [['data_collection' => ['user_info' => false], 'send_default_pii' => true], false];
+    }
+
+    public function testDatabaseQueryDataIsDisabledByDefault(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options());
+
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
+    }
+
+    public function testSendDefaultPiiDoesNotEnableDatabaseQueryData(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
+
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
+    }
+
+    public function testDatabaseQueryDataIsEnabledWithDataCollection(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['data_collection' => []]));
+
+        $this->assertTrue($policy->shouldCollectDatabaseQueryData());
+    }
+
+    public function testDatabaseQueryDataCanBeDisabled(): void
+    {
+        $policy = DataCollectionPolicy::fromOptions(new Options(['data_collection' => ['database_query_data' => false]]));
+
+        $this->assertFalse($policy->shouldCollectDatabaseQueryData());
     }
 
     public function testFromHubUsesClientConfiguration(): void

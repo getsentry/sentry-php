@@ -503,6 +503,42 @@ final class KeyValueDataFilterTest extends TestCase
         ]));
     }
 
+    public function testSerializeValueIsOnlyCalledForKeysThatAreNotFiltered(): void
+    {
+        $serializedKeys = [];
+        $serializeValue = static function (array $value) use (&$serializedKeys): array {
+            $serializedKeys[] = $value['key'];
+
+            return ['name' => $value['key'], 'password' => 'introduced by serialization'];
+        };
+
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::denyList()))->filterKeyValueData([
+            'profile' => ['key' => 'profile'],
+            'password' => ['key' => 'password'],
+        ], $serializeValue);
+
+        $this->assertSame(['profile'], $serializedKeys);
+        $this->assertSame([
+            'profile' => ['name' => 'profile', 'password' => '[Filtered]'],
+            'password' => '[Filtered]',
+        ], $filtered);
+    }
+
+    public function testSerializeValueIsNotCalledWhenCollectionIsOff(): void
+    {
+        $calls = 0;
+
+        $this->assertNull((new KeyValueDataFilter(KeyValueCollectionBehavior::off()))->filterKeyValueData(
+            ['theme' => 'dark'],
+            static function ($value) use (&$calls) {
+                ++$calls;
+
+                return $value;
+            }
+        ));
+        $this->assertSame(0, $calls);
+    }
+
     /**
      * @return array<string, string>
      */

@@ -109,6 +109,13 @@ final class DataCollectionPolicy
         return $this->options === null ? null : $this->options->getContextLines();
     }
 
+    public function shouldCollectDatabaseQueryData(): bool
+    {
+        $dataCollection = $this->getDataCollection();
+
+        return $dataCollection !== null && $dataCollection->shouldCollectDatabaseQueryData();
+    }
+
     private function calculateMaxHttpBodyLength(HttpMessageType $messageType): int
     {
         if ($this->options === null) {
