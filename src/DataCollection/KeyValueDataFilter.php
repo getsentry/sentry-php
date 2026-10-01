@@ -263,10 +263,10 @@ final class KeyValueDataFilter
         }
 
         if ($this->behavior->getMode() === KeyValueCollectionBehavior::MODE_ALLOW_LIST) {
-            return !self::matchesAnyTerm($key, $this->behavior->getTerms(), false);
+            return !self::matchesAnyTerm($key, $this->behavior->getTerms());
         }
 
-        return self::matchesAnyTerm($key, $this->behavior->getTerms(), true);
+        return self::matchesAnyTerm($key, $this->behavior->getTerms());
     }
 
     private static function matchesMandatoryDenyList(string $key): bool
@@ -283,7 +283,7 @@ final class KeyValueDataFilter
     /**
      * @param string[] $terms
      */
-    private static function matchesAnyTerm(string $key, array $terms, bool $partial): bool
+    private static function matchesAnyTerm(string $key, array $terms): bool
     {
         $key = strtolower($key);
 
@@ -292,7 +292,7 @@ final class KeyValueDataFilter
             if ($term === '') {
                 continue;
             }
-            if ($partial ? strpos($key, $term) !== false : $key === $term) {
+            if (strpos($key, $term) !== false) {
                 return true;
             }
         }

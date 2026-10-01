@@ -353,13 +353,13 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
-    public function testCustomAllowTermsMatchWholeNames(): void
+    public function testCustomAllowTermsMatchSubstrings(): void
     {
         $behavior = KeyValueCollectionBehavior::allowList(['THEME', 'api_token']);
 
         $this->assertSame([
             'theme' => 'dark',
-            'user_theme' => '[Filtered]',
+            'user_theme' => 'light',
             'api_token' => '[Filtered]',
         ], (new KeyValueDataFilter($behavior))->filterKeyValueData($this->customTermInput()));
     }
@@ -410,9 +410,9 @@ final class KeyValueDataFilterTest extends TestCase
 
     public function customQueryTermProvider(): \Generator
     {
-        yield 'allow list uses whole names' => [
+        yield 'allow list uses partial names' => [
             KeyValueCollectionBehavior::allowList(['THEME', 'api_token']),
-            '%74heme=dark&user_theme=[Filtered]&api_token=[Filtered]&q=[Filtered]',
+            '%74heme=dark&user_theme=light&api_token=[Filtered]&q=[Filtered]',
         ];
         yield 'deny list uses partial names' => [
             KeyValueCollectionBehavior::denyList(['THEME', 'api_token']),
