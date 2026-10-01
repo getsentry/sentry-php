@@ -12,6 +12,7 @@ use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -234,6 +235,28 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
         $this->assertSame('foo@example.com', $attributes->get('user.email')->getValue());
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
+    }
+
+    public function testBeforeSendLogExceptionDropsLogAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $client = ClientBuilder::create([
+            'before_send_log' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'logger' => StubLogger::getInstance(),
+        ])->getClient();
+        SentrySdk::setCurrentHub(new Hub($client));
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $this->assertEmpty($aggregator->all());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "before_send_log" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testFlushesImmediatelyWhenThresholdIsReached(): void

@@ -279,6 +279,50 @@ final class HttpTransportTest extends TestCase
     /**
      * @group time-sensitive
      */
+    public function testSendBacksOffWhenRateLimitedResponseHasBody(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $event = Event::createEvent();
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        // Sentry replies to rate limited envelopes with a JSON body, which the
+        // default HTTP client exposes as the response error.
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn(new Response(
+                429,
+                [
+                    'Retry-After' => ['60'],
+                    'X-Sentry-Rate-Limits' => ['60:error:organization'],
+                ],
+                '{"detail":"event submission rejected with_reason: RateLimited"}'
+            ));
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $transport->send($event);
+
+        // The rate limit must be respected, so no second HTTP request is made
+        $result = $transport->send($event);
+
+        $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
+    }
+
+    /**
+     * @group time-sensitive
+     */
     public function testDropsProfileAndSendsTransactionWhenProfileRateLimited(): void
     {
         ClockMock::withClockMock(1644105600);

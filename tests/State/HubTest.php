@@ -20,6 +20,7 @@ use Sentry\Options;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
@@ -568,6 +569,27 @@ final class HubTest extends TestCase
         });
     }
 
+    public function testBeforeBreadcrumbExceptionDropsBreadcrumbAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $options = new Options([
+            'before_breadcrumb' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'logger' => StubLogger::getInstance(),
+        ]);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+        $hub = new Hub($client);
+
+        $this->assertFalse($hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting')));
+        $this->assertSame([[
+            'level' => 'error',
+            'message' => 'The "before_breadcrumb" callback failed with exception: "test".',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
     public function testAddBreadcrumbStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void
     {
         $callbackInvoked = false;
@@ -634,6 +656,26 @@ final class HubTest extends TestCase
         $transaction = $hub->startTransaction($transactionContext);
 
         $this->assertSame($expectedSampled, $transaction->getSampled());
+    }
+
+    public function testTracesSamplerExceptionDropsTransactionAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $options = new Options([
+            'logger' => StubLogger::getInstance(),
+            'traces_sampler' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+        ]);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+
+        $this->assertFalse((new Hub($client))->startTransaction(new TransactionContext())->getSampled());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "traces_sampler" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testStartTransactionIgnoresBaggageSampleRateWithoutSentryTrace(): void
@@ -832,6 +874,28 @@ final class HubTest extends TestCase
 
         $hub = new Hub($client);
         $hub->startTransaction(new TransactionContext(), $customSamplingContext);
+    }
+
+    public function testProfilesSamplerExceptionDropsProfileAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $options = new Options([
+            'logger' => StubLogger::getInstance(),
+            'profiles_sampler' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'traces_sample_rate' => 1.0,
+        ]);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+        $transaction = (new Hub($client))->startTransaction(new TransactionContext());
+
+        $this->assertNull($transaction->getProfiler());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "profiles_sampler" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testStartTransactionStartsProfilerWithProfilesSampler(): void

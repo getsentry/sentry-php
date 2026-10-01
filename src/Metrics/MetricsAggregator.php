@@ -109,9 +109,15 @@ final class MetricsAggregator
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         if ($client !== null) {
-            $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
-            $metric = $beforeSendMetric($metric);
-            if ($metric === null) {
+            try {
+                $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
+                $metric = $beforeSendMetric($metric);
+                if ($metric === null) {
+                    return;
+                }
+            } catch (\Throwable $exception) {
+                $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
+
                 return;
             }
         }

@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.31.0';
+    public const SDK_VERSION = '4.32.0';
 
     /**
      * Regex pattern to detect if a string is a regex pattern (starts and ends with / optionally followed by flags).
@@ -477,11 +477,29 @@ class Client implements ClientInterface
     {
         switch ($event->getType()) {
             case EventType::event():
-                return ($this->options->getBeforeSendCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             case EventType::transaction():
-                return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send_transaction" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             case EventType::checkIn():
-                return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send_check_in" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             default:
                 return $event;
         }
