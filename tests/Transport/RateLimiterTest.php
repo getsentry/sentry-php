@@ -96,6 +96,53 @@ final class RateLimiterTest extends TestCase
         $this->assertSame(1644105600 + 2700, $this->rateLimiter->getDisabledUntil(EventType::event()));
     }
 
+    /**
+     * @dataProvider attachmentRateLimitsDataProvider
+     */
+    public function testAttachmentsAreRateLimited(string $rateLimitsHeader, int $expectedDisabledUntil): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $this->rateLimiter->handleResponse(new Response(429, ['X-Sentry-Rate-Limits' => [$rateLimitsHeader]], ''));
+
+        $this->assertTrue($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+        $this->assertSame($expectedDisabledUntil, $this->rateLimiter->getDisabledUntil(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+
+        // Attachment rate limits must not affect the events the attachments belong to
+        $this->assertEventTypesAreRateLimited([]);
+
+        ClockMock::withClockMock($expectedDisabledUntil);
+
+        $this->assertFalse($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+    }
+
+    public static function attachmentRateLimitsDataProvider(): \Generator
+    {
+        yield 'Back-off using X-Sentry-Rate-Limits header with attachment category' => [
+            '60:attachment:organization',
+            1644105600 + 60,
+        ];
+
+        yield 'Back-off using X-Sentry-Rate-Limits header with attachment_item category' => [
+            '60:attachment_item:organization',
+            1644105600 + 60,
+        ];
+
+        yield 'Back-off using the longest of the attachment and attachment_item categories' => [
+            '120:attachment_item:organization, 60:attachment:organization',
+            1644105600 + 120,
+        ];
+    }
+
+    public function testAttachmentsAreRateLimitedWhenAllCategoriesAreRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $this->rateLimiter->handleResponse(new Response(429, ['Retry-After' => ['60']], ''));
+
+        $this->assertTrue($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+    }
+
     public function testIsRateLimited(): void
     {
         // Events should not be rate-limited at all
