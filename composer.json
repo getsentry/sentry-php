@@ -86,6 +86,11 @@
         "allow-plugins": {
             "php-http/discovery": false,
             "tbachert/spi": false
+        },
+        "policy": {
+            "advisories": {
+                "block": false
+            }
         }
     },
     "prefer-stable": true
