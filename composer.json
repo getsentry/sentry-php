@@ -41,6 +41,7 @@
         "open-telemetry/api": "^1.1",
         "open-telemetry/context": "^1.1",
         "open-telemetry/exporter-otlp": "^1.1",
+        "open-telemetry/gen-otlp-protobuf": "^1.2.1",
         "open-telemetry/sem-conv": "^1.27",
         "open-telemetry/sdk": "^1.1",
         "phpstan/phpstan": "^1.3",
