@@ -1185,7 +1185,8 @@ final class Options
     /**
      * Sets a list of callables that will be called to customize how objects are
      * serialized in the event's payload. The list must be a map of FQCN/callable
-     * pairs.
+     * pairs. Use `object` as the key to register a serializer that matches any
+     * object; return `null` from it to fall back to the default serialization.
      *
      * @param array<string, callable> $serializers The list of serializer callbacks
      */
