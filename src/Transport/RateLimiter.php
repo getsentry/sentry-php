@@ -19,6 +19,16 @@ final class RateLimiter
     /**
      * @var string
      */
+    public const DATA_CATEGORY_ATTACHMENT = 'attachment';
+
+    /**
+     * @var string
+     */
+    private const DATA_CATEGORY_ATTACHMENT_ITEM = 'attachment_item';
+
+    /**
+     * @var string
+     */
     private const DATA_CATEGORY_ERROR = 'error';
 
     /**
@@ -131,7 +141,14 @@ final class RateLimiter
             $eventType = self::DATA_CATEGORY_CHECK_IN;
         }
 
-        return max($this->rateLimits['all'] ?? 0, $this->rateLimits[$eventType] ?? 0);
+        $disabledUntil = max($this->rateLimits['all'] ?? 0, $this->rateLimits[$eventType] ?? 0);
+
+        // Attachments can be dropped for size or for count, so we have to check the count here as well
+        if ($eventType === self::DATA_CATEGORY_ATTACHMENT) {
+            $disabledUntil = max($disabledUntil, $this->rateLimits[self::DATA_CATEGORY_ATTACHMENT_ITEM] ?? 0);
+        }
+
+        return $disabledUntil;
     }
 
     private function parseRetryAfterHeader(int $currentTime, string $header): int

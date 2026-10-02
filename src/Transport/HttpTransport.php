@@ -114,6 +114,16 @@ class HttpTransport implements TransportInterface
                     );
                 }
             }
+
+            // Attachments are rate limited independently of the event they belong to,
+            // so only the attachments are dropped and the event is still sent.
+            if ($event->getAttachments() !== [] && $this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT)) {
+                $event->setAttachments([]);
+                $this->logger->warning(
+                    'Rate limit exceeded for sending requests of type "attachment". The attachments have been dropped.',
+                    ['event' => $event]
+                );
+            }
         }
 
         $request = new Request();
