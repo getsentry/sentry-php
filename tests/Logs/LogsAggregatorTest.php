@@ -7,10 +7,13 @@ namespace Sentry\Tests\Logs;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\ClientInterface;
+use Sentry\Event;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
+use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
@@ -35,8 +38,7 @@ final class LogsAggregatorTest extends TestCase
             'enable_logs' => true,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -93,8 +95,7 @@ final class LogsAggregatorTest extends TestCase
             'enable_logs' => true,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -170,22 +171,19 @@ final class LogsAggregatorTest extends TestCase
             'server_name' => 'web-server-01',
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
-        $hub->configureScope(static function (Scope $scope) {
-            $userDataBag = new UserDataBag();
-            $userDataBag->setId('unique_id');
-            $userDataBag->setEmail('foo@example.com');
-            $userDataBag->setUsername('my_user');
-            $scope->setUser($userDataBag);
-        });
+        $userDataBag = new UserDataBag();
+        $userDataBag->setId('unique_id');
+        $userDataBag->setEmail('foo@example.com');
+        $userDataBag->setUsername('my_user');
+        SentrySdk::getIsolationScope()->setUser($userDataBag);
 
         $spanContext = new SpanContext();
         $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
         $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
         $span = new Span($spanContext);
-        $hub->setSpan($span);
+        SentrySdk::getIsolationScope()->setSpan($span);
 
         $aggregator = new LogsAggregator();
 
@@ -211,6 +209,31 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
+    public function testGlobalScopeAttributesAreAddedToLogMessage(): void
+    {
+        $client = ClientBuilder::create([
+            'enable_logs' => true,
+        ])->getClient();
+
+        SentrySdk::init($client);
+        SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
+
+        $spanContext = new SpanContext();
+        $spanContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
+        $spanContext->setSpanId(new SpanId('566e3688a61d4bc8'));
+        SentrySdk::getIsolationScope()->setSpan(new Span($spanContext));
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $logs = $aggregator->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes();
+        $this->assertSame('global-user', $attributes->get('user.id')->getValue());
+        $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
+    }
+
     public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
     {
         $client = ClientBuilder::create([
@@ -218,16 +241,13 @@ final class LogsAggregatorTest extends TestCase
             'send_default_pii' => false,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
-        $hub->configureScope(static function (Scope $scope) {
-            $userDataBag = new UserDataBag();
-            $userDataBag->setId('unique_id');
-            $userDataBag->setEmail('foo@example.com');
-            $userDataBag->setUsername('my_user');
-            $scope->setUser($userDataBag);
-        });
+        $userDataBag = new UserDataBag();
+        $userDataBag->setId('unique_id');
+        $userDataBag->setEmail('foo@example.com');
+        $userDataBag->setUsername('my_user');
+        SentrySdk::getIsolationScope()->setUser($userDataBag);
 
         $aggregator = new LogsAggregator();
         $aggregator->add(LogLevel::info(), 'User performed action');
@@ -252,8 +272,7 @@ final class LogsAggregatorTest extends TestCase
             'log_flush_threshold' => 2,
         ])->setTransport($transport)->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -271,6 +290,39 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('Second message', StubTransport::$events[0]->getLogs()[1]->getBody());
     }
 
+    public function testFlushCapturesLogsWithProvidedClient(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'enable_logs' => true,
+            ]));
+
+        $fallbackClient = $this->createMock(ClientInterface::class);
+        $fallbackClient->method('getOptions')
+            ->willReturn(new Options([
+                'enable_logs' => true,
+            ]));
+        $fallbackClient->expects($this->never())
+            ->method('captureEvent');
+        SentrySdk::init($fallbackClient);
+
+        $aggregator = new LogsAggregator();
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with(
+                $this->callback(function (Event $event): bool {
+                    $this->assertCount(1, $event->getLogs());
+
+                    return true;
+                })
+            );
+
+        $aggregator->flush($client);
+    }
+
     public function testDoesNotFlushImmediatelyWhenThresholdIsNull(): void
     {
         StubTransport::$events = [];
@@ -281,8 +333,7 @@ final class LogsAggregatorTest extends TestCase
             'log_flush_threshold' => null,
         ])->setTransport($transport)->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         $aggregator = new LogsAggregator();
 
@@ -303,8 +354,8 @@ final class LogsAggregatorTest extends TestCase
         $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
         $propagationContext->setSpanId(new SpanId('1234567890abcdef'));
 
-        $hub = new Hub($client, new Scope($propagationContext));
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope(new IsolationScope($propagationContext));
 
         $aggregator = new LogsAggregator();
         $aggregator->add(LogLevel::info(), 'Test message');
@@ -325,8 +376,7 @@ final class LogsAggregatorTest extends TestCase
             'enable_logs' => true,
         ])->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         Scope::registerExternalPropagationContext(static function (): array {
             return [

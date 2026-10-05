@@ -11,7 +11,7 @@ use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\Integration\TransactionIntegration;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 use function Sentry\withScope;
 
@@ -35,10 +35,10 @@ final class TransactionIntegrationTest extends TestCase
             ->method('getIntegration')
             ->willReturn($isIntegrationEnabled ? $integration : null);
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
-        withScope(function (Scope $scope) use ($event, $hint, $expectedTransaction): void {
-            $event = $scope->applyToEvent($event, $hint);
+        withScope(function (IsolationScope $scope) use ($event, $hint, $expectedTransaction): void {
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event, $hint);
 
             $this->assertNotNull($event);
             $this->assertSame($event->getTransaction(), $expectedTransaction);

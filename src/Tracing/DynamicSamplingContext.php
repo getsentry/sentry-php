@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientInterface;
 use Sentry\Options;
-use Sentry\State\HubInterface;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 
 /**
  * This class represents the Dynamic Sampling Context (dsc).
@@ -149,7 +149,7 @@ final class DynamicSamplingContext
      *
      * @see https://develop.sentry.dev/sdk/performance/dynamic-sampling-context/#baggage-header
      */
-    public static function fromTransaction(Transaction $transaction, HubInterface $hub): self
+    public static function fromTransaction(Transaction $transaction, ClientInterface $client): self
     {
         $samplingContext = new self();
         $samplingContext->set('trace_id', (string) $transaction->getTraceId());
@@ -163,8 +163,6 @@ final class DynamicSamplingContext
         if ($transaction->getMetadata()->getSource() !== TransactionSource::url()) {
             $samplingContext->set('transaction', $transaction->getName());
         }
-
-        $client = $hub->getClient();
 
         self::setOrgOptions($client->getOptions(), $samplingContext);
 
@@ -181,11 +179,19 @@ final class DynamicSamplingContext
         return $samplingContext;
     }
 
-    public static function fromOptions(Options $options, Scope $scope): self
+    public static function fromOptions(Options $options, IsolationScope $scope): self
+    {
+        return self::fromOptionsAndPropagationContext($options, $scope->getPropagationContext());
+    }
+
+    /**
+     * @internal
+     */
+    public static function fromOptionsAndPropagationContext(Options $options, PropagationContext $propagationContext): self
     {
         $samplingContext = new self();
-        $samplingContext->set('trace_id', (string) $scope->getPropagationContext()->getTraceId());
-        $samplingContext->set('sample_rand', (string) $scope->getPropagationContext()->getSampleRand());
+        $samplingContext->set('trace_id', (string) $propagationContext->getTraceId());
+        $samplingContext->set('sample_rand', (string) $propagationContext->getSampleRand());
 
         if ($options->getTracesSampleRate() !== null) {
             $samplingContext->set('sample_rate', (string) $options->getTracesSampleRate());

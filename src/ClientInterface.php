@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Integration\IntegrationInterface;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\Transport\Result;
 
 interface ClientInterface
@@ -23,38 +23,38 @@ interface ClientInterface
     /**
      * Logs a message.
      *
-     * @param string         $message The message (primary description) for the event
-     * @param Severity|null  $level   The level of the message to be sent
-     * @param Scope|null     $scope   An optional scope keeping the state
-     * @param EventHint|null $hint    Object that can contain additional information about the event
+     * @param string              $message The message (primary description) for the event
+     * @param Severity|null       $level   The level of the message to be sent
+     * @param IsolationScope|null $scope   An optional scope keeping the state
+     * @param EventHint|null      $hint    Object that can contain additional information about the event
      */
-    public function captureMessage(string $message, ?Severity $level = null, ?Scope $scope = null, ?EventHint $hint = null): ?EventId;
+    public function captureMessage(string $message, ?Severity $level = null, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Logs an exception.
      *
-     * @param \Throwable     $exception The exception object
-     * @param Scope|null     $scope     An optional scope keeping the state
-     * @param EventHint|null $hint      Object that can contain additional information about the event
+     * @param \Throwable          $exception The exception object
+     * @param IsolationScope|null $scope     An optional scope keeping the state
+     * @param EventHint|null      $hint      Object that can contain additional information about the event
      */
-    public function captureException(\Throwable $exception, ?Scope $scope = null, ?EventHint $hint = null): ?EventId;
+    public function captureException(\Throwable $exception, ?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Logs the most recent error (obtained with {@link error_get_last}).
      *
-     * @param Scope|null     $scope An optional scope keeping the state
-     * @param EventHint|null $hint  Object that can contain additional information about the event
+     * @param IsolationScope|null $scope An optional scope keeping the state
+     * @param EventHint|null      $hint  Object that can contain additional information about the event
      */
-    public function captureLastError(?Scope $scope = null, ?EventHint $hint = null): ?EventId;
+    public function captureLastError(?IsolationScope $scope = null, ?EventHint $hint = null): ?EventId;
 
     /**
      * Captures a new event using the provided data.
      *
-     * @param Event          $event The event being captured
-     * @param EventHint|null $hint  May contain additional information about the event
-     * @param Scope|null     $scope An optional scope keeping the state
+     * @param Event               $event The event being captured
+     * @param EventHint|null      $hint  May contain additional information about the event
+     * @param IsolationScope|null $scope An optional scope keeping the state
      */
-    public function captureEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?EventId;
+    public function captureEvent(Event $event, ?EventHint $hint = null, ?IsolationScope $scope = null): ?EventId;
 
     /**
      * Returns the integration instance if it is installed on the client.

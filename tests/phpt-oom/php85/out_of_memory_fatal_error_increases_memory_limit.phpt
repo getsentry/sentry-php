@@ -65,7 +65,7 @@ $options->setTransport($transport);
 
 $client = (new ClientBuilder($options))->getClient();
 
-SentrySdk::init()->bindClient($client);
+SentrySdk::init($client);
 
 echo 'Before OOM memory limit: ' . \ini_get('memory_limit');
 

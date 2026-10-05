@@ -19,6 +19,8 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
+use function Sentry\captureException;
+
 $vendor = __DIR__;
 
 while (!file_exists($vendor . '/vendor')) {
@@ -51,11 +53,11 @@ $client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 class Foo {
     function __construct(string $bar) {
-        SentrySdk::getCurrentHub()->captureException(new Exception('doh!'));
+        captureException(new Exception('doh!'));
     }
 }
 

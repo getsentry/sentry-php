@@ -13,7 +13,6 @@ use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Hub;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -36,8 +35,7 @@ final class LogsTest extends TestCase
         $client->expects($this->never())
                ->method('captureEvent');
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         logger()->info('Some info message');
 
@@ -186,8 +184,7 @@ final class LogsTest extends TestCase
 
         $client = ClientBuilder::create($clientOptions)->setTransport($transport)->getClient();
 
-        $hub = new Hub($client);
-        SentrySdk::setCurrentHub($hub);
+        SentrySdk::init($client);
 
         return $client;
     }

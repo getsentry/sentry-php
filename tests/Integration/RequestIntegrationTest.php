@@ -16,7 +16,7 @@ use Sentry\Integration\RequestFetcherInterface;
 use Sentry\Integration\RequestIntegration;
 use Sentry\Options;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
+use Sentry\State\IsolationScope;
 use Sentry\UserDataBag;
 
 use function Sentry\withScope;
@@ -44,10 +44,10 @@ final class RequestIntegrationTest extends TestCase
             ->method('getOptions')
             ->willReturn(new Options($options));
 
-        SentrySdk::getCurrentHub()->bindClient($client);
+        SentrySdk::init($client);
 
-        withScope(function (Scope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
-            $event = $scope->applyToEvent($event);
+        withScope(function (IsolationScope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
+            $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);
             $this->assertSame($expectedRequestContextData, $event->getRequest());

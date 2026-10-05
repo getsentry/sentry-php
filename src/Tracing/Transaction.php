@@ -6,9 +6,11 @@ namespace Sentry\Tracing;
 
 use Sentry\Event;
 use Sentry\EventId;
+use Sentry\Options;
 use Sentry\Profiling\Profiler;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
+use Sentry\State\EventRecorder;
+use Sentry\State\IsolationScope;
 
 /**
  * This class stores all the information about a Transaction.
@@ -16,14 +18,14 @@ use Sentry\State\HubInterface;
 final class Transaction extends Span
 {
     /**
-     * @var HubInterface The hub instance
-     */
-    private $hub;
-
-    /**
      * @var string Name of the transaction
      */
     private $name;
+
+    /**
+     * @var IsolationScope
+     */
+    private $scope;
 
     /**
      * @var Transaction The transaction
@@ -44,16 +46,15 @@ final class Transaction extends Span
      * Span constructor.
      *
      * @param TransactionContext $context The context to create the transaction with
-     * @param HubInterface|null  $hub     Instance of a hub to flush the transaction
      *
      * @internal
      */
-    public function __construct(TransactionContext $context, ?HubInterface $hub = null)
+    public function __construct(TransactionContext $context, ?IsolationScope $scope = null)
     {
         parent::__construct($context);
 
-        $this->hub = $hub ?? SentrySdk::getCurrentHub();
         $this->name = $context->getName();
+        $this->scope = $scope ?? SentrySdk::getIsolationScope();
         $this->metadata = $context->getMetadata();
         $this->transaction = $this;
     }
@@ -97,7 +98,7 @@ final class Transaction extends Span
             return $this->metadata->getDynamicSamplingContext();
         }
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, SentrySdk::getClient($this->scope));
         $this->getMetadata()->setDynamicSamplingContext($samplingContext);
 
         return $samplingContext;
@@ -119,10 +120,10 @@ final class Transaction extends Span
         return $this;
     }
 
-    public function initProfiler(): Profiler
+    public function initProfiler(?Options $options = null): Profiler
     {
         if ($this->profiler === null) {
-            $this->profiler = new Profiler($this->hub->getClient()->getOptions());
+            $this->profiler = new Profiler($options ?? SentrySdk::getClient($this->scope)->getOptions());
         }
 
         return $this->profiler;
@@ -187,6 +188,6 @@ final class Transaction extends Span
             }
         }
 
-        return $this->hub->captureEvent($event);
+        return EventRecorder::captureEvent($event, null, $this->scope);
     }
 }

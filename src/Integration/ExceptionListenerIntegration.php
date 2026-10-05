@@ -20,16 +20,14 @@ final class ExceptionListenerIntegration extends AbstractErrorListenerIntegratio
     {
         $errorHandler = ErrorHandler::registerOnceExceptionHandler();
         $errorHandler->addExceptionHandlerListener(static function (\Throwable $exception): void {
-            $currentHub = SentrySdk::getCurrentHub();
-            $integration = $currentHub->getIntegration(self::class);
+            $client = SentrySdk::getClient();
+            $integration = $client->getIntegration(self::class);
 
-            // The client bound to the current hub, if any, could not have this
-            // integration enabled. If this is the case, bail out
             if ($integration === null) {
                 return;
             }
 
-            $integration->captureException($currentHub, $exception);
+            $integration->captureException($exception);
         });
     }
 }

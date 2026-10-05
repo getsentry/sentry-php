@@ -6,10 +6,11 @@ namespace Sentry\Logs;
 
 use Sentry\Attributes\Attribute;
 use Sentry\Client;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
-use Sentry\State\HubInterface;
+use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
@@ -40,8 +41,10 @@ final class LogsAggregator
     ): void {
         $timestamp = microtime(true);
 
-        $hub = SentrySdk::getCurrentHub();
-        $client = $hub->getClient();
+        $isolationScope = SentrySdk::getIsolationScope();
+        $client = SentrySdk::getClient($isolationScope);
+        $globalScope = SentrySdk::getGlobalScope();
+        $scope = $globalScope->merge($isolationScope);
 
         $options = $client->getOptions();
         $sdkLogger = $options->getLogger();
@@ -70,7 +73,7 @@ final class LogsAggregator
             $formattedMessage = $message;
         }
 
-        $traceData = $this->getTraceData($hub);
+        $traceData = $this->getTraceData($isolationScope);
         $traceId = $traceData['trace_id'];
         $parentSpanId = $traceData['parent_span_id'];
 
@@ -85,20 +88,18 @@ final class LogsAggregator
             $log->setAttribute('sentry.sdk.version', $client->getSdkVersion());
         }
 
-        $hub->configureScope(static function (Scope $scope) use ($log) {
-            $user = $scope->getUser();
-            if ($user !== null) {
-                if ($user->getId() !== null) {
-                    $log->setAttribute('user.id', $user->getId());
-                }
-                if ($user->getEmail() !== null) {
-                    $log->setAttribute('user.email', $user->getEmail());
-                }
-                if ($user->getUsername() !== null) {
-                    $log->setAttribute('user.name', $user->getUsername());
-                }
+        $user = $scope->getUser();
+        if ($user !== null) {
+            if ($user->getId() !== null) {
+                $log->setAttribute('user.id', $user->getId());
             }
-        });
+            if ($user->getEmail() !== null) {
+                $log->setAttribute('user.email', $user->getEmail());
+            }
+            if ($user->getUsername() !== null) {
+                $log->setAttribute('user.name', $user->getUsername());
+            }
+        }
 
         if (\count($values)) {
             $log->setAttribute('sentry.message.template', $message);
@@ -159,20 +160,23 @@ final class LogsAggregator
         $logs->push($log);
 
         if ($logFlushThreshold !== null && \count($logs) >= $logFlushThreshold) {
-            $this->flush($hub);
+            $this->flush($client);
         }
     }
 
-    public function flush(?HubInterface $hub = null): ?EventId
+    public function flush(?ClientInterface $client = null, ?IsolationScope $isolationScope = null): ?EventId
     {
-        if ($this->logs === null || $this->logs->isEmpty()) {
+        $logs = $this->logs;
+
+        if ($logs === null || $logs->isEmpty()) {
             return null;
         }
 
-        $hub = $hub ?? SentrySdk::getCurrentHub();
-        $event = Event::createLogs()->setLogs($this->logs->drain());
+        $isolationScope = $isolationScope ?? SentrySdk::getIsolationScope();
+        $client = $client ?? SentrySdk::getClient($isolationScope);
+        $event = Event::createLogs()->setLogs($logs->drain());
 
-        return $hub->captureEvent($event);
+        return $client->captureEvent($event, null, $isolationScope);
     }
 
     /**
@@ -186,9 +190,9 @@ final class LogsAggregator
     /**
      * @return array{trace_id: string, parent_span_id: string|null}
      */
-    private function getTraceData(HubInterface $hub): array
+    private function getTraceData(IsolationScope $scope): array
     {
-        $span = $hub->getSpan();
+        $span = $scope->getSpan();
 
         if ($span !== null) {
             return [
@@ -197,28 +201,18 @@ final class LogsAggregator
             ];
         }
 
-        $traceData = null;
-
-        $hub->configureScope(static function (Scope $scope) use (&$traceData): void {
-            $externalPropagationContext = Scope::getExternalPropagationContext();
-
-            if ($externalPropagationContext !== null) {
-                $traceData = [
-                    'trace_id' => $externalPropagationContext['trace_id'],
-                    'parent_span_id' => $externalPropagationContext['span_id'],
-                ];
-
-                return;
-            }
-
-            $traceData = [
-                'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
-                'parent_span_id' => null,
+        $externalPropagationContext = Scope::getExternalPropagationContext();
+        if ($externalPropagationContext !== null) {
+            return [
+                'trace_id' => $externalPropagationContext['trace_id'],
+                'parent_span_id' => $externalPropagationContext['span_id'],
             ];
-        });
+        }
 
-        /** @var array{trace_id: string, parent_span_id: string|null} $traceData */
-        return $traceData;
+        return [
+            'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
+            'parent_span_id' => null,
+        ];
     }
 
     /**

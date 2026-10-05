@@ -33,24 +33,22 @@ final class ErrorListenerIntegration extends AbstractErrorListenerIntegration im
         ErrorHandler::registerOnceErrorHandler($this->options)
                     ->addErrorHandlerListener(
                         static function (\ErrorException $exception): void {
-                            $currentHub = SentrySdk::getCurrentHub();
-                            $integration = $currentHub->getIntegration(self::class);
+                            $client = SentrySdk::getClient();
+                            $integration = $client->getIntegration(self::class);
 
                             if ($integration === null) {
                                 return;
                             }
 
-                            $client = $currentHub->getClient();
-
                             if ($exception instanceof SilencedErrorException && !$client->getOptions()->shouldCaptureSilencedErrors()) {
                                 return;
                             }
 
-                            if (!$exception instanceof SilencedErrorException && !($client->getOptions()->getErrorTypes() & $exception->getSeverity())) {
+                            if (!$exception instanceof SilencedErrorException && ($client->getOptions()->getErrorTypes() & $exception->getSeverity()) === 0) {
                                 return;
                             }
 
-                            $integration->captureException($currentHub, $exception);
+                            $integration->captureException($exception);
                         }
                     );
     }

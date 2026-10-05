@@ -50,7 +50,7 @@ $client = ClientBuilder::create($options)
     ->setTransport($transport)
     ->getClient();
 
-SentrySdk::getCurrentHub()->bindClient($client);
+SentrySdk::init($client);
 
 echo 'Triggering E_USER_NOTICE error' . PHP_EOL;
 
