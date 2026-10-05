@@ -49,7 +49,7 @@ class Arr
      *
      * @see https://www.php.net/manual/en/function.array-is-list.php#126794
      *
-     * @param array<string, mixed> $array
+     * @param array<array-key, mixed> $array
      */
     public static function isList(array $array): bool
     {
@@ -62,5 +62,15 @@ class Arr
         }
 
         return true;
+    }
+
+    /**
+     * Checks whether a given value is an associative array.
+     *
+     * @param mixed $value
+     */
+    public static function isAssociative($value): bool
+    {
+        return \is_array($value) && !self::isList($value);
     }
 }

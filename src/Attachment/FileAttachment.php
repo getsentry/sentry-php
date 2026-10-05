@@ -22,11 +22,25 @@ class FileAttachment extends Attachment
 
     public function getSize(): ?int
     {
-        return @filesize($this->path) ?: null;
+        $size = @filesize($this->path);
+        if ($size !== false) {
+            return $size;
+        }
+
+        return null;
     }
 
     public function getData(): ?string
     {
-        return @file_get_contents($this->path) ?: null;
+        try {
+            $content = @file_get_contents($this->path);
+            if ($content !== false) {
+                return $content;
+            }
+
+            return null;
+        } catch (\ValueError $e) {
+            return null;
+        }
     }
 }

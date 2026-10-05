@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment\Attachment;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
@@ -36,6 +37,7 @@ use Sentry\Transport\TransportInterface;
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
+ *     enable_metrics?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
@@ -265,11 +267,30 @@ function withIsolationScope(callable $callback)
     }
 }
 
-function startContext(): void
+/**
+ * Starts an isolated context for the current logical execution.
+ *
+ * A provided isolation scope is used as-is, allowing runtimes to prepare the
+ * isolation scope of the new context. When no isolation scope is provided, the
+ * SDK creates an empty one.
+ *
+ * If a context is already active, this function is a no-op and the provided
+ * isolation scope is ignored.
+ *
+ * @param IsolationScope|null $isolationScope The isolation scope to use for the new context
+ */
+function startContext(?IsolationScope $isolationScope = null): void
 {
-    SentrySdk::startContext();
+    SentrySdk::startContext($isolationScope);
 }
 
+/**
+ * Ends and flushes the active context for the current logical execution.
+ *
+ * When no context is active this is a no-op.
+ *
+ * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+ */
 function endContext(?int $timeout = null): void
 {
     SentrySdk::endContext($timeout);
@@ -278,7 +299,7 @@ function endContext(?int $timeout = null): void
 /**
  * Executes the given callback within an isolated context.
  *
- * If a context is already active for the current execution key, it is reused.
+ * If a context is already active for the current logical execution, it is reused.
  *
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
@@ -487,6 +508,15 @@ function traceMetrics(): TraceMetrics
 function addFeatureFlag(string $name, bool $result): void
 {
     SentrySdk::getIsolationScope()->addFeatureFlag($name, $result);
+}
+
+/**
+ * Adds an attachment to the current scope. For large attachments, it might be helpful
+ * to use the SDK Sidecar Transport: https://docs.sentry.io/platforms/php/agent/.
+ */
+function addAttachment(Attachment $attachment): void
+{
+    SentrySdk::getIsolationScope()->addAttachment($attachment);
 }
 
 /**

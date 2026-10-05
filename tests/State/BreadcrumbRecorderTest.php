@@ -13,6 +13,7 @@ use Sentry\Options;
 use Sentry\State\BreadcrumbRecorder;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
+use Sentry\Tests\StubLogger;
 
 final class BreadcrumbRecorderTest extends TestCase
 {
@@ -80,6 +81,34 @@ final class BreadcrumbRecorderTest extends TestCase
             new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting')
         ));
         $this->assertScopeBreadcrumbs($scope, []);
+    }
+
+    public function testRecordReturnsFalseAndLogsWhenBeforeBreadcrumbCallbackThrows(): void
+    {
+        StubLogger::$logs = [];
+        $scope = new IsolationScope();
+        $client = $this->createMock(ClientInterface::class);
+
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options([
+                'before_breadcrumb' => static function (): void {
+                    throw new \RuntimeException('test');
+                },
+                'logger' => StubLogger::getInstance(),
+            ]));
+
+        $this->assertFalse(BreadcrumbRecorder::record(
+            $client,
+            $scope,
+            new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting')
+        ));
+        $this->assertScopeBreadcrumbs($scope, []);
+        $this->assertSame([[
+            'level' => 'error',
+            'message' => 'The "before_breadcrumb" callback failed with exception: "test".',
+            'context' => [],
+        ]], StubLogger::$logs);
     }
 
     public function testRecordStoresBreadcrumbReturnedByBeforeBreadcrumbCallback(): void

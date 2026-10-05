@@ -61,6 +61,9 @@
 
 - Add tests with every behavior change. This is a library repo with broad
   compatibility and regression coverage.
+- Every SDK option/default must have a valid case in
+  `OptionsTest::optionsDataProvider()`. Keep the exhaustive option-coverage and
+  default-validation tests passing when adding or changing options.
 - New tests belong under `tests/`.
 - `phpunit.xml.dist` defines a `unit` suite that includes both PHPUnit tests
   and `tests/phpt`, plus a separate `oom` suite for `tests/phpt-oom`.

@@ -87,7 +87,7 @@ final class GuzzleTracingMiddleware
 
                     if ($responseOrException instanceof ResponseInterface) {
                         $response = $responseOrException;
-                    } elseif ($responseOrException instanceof GuzzleRequestException) {
+                    } elseif ($responseOrException instanceof GuzzleRequestException && method_exists($responseOrException, 'getResponse')) {
                         $response = $responseOrException->getResponse();
                     }
 

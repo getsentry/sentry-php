@@ -43,8 +43,14 @@ final class TransactionSampler
             $tracesSampler = $options->getTracesSampler();
 
             if ($tracesSampler !== null) {
-                $sampleRate = $tracesSampler($samplingContext);
-                $sampleSource = 'config:traces_sampler';
+                try {
+                    $sampleRate = $tracesSampler($samplingContext);
+                    $sampleSource = 'config:traces_sampler';
+                } catch (\Throwable $exception) {
+                    $logger->error(\sprintf('The "traces_sampler" callback failed with exception: "%s".', $exception->getMessage()));
+                    $sampleRate = $options->getTracesSampleRate() ?? 0;
+                    $sampleSource = 'config:traces_sampler_error_fallback';
+                }
             } else {
                 $parentSampleRate = $context->getMetadata()->getParentSamplingRate();
                 if ($parentSampleRate !== null) {
@@ -100,8 +106,14 @@ final class TransactionSampler
         $profilesSampler = $options->getProfilesSampler();
 
         if ($profilesSampler !== null) {
-            $profilesSampleRate = $profilesSampler($samplingContext);
-            $profilesSampleSource = 'config:profiles_sampler';
+            try {
+                $profilesSampleRate = $profilesSampler($samplingContext);
+                $profilesSampleSource = 'config:profiles_sampler';
+            } catch (\Throwable $exception) {
+                $logger->error(\sprintf('The "profiles_sampler" callback failed with exception: "%s".', $exception->getMessage()));
+                $profilesSampleRate = $options->getProfilesSampleRate() ?? 0;
+                $profilesSampleSource = 'config:profiles_sampler_error_fallback';
+            }
         } else {
             $profilesSampleRate = $options->getProfilesSampleRate();
         }

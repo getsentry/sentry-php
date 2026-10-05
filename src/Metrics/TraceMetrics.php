@@ -32,8 +32,8 @@ class TraceMetrics
     }
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function count(
         string $name,
@@ -51,8 +51,8 @@ class TraceMetrics
     }
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function distribution(
         string $name,
@@ -70,8 +70,8 @@ class TraceMetrics
     }
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function gauge(
         string $name,

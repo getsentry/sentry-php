@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\State;
 
+use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -62,6 +63,16 @@ abstract class Scope
     public function getUser(): ?UserDataBag
     {
         return $this->scopeData->getUser();
+    }
+
+    /**
+     * Gets the breadcrumbs.
+     *
+     * @return Breadcrumb[]
+     */
+    public function getBreadcrumbs(): array
+    {
+        return $this->scopeData->getBreadcrumbs();
     }
 
     /**

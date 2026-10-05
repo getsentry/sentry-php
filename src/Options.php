@@ -116,7 +116,12 @@ final class Options
     /**
      * Sets if logs should be enabled or not.
      *
+     * This option no longer gates the manual logging API or logging integrations.
+     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
+     *
      * @param bool|null $enableLogs Boolean if logs should be enabled or not
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function setEnableLogs(?bool $enableLogs): self
     {
@@ -125,6 +130,11 @@ final class Options
 
     /**
      * Gets if logs is enabled or not.
+     *
+     * This option no longer gates the manual logging API or logging integrations.
+     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function getEnableLogs(): bool
     {
@@ -177,14 +187,24 @@ final class Options
 
     /**
      * Sets if metrics should be enabled or not.
+     *
+     * This option no longer gates the manual metrics API or metrics integrations.
+     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
-    public function setEnableMetrics(bool $enableTracing): self
+    public function setEnableMetrics(bool $enableMetrics): self
     {
-        return $this->updateOptions(['enable_metrics' => $enableTracing]);
+        return $this->updateOptions(['enable_metrics' => $enableMetrics]);
     }
 
     /**
      * Returns whether metrics are enabled or not.
+     *
+     * This option no longer gates the manual metrics API or metrics integrations.
+     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
+     *
+     * @deprecated since version 4.31. To be removed in version 5.0
      */
     public function getEnableMetrics(): bool
     {
@@ -361,7 +381,7 @@ final class Options
     /**
      * Helper to always get a logger instance even if it was not set.
      *
-     * it will check for a logger using the following order:
+     * It checks for a logger using the following order:
      * 1. the passed `$options`
      * 2. already configured `logger` option
      * 3. `NullLogger` as fallback
@@ -370,12 +390,13 @@ final class Options
      */
     public function getLoggerOrNullLogger(array $options = []): LoggerInterface
     {
-        /**
-         * @var LoggerInterface $logger
-         */
-        $logger = $options['logger'] ?? $this->getLogger() ?? new NullLogger();
+        $logger = $options['logger'] ?? null;
 
-        return $logger;
+        if ($logger instanceof LoggerInterface) {
+            return $logger;
+        }
+
+        return $this->getLogger() ?? new NullLogger();
     }
 
     /**
@@ -628,9 +649,7 @@ final class Options
      */
     public function setBeforeSendMetricCallback(callable $callback): self
     {
-        $this->updateOptions(['before_send_metric' => $callback]);
-
-        return $this;
+        return $this->updateOptions(['before_send_metric' => $callback]);
     }
 
     /**
@@ -1031,7 +1050,8 @@ final class Options
     /**
      * Sets a list of callables that will be called to customize how objects are
      * serialized in the event's payload. The list must be a map of FQCN/callable
-     * pairs.
+     * pairs. Use `object` as the key to register a serializer that matches any
+     * object; return `null` from it to fall back to the default serialization.
      *
      * @param array<string, callable> $serializers The list of serializer callbacks
      */
@@ -1228,7 +1248,7 @@ final class Options
     }
 
     /**
-     * @param bool|string $booleanOrUrl
+     * @param bool|string|null $booleanOrUrl
      *
      * @return bool|string
      */
@@ -1340,8 +1360,8 @@ final class Options
      */
     private function validateClassSerializersOption(array $serializers): bool
     {
-        foreach ($serializers as $class => $serializer) {
-            if (!\is_string($class) || !\is_callable($serializer)) {
+        foreach (array_keys($serializers) as $class) {
+            if (!\is_string($class) || !\is_callable($serializers[$class])) {
                 return false;
             }
         }
@@ -1385,11 +1405,17 @@ final class Options
      *
      * @param array<string, mixed> $override
      *
+     * @return $this
+     *
      * @internal
      */
     public function updateOptions(array $override = []): self
     {
-        $resolved = $this->resolver->resolveOnly($override, $this->getLoggerOrNullLogger($override));
+        $resolved = $this->resolver->resolveOnly(
+            $override,
+            $this->options,
+            $this->getLoggerOrNullLogger($override)
+        );
 
         $this->options = array_merge($this->options, $resolved);
 

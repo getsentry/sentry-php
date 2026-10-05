@@ -6,6 +6,7 @@ namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Options;
+use Sentry\Tests\StubLogger;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Transaction;
@@ -209,6 +210,37 @@ final class TransactionSamplerTest extends TestCase
         $this->assertTrue($samplerInvoked);
     }
 
+    public function testTracesSamplerExceptionDropsTransactionAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+
+        $transaction = $this->sampleTransaction(new Options([
+            'logger' => StubLogger::getInstance(),
+            'traces_sampler' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+        ]), new TransactionContext());
+
+        $this->assertFalse($transaction->getSampled());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "traces_sampler" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
+    }
+
+    public function testTracesSamplerExceptionFallsBackToTracesSampleRate(): void
+    {
+        $transaction = $this->sampleTransaction(new Options([
+            'traces_sample_rate' => 1.0,
+            'traces_sampler' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+        ]), new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+    }
+
     public function testStartsProfilerWithProfilesSampler(): void
     {
         $transaction = $this->sampleTransaction(new Options([
@@ -278,6 +310,27 @@ final class TransactionSamplerTest extends TestCase
 
         $this->assertTrue($transaction->getSampled());
         $this->assertNull($transaction->getProfiler());
+    }
+
+    public function testProfilesSamplerExceptionDropsProfileAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+
+        $transaction = $this->sampleTransaction(new Options([
+            'logger' => StubLogger::getInstance(),
+            'profiles_sampler' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'traces_sample_rate' => 1.0,
+        ]), new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "profiles_sampler" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testDoesNotCallProfilesSamplerWhenTransactionIsNotSampled(): void

@@ -15,6 +15,13 @@
         <testsuite name="unit">
             <directory>tests</directory>
             <directory suffix=".phpt">tests/phpt</directory>
+            <exclude>tests/Integration/OTLPIntegrationTest.php</exclude>
+            <exclude>tests/OpenTelemetry</exclude>
+        </testsuite>
+
+        <testsuite name="opentelemetry">
+            <file>tests/Integration/OTLPIntegrationTest.php</file>
+            <directory>tests/OpenTelemetry</directory>
         </testsuite>
 
         <testsuite name="oom">

@@ -78,23 +78,39 @@ final class ArrTest extends TestCase
 
     /**
      * @dataProvider isListDataProvider
+     *
+     * @param mixed $value
      */
-    public function testIsList(array $value, bool $expectedResult): void
+    public function testIsList($value, bool $expectedResult): void
     {
         $this->assertSame($expectedResult, Arr::isList($value));
+        $this->assertSame(\is_array($value) && !$expectedResult, Arr::isAssociative($value));
     }
 
     public static function isListDataProvider(): \Generator
     {
-        yield [
+        yield 'empty array' => [
+            [],
+            true,
+        ];
+
+        yield 'list' => [
             [1, 2, 3],
             true,
         ];
 
-        yield [
-            [
-                'key' => 'value',
-            ],
+        yield 'associative array' => [
+            ['key' => 'value'],
+            false,
+        ];
+
+        yield 'sparse integer keys' => [
+            [2 => 'value'],
+            false,
+        ];
+
+        yield 'mixed keys' => [
+            [0 => 'value', 'key' => 'value'],
             false,
         ];
     }

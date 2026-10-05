@@ -22,10 +22,10 @@ use Sentry\State\IsolationScope;
 final class BreadcrumbHandler extends AbstractProcessingHandler
 {
     /**
-     * @param int|string $level  The minimum logging level at which this
-     *                           handler will be triggered
-     * @param bool       $bubble Whether the messages that are handled can
-     *                           bubble up the stack or not
+     * @param int|string|Level|LogLevel $level  The minimum logging level at which this
+     *                                          handler will be triggered
+     * @param bool                      $bubble Whether the messages that are handled can
+     *                                          bubble up the stack or not
      *
      * @phpstan-param int|string|Level|LogLevel::* $level
      */

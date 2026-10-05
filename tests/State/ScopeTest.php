@@ -16,6 +16,7 @@ use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -147,6 +148,31 @@ final class ScopeTest extends TestCase
                 ],
             ],
         ], $event->getContexts()['flags']);
+    }
+
+    public function testSetFlagKeepsDuplicateFlagUpdatesSerializedAsList(): void
+    {
+        $scope = new IsolationScope();
+
+        $scope->addFeatureFlag('feature-flag-1', true);
+        $scope->addFeatureFlag('feature-flag-2', false);
+        $scope->addFeatureFlag('feature-flag-1', false);
+
+        $event = $this->applyScope($scope, Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertArrayHasKey('flags', $event->getContexts());
+        $this->assertSame([
+            [
+                'flag' => 'feature-flag-2',
+                'result' => false,
+            ],
+            [
+                'flag' => 'feature-flag-1',
+                'result' => false,
+            ],
+        ], $event->getContexts()['flags']['values']);
+        $this->assertSame('[{"flag":"feature-flag-2","result":false},{"flag":"feature-flag-1","result":false}]', json_encode($event->getContexts()['flags']['values']));
     }
 
     public function testSetFlagLimit(): void
@@ -456,6 +482,24 @@ final class ScopeTest extends TestCase
         $this->assertNull($this->applyScope($scope, $event));
         $this->assertTrue($callback2Called);
         $this->assertFalse($callback3Called);
+    }
+
+    public function testEventProcessorExceptionDropsEventAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $scope = new IsolationScope();
+        $scope->addEventProcessor(static function (): void {
+            throw new \RuntimeException('test');
+        });
+
+        $this->assertNull($this->applyScope($scope, Event::createEvent(), null, new Options([
+            'logger' => StubLogger::getInstance(),
+        ])));
+        $this->assertSame([[
+            'level' => 'error',
+            'message' => 'The event processor failed with exception: "test".',
+            'context' => [],
+        ]], StubLogger::$logs);
     }
 
     public function testEventProcessorReceivesTheEventAndEventHint(): void

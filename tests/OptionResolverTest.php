@@ -5,11 +5,18 @@ declare(strict_types=1);
 namespace Sentry\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use Sentry\OptionsResolver;
 
 class OptionResolverTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        StubLogger::$logs = [];
+    }
+
     public function testFlatOptionResolve(): void
     {
         $resolver = new OptionsResolver();
@@ -25,9 +32,28 @@ class OptionResolverTest extends TestCase
     public function testNestedOptionResolve(): void
     {
         $resolver = new OptionsResolver();
-        $resolver->setDefaults(['foo' => ['bar' => 'baz'], 'a' => 'b']);
-        $result = $resolver->resolve(['foo' => ['bar' => 'test']]);
-        $this->assertEquals(['foo' => ['bar' => 'test'], 'a' => 'b'], $result);
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => 'sweet',
+                ],
+            ],
+            'a' => 'b',
+        ]);
+
+        $result = $resolver->resolve([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'hello',
+                ],
+            ],
+        ]);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'hello', 'example' => 'sweet']],
+            'a' => 'b',
+        ], $result);
     }
 
     public function testArrayValues(): void
@@ -36,6 +62,308 @@ class OptionResolverTest extends TestCase
         $resolver->setDefaults(['foo' => ['bar', 'baz'], 'a' => 'b']);
         $result = $resolver->resolve(['foo' => ['php'], 'a' => 'b']);
         $this->assertEquals(['foo' => ['php'], 'a' => 'b'], $result);
+    }
+
+    public function testEmptyDefaultArrayIsReplaced(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'empty' => [],
+        ]);
+
+        $result = $resolver->resolve([
+            'empty' => ['not' => 'empty'],
+        ]);
+
+        $this->assertSame(['empty' => ['not' => 'empty']], $result);
+    }
+
+    public function testRegularArrayIsReplaced(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'list' => ['abc', 'efg'],
+        ]);
+        $result = $resolver->resolve([
+            'list' => ['foo'],
+        ]);
+        $this->assertSame(['list' => ['foo']], $result);
+    }
+
+    public function testDefaultsAreNormalizedInSubtree(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setNormalizer('foo.bar.baz', static function (string $value): string {
+            return trim($value);
+        });
+        $resolver->setDefault('foo', ['bar' => ['baz' => '   abc   ', 'example' => '   sweet   ']]);
+
+        $result = $resolver->resolve();
+
+        $this->assertSame([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => '   sweet   ',
+                ],
+            ],
+        ], $result);
+    }
+
+    public function testNormalizerIsAppliedInSubtree(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedTypes('foo.bar.baz', 'string');
+        $resolver->setNormalizer('foo.bar.baz', static function (string $value): string {
+            return trim($value);
+        });
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'foo',
+                    'example' => 'sweet',
+                ],
+            ],
+        ]);
+
+        $result = $resolver->resolve([
+            'foo' => [
+                'bar' => [
+                    'baz' => '   abc   ',
+                ],
+            ],
+        ]);
+
+        $this->assertSame([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => 'sweet',
+                ],
+            ],
+        ], $result);
+    }
+
+    public function testNullIsValidDefault(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults(['known' => null]);
+
+        $result = $resolver->resolveOnly([
+            'known' => null,
+            'missing' => null,
+        ], [], $logger);
+
+        $this->assertSame(['known' => null], $result);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Option "missing" does not exist and will be ignored',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testResolveOnlyReplacesArrayValues(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'foo' => [
+                'map' => [],
+            ],
+        ]);
+        $currentOptions = [
+            'foo' => [
+                'map' => ['old' => 'value'],
+            ],
+        ];
+
+        $result = $this->resolvePartialUpdate($resolver, $currentOptions, [
+            'foo' => ['map' => ['new' => 'value']],
+        ]);
+
+        $this->assertSame([
+            'foo' => [
+                'map' => ['new' => 'value'],
+            ],
+        ], $result);
+    }
+
+    public function testResolveOnlyDoesNotNormalizeOmittedValues(): void
+    {
+        $normalizerCalls = 0;
+        $resolver = new OptionsResolver();
+        $resolver->setNormalizer('foo.bar.example', static function (string $value) use (&$normalizerCalls): string {
+            ++$normalizerCalls;
+
+            return $value;
+        });
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => 'sweet',
+                ],
+            ],
+        ]);
+        $normalizerCalls = 0;
+
+        $result = $resolver->resolveOnly([
+            'foo' => ['bar' => ['baz' => 'hello']],
+        ]);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'hello', 'example' => 'sweet']],
+        ], $result);
+        $this->assertSame(0, $normalizerCalls);
+    }
+
+    public function testResolveOnlyKeepsCurrentValueWhenOverrideIsInvalid(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedTypes('foo.bar.baz', 'string');
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'default',
+                ],
+            ],
+        ]);
+        $currentOptions = [
+            'foo' => [
+                'bar' => [
+                    'baz' => 'current',
+                ],
+            ],
+        ];
+
+        $result = $this->resolvePartialUpdate($resolver, $currentOptions, [
+            'foo' => ['bar' => ['baz' => 42]],
+        ], $logger);
+
+        $this->assertSame($currentOptions, $result);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testNestedValidationLogsFullOptionPaths(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedTypes('foo.bar.baz', 'string');
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => 'sweet',
+                ],
+            ],
+        ]);
+
+        $result = $resolver->resolve([
+            'foo' => [
+                'bar' => [
+                    0 => 'ignored',
+                    'unknown' => 'ignored',
+                    'baz' => 42,
+                    'example' => 'tart',
+                ],
+            ],
+        ], $logger);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'abc', 'example' => 'tart']],
+        ], $result);
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Option "foo.bar.0" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Option "foo.bar.unknown" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
+    }
+
+    public function testNestedSchemaFallsBackWhenPassedValueIsNotAnArray(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setDefaults([
+            'foo' => [
+                'bar' => [
+                    'baz' => 'abc',
+                    'example' => 'sweet',
+                ],
+            ],
+        ]);
+
+        $result = $resolver->resolve(['foo' => 'invalid'], $logger);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'abc', 'example' => 'sweet']],
+        ], $result);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "foo". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testAllowedValuesAcceptsScalarAtNestedPath(): void
+    {
+        $logger = StubLogger::getInstance();
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedValues('foo.bar.baz', 'abc');
+        $resolver->setDefaults([
+            'foo' => ['bar' => ['baz' => 'abc']],
+        ]);
+
+        $result = $resolver->resolve(['foo' => ['bar' => ['baz' => 'abc']]], $logger);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'abc']],
+        ], $result);
+        $this->assertSame([], StubLogger::$logs);
+
+        $result = $resolver->resolve(['foo' => ['bar' => ['baz' => 'def']]], $logger);
+
+        $this->assertSame([
+            'foo' => ['bar' => ['baz' => 'abc']],
+        ], $result);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Invalid value for option "foo.bar.baz". The value has been ignored.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    public function testNullAllowedValueDisablesNestedValueValidation(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedValues('foo.bar', null);
+        $resolver->setDefaults([
+            'foo' => ['bar' => null],
+        ]);
+
+        $result = $resolver->resolve([
+            'foo' => ['bar' => 'custom'],
+        ]);
+
+        $this->assertSame([
+            'foo' => ['bar' => 'custom'],
+        ], $result);
     }
 
     public function testAllowedTypeIntValid(): void
@@ -290,49 +618,77 @@ class OptionResolverTest extends TestCase
 
     public function testDebugLogsProduced(): void
     {
-        $logger = new TestLogger();
+        $logger = StubLogger::getInstance();
         $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults([
             'test' => 'foo',
         ]);
         $resolver->resolve(['example' => 'abc'], $logger);
-        $this->assertCount(1, $logger->getLogs());
-        $this->assertEquals('Option "example" does not exist and will be ignored', $logger->getLogs()[0]);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Option "example" does not exist and will be ignored',
+            'context' => [],
+        ]], StubLogger::$logs);
 
         $resolver->resolve(['test' => 'abc'], $logger);
-        $this->assertCount(2, $logger->getLogs());
-        $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Option "example" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "test". The value has been ignored.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
 
     public function testDebugLogsProducedForResolveOnly(): void
     {
-        $logger = new TestLogger();
+        $logger = StubLogger::getInstance();
         $resolver = new OptionsResolver();
         $resolver->setAllowedValues('test', ['foo']);
         $resolver->setDefaults(['test' => 'foo', 'abc' => 'def', 'bar' => 'baz']);
 
-        $resolver->resolveOnly(['example' => 'test'], $logger);
-        $this->assertCount(1, $logger->getLogs());
-        $this->assertEquals('Option "example" does not exist and will be ignored', $logger->getLogs()[0]);
+        $resolver->resolveOnly(['example' => 'test'], [], $logger);
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'Option "example" does not exist and will be ignored',
+            'context' => [],
+        ]], StubLogger::$logs);
 
-        $resolver->resolveOnly(['test' => 'abc'], $logger);
-        $this->assertCount(2, $logger->getLogs());
-        $this->assertEquals('Invalid value for option "test". Using default value.', $logger->getLogs()[1]);
+        $resolver->resolveOnly(['test' => 'abc'], [], $logger);
+        $this->assertSame([
+            [
+                'level' => 'debug',
+                'message' => 'Option "example" does not exist and will be ignored',
+                'context' => [],
+            ],
+            [
+                'level' => 'debug',
+                'message' => 'Invalid value for option "test". The value has been ignored.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
-}
 
-class TestLogger extends AbstractLogger
-{
-    private $logs = [];
+    /**
+     * @param array<string, mixed> $currentOptions
+     * @param array<string, mixed> $override
+     *
+     * @return array<string, mixed>
+     */
+    private function resolvePartialUpdate(
+        OptionsResolver $resolver,
+        array $currentOptions,
+        array $override,
+        ?LoggerInterface $logger = null
+    ): array {
+        $resolved = $resolver->resolveOnly($override, $currentOptions, $logger);
 
-    public function log($level, $message, array $context = []): void
-    {
-        $this->logs[] = $message;
-    }
-
-    public function getLogs(): array
-    {
-        return $this->logs;
+        return array_merge($currentOptions, $resolved);
     }
 }

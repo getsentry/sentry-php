@@ -10,6 +10,7 @@ use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\RuntimeContext;
 use Sentry\State\RuntimeContextManager;
+use Sentry\State\RuntimeContextStorageInterface;
 
 /**
  * This class is the main entry point for all the most common SDK features.
@@ -29,6 +30,11 @@ final class SentrySdk
     private static $runtimeContextManager;
 
     /**
+     * @var RuntimeContextStorageInterface|null
+     */
+    private static $runtimeContextStorage;
+
+    /**
      * Constructor.
      */
     private function __construct()
@@ -41,10 +47,33 @@ final class SentrySdk
      */
     public static function init(?ClientInterface $client = null): void
     {
+        if (self::$runtimeContextManager !== null) {
+            self::$runtimeContextManager->discardActiveContext();
+        }
+
         if ($client !== null) {
             self::getGlobalScope()->setClient($client);
         }
-        self::$runtimeContextManager = new RuntimeContextManager();
+
+        self::$runtimeContextManager = null;
+    }
+
+    /**
+     * Registers storage for isolating runtime contexts across overlapping logical executions.
+     *
+     * The registration persists across SDK initialization. Changing it discards the active
+     * context for the current logical execution without flushing it, while the global fallback
+     * context is kept. Concurrent runtimes should register storage before logical executions
+     * begin and must not replace it while other logical executions are active.
+     */
+    public static function setRuntimeContextStorage(?RuntimeContextStorageInterface $runtimeContextStorage): void
+    {
+        if (self::$runtimeContextManager !== null) {
+            self::$runtimeContextManager->discardActiveContext();
+            self::$runtimeContextManager->setRuntimeContextStorage($runtimeContextStorage);
+        }
+
+        self::$runtimeContextStorage = $runtimeContextStorage;
     }
 
     public static function getGlobalScope(): GlobalScope
@@ -77,11 +106,30 @@ final class SentrySdk
         return self::getGlobalScope()->getClient();
     }
 
-    public static function startContext(): void
+    /**
+     * Starts an isolated context for the current logical execution.
+     *
+     * A provided isolation scope is used as-is, allowing runtimes to prepare the
+     * isolation scope of the new context. When no isolation scope is provided, the
+     * SDK creates an empty one.
+     *
+     * If a context is already active, this method is a no-op and the provided
+     * isolation scope is ignored.
+     *
+     * @param IsolationScope|null $isolationScope The isolation scope to use for the new context
+     */
+    public static function startContext(?IsolationScope $isolationScope = null): void
     {
-        self::getRuntimeContextManager()->startContext();
+        self::getRuntimeContextManager()->startContext($isolationScope);
     }
 
+    /**
+     * Ends and flushes the active context for the current logical execution.
+     *
+     * When no context is active this is a no-op.
+     *
+     * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+     */
     public static function endContext(?int $timeout = null): void
     {
         self::getRuntimeContextManager()->endContext($timeout);
@@ -90,7 +138,7 @@ final class SentrySdk
     /**
      * Executes the given callback within an isolated context.
      *
-     * If a context is already active for the current execution key, this method
+     * If a context is already active for the current logical execution, this method
      * reuses it and only executes the callback.
      *
      * @param callable $callback The callback to execute
@@ -106,11 +154,7 @@ final class SentrySdk
     public static function withContext(callable $callback, ?int $timeout = null)
     {
         $runtimeContextManager = self::getRuntimeContextManager();
-        $startedNewContext = !$runtimeContextManager->hasActiveContext();
-
-        if ($startedNewContext) {
-            $runtimeContextManager->startContext();
-        }
+        $startedNewContext = $runtimeContextManager->startContext();
 
         try {
             return $callback();
@@ -152,7 +196,7 @@ final class SentrySdk
     private static function getRuntimeContextManager(): RuntimeContextManager
     {
         if (self::$runtimeContextManager === null) {
-            self::$runtimeContextManager = new RuntimeContextManager();
+            self::$runtimeContextManager = new RuntimeContextManager(self::$runtimeContextStorage);
         }
 
         return self::$runtimeContextManager;
