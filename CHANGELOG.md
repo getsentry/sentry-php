@@ -1,5 +1,37 @@
 # CHANGELOG
 
+## 4.33.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.0.
+
+### Features
+
+- Add the `data_collection` option to control which potentially sensitive data the SDK collects. Setting it to any value other than `null` opts into the new behavior and ignores `send_default_pii`. [(#2227)](https://github.com/getsentry/sentry-php/pull/2227)
+
+  ```php
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'data_collection' => [
+          'cookies' => ['mode' => 'allowList', 'terms' => ['locale']],
+          'http_bodies' => ['incomingRequest'],
+          'stack_frame_variables' => false,
+      ],
+  ]);
+  ```
+
+- Allow registering a fallback serializer for any object by using `object` as the key in `class_serializers`. [(#2232)](https://github.com/getsentry/sentry-php/pull/2232)
+- Apply rate limits to attachments. [(#2233)](https://github.com/getsentry/sentry-php/pull/2233)
+
+### Bug Fixes
+
+- Respect rate limits on `429` responses that include a response body. [(#2225)](https://github.com/getsentry/sentry-php/pull/2225)
+- Parse every limit in the `X-Sentry-Rate-Limits` header instead of falling back to the default duration for all but the first one. [(#2226)](https://github.com/getsentry/sentry-php/pull/2226)
+- Keep the longest rate limit when multiple limits apply to the same category, apply the default rate limit to `429` responses without rate limit headers, and handle decimal durations. [(#2234)](https://github.com/getsentry/sentry-php/pull/2234)
+
+### Misc
+
+- Exclude development files from the distributed package. [(#2230)](https://github.com/getsentry/sentry-php/pull/2230)
+
 ## 4.32.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.32.0.
