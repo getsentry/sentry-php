@@ -80,22 +80,29 @@ final class RateLimiter
 
         if ($response->hasHeader(self::RATE_LIMITS_HEADER)) {
             foreach (explode(',', $response->getHeaderLine(self::RATE_LIMITS_HEADER)) as $limit) {
+                $limit = trim($limit);
+
+                // Skip empty limits, e.g. caused by a trailing comma
+                if ($limit === '') {
+                    continue;
+                }
+
                 /**
                  * $parameters[0] - retry_after
-                 * $parameters[1] - categories
+                 * $parameters[1] - categories (if missing or empty, the limit applies to all categories)
                  * $parameters[2] - scope (not used)
                  * $parameters[3] - reason_code (not used)
                  * $parameters[4] - namespaces (only returned if categories contains "metric_bucket").
                  */
-                $parameters = explode(':', trim($limit), 5);
+                $parameters = explode(':', $limit, 5);
 
-                $retryAfter = $now + (ctype_digit($parameters[0]) ? (int) $parameters[0] : self::DEFAULT_RETRY_AFTER_SECONDS);
+                $retryAfter = $now + $this->parseRateLimitRetryAfter($parameters[0]);
 
-                foreach (explode(';', $parameters[1]) as $category) {
-                    $this->rateLimits[$category ?: 'all'] = $retryAfter;
+                foreach (explode(';', $parameters[1] ?? '') as $category) {
+                    $disabledUntil = $this->updateRateLimit($category ?: 'all', $retryAfter);
 
                     $this->logger->warning(
-                        \sprintf('Rate limited exceeded for category "%s", backing off until "%s".', $category, gmdate(\DATE_ATOM, $retryAfter))
+                        \sprintf('Rate limited exceeded for category "%s", backing off until "%s".', $category, gmdate(\DATE_ATOM, $disabledUntil))
                     );
                 }
             }
@@ -105,17 +112,20 @@ final class RateLimiter
 
         if ($response->hasHeader(self::RETRY_AFTER_HEADER)) {
             $retryAfter = $now + $this->parseRetryAfterHeader($now, $response->getHeaderLine(self::RETRY_AFTER_HEADER));
-
-            $this->rateLimits['all'] = $retryAfter;
-
-            $this->logger->warning(
-                \sprintf('Rate limited exceeded for all categories, backing off until "%s".', gmdate(\DATE_ATOM, $retryAfter))
-            );
-
-            return true;
+        } elseif ($response->getStatusCode() === 429) {
+            // Rate limited responses without any rate limit headers back off all categories for the default duration
+            $retryAfter = $now + self::DEFAULT_RETRY_AFTER_SECONDS;
+        } else {
+            return false;
         }
 
-        return false;
+        $disabledUntil = $this->updateRateLimit('all', $retryAfter);
+
+        $this->logger->warning(
+            \sprintf('Rate limited exceeded for all categories, backing off until "%s".', gmdate(\DATE_ATOM, $disabledUntil))
+        );
+
+        return true;
     }
 
     /**
@@ -161,6 +171,30 @@ final class RateLimiter
 
         if ($headerDate !== false && $headerDate->getTimestamp() >= $currentTime) {
             return $headerDate->getTimestamp() - $currentTime;
+        }
+
+        return self::DEFAULT_RETRY_AFTER_SECONDS;
+    }
+
+    /**
+     * Stores the rate limit for the given category, keeping the existing one if it
+     * lasts longer, and returns the time until it is rate limited.
+     */
+    private function updateRateLimit(string $category, int $disabledUntil): int
+    {
+        $this->rateLimits[$category] = max($this->rateLimits[$category] ?? 0, $disabledUntil);
+
+        return $this->rateLimits[$category];
+    }
+
+    /**
+     * Parses the number of seconds of a limit in the X-Sentry-Rate-Limits header,
+     * which can be either an integer or a floating point number.
+     */
+    private function parseRateLimitRetryAfter(string $retryAfter): int
+    {
+        if (is_numeric($retryAfter)) {
+            return (int) ceil(max(0.0, (float) $retryAfter));
         }
 
         return self::DEFAULT_RETRY_AFTER_SECONDS;
