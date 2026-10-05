@@ -83,6 +83,17 @@ final class RateLimiterTest extends TestCase
             true,
             EventType::cases(),
         ];
+
+        yield 'Back-off on 429 response without rate limit headers should lock them all' => [
+            new Response(429, [], ''),
+            true,
+            EventType::cases(),
+        ];
+
+        yield 'Do not back-off on error response without rate limit headers' => [
+            new Response(500, [], ''),
+            false,
+        ];
     }
 
     public function testHandleResponseWithMultipleCommaSpaceSeparatedLimits(): void
@@ -94,6 +105,53 @@ final class RateLimiterTest extends TestCase
 
         $this->assertSame(1644105600 + 60, $this->rateLimiter->getDisabledUntil(EventType::transaction()));
         $this->assertSame(1644105600 + 2700, $this->rateLimiter->getDisabledUntil(EventType::event()));
+    }
+
+    /**
+     * @dataProvider attachmentRateLimitsDataProvider
+     */
+    public function testAttachmentsAreRateLimited(string $rateLimitsHeader, int $expectedDisabledUntil): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $this->rateLimiter->handleResponse(new Response(429, ['X-Sentry-Rate-Limits' => [$rateLimitsHeader]], ''));
+
+        $this->assertTrue($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+        $this->assertSame($expectedDisabledUntil, $this->rateLimiter->getDisabledUntil(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+
+        // Attachment rate limits must not affect the events the attachments belong to
+        $this->assertEventTypesAreRateLimited([]);
+
+        ClockMock::withClockMock($expectedDisabledUntil);
+
+        $this->assertFalse($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
+    }
+
+    public static function attachmentRateLimitsDataProvider(): \Generator
+    {
+        yield 'Back-off using X-Sentry-Rate-Limits header with attachment category' => [
+            '60:attachment:organization',
+            1644105600 + 60,
+        ];
+
+        yield 'Back-off using X-Sentry-Rate-Limits header with attachment_item category' => [
+            '60:attachment_item:organization',
+            1644105600 + 60,
+        ];
+
+        yield 'Back-off using the longest of the attachment and attachment_item categories' => [
+            '120:attachment_item:organization, 60:attachment:organization',
+            1644105600 + 120,
+        ];
+    }
+
+    public function testAttachmentsAreRateLimitedWhenAllCategoriesAreRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $this->rateLimiter->handleResponse(new Response(429, ['Retry-After' => ['60']], ''));
+
+        $this->assertTrue($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_ATTACHMENT));
     }
 
     public function testIsRateLimited(): void
@@ -122,6 +180,108 @@ final class RateLimiterTest extends TestCase
         ClockMock::withClockMock(1644105720);
 
         $this->assertEventTypesAreRateLimited([]);
+    }
+
+    /**
+     * @dataProvider getDisabledUntilDataProvider
+     *
+     * @param Response[] $responses
+     */
+    public function testGetDisabledUntil(array $responses, EventType $eventType, int $expectedDisabledUntil): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        foreach ($responses as $response) {
+            $this->rateLimiter->handleResponse($response);
+        }
+
+        $this->assertSame($expectedDisabledUntil, $this->rateLimiter->getDisabledUntil($eventType));
+    }
+
+    public static function getDisabledUntilDataProvider(): \Generator
+    {
+        yield 'Keep the longest limit of a category within the same header' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['2700:default;error;security:organization, 60:error:key']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 2700,
+        ];
+
+        yield 'Keep the longest limit of a category across responses' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['2700:error:organization']], ''),
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:key']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 2700,
+        ];
+
+        yield 'Extend the limit of a category if a longer one is received' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:key']], ''),
+                new Response(429, ['X-Sentry-Rate-Limits' => ['2700:error:organization']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 2700,
+        ];
+
+        yield 'Keep the longest limit of all categories across Retry-After headers' => [
+            [
+                new Response(429, ['Retry-After' => ['2700']], ''),
+                new Response(429, ['Retry-After' => ['10']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 2700,
+        ];
+
+        yield 'Back-off for the default duration on 429 response without rate limit headers' => [
+            [
+                new Response(429, [], ''),
+            ],
+            EventType::transaction(),
+            1644105600 + 60,
+        ];
+
+        yield 'Round up floating point retry_after' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['2700.5:error:organization']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 2701,
+        ];
+
+        yield 'Fall back to the default duration for invalid retry_after' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['foo:error:organization']], ''),
+            ],
+            EventType::event(),
+            1644105600 + 60,
+        ];
+
+        yield 'Ignore empty limits' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:organization,']], ''),
+            ],
+            EventType::transaction(),
+            0,
+        ];
+
+        yield 'Apply limits without categories to all categories' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['10']], ''),
+            ],
+            EventType::transaction(),
+            1644105600 + 10,
+        ];
+
+        yield 'Apply limits following a limit without categories' => [
+            [
+                new Response(429, ['X-Sentry-Rate-Limits' => ['60:error:organization, 10, 2700:transaction:key']], ''),
+            ],
+            EventType::transaction(),
+            1644105600 + 2700,
+        ];
     }
 
     private function assertEventTypesAreRateLimited(array $eventTypesLimited): void
