@@ -23,9 +23,21 @@ final class FrameContextifierIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(string $fixtureFilePath, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
-    {
-        $options = new Options(['context_lines' => $contextLines]);
+    public function testInvoke(
+        string $fixtureFilePath,
+        int $lineNumber,
+        int $contextLines,
+        int $preContextCount,
+        int $postContextCount,
+        ?int $dataCollectionContextLines = null
+    ): void {
+        $options = ['context_lines' => $contextLines];
+
+        if ($dataCollectionContextLines !== null) {
+            $options['data_collection'] = ['frame_context_lines' => $dataCollectionContextLines];
+        }
+
+        $options = new Options($options);
         $integration = new FrameContextifierIntegration();
         $integration->setupOnce();
 
@@ -107,6 +119,24 @@ final class FrameContextifierIntegrationTest extends TestCase
             5,
             2,
             5,
+        ];
+
+        yield 'data collection context lines take precedence over legacy option' => [
+            realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
+            8,
+            1,
+            3,
+            3,
+            3,
+        ];
+
+        yield 'data collection can omit surrounding context lines' => [
+            realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
+            8,
+            5,
+            0,
+            0,
+            0,
         ];
     }
 

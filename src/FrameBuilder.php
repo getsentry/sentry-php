@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Util\PrefixStripper;
 
@@ -173,6 +174,13 @@ final class FrameBuilder
             return [];
         }
 
+        $dataCollection = $this->options->getDataCollection();
+        $filter = $dataCollection === null ? null : new KeyValueDataFilter($dataCollection->getStackFrameVariables());
+
+        if ($filter !== null && !$filter->isEnabled()) {
+            return [];
+        }
+
         $reflectionFunction = null;
 
         try {
@@ -199,6 +207,10 @@ final class FrameBuilder
             foreach ($backtraceFrame['args'] as $parameterPosition => $parameterValue) {
                 $argumentValues['param' . $parameterPosition] = $parameterValue;
             }
+        }
+
+        if ($filter !== null) {
+            return $filter->filterKeyValueData($argumentValues, [$this->representationSerializer, 'representationSerialize']) ?? [];
         }
 
         foreach ($argumentValues as $argumentName => $argumentValue) {
