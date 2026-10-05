@@ -416,8 +416,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $this->assertSame('https://[Filtered]:[Filtered]@www.example.com/path?search=hello%20world&password=[Filtered]#fragment', $spanData['url.full']);
         $this->assertSame('search=hello%20world&password=[Filtered]', $spanData['http.query']);
-        $this->assertSame(['[Filtered]'], $spanData['http.request.header.authorization']);
-        $this->assertSame(['application/json'], $spanData['http.response.header.content-type']);
+        $this->assertSame('[Filtered]', $spanData['http.request.header.authorization']);
+        $this->assertSame('application/json', $spanData['http.response.header.content-type']);
         $this->assertSame('[Filtered]', $spanData['http.request.header.cookie.session_id']);
         $this->assertSame('dark', $spanData['http.request.header.cookie.theme']);
         $this->assertSame('[Filtered]', $spanData['http.response.header.set_cookie.session_id']);
@@ -478,10 +478,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ])
         );
 
-        $this->assertSame(['request-id', 'second-request-id'], $spanData['http.request.header.x-request-id']);
-        $this->assertSame(['[Filtered]'], $spanData['http.request.header.x-response-id']);
-        $this->assertSame(['[Filtered]'], $spanData['http.response.header.x-request-id']);
-        $this->assertSame(['response-id', 'second-response-id'], $spanData['http.response.header.x-response-id']);
+        $this->assertSame('request-id, second-request-id', $spanData['http.request.header.x-request-id']);
+        $this->assertSame('[Filtered]', $spanData['http.request.header.x-response-id']);
+        $this->assertSame('[Filtered]', $spanData['http.response.header.x-request-id']);
+        $this->assertSame('response-id, second-response-id', $spanData['http.response.header.x-response-id']);
         $this->assertArrayNotHasKey('http.request.header.cookie', $spanData);
         $this->assertArrayNotHasKey('http.request.header.cookie.theme', $spanData);
         $this->assertArrayNotHasKey('http.response.header.set-cookie', $spanData);
@@ -537,8 +537,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             new Response(200, ['456' => 'response'])
         );
 
-        $this->assertSame(['request'], $spanData['http.request.header.123']);
-        $this->assertSame(['response'], $spanData['http.response.header.456']);
+        $this->assertSame('request', $spanData['http.request.header.123']);
+        $this->assertSame('response', $spanData['http.response.header.456']);
     }
 
     public function testTracePreservesExplicitSpanDataInLegacyMode(): void
@@ -590,7 +590,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $data = $this->getHttpSpan($transaction)->getData();
         $this->assertSame('explicit', $data['http.query']);
         $this->assertSame(['Bearer explicit'], $data['http.response.header.authorization']);
-        $this->assertSame(['application/json'], $data['http.response.header.content-type']);
+        $this->assertSame('application/json', $data['http.response.header.content-type']);
     }
 
     /**
