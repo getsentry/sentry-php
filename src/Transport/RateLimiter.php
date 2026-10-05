@@ -161,7 +161,7 @@ final class RateLimiter
 
     /**
      * Stores the rate limit for the given category, keeping the existing one if it
-     * lasts longer, and returns the time until it is rate limited
+     * lasts longer, and returns the time until it is rate limited.
      */
     private function updateRateLimit(string $category, int $disabledUntil): int
     {
