@@ -14,7 +14,8 @@ use Sentry\Metrics\MetricsAggregator;
  * A unit of work can be an HTTP request, a queue job, a worker task, or any
  * explicit lifecycle wrapped with startContext()/endContext().
  *
- * @internal
+ * Storage implementations should treat instances as opaque values owned by the
+ * SDK and must not create or mutate them directly.
  */
 final class RuntimeContext
 {
@@ -43,6 +44,9 @@ final class RuntimeContext
      */
     private $lastEventId;
 
+    /**
+     * @internal
+     */
     public function __construct(string $id, ?IsolationScope $isolationScope = null)
     {
         $this->id = $id;
@@ -51,36 +55,57 @@ final class RuntimeContext
         $this->metricsAggregator = new MetricsAggregator();
     }
 
+    /**
+     * @internal
+     */
     public function getId(): string
     {
         return $this->id;
     }
 
+    /**
+     * @internal
+     */
     public function getIsolationScope(): IsolationScope
     {
         return $this->isolationScope;
     }
 
+    /**
+     * @internal
+     */
     public function setIsolationScope(IsolationScope $isolationScope): void
     {
         $this->isolationScope = $isolationScope;
     }
 
+    /**
+     * @internal
+     */
     public function getLogsAggregator(): LogsAggregator
     {
         return $this->logsAggregator;
     }
 
+    /**
+     * @internal
+     */
     public function getMetricsAggregator(): MetricsAggregator
     {
         return $this->metricsAggregator;
     }
 
+    /**
+     * @internal
+     */
     public function getLastEventId(): ?EventId
     {
         return $this->lastEventId;
     }
 
+    /**
+     * @internal
+     */
     public function setLastEventId(?EventId $lastEventId): void
     {
         $this->lastEventId = $lastEventId;

@@ -112,10 +112,13 @@ final class ErrorHandler
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed in case a fatal error occurs to handle it
-     *
-     * @phpstan-ignore-next-line This property is used to reserve memory for the fatal error handler and is thus never read
      */
     private static $reservedMemory;
+
+    /**
+     * @var int The amount of memory to reserve for the fatal error handler
+     */
+    private static $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE;
 
     /**
      * @var bool Whether the fatal error handler should be disabled
@@ -214,6 +217,7 @@ final class ErrorHandler
         }
 
         self::$handlerInstance->isFatalErrorHandlerRegistered = true;
+        self::$reservedMemorySize = $reservedMemorySize;
         self::$reservedMemory = str_repeat('x', $reservedMemorySize);
 
         register_shutdown_function(\Closure::fromCallable([self::$handlerInstance, 'handleFatalError']));
@@ -299,6 +303,22 @@ final class ErrorHandler
         }
 
         $this->memoryLimitIncreaseOnOutOfMemoryErrorValue = $valueInBytes;
+    }
+
+    /**
+     * @internal
+     */
+    public static function resetFatalErrorHandlerState(): void
+    {
+        self::$disableFatalErrorHandler = false;
+        self::$didIncreaseMemoryLimit = false;
+
+        if (self::$handlerInstance !== null
+            && self::$handlerInstance->isFatalErrorHandlerRegistered
+            && self::$reservedMemory === null
+        ) {
+            self::$reservedMemory = str_repeat('x', self::$reservedMemorySize);
+        }
     }
 
     /**

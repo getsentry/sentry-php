@@ -6,114 +6,105 @@ namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
 use Sentry\ClientInterface;
+use Sentry\ErrorHandler;
 use Sentry\SentrySdk;
 
 /**
  * Manages runtime-local SDK state across different execution models.
  *
- * Lifecycle model:
- * - The manager keeps a lazily initialized global context as fallback.
- * - startContext() creates an isolated runtime context for the current
- *   execution key when no context is active yet.
- * - endContext() flushes context resources and removes that context.
+ * The manager keeps a lazily initialized global context as fallback. Explicit
+ * contexts use process-local storage by default, or the configured storage for
+ * runtimes with overlapping logical executions.
  *
  * @internal
  */
 final class RuntimeContextManager
 {
-    private const PROCESS_EXECUTION_CONTEXT_KEY = 'process';
-
     /**
      * @var RuntimeContext|null
      */
     private $globalContext;
 
     /**
-     * @var array<string, RuntimeContext>
+     * @var RuntimeContext|null
      */
-    private $activeContexts = [];
+    private $runtimeContext;
 
     /**
-     * @var array<string, string>
+     * @var RuntimeContextStorageInterface|null
      */
-    private $executionContextToRuntimeContext = [];
+    private $runtimeContextStorage;
+
+    public function __construct(?RuntimeContextStorageInterface $runtimeContextStorage = null)
+    {
+        $this->runtimeContextStorage = $runtimeContextStorage;
+    }
+
+    /**
+     * Replaces the storage used for explicit contexts. The global fallback context is kept.
+     *
+     * Callers must discard the active context before replacing the storage.
+     */
+    public function setRuntimeContextStorage(?RuntimeContextStorageInterface $runtimeContextStorage): void
+    {
+        $this->runtimeContextStorage = $runtimeContextStorage;
+    }
 
     public function getCurrentContext(): RuntimeContext
     {
-        $executionContextKey = $this->getExecutionContextKey();
-
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-
-            return $this->activeContexts[$runtimeContextId];
-        }
-
-        return $this->getGlobalContext();
-    }
-
-    public function hasActiveContext(): bool
-    {
-        return $this->hasActiveContextForExecutionContextKey($this->getExecutionContextKey());
+        return $this->getActiveContext() ?? $this->getGlobalContext();
     }
 
     /**
-     * Starts an isolated context for the current execution key.
-     */
-    public function startContext(): void
-    {
-        $executionContextKey = $this->getExecutionContextKey();
-
-        if ($this->hasActiveContextForExecutionContextKey($executionContextKey)) {
-            // Nested start calls for the same execution key should be a no-op.
-            return;
-        }
-
-        $this->createContextForExecutionContextKey($executionContextKey);
-    }
-
-    /**
-     * Ends and flushes the active context for the current execution key.
+     * Starts an isolated context for the current logical execution.
      *
-     * When no context is active for the key this is a no-op.
+     * A provided isolation scope is used as-is. It is ignored when a context is already active.
+     *
+     * @param IsolationScope|null $isolationScope The isolation scope to use for the new context
+     *
+     * @return bool Whether a new context was started
+     */
+    public function startContext(?IsolationScope $isolationScope = null): bool
+    {
+        if ($this->getActiveContext() !== null) {
+            // Nested start calls for the same logical execution should be a no-op.
+            return false;
+        }
+
+        ErrorHandler::resetFatalErrorHandlerState();
+
+        $this->setActiveContext(new RuntimeContext($this->generateRuntimeContextId(), $isolationScope));
+
+        return true;
+    }
+
+    /**
+     * Ends and flushes the active context for the current logical execution.
+     *
+     * When no context is active this is a no-op.
+     *
+     * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
      */
     public function endContext(?int $timeout = null): void
     {
-        $executionContextKey = $this->getExecutionContextKey();
+        $runtimeContext = $this->removeActiveContext();
 
-        if (!$this->hasActiveContextForExecutionContextKey($executionContextKey)) {
+        if ($runtimeContext === null) {
             return;
         }
-
-        $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
-        unset($this->executionContextToRuntimeContext[$executionContextKey]);
-
-        $this->removeContextById($runtimeContextId, $timeout);
-    }
-
-    private function createContextForExecutionContextKey(string $executionContextKey): void
-    {
-        $runtimeContextId = $this->generateRuntimeContextId();
-        $runtimeContext = new RuntimeContext($runtimeContextId);
-
-        $this->activeContexts[$runtimeContextId] = $runtimeContext;
-        $this->executionContextToRuntimeContext[$executionContextKey] = $runtimeContextId;
-    }
-
-    private function removeContextById(string $runtimeContextId, ?int $timeout = null): void
-    {
-        if (!isset($this->activeContexts[$runtimeContextId])) {
-            return;
-        }
-
-        $runtimeContext = $this->activeContexts[$runtimeContextId];
-        unset($this->activeContexts[$runtimeContextId]);
-        // Remove any key mappings that may still reference this context.
-        $this->removeExecutionContextMappingsForRuntimeContext($runtimeContextId);
 
         $client = SentrySdk::getClient($runtimeContext->getIsolationScope());
         $logger = $client->getOptions()->getLoggerOrNullLogger();
 
         $this->flushRuntimeContextResources($runtimeContext, $client, $timeout, $logger);
+    }
+
+    /**
+     * Discards the active context for the current logical execution without flushing it.
+     */
+    public function discardActiveContext(): void
+    {
+        $this->removeActiveContext();
     }
 
     private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ClientInterface $client, ?int $timeout, LoggerInterface $logger): void
@@ -150,42 +141,41 @@ final class RuntimeContextManager
         }
     }
 
-    private function removeExecutionContextMappingsForRuntimeContext(string $runtimeContextId): void
+    private function getActiveContext(): ?RuntimeContext
     {
-        foreach ($this->executionContextToRuntimeContext as $executionContextKey => $mappedRuntimeContextId) {
-            if ($mappedRuntimeContextId === $runtimeContextId) {
-                unset($this->executionContextToRuntimeContext[$executionContextKey]);
-            }
+        if ($this->runtimeContextStorage !== null) {
+            return $this->runtimeContextStorage->get();
         }
+
+        return $this->runtimeContext;
     }
 
-    private function hasActiveContextForExecutionContextKey(string $executionContextKey): bool
+    private function setActiveContext(RuntimeContext $runtimeContext): void
     {
-        if (!isset($this->executionContextToRuntimeContext[$executionContextKey])) {
-            return false;
+        if ($this->runtimeContextStorage !== null) {
+            $this->runtimeContextStorage->set($runtimeContext);
+
+            return;
         }
 
-        $runtimeContextId = $this->executionContextToRuntimeContext[$executionContextKey];
+        $this->runtimeContext = $runtimeContext;
+    }
 
-        if (!isset($this->activeContexts[$runtimeContextId])) {
-            // Mapping points to a context that was already evicted/ended; drop the stale index entry.
-            unset($this->executionContextToRuntimeContext[$executionContextKey]);
-
-            return false;
+    private function removeActiveContext(): ?RuntimeContext
+    {
+        if ($this->runtimeContextStorage !== null) {
+            return $this->runtimeContextStorage->remove();
         }
 
-        return true;
+        $runtimeContext = $this->runtimeContext;
+        $this->runtimeContext = null;
+
+        return $runtimeContext;
     }
 
     private function generateRuntimeContextId(): string
     {
         return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
-    }
-
-    private function getExecutionContextKey(): string
-    {
-        // All supported runtime modes currently use a process-local execution key.
-        return self::PROCESS_EXECUTION_CONTEXT_KEY;
     }
 
     private function getGlobalContext(): RuntimeContext

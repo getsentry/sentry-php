@@ -67,6 +67,57 @@ class RingBufferTest extends TestCase
         $this->assertEquals(['bar', 'baz'], $buffer->toArray());
     }
 
+    public function testToArraySnapshotIsNotAffectedByLaterPushes(): void
+    {
+        $buffer = new RingBuffer(3);
+        $buffer->push('foo');
+        $buffer->push('bar');
+        $buffer->push('baz');
+
+        $snapshot = $buffer->toArray();
+        $buffer->push('qux');
+
+        $this->assertEquals(['foo', 'bar', 'baz'], $snapshot);
+        $this->assertEquals(['bar', 'baz', 'qux'], $buffer->toArray());
+    }
+
+    public function testToArrayAfterShift(): void
+    {
+        $buffer = new RingBuffer(5);
+        $buffer->push('foo');
+        $buffer->push('bar');
+        $buffer->push('baz');
+
+        $buffer->shift();
+
+        $this->assertEquals(['bar', 'baz'], $buffer->toArray());
+    }
+
+    public function testToArrayWrapped(): void
+    {
+        $buffer = new RingBuffer(3);
+        for ($i = 1; $i <= 7; ++$i) {
+            $buffer->push($i);
+        }
+
+        $this->assertSame(3, $buffer->count());
+        $this->assertEquals([5, 6, 7], $buffer->toArray());
+    }
+
+    public function testPushAfterDrain(): void
+    {
+        $buffer = new RingBuffer(3);
+        $buffer->push('foo');
+        $buffer->push('bar');
+
+        $this->assertEquals(['foo', 'bar'], $buffer->drain());
+
+        $buffer->push('baz');
+
+        $this->assertCount(1, $buffer);
+        $this->assertEquals(['baz'], $buffer->toArray());
+    }
+
     public function testClear(): void
     {
         $buffer = new RingBuffer(5);

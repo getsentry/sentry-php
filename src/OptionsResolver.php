@@ -5,7 +5,26 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Sentry\Util\Arr;
 
+/**
+ * A container that declares defaults and allows validation and normalization in a central place.
+ * When a value fails validation, it will keep the current value (or fall back to the default value if there is no
+ * current value) and emit debug logs.
+ *
+ * Supports a nested config with arbitrary number of layers.
+ *
+ * To set validation on nested values, it's possible to use a . (dot) syntax, similar to how JSON can be traversed.
+ * For example, using 'foo.bar' will refer to
+ * 'foo' => [
+ *     'bar' => 'test'
+ * ]
+ *
+ * Dot syntax is generally available to set validators and normalizers, while defaults are specified using
+ * the real array shape
+ *
+ * @internal
+ */
 class OptionsResolver
 {
     /**
@@ -17,23 +36,24 @@ class OptionsResolver
     private $defaults = [];
 
     /**
-     * List of allowed types for each top level array key.
+     * List of all allowed types for a path. Stored using dot syntax.
      *
      * @var array<string, string[]>
      */
     private $allowedTypes = [];
 
     /**
-     * List of valid values or a validation callback for each top level array key.
+     * List of valid values or a validation callback for each option path.
+     * Stored using dot syntax.
      *
-     * @var array<string, mixed[]|callable>
+     * @var array<string, mixed[]|callable|bool|float|int|string|null>
      */
     private $allowedValues = [];
 
     /**
-     * Stores normalizers for each top level array key. Normalizers are executed for defaults and user provided options.
+     * Stores normalizers for each option path. Stored using dot syntax.
      *
-     * @var array<callable>
+     * @var array<string, callable>
      */
     private $normalizers = [];
 
@@ -42,21 +62,7 @@ class OptionsResolver
      */
     public function setDefaults(array $defaults): void
     {
-        $processed = [];
-
-        foreach ($defaults as $option => $defaultValue) {
-            [$isValid, $normalized] = $this->normalizeAndValidate($option, $defaultValue);
-
-            if (!$isValid) {
-                // Since defaults are used as fallback values if passed options are invalid, we want to
-                // get hard errors here to make sure we have something to fall back to.
-                throw new \InvalidArgumentException(\sprintf('Invalid default for option "%s"', $option));
-            }
-
-            $processed[$option] = $normalized;
-        }
-
-        $this->defaults = $processed;
+        $this->defaults = $this->processDefaults($defaults, '');
     }
 
     /**
@@ -64,15 +70,7 @@ class OptionsResolver
      */
     public function setDefault(string $name, $value): void
     {
-        [$isValid, $normalized] = $this->normalizeAndValidate($name, $value);
-
-        if (!$isValid) {
-            // Since defaults are used as fallback values if passed options are invalid, we want to
-            // get hard errors here to make sure we have something to fall back to.
-            throw new \InvalidArgumentException(\sprintf('Invalid default for option "%s"', $name));
-        }
-
-        $this->defaults[$name] = $normalized;
+        $this->defaults[$name] = $this->processDefaults([$name => $value], '')[$name];
     }
 
     /**
@@ -80,11 +78,31 @@ class OptionsResolver
      */
     public function setAllowedTypes(string $name, $types): void
     {
-        $this->allowedTypes[$name] = \is_array($types) ? $types : [$types];
+        if (\is_string($types)) {
+            $this->allowedTypes[$name] = [$types];
+
+            return;
+        }
+
+        if (!\is_array($types)) {
+            throw new \InvalidArgumentException('Allowed types must be a string or an array of strings.');
+        }
+
+        $typeSpecs = [];
+
+        foreach (array_keys($types) as $key) {
+            if (!\is_string($types[$key])) {
+                throw new \InvalidArgumentException('Allowed types must be strings.');
+            }
+
+            $typeSpecs[] = $types[$key];
+        }
+
+        $this->allowedTypes[$name] = $typeSpecs;
     }
 
     /**
-     * @param mixed[]|callable $values
+     * @param mixed[]|callable|bool|float|int|string|null $values
      */
     public function setAllowedValues(string $path, $values): void
     {
@@ -109,43 +127,116 @@ class OptionsResolver
      */
     public function resolve(array $options = [], ?LoggerInterface $logger = null): array
     {
-        return array_merge($this->defaults, $this->resolveOnly($options, $logger));
+        return array_merge($this->defaults, $this->resolveOnly($options, [], $logger));
     }
 
     /**
-     * Resolves passed options against the defaults but in contrast to {@see self::resolve}, it will not merge
-     * defaults into the result. This means that the returning array will always be equal or smaller than
-     * the input array.
+     * Resolves only the options passed as $override and all nested keys that belong to it.
      *
+     * @param array<string, mixed> $override
      * @param array<string, mixed> $options
      *
      * @return array<string, mixed>
      */
-    public function resolveOnly(array $options = [], ?LoggerInterface $logger = null): array
+    public function resolveOnly(
+        array $override = [],
+        array $options = [],
+        ?LoggerInterface $logger = null
+    ): array {
+        return $this->applyOptions(array_intersect_key($options, $override), $this->defaults, $override, '', $logger);
+    }
+
+    /**
+     * @param array<string, mixed> $defaults
+     *
+     * @return array<string, mixed>
+     */
+    private function processDefaults(array $defaults, string $parentPath): array
     {
-        $result = [];
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($defaults as $option => $value) {
+            $path = $parentPath === '' ? $option : $parentPath . '.' . $option;
+            /** @mago-ignore analysis:mixed-assignment */
+            [$isValid, $processed] = $this->normalizeAndValidate($path, $value);
 
-        foreach ($options as $option => $value) {
-            if (!\array_key_exists($option, $this->defaults)) {
-                if ($logger !== null) {
-                    $logger->debug(\sprintf('Option "%s" does not exist and will be ignored', $option));
-                }
-                continue;
-            }
-
-            [$isValid, $normalized] = $this->normalizeAndValidate($option, $value);
             if (!$isValid) {
-                if ($logger !== null) {
-                    $logger->debug(\sprintf('Invalid value for option "%s". Using default value.', $option));
-                }
-                $result[$option] = $this->defaults[$option];
-                continue;
+                $defaults[$option] = null;
+            } elseif (!Arr::isAssociative($processed)) {
+                $defaults[$option] = $processed;
+            } else {
+                /** @var array<string, mixed> $processed */
+                $defaults[$option] = $this->processDefaults($processed, $path);
             }
-
-            $result[$option] = $normalized;
         }
 
-        return $result;
+        return $defaults;
+    }
+
+    /**
+     * @param array<string, mixed> $resolved
+     * @param array<string, mixed> $defaults
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function applyOptions(
+        array $resolved,
+        array $defaults,
+        array $options,
+        string $parentPath,
+        ?LoggerInterface $logger
+    ): array {
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($options as $option => $value) {
+            $path = $parentPath === '' ? $option : $parentPath . '.' . $option;
+
+            if (!\array_key_exists($option, $defaults)) {
+                if ($logger !== null) {
+                    $logger->debug(\sprintf('Option "%s" does not exist and will be ignored', $path));
+                }
+
+                continue;
+            }
+
+            /** @mago-ignore analysis:mixed-assignment */
+            $default = $defaults[$option];
+            $isBranch = Arr::isAssociative($default);
+            /** @mago-ignore analysis:mixed-assignment */
+            [$isValid, $value] = $this->normalizeAndValidate($path, $value);
+
+            // If the value is invalid or the value is not in the correct shape, keep the current value if one exists.
+            // Otherwise, fall back to the default.
+            // For example, we expected to receive a nested value, but we got a scalar
+            if (!$isValid || ($isBranch && !\is_array($value))) {
+                if ($logger !== null) {
+                    $logger->debug(\sprintf('Invalid value for option "%s". The value has been ignored.', $path));
+                }
+
+                if (!\array_key_exists($option, $resolved)) {
+                    $resolved[$option] = $default;
+                }
+
+                continue;
+            }
+
+            if (!$isBranch) {
+                $resolved[$option] = $value;
+
+                continue;
+            }
+
+            $base = $resolved[$option] ?? null;
+            if (!\is_array($base)) {
+                $base = $default;
+            }
+
+            /** @var array<string, mixed> $default */
+            /** @var array<string, mixed> $base */
+            /** @var array<string, mixed> $value */
+            $resolved[$option] = $this->applyOptions($base, $default, $value, $path, $logger);
+        }
+
+        return $resolved;
     }
 
     /**
@@ -172,6 +263,7 @@ class OptionsResolver
         }
 
         // Normalize, then validate again only if the value actually changed
+        /** @mago-ignore analysis:mixed-assignment */
         $normalized = $normalizer($value);
         if ($normalized === $value) {
             return [true, $value];
@@ -222,8 +314,8 @@ class OptionsResolver
                 return false;
             }
 
-            foreach ($value as $element) {
-                if (!$this->valueMatchesType($element, $elementType)) {
+            foreach (array_keys($value) as $key) {
+                if (!$this->valueMatchesType($value[$key], $elementType)) {
                     return false;
                 }
             }
@@ -269,13 +361,15 @@ class OptionsResolver
         if ($allowedValue === null) {
             return true;
         }
+
         if (\is_callable($allowedValue)) {
-            return $allowedValue($value);
-        }
-        if (\is_array($allowedValue)) {
-            return \in_array($value, $allowedValue, true);
+            return $allowedValue($value) === true;
         }
 
-        return false;
+        if (!\is_array($allowedValue)) {
+            return $value === $allowedValue;
+        }
+
+        return \in_array($value, $allowedValue, true);
     }
 }

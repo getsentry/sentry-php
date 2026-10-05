@@ -41,8 +41,8 @@ final class MetricsAggregator
     private $metrics;
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function add(
         string $type,
@@ -61,10 +61,6 @@ final class MetricsAggregator
         if (!\is_int($value) && !\is_float($value)) {
             $options->getLoggerOrNullLogger()->debug('Metrics value is neither int nor float. Metric will be discarded');
 
-            return;
-        }
-
-        if ($options->getEnableMetrics() === false) {
             return;
         }
 
@@ -106,9 +102,15 @@ final class MetricsAggregator
         /** @var Metric $metric */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
-        $beforeSendMetric = $options->getBeforeSendMetricCallback();
-        $metric = $beforeSendMetric($metric);
-        if ($metric === null) {
+        try {
+            $beforeSendMetric = $options->getBeforeSendMetricCallback();
+            $metric = $beforeSendMetric($metric);
+            if ($metric === null) {
+                return;
+            }
+        } catch (\Throwable $exception) {
+            $options->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
+
             return;
         }
 

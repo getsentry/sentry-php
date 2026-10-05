@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -33,6 +34,7 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
+use function Sentry\addAttachment;
 use function Sentry\addBreadcrumb;
 use function Sentry\addFeatureFlag;
 use function Sentry\captureCheckIn;
@@ -81,6 +83,23 @@ final class FunctionsTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame(['baseline' => 'yes'], $event->getTags());
+    }
+
+    public function testInitUsesRuntimeContextStorage(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($storage);
+        init(['default_integrations' => false]);
+
+        $storage->switchTo('request');
+        startContext();
+
+        $this->assertNotNull($storage->get());
+
+        endContext();
+
+        $this->assertNull($storage->get());
     }
 
     /**
@@ -532,6 +551,27 @@ final class FunctionsTest extends TestCase
         $this->assertScopeBreadcrumbs($scope, [$breadcrumb2]);
     }
 
+    public function testAddAttachment(): void
+    {
+        $attachment = Attachment::fromBytes('test.txt', 'test');
+        $globalScope = SentrySdk::getGlobalScope();
+        $isolationScope = new IsolationScope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($isolationScope);
+
+        addAttachment($attachment);
+
+        $event = (new GlobalScope())->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$attachment], $event->getAttachments());
+        $this->assertSame('void', (string) (new \ReflectionFunction('Sentry\addAttachment'))->getReturnType());
+
+        $globalEvent = $globalScope->merge(new IsolationScope())->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($globalEvent);
+        $this->assertSame([], $globalEvent->getAttachments());
+    }
+
     public function testWithScope(): void
     {
         $returnValue = withScope(static function (): string {
@@ -603,6 +643,22 @@ final class FunctionsTest extends TestCase
         $requestScope = SentrySdk::getIsolationScope();
 
         $this->assertNotSame($globalScope, $requestScope);
+
+        endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testStartContextForwardsProvidedIsolationScope(): void
+    {
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+        $isolationScope = new IsolationScope();
+
+        startContext($isolationScope);
+
+        $this->assertSame($isolationScope, SentrySdk::getIsolationScope());
 
         endContext();
 

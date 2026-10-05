@@ -21,7 +21,7 @@ class AttachmentItem
             'filename' => $attachment->getFilename(),
             'content_type' => $attachment->getContentType(),
             'attachment_type' => 'event.attachment',
-            'length' => $attachment->getSize(),
+            'length' => \strlen($data),
         ];
 
         return \sprintf("%s\n%s", JSON::encode($header), $data);

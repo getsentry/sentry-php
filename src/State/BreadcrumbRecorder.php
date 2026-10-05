@@ -33,7 +33,13 @@ final class BreadcrumbRecorder
             return false;
         }
 
-        $breadcrumb = ($options->getBeforeBreadcrumbCallback())($breadcrumb);
+        try {
+            $breadcrumb = ($options->getBeforeBreadcrumbCallback())($breadcrumb);
+        } catch (\Throwable $exception) {
+            $options->getLoggerOrNullLogger()->error(\sprintf('The "before_breadcrumb" callback failed with exception: "%s".', $exception->getMessage()));
+
+            return false;
+        }
 
         if ($breadcrumb !== null) {
             $scope->addBreadcrumb($breadcrumb, $maxBreadcrumbs);

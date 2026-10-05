@@ -8,6 +8,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Logs\Logs;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -155,6 +157,27 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($baselineSpan, SentrySdk::getIsolationScope()->getSpan());
     }
 
+    public function testStartContextUsesProvidedIsolationScopeAsIs(): void
+    {
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+        $span = new Span(new SpanContext());
+        $isolationScope = new IsolationScope();
+        $isolationScope->setSpan($span);
+        $traceparent = $isolationScope->getPropagationContext()->toTraceparent();
+
+        SentrySdk::startContext($isolationScope);
+
+        $this->assertSame($isolationScope, SentrySdk::getIsolationScope());
+        $this->assertSame($span, SentrySdk::getIsolationScope()->getSpan());
+        $this->assertSame($traceparent, $this->getCurrentScopeTraceparent());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
     public function testStartContextCreatesFreshPropagationContext(): void
     {
         SentrySdk::init();
@@ -213,6 +236,239 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($globalScope, SentrySdk::getIsolationScope());
     }
 
+    public function testNestedStartContextIgnoresProvidedIsolationScope(): void
+    {
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::startContext();
+        $contextScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::startContext(new IsolationScope());
+
+        $this->assertSame($contextScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testRuntimeContextStorageIsolatesConcurrentExecutions(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        $storage->switchTo('first');
+
+        $firstScope = new IsolationScope();
+        SentrySdk::startContext($firstScope);
+
+        $firstContext = SentrySdk::getCurrentRuntimeContext();
+        $firstLogsAggregator = $firstContext->getLogsAggregator();
+        $firstMetricsAggregator = $firstContext->getMetricsAggregator();
+
+        $this->assertSame($firstScope, $firstContext->getIsolationScope());
+
+        SentrySdk::getIsolationScope()->setTag('execution', 'first');
+
+        $storage->switchTo('second');
+        SentrySdk::startContext();
+
+        $secondContext = SentrySdk::getCurrentRuntimeContext();
+        $secondScope = $secondContext->getIsolationScope();
+
+        SentrySdk::getIsolationScope()->setTag('execution', 'second');
+
+        $this->assertNotSame($firstContext, $secondContext);
+        $this->assertNotSame($firstScope, $secondScope);
+        $this->assertNotSame($firstLogsAggregator, $secondContext->getLogsAggregator());
+        $this->assertNotSame($firstMetricsAggregator, $secondContext->getMetricsAggregator());
+
+        $storage->switchTo('first');
+
+        $this->assertSame($firstContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame('first', $this->getCurrentScopeTag('execution'));
+
+        $storage->switchTo('second');
+
+        $this->assertSame($secondContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame('second', $this->getCurrentScopeTag('execution'));
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+
+        $storage->switchTo('first');
+
+        $this->assertSame($firstContext, SentrySdk::getCurrentRuntimeContext());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+        $this->assertNull($this->getCurrentScopeTag('execution'));
+    }
+
+    public function testRuntimeContextStorageCanReleaseAbandonedExecutions(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        $storage->switchTo('abandoned');
+        SentrySdk::startContext();
+
+        $abandonedContext = SentrySdk::getCurrentRuntimeContext();
+
+        $storage->release('abandoned');
+
+        $this->assertNotSame($abandonedContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testRepeatedEndContextWithRuntimeContextStorageIsNoOp(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->once())
+            ->method('flush')
+            ->willReturn(new Result(ResultStatus::success()));
+
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init($client);
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        $storage->switchTo('request');
+        SentrySdk::startContext();
+        SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+
+        SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testInitClearsContextStoredByPreviousManager(): void
+    {
+        /** @var ClientInterface&MockObject $firstClient */
+        $firstClient = $this->createMock(ClientInterface::class);
+        $firstClient->expects($this->never())
+            ->method('flush');
+
+        /** @var ClientInterface&MockObject $secondClient */
+        $secondClient = $this->createMock(ClientInterface::class);
+        $secondClient->expects($this->once())
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $secondClient->expects($this->once())
+            ->method('flush')
+            ->willReturn(new Result(ResultStatus::success()));
+
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init($firstClient);
+
+        $storage->switchTo('request');
+        SentrySdk::startContext();
+        $previousScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::init($secondClient);
+
+        $this->assertNull($storage->get());
+        $this->assertNotSame($previousScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::endContext();
+
+        $this->assertNull($storage->get());
+
+        SentrySdk::startContext();
+
+        $this->assertNotNull($storage->get());
+        $this->assertSame($secondClient, SentrySdk::getClient());
+
+        SentrySdk::endContext();
+    }
+
+    public function testReplacingRuntimeContextStorageDiscardsContextFromPreviousStorage(): void
+    {
+        $firstStorage = new StubRuntimeContextStorage();
+        $secondStorage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($firstStorage);
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::startContext();
+
+        $this->assertNotNull($firstStorage->get());
+
+        SentrySdk::setRuntimeContextStorage($secondStorage);
+
+        $this->assertNull($firstStorage->get());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::startContext();
+
+        $this->assertNull($firstStorage->get());
+        $this->assertSame(SentrySdk::getCurrentRuntimeContext(), $secondStorage->get());
+
+        SentrySdk::endContext();
+    }
+
+    public function testUnregisteringRuntimeContextStorageRestoresProcessLocalContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init();
+
+        $globalScope = SentrySdk::getIsolationScope();
+
+        SentrySdk::startContext();
+
+        $this->assertNotNull($storage->get());
+
+        SentrySdk::setRuntimeContextStorage(null);
+
+        $this->assertNull($storage->get());
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::startContext();
+
+        $this->assertNull($storage->get());
+        $this->assertNotSame($globalScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($globalScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testSettingRuntimeContextStorageKeepsGlobalFallbackContext(): void
+    {
+        SentrySdk::init();
+
+        $globalContext = SentrySdk::getCurrentRuntimeContext();
+        SentrySdk::getIsolationScope()->setTag('baseline', 'yes');
+
+        SentrySdk::setRuntimeContextStorage(new StubRuntimeContextStorage());
+
+        $this->assertSame($globalContext, SentrySdk::getCurrentRuntimeContext());
+        $this->assertSame('yes', $this->getCurrentScopeTag('baseline'));
+    }
+
     public function testEndContextFlushesClientTransportWithOptionalTimeout(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -243,6 +499,43 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init($client);
 
         SentrySdk::flush();
+    }
+
+    public function testEndContextFlushesResourcesIndependently(): void
+    {
+        StubLogger::$logs = [];
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->atLeastOnce())
+            ->method('getOptions')
+            ->willReturn(new Options(['logger' => StubLogger::getInstance()]));
+        $client->expects($this->exactly(2))
+            ->method('captureEvent')
+            ->willReturnCallback(static function (Event $event): void {
+                throw new \RuntimeException('Failed capturing ' . (string) $event->getType());
+            });
+        $client->expects($this->once())
+            ->method('flush')
+            ->willThrowException(new \RuntimeException('Failed flushing transport'));
+
+        SentrySdk::init($client);
+        SentrySdk::startContext();
+
+        Logs::getInstance()->info('log');
+        TraceMetrics::getInstance()->count('metric', 1);
+
+        SentrySdk::endContext();
+
+        $errors = array_filter(StubLogger::$logs, static function (array $log): bool {
+            return $log['level'] === 'error';
+        });
+
+        $this->assertSame([
+            'Failed to flush logs while ending a runtime context.',
+            'Failed to flush trace metrics while ending a runtime context.',
+            'Failed to flush the client transport while ending a runtime context.',
+        ], array_column($errors, 'message'));
     }
 
     public function testWithContextReturnsCallbackResultAndRestoresGlobalIsolationScope(): void
@@ -334,5 +627,12 @@ final class SentrySdkTest extends TestCase
         $traceparent = SentrySdk::getIsolationScope()->getPropagationContext()->toTraceparent();
 
         return $traceparent;
+    }
+
+    private function getCurrentScopeTag(string $key): ?string
+    {
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent(Event::createEvent());
+
+        return $event !== null ? $event->getTags()[$key] ?? null : null;
     }
 }
