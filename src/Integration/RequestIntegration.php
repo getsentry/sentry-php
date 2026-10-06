@@ -11,7 +11,6 @@ use Sentry\Exception\JsonException;
 use Sentry\Options;
 use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 use Sentry\UserDataBag;
 use Sentry\Util\JSON;
 
@@ -103,7 +102,7 @@ final class RequestIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(function (Event $event): Event {
+        SentrySdk::getGlobalScope()->addEventProcessor(function (Event $event): Event {
             $client = SentrySdk::getClient();
             $integration = $client->getIntegration(self::class);
 

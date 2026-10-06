@@ -136,7 +136,7 @@ final class MergedScope extends Scope
             }
         }
 
-        foreach (array_merge(parent::$globalEventProcessors, $this->scopeData->getEventProcessors()) as $processor) {
+        foreach ($this->scopeData->getEventProcessors() as $processor) {
             try {
                 $event = $processor($event, $hint);
             } catch (\Throwable $exception) {

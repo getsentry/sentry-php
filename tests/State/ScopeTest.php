@@ -552,6 +552,32 @@ final class ScopeTest extends TestCase
         $this->assertSame($client, $scope->getClient());
     }
 
+    public function testClearKeepsEventProcessors(): void
+    {
+        $calls = [];
+
+        $globalScope = new GlobalScope();
+        $globalScope->addEventProcessor(static function (Event $event) use (&$calls): Event {
+            $calls[] = 'global';
+
+            return $event;
+        });
+        $globalScope->clear();
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addEventProcessor(static function (Event $event) use (&$calls): Event {
+            $calls[] = 'isolation';
+
+            return $event;
+        });
+        $isolationScope->clear();
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['global', 'isolation'], $calls);
+    }
+
     public function testApplyToEvent(): void
     {
         $breadcrumb = new Breadcrumb(Breadcrumb::LEVEL_ERROR, Breadcrumb::TYPE_ERROR, 'error_reporting');
@@ -950,12 +976,6 @@ final class ScopeTest extends TestCase
     {
         $calls = [];
 
-        Scope::addGlobalEventProcessor(static function (Event $event) use (&$calls): ?Event {
-            $calls[] = 'static';
-
-            return $event;
-        });
-
         $globalScope = new GlobalScope();
         $globalScope->addEventProcessor(static function (Event $event) use (&$calls): ?Event {
             $calls[] = 'global';
@@ -973,7 +993,7 @@ final class ScopeTest extends TestCase
         $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['static', 'global', 'isolation'], $calls);
+        $this->assertSame(['global', 'isolation'], $calls);
     }
 
     /**

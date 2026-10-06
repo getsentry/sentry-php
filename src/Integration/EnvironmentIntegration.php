@@ -8,7 +8,6 @@ use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 use Sentry\Util\PHPVersion;
 
 /**
@@ -23,7 +22,7 @@ final class EnvironmentIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event): Event {
+        SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event): Event {
             $integration = SentrySdk::getClient()->getIntegration(self::class);
 
             if ($integration !== null) {
