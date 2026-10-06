@@ -502,6 +502,50 @@ final class ScopeTest extends TestCase
         ]], StubLogger::$logs);
     }
 
+    public function testEventProcessorReturningInvalidValueDropsEventAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $scope = new IsolationScope();
+        $scope->addEventProcessor(static function (): string {
+            return 'foo';
+        });
+
+        $this->assertNull($this->applyScope($scope, Event::createEvent(), null, new Options([
+            'logger' => StubLogger::getInstance(),
+        ])));
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'The event processor must return null or an instance of the Sentry\Event class. The event will be discarded.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    /**
+     * @dataProvider eventProcessorsRunForEventTypeDataProvider
+     */
+    public function testEventProcessorsOnlyRunForErrorsAndTransactions(Event $event, bool $expectedProcessorCalled): void
+    {
+        $processorCalled = false;
+        $scope = new IsolationScope();
+        $scope->addEventProcessor(static function (Event $event) use (&$processorCalled): Event {
+            $processorCalled = true;
+
+            return $event;
+        });
+
+        $this->assertNotNull($this->applyScope($scope, $event));
+        $this->assertSame($expectedProcessorCalled, $processorCalled);
+    }
+
+    public static function eventProcessorsRunForEventTypeDataProvider(): \Generator
+    {
+        yield 'event' => [Event::createEvent(), true];
+        yield 'transaction' => [Event::createTransaction(), true];
+        yield 'check-in' => [Event::createCheckIn(), false];
+        yield 'logs' => [Event::createLogs(), false];
+        yield 'metrics' => [Event::createMetrics(), false];
+    }
+
     public function testEventProcessorReceivesTheEventAndEventHint(): void
     {
         $event = Event::createEvent();
