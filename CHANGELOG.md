@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 4.33.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.1.
+
+### Bug Fixes
+
+- Join multiple values of the same header into a single comma-separated string in Guzzle span data. [(#2241)](https://github.com/getsentry/sentry-php/pull/2241)
+
 ## 4.33.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.0.
