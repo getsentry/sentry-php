@@ -178,7 +178,7 @@ final class GuzzleTracingMiddleware
     private static function addHeaderData(array &$data, string $prefix, ?array $headers): void
     {
         foreach ($headers ?? [] as $name => $values) {
-            $data[$prefix . '.' . strtolower((string) $name)] = $values;
+            $data[$prefix . '.' . strtolower((string) $name)] = implode(', ', $values);
         }
     }
 
