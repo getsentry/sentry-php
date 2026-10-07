@@ -10,10 +10,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
 use Sentry\DataCollection\DataCollectionPolicy;
-use Sentry\DataCollection\HttpBodyCollector;
-use Sentry\DataCollection\HttpCookieCollector;
-use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpMessageType;
+use Sentry\DataCollection\HttpSpanDataCollector;
 use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -68,14 +66,7 @@ final class GuzzleTracingMiddleware
                 $childSpan = null;
 
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
-                    $spanData = $spanAndBreadcrumbData;
-                    self::addHeaderData($spanData, 'http.request.header', HttpHeaderCollector::collect($policy, HttpMessageType::outgoingRequest(), $request->getHeaders()));
-                    self::addCookieData($spanData, 'http.request.header.cookie', HttpCookieCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
-
-                    $requestBody = HttpBodyCollector::collectPsr7Message($policy, HttpMessageType::outgoingRequest(), $request);
-                    if ($requestBody !== null) {
-                        $spanData['http.request.body.data'] = $requestBody;
-                    }
+                    $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
 
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
@@ -133,14 +124,7 @@ final class GuzzleTracingMiddleware
 
                     if ($childSpan !== null) {
                         if ($response instanceof ResponseInterface) {
-                            $spanData = $spanAndBreadcrumbData;
-                            self::addHeaderData($spanData, 'http.response.header', HttpHeaderCollector::collect($policy, HttpMessageType::incomingResponse(), $response->getHeaders()));
-                            self::addCookieData($spanData, 'http.response.header.set_cookie', HttpCookieCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
-
-                            $responseBody = HttpBodyCollector::collectPsr7Message($policy, HttpMessageType::incomingResponse(), $response);
-                            if ($responseBody !== null) {
-                                $spanData['http.response.body.data'] = $responseBody;
-                            }
+                            $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
 
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             $childSpan->setData(array_merge($spanData, $childSpan->getData()));
@@ -169,35 +153,6 @@ final class GuzzleTracingMiddleware
                 return $handler($request, $options)->then($handlerPromiseCallback, $handlerPromiseCallback);
             };
         };
-    }
-
-    /**
-     * @param array<string, mixed>            $data
-     * @param array<array-key, string[]>|null $headers
-     */
-    private static function addHeaderData(array &$data, string $prefix, ?array $headers): void
-    {
-        foreach ($headers ?? [] as $name => $values) {
-            $data[$prefix . '.' . strtolower((string) $name)] = implode(', ', $values);
-        }
-    }
-
-    /**
-     * @param array<string, mixed>                $data
-     * @param array<array-key, mixed>|string|null $cookies Cookies grouped by name, or `[Filtered]` if they could not be parsed
-     */
-    private static function addCookieData(array &$data, string $prefix, $cookies): void
-    {
-        if (\is_string($cookies)) {
-            $data[$prefix] = $cookies;
-
-            return;
-        }
-
-        /** @mago-ignore analysis:mixed-assignment */
-        foreach ($cookies ?? [] as $name => $value) {
-            $data[$prefix . '.' . $name] = $value;
-        }
     }
 
     private static function shouldAttachTracingHeaders(?Options $options, RequestInterface $request): bool
