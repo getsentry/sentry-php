@@ -11,6 +11,7 @@ use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\Event;
+use Sentry\EventType;
 use Sentry\Options;
 use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
@@ -127,7 +128,9 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['headers'] = $headers;
         }
 
-        if (!\array_key_exists('data', $event->getRequest())) {
+        // Request bodies attached here are only relevant for error events, other events would
+        // needlessly read the body only to be discarded later on
+        if ($event->getType() === EventType::event() && !\array_key_exists('data', $event->getRequest())) {
             $requestBody = HttpBodyCollector::collectServerRequest($policy, $request);
             if ($requestBody !== null) {
                 $requestData['data'] = $requestBody;
