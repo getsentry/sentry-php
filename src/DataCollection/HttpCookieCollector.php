@@ -35,6 +35,8 @@ final class HttpCookieCollector
     /**
      * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
      *                                             could not be parsed
+     *
+     * @deprecated Use HttpSpanDataCollector::collectCookieHeaders() with the `Cookie` headers instead. To be removed in 5.x.
      */
     public static function collectPsr7Request(DataCollectionPolicy $policy, HttpMessageType $type, RequestInterface $request)
     {
@@ -42,12 +44,18 @@ final class HttpCookieCollector
             return null;
         }
 
-        return self::collectGroupedPairs($policy, $type, HttpCookieParser::parseCookieHeaders($request->getHeader('Cookie')));
+        /** @mago-ignore analysis:deprecated-method */
+        $cookies = HttpCookieParser::parseCookieHeaders($request->getHeader('Cookie'));
+
+        /** @mago-ignore analysis:deprecated-method */
+        return self::collectGroupedPairs($policy, $type, $cookies);
     }
 
     /**
      * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
      *                                             could not be parsed
+     *
+     * @deprecated Use HttpSpanDataCollector::collectCookieHeaders() with the `Set-Cookie` headers instead. To be removed in 5.x.
      */
     public static function collectPsr7Response(DataCollectionPolicy $policy, HttpMessageType $type, ResponseInterface $response)
     {
@@ -55,7 +63,11 @@ final class HttpCookieCollector
             return null;
         }
 
-        return self::collectGroupedPairs($policy, $type, HttpCookieParser::parseSetCookieHeaders($response->getHeader('Set-Cookie')));
+        /** @mago-ignore analysis:deprecated-method */
+        $cookies = HttpCookieParser::parseSetCookieHeaders($response->getHeader('Set-Cookie'));
+
+        /** @mago-ignore analysis:deprecated-method */
+        return self::collectGroupedPairs($policy, $type, $cookies);
     }
 
     /**
@@ -82,6 +94,8 @@ final class HttpCookieCollector
      *
      * @return array<array-key, mixed>|string|null `null` if cookies are not collected, `[Filtered]` if they
      *                                             could not be parsed
+     *
+     * @deprecated Use HttpSpanDataCollector::collectCookiePairs() instead. To be removed in 5.x.
      */
     public static function collectGroupedPairs(DataCollectionPolicy $policy, HttpMessageType $type, ?array $cookies)
     {
