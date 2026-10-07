@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 4.33.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.2.
+
+### Bug Fixes
+
+- Collect cookies as string arrays in the form of `key=value` instead of maps and bodies as JSON strings. [(#2246)](https://github.com/getsentry/sentry-php/pull/2246)
+
+### Misc
+
+- Only read the request body in `RequestIntegration` for error events, as it is not used for transactions. [(#2247)](https://github.com/getsentry/sentry-php/pull/2247)
+- Add `HttpSpanDataCollector` to share HTTP span attribute names and formats with the framework integrations. [(#2246)](https://github.com/getsentry/sentry-php/pull/2246)
+
 ## 4.33.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.1.
