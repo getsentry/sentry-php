@@ -35,6 +35,9 @@ final class KeyValueDataFilter
         'session',
         'sid',
         'identity',
+
+        // Filters the "remember me" cookies of Laravel and Symfony
+        'remember',
     ];
 
     private const EXCLUDED_HEADERS = [

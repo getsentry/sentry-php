@@ -33,6 +33,19 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
+    public function testFilterKeyValueDataFiltersRememberMeCookies(): void
+    {
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::allowList(['REMEMBERME', 'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d'])))->filterPairs([
+            ['REMEMBERME', 'token'],
+            ['remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d', 'token'],
+        ]);
+
+        $this->assertSame([
+            ['REMEMBERME', '[Filtered]'],
+            ['remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d', '[Filtered]'],
+        ], $filtered);
+    }
+
     public function testFilterKeyValueDataCombinesMandatoryAndCustomDenyListTerms(): void
     {
         $behavior = KeyValueCollectionBehavior::denyList(['custom-field']);
