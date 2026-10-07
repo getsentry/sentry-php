@@ -502,6 +502,50 @@ final class ScopeTest extends TestCase
         ]], StubLogger::$logs);
     }
 
+    public function testEventProcessorReturningInvalidValueDropsEventAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $scope = new IsolationScope();
+        $scope->addEventProcessor(static function (): string {
+            return 'foo';
+        });
+
+        $this->assertNull($this->applyScope($scope, Event::createEvent(), null, new Options([
+            'logger' => StubLogger::getInstance(),
+        ])));
+        $this->assertSame([[
+            'level' => 'debug',
+            'message' => 'The event processor must return null or an instance of the Sentry\Event class. The event will be discarded.',
+            'context' => [],
+        ]], StubLogger::$logs);
+    }
+
+    /**
+     * @dataProvider eventProcessorsRunForEventTypeDataProvider
+     */
+    public function testEventProcessorsOnlyRunForErrorsAndTransactions(Event $event, bool $expectedProcessorCalled): void
+    {
+        $processorCalled = false;
+        $scope = new IsolationScope();
+        $scope->addEventProcessor(static function (Event $event) use (&$processorCalled): Event {
+            $processorCalled = true;
+
+            return $event;
+        });
+
+        $this->assertNotNull($this->applyScope($scope, $event));
+        $this->assertSame($expectedProcessorCalled, $processorCalled);
+    }
+
+    public static function eventProcessorsRunForEventTypeDataProvider(): \Generator
+    {
+        yield 'event' => [Event::createEvent(), true];
+        yield 'transaction' => [Event::createTransaction(), true];
+        yield 'check-in' => [Event::createCheckIn(), false];
+        yield 'logs' => [Event::createLogs(), false];
+        yield 'metrics' => [Event::createMetrics(), false];
+    }
+
     public function testEventProcessorReceivesTheEventAndEventHint(): void
     {
         $event = Event::createEvent();
@@ -550,6 +594,32 @@ final class ScopeTest extends TestCase
         $this->assertEmpty($event->getUser());
         $this->assertArrayNotHasKey('flags', $event->getContexts());
         $this->assertSame($client, $scope->getClient());
+    }
+
+    public function testClearKeepsEventProcessors(): void
+    {
+        $calls = [];
+
+        $globalScope = new GlobalScope();
+        $globalScope->addEventProcessor(static function (Event $event) use (&$calls): Event {
+            $calls[] = 'global';
+
+            return $event;
+        });
+        $globalScope->clear();
+
+        $isolationScope = new IsolationScope();
+        $isolationScope->addEventProcessor(static function (Event $event) use (&$calls): Event {
+            $calls[] = 'isolation';
+
+            return $event;
+        });
+        $isolationScope->clear();
+
+        $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['global', 'isolation'], $calls);
     }
 
     public function testApplyToEvent(): void
@@ -950,12 +1020,6 @@ final class ScopeTest extends TestCase
     {
         $calls = [];
 
-        Scope::addGlobalEventProcessor(static function (Event $event) use (&$calls): ?Event {
-            $calls[] = 'static';
-
-            return $event;
-        });
-
         $globalScope = new GlobalScope();
         $globalScope->addEventProcessor(static function (Event $event) use (&$calls): ?Event {
             $calls[] = 'global';
@@ -973,7 +1037,7 @@ final class ScopeTest extends TestCase
         $event = $globalScope->merge($isolationScope)->applyToEvent(Event::createEvent());
 
         $this->assertNotNull($event);
-        $this->assertSame(['static', 'global', 'isolation'], $calls);
+        $this->assertSame(['global', 'isolation'], $calls);
     }
 
     /**

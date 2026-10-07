@@ -7,7 +7,6 @@ namespace Sentry\Integration;
 use Composer\InstalledVersions;
 use Sentry\Event;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 
 /**
  * This integration logs with the event details all the versions of the packages
@@ -25,7 +24,7 @@ final class ModulesIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event): Event {
+        SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event): Event {
             $integration = SentrySdk::getClient()->getIntegration(self::class);
 
             if ($integration !== null) {

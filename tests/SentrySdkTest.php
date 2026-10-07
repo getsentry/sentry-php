@@ -122,6 +122,24 @@ final class SentrySdkTest extends TestCase
         $this->assertSame(['baseline' => 'yes'], $event->getTags());
     }
 
+    public function testInitKeepsGlobalScopeEventProcessors(): void
+    {
+        $processorCalled = false;
+
+        SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event) use (&$processorCalled): Event {
+            $processorCalled = true;
+
+            return $event;
+        });
+
+        SentrySdk::init();
+
+        $event = SentrySdk::getGlobalScope()->merge(new IsolationScope())->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertTrue($processorCalled);
+    }
+
     public function testStartAndEndContextIsolateScopeData(): void
     {
         SentrySdk::init();

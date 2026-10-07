@@ -6,8 +6,6 @@ namespace Sentry\State;
 
 use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
-use Sentry\Event;
-use Sentry\EventHint;
 use Sentry\NoOpClient;
 use Sentry\UserDataBag;
 
@@ -30,13 +28,6 @@ abstract class Scope
      * @var ScopeData
      */
     protected $scopeData;
-
-    /**
-     * @var callable[] List of event processors
-     *
-     * @phpstan-var array<callable(Event, EventHint): ?Event>
-     */
-    protected static $globalEventProcessors = [];
 
     /**
      * @var callable|null
@@ -73,17 +64,6 @@ abstract class Scope
     public function getBreadcrumbs(): array
     {
         return $this->scopeData->getBreadcrumbs();
-    }
-
-    /**
-     * Adds a new event processor that will be called after {@see MergedScope::applyToEvent}
-     * finished its work.
-     *
-     * @param callable $eventProcessor The event processor
-     */
-    public static function addGlobalEventProcessor(callable $eventProcessor): void
-    {
-        self::$globalEventProcessors[] = $eventProcessor;
     }
 
     public static function registerExternalPropagationContext(callable $callback): void

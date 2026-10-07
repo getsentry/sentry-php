@@ -136,23 +136,29 @@ final class MergedScope extends Scope
             }
         }
 
-        foreach (array_merge(parent::$globalEventProcessors, $this->scopeData->getEventProcessors()) as $processor) {
-            try {
-                $event = $processor($event, $hint);
-            } catch (\Throwable $exception) {
-                if ($options !== null) {
-                    $options->getLoggerOrNullLogger()->error(\sprintf('The event processor failed with exception: "%s".', $exception->getMessage()));
+        if ($event->getType()->requiresEventProcessors()) {
+            foreach ($this->scopeData->getEventProcessors() as $processor) {
+                try {
+                    $event = $processor($event, $hint);
+                } catch (\Throwable $exception) {
+                    if ($options !== null) {
+                        $options->getLoggerOrNullLogger()->error(\sprintf('The event processor failed with exception: "%s".', $exception->getMessage()));
+                    }
+
+                    return null;
                 }
 
-                return null;
-            }
+                if ($event === null) {
+                    return null;
+                }
 
-            if ($event === null) {
-                return null;
-            }
+                if (!$event instanceof Event) {
+                    if ($options !== null) {
+                        $options->getLoggerOrNullLogger()->debug(\sprintf('The event processor must return null or an instance of the %s class. The event will be discarded.', Event::class));
+                    }
 
-            if (!$event instanceof Event) {
-                throw new \InvalidArgumentException(\sprintf('The event processor must return null or an instance of the %s class', Event::class));
+                    return null;
+                }
             }
         }
 

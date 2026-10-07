@@ -7,7 +7,6 @@ namespace Sentry\Integration;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\SentrySdk;
-use Sentry\State\Scope;
 
 /**
  * This integration sets the `transaction` attribute of the event to the value
@@ -23,7 +22,7 @@ final class TransactionIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event, EventHint $hint): Event {
+        SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event, EventHint $hint): Event {
             $integration = SentrySdk::getClient()->getIntegration(self::class);
 
             if ($integration === null) {

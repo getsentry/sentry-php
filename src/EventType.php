@@ -87,6 +87,20 @@ final class EventType
     }
 
     /**
+     * Specifies whether event processors should run for this type of event.
+     */
+    public function requiresEventProcessors(): bool
+    {
+        switch ($this) {
+            case self::event():
+            case self::transaction():
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
      * Returns false if rate limiting should not be applied.
      */
     public function requiresRateLimiting(): bool

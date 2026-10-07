@@ -17,11 +17,11 @@ use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\IsolationScope;
-use Sentry\State\Scope;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -50,7 +50,7 @@ final class ClientTest extends TestCase
 
             public function setupOnce(): void
             {
-                Scope::addGlobalEventProcessor(function (): ?Event {
+                SentrySdk::getGlobalScope()->addEventProcessor(function (): ?Event {
                     $this->integrationCalled = true;
 
                     return null;

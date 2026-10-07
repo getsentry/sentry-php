@@ -10,7 +10,6 @@ use Sentry\Event;
 use Sentry\Frame;
 use Sentry\SentrySdk;
 use Sentry\Stacktrace;
-use Sentry\State\Scope;
 
 /**
  * This integration reads excerpts of code around the line that originated an
@@ -40,7 +39,7 @@ final class FrameContextifierIntegration implements IntegrationInterface
      */
     public function setupOnce(): void
     {
-        Scope::addGlobalEventProcessor(static function (Event $event): Event {
+        SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event): Event {
             $client = SentrySdk::getClient();
 
             $maxContextLines = $client->getOptions()->getContextLines();
