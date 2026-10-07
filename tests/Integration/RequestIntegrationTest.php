@@ -691,6 +691,55 @@ final class RequestIntegrationTest extends TestCase
         });
     }
 
+    /**
+     * @dataProvider nonErrorEventDataProvider
+     */
+    public function testBodyIsNotCollectedForNonErrorEvents(Event $event, array $options): void
+    {
+        $request = $this->createMock(ServerRequestInterface::class);
+        $request->method('getUri')->willReturn(new Uri('https://example.com/'));
+        $request->method('getMethod')->willReturn('POST');
+        $request->method('getHeaders')->willReturn(['Content-Length' => ['16']]);
+        $request->method('getHeaderLine')->willReturn('16');
+        $request->method('getCookieParams')->willReturn(['theme' => 'dark']);
+        $request->method('getServerParams')->willReturn([]);
+        $request->expects($this->never())->method('getParsedBody');
+        $request->expects($this->never())->method('getUploadedFiles');
+        $request->expects($this->never())->method('getBody');
+
+        $this->setupIntegration($request, $options);
+
+        withScope(function (Scope $scope) use ($event): void {
+            $event = $scope->applyToEvent($event);
+
+            $this->assertNotNull($event);
+            $this->assertSame([
+                'url' => 'https://example.com/',
+                'method' => 'POST',
+                'cookies' => ['theme' => 'dark'],
+                'headers' => ['Content-Length' => ['16']],
+            ], $event->getRequest());
+        });
+    }
+
+    public static function nonErrorEventDataProvider(): iterable
+    {
+        yield 'transactions with data collection' => [
+            Event::createTransaction(),
+            ['data_collection' => [], 'max_request_body_size' => 'always'],
+        ];
+
+        yield 'transactions with the legacy options' => [
+            Event::createTransaction(),
+            ['send_default_pii' => true, 'max_request_body_size' => 'always'],
+        ];
+
+        yield 'check-ins' => [
+            Event::createCheckIn(),
+            ['data_collection' => [], 'max_request_body_size' => 'always'],
+        ];
+    }
+
     private function setupIntegration(ServerRequestInterface $request, array $options, array $integrationOptions = []): void
     {
         $integration = new RequestIntegration($this->createRequestFetcher($request), $integrationOptions);
