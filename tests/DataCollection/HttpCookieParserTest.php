@@ -115,4 +115,36 @@ final class HttpCookieParserTest extends TestCase
             ['theme', 'dark'],
         ], HttpCookieParser::parseCookieHeaders(['debug; =bad; empty=; user_session=secret; theme=dark;;']));
     }
+
+    public function testCookieHeadersAreSplitInOrder(): void
+    {
+        $this->assertSame([
+            ['theme', 'dark'],
+            ['lang', 'en'],
+            ['lang', 'de'],
+            ['jwt', 'eyJ='],
+            ['empty', ''],
+            ['', 'debug'],
+            ['', 'bad'],
+            ['session_id', 'secret'],
+        ], HttpCookieParser::splitCookieHeaders([
+            ' theme = dark ;lang=en; lang=de; jwt=eyJ=; empty=; debug; =bad;;=; ',
+            'session_id=secret',
+        ]));
+    }
+
+    public function testSetCookieHeadersAreSplitInOrder(): void
+    {
+        $this->assertSame([
+            ['theme', 'dark'],
+            ['theme', 'light'],
+            ['', 'opaque'],
+        ], HttpCookieParser::splitSetCookieHeaders([
+            'theme=dark; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT',
+            ' theme = light ; HttpOnly',
+            'opaque; Secure',
+            '; Path=/',
+            '=',
+        ]));
+    }
 }
