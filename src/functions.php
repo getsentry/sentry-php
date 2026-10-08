@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment\Attachment;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -31,9 +33,25 @@ use Sentry\Transport\TransportInterface;
  *     before_send_transaction?: callable,
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
+ *     data_collection?: DataCollection\DataCollectionOptions|array{
+ *         user_info?: bool,
+ *         cookies?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         http_headers?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>}|array{
+ *             request?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *             response?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         },
+ *         http_bodies?: array<"incomingRequest"|"outgoingRequest"|"incomingResponse"|"outgoingResponse">|DataCollection\HttpMessageType[],
+ *         url_query_params?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         gen_ai?: array{inputs?: bool, outputs?: bool},
+ *         database_query_data?: bool,
+ *         queues?: bool,
+ *         stack_frame_variables?: bool|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         frame_context_lines?: int,
+ *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
+ *     enable_metrics?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
@@ -51,12 +69,14 @@ use Sentry\Transport\TransportInterface;
  *     integrations?: IntegrationInterface[]|callable(IntegrationInterface[]): IntegrationInterface[],
  *     logger?: LoggerInterface|null,
  *     log_flush_threshold?: int|null,
+ *     metric_flush_threshold?: int|null,
  *     max_breadcrumbs?: int,
  *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
  *     max_value_length?: int,
  *     org_id?: int|null,
  *     prefixes?: array<string>,
  *     profiles_sample_rate?: int|float|null,
+ *     profiles_sampler?: callable|null,
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
@@ -219,11 +239,30 @@ function withScope(callable $callback)
     return SentrySdk::getCurrentHub()->withScope($callback);
 }
 
-function startContext(): void
+/**
+ * Starts an isolated context for the current logical execution.
+ *
+ * A provided hub is used as-is, allowing runtimes with their own HubInterface
+ * implementation to manage hub isolation. When no hub is provided, the SDK
+ * creates an isolated hub from the baseline.
+ *
+ * If a context is already active, this function is a no-op and the provided hub
+ * is ignored. Use SentrySdk::setCurrentHub() to replace the active context's hub.
+ *
+ * @param HubInterface|null $hub The hub to use for the new context
+ */
+function startContext(?HubInterface $hub = null): void
 {
-    SentrySdk::startContext();
+    SentrySdk::startContext($hub);
 }
 
+/**
+ * Ends and flushes the active context for the current logical execution.
+ *
+ * When no context is active this is a no-op.
+ *
+ * @param int|null $timeout The maximum number of seconds to wait while flushing the client transport
+ */
 function endContext(?int $timeout = null): void
 {
     SentrySdk::endContext($timeout);
@@ -232,7 +271,7 @@ function endContext(?int $timeout = null): void
 /**
  * Executes the given callback within an isolated context.
  *
- * If a context is already active for the current execution key, it is reused.
+ * If a context is already active for the current logical execution, it is reused.
  *
  * @param callable $callback The callback to execute
  * @param int|null $timeout  The maximum number of seconds to wait while flushing the client transport
@@ -288,6 +327,7 @@ function trace(callable $trace, SpanContext $context)
 {
     return SentrySdk::getCurrentHub()->withScope(static function (Scope $scope) use ($context, $trace) {
         $parentSpan = $scope->getSpan();
+        $span = null;
 
         // If there is a span set on the scope and it's sampled there is an active transaction.
         // If that is the case we create the child span and set it on the scope.
@@ -301,7 +341,7 @@ function trace(callable $trace, SpanContext $context)
         try {
             return $trace($scope);
         } finally {
-            if (isset($span)) {
+            if ($span !== null) {
                 $span->finish();
 
                 $scope->setSpan($parentSpan);
@@ -349,7 +389,7 @@ function getTraceparent(): string
     if ($client !== null) {
         $options = $client->getOptions();
 
-        if ($options !== null && $options->isTracingEnabled()) {
+        if ($options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
                 return $span->toTraceparent();
@@ -396,7 +436,7 @@ function getBaggage(): string
     if ($client !== null) {
         $options = $client->getOptions();
 
-        if ($options !== null && $options->isTracingEnabled()) {
+        if ($options->isTracingEnabled()) {
             $span = SentrySdk::getCurrentHub()->getSpan();
             if ($span !== null) {
                 return $span->toBaggage();
@@ -489,6 +529,17 @@ function addFeatureFlag(string $name, bool $result): void
 {
     SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($name, $result) {
         $scope->addFeatureFlag($name, $result);
+    });
+}
+
+/**
+ * Adds an attachment to the current scope. For large attachments, it might be helpful
+ * to use the SDK Sidecar Transport: https://docs.sentry.io/platforms/php/agent/.
+ */
+function addAttachment(Attachment $attachment): void
+{
+    SentrySdk::getCurrentHub()->configureScope(static function (Scope $scope) use ($attachment) {
+        $scope->addAttachment($attachment);
     });
 }
 

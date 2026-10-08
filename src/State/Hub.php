@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\State;
 
 use Psr\Log\NullLogger;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
@@ -222,13 +223,32 @@ class Hub implements HubInterface
             return false;
         }
 
-        $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+        try {
+            $breadcrumb = $beforeBreadcrumbCallback($breadcrumb);
+        } catch (\Throwable $exception) {
+            $options->getLoggerOrNullLogger()->error(\sprintf('The "before_breadcrumb" callback failed with exception: "%s".', $exception->getMessage()));
+
+            return false;
+        }
 
         if ($breadcrumb !== null) {
             $this->getScope()->addBreadcrumb($breadcrumb, $maxBreadcrumbs);
         }
 
         return $breadcrumb !== null;
+    }
+
+    public function addAttachment(Attachment $attachment): bool
+    {
+        $client = $this->getClient();
+
+        if ($client === null) {
+            return false;
+        }
+
+        $this->getScope()->addAttachment($attachment);
+
+        return true;
     }
 
     /**
@@ -275,8 +295,14 @@ class Hub implements HubInterface
             $tracesSampler = $options->getTracesSampler();
 
             if ($tracesSampler !== null) {
-                $sampleRate = $tracesSampler($samplingContext);
-                $sampleSource = 'config:traces_sampler';
+                try {
+                    $sampleRate = $tracesSampler($samplingContext);
+                    $sampleSource = 'config:traces_sampler';
+                } catch (\Throwable $exception) {
+                    $options->getLoggerOrNullLogger()->error(\sprintf('The "traces_sampler" callback failed with exception: "%s".', $exception->getMessage()));
+                    $sampleRate = $options->getTracesSampleRate() ?? 0;
+                    $sampleSource = 'config:traces_sampler_error_fallback';
+                }
             } else {
                 $parentSampleRate = $context->getMetadata()->getParentSamplingRate();
                 if ($parentSampleRate !== null) {
@@ -328,9 +354,26 @@ class Hub implements HubInterface
 
         $transaction->initSpanRecorder();
 
-        $profilesSampleRate = $options->getProfilesSampleRate();
+        $profilesSampleSource = 'config:profiles_sample_rate';
+        $profilesSampler = $options->getProfilesSampler();
+
+        if ($profilesSampler !== null) {
+            try {
+                $profilesSampleRate = $profilesSampler($samplingContext);
+                $profilesSampleSource = 'config:profiles_sampler';
+            } catch (\Throwable $exception) {
+                $options->getLoggerOrNullLogger()->error(\sprintf('The "profiles_sampler" callback failed with exception: "%s".', $exception->getMessage()));
+                $profilesSampleRate = $options->getProfilesSampleRate() ?? 0;
+                $profilesSampleSource = 'config:profiles_sampler_error_fallback';
+            }
+        } else {
+            $profilesSampleRate = $options->getProfilesSampleRate();
+        }
+
         if ($profilesSampleRate === null) {
-            $logger->info(\sprintf('Transaction [%s] is not profiling because `profiles_sample_rate` option is not set.', (string) $transaction->getTraceId()));
+            $logger->info(\sprintf('Transaction [%s] is not profiling because neither `profiles_sample_rate` nor `profiles_sampler` option is set.', (string) $transaction->getTraceId()));
+        } elseif (!$this->isValidSampleRate($profilesSampleRate)) {
+            $logger->warning(\sprintf('Transaction [%s] is not profiling because profile sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $profilesSampleSource));
         } elseif ($this->sample($profilesSampleRate)) {
             $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 

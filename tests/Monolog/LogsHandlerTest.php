@@ -22,7 +22,7 @@ final class LogsHandlerTest extends TestCase
     {
         Logs::getInstance()->flush();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
+            'enable_logs' => false,
             'before_send' => static function () {
                 return null; // we don't need to send the event, we are just testing the Monolog handler
             },
@@ -54,7 +54,7 @@ final class LogsHandlerTest extends TestCase
                 $log->attributes()->toSimpleArray(),
                 static function (string $key) {
                     // We are not testing Sentry's own attributes here, only the ones the user supplied so filter them out of the expected attributes
-                    return !str_starts_with($key, 'sentry.');
+                    return !str_starts_with($key, 'sentry.') && $key !== 'server.address';
                 },
                 \ARRAY_FILTER_USE_KEY
             )
@@ -100,11 +100,11 @@ final class LogsHandlerTest extends TestCase
         }
     }
 
-    public function testLogsHandlerDestructor()
+    public function testLogsHandlerDestructor(): void
     {
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
+            'enable_logs' => false,
         ])->setTransport($transport)
             ->getClient();
 
@@ -158,7 +158,7 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('channel.foo', $log->attributes()->toSimpleArray()['channel']);
     }
 
-    public function testOriginTagNotAppliedWhenUsingDirectly()
+    public function testOriginTagNotAppliedWhenUsingDirectly(): void
     {
         \Sentry\logger()->info('No origin attribute');
 

@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
 use Sentry\ClientInterface;
@@ -32,6 +33,7 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Util\SentryUid;
 
+use function Sentry\addAttachment;
 use function Sentry\addBreadcrumb;
 use function Sentry\captureCheckIn;
 use function Sentry\captureEvent;
@@ -59,6 +61,23 @@ final class FunctionsTest extends TestCase
         init(['default_integrations' => false]);
 
         $this->assertNotNull(SentrySdk::getCurrentHub()->getClient());
+    }
+
+    public function testInitUsesRuntimeContextStorage(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+
+        SentrySdk::setRuntimeContextStorage($storage);
+        init(['default_integrations' => false]);
+
+        $storage->switchTo('request');
+        startContext();
+
+        $this->assertNotNull($storage->get());
+
+        endContext();
+
+        $this->assertNull($storage->get());
     }
 
     /**
@@ -318,6 +337,21 @@ final class FunctionsTest extends TestCase
         });
     }
 
+    public function testAddAttachment(): void
+    {
+        $attachment = Attachment::fromBytes('test.txt', 'test');
+        $scope = new Scope();
+        SentrySdk::setCurrentHub(new Hub(null, $scope));
+
+        addAttachment($attachment);
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame([$attachment], $event->getAttachments());
+        $this->assertSame('void', (string) (new \ReflectionFunction('Sentry\addAttachment'))->getReturnType());
+    }
+
     public function testWithScope(): void
     {
         $returnValue = withScope(static function (): string {
@@ -349,6 +383,22 @@ final class FunctionsTest extends TestCase
         $requestHub = SentrySdk::getCurrentHub();
 
         $this->assertNotSame($globalHub, $requestHub);
+
+        endContext();
+
+        $this->assertSame($globalHub, SentrySdk::getCurrentHub());
+    }
+
+    public function testStartContextForwardsProvidedHub(): void
+    {
+        SentrySdk::init();
+
+        $globalHub = SentrySdk::getCurrentHub();
+        $hub = new Hub();
+
+        startContext($hub);
+
+        $this->assertSame($hub, SentrySdk::getCurrentHub());
 
         endContext();
 
@@ -497,10 +547,10 @@ final class FunctionsTest extends TestCase
         $transaction->setSampled(false);
 
         $scope->expects($this->never())
-              ->method('setSpan');
+            ->method('setSpan');
         $scope->expects($this->exactly(3))
-              ->method('getSpan')
-              ->willReturn($transaction);
+            ->method('getSpan')
+            ->willReturn($transaction);
 
         SentrySdk::setCurrentHub($hub);
 

@@ -2,7 +2,7 @@
 Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID >= 80400) {
+if (PHP_VERSION_ID >= 80500) {
     die('skip - only works for PHP 8.4 and below');
 }
 --INI--
@@ -24,6 +24,8 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
 $vendor = __DIR__;
 
 while (!file_exists($vendor . '/vendor')) {
@@ -31,8 +33,6 @@ while (!file_exists($vendor . '/vendor')) {
 }
 
 require $vendor . '/vendor/autoload.php';
-
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
 $options = new Options([
     'dsn' => 'http://public@example.com/sentry/1',

@@ -76,7 +76,7 @@ final class ErrorHandler
     /**
      * @var callable|null The previous exception handler, if any
      *
-     * @phpstan-var null|callable(\Throwable): void
+     * @phpstan-var (callable(\Throwable): void)|null
      */
     private $previousExceptionHandler;
 
@@ -112,10 +112,13 @@ final class ErrorHandler
 
     /**
      * @var string|null A portion of pre-allocated memory data that will be reclaimed in case a fatal error occurs to handle it
-     *
-     * @phpstan-ignore-next-line This property is used to reserve memory for the fatal error handler and is thus never read
      */
     private static $reservedMemory;
+
+    /**
+     * @var int The amount of memory to reserve for the fatal error handler
+     */
+    private static $reservedMemorySize = self::DEFAULT_RESERVED_MEMORY_SIZE;
 
     /**
      * @var bool Whether the fatal error handler should be disabled
@@ -214,6 +217,7 @@ final class ErrorHandler
         }
 
         self::$handlerInstance->isFatalErrorHandlerRegistered = true;
+        self::$reservedMemorySize = $reservedMemorySize;
         self::$reservedMemory = str_repeat('x', $reservedMemorySize);
 
         register_shutdown_function(\Closure::fromCallable([self::$handlerInstance, 'handleFatalError']));
@@ -299,6 +303,22 @@ final class ErrorHandler
         }
 
         $this->memoryLimitIncreaseOnOutOfMemoryErrorValue = $valueInBytes;
+    }
+
+    /**
+     * @internal
+     */
+    public static function resetFatalErrorHandlerState(): void
+    {
+        self::$disableFatalErrorHandler = false;
+        self::$didIncreaseMemoryLimit = false;
+
+        if (self::$handlerInstance !== null
+            && self::$handlerInstance->isFatalErrorHandlerRegistered
+            && self::$reservedMemory === null
+        ) {
+            self::$reservedMemory = str_repeat('x', self::$reservedMemorySize);
+        }
     }
 
     /**
@@ -394,8 +414,15 @@ final class ErrorHandler
                 && preg_match(self::OOM_MESSAGE_MATCHER, $error['message'], $matches) === 1
             ) {
                 $currentMemoryLimit = (int) $matches['memory_limit'];
+                $newMemoryLimit = $currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue;
 
-                ini_set('memory_limit', (string) ($currentMemoryLimit + $this->memoryLimitIncreaseOnOutOfMemoryErrorValue));
+                // It can happen that the memory limit + increase is still lower than
+                // the memory that is currently being used. This produces warnings
+                // that may end up in Sentry. To prevent this, we can check the real
+                // usage before.
+                if ($newMemoryLimit > memory_get_usage(true)) {
+                    $this->setMemoryLimitWithoutHandlingWarnings($newMemoryLimit);
+                }
 
                 self::$didIncreaseMemoryLimit = true;
             }
@@ -450,6 +477,23 @@ final class ErrorHandler
         }
 
         $this->handleException($previousExceptionHandlerException);
+    }
+
+    /**
+     * Set the memory_limit while having no real error handler so that a warning emitted
+     * will not get reported.
+     */
+    private function setMemoryLimitWithoutHandlingWarnings(int $memoryLimit): void
+    {
+        set_error_handler(static function (): bool {
+            return true;
+        }, \E_WARNING);
+
+        try {
+            ini_set('memory_limit', (string) $memoryLimit);
+        } finally {
+            restore_error_handler();
+        }
     }
 
     /**

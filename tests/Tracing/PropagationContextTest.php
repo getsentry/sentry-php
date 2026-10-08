@@ -14,7 +14,7 @@ use Sentry\Tracing\TraceId;
 
 final class PropagationContextTest extends TestCase
 {
-    public function testFromDefaults()
+    public function testFromDefaults(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
 
@@ -27,7 +27,7 @@ final class PropagationContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $propagationContext = PropagationContext::fromHeaders($sentryTraceHeader, $baggageHeader);
 
@@ -49,7 +49,7 @@ final class PropagationContextTest extends TestCase
     /**
      * @dataProvider tracingDataProvider
      */
-    public function testFromEnvironment(string $sentryTrace, string $baggage, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen)
+    public function testFromEnvironment(string $sentryTrace, string $baggage, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen): void
     {
         $propagationContext = PropagationContext::fromEnvironment($sentryTrace, $baggage);
 
@@ -95,7 +95,7 @@ final class PropagationContextTest extends TestCase
         ];
     }
 
-    public function testToTraceparent()
+    public function testToTraceparent(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
@@ -104,7 +104,7 @@ final class PropagationContextTest extends TestCase
         $this->assertSame('566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8', $propagationContext->toTraceparent());
     }
 
-    public function testToBaggage()
+    public function testToBaggage(): void
     {
         $dynamicSamplingContext = DynamicSamplingContext::fromHeader('sentry-trace_id=566e3688a61d4bc888951642d6f14a19');
         $propagationContext = PropagationContext::fromDefaults();
@@ -113,7 +113,7 @@ final class PropagationContextTest extends TestCase
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19', $propagationContext->toBaggage());
     }
 
-    public function testGetTraceContext()
+    public function testGetTraceContext(): void
     {
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('566e3688a61d4bc888951642d6f14a19'));
@@ -134,6 +134,41 @@ final class PropagationContextTest extends TestCase
             'span_id' => (string) $propagationContext->getSpanId(),
             'parent_span_id' => (string) $propagationContext->getParentSpanId(),
         ], $propagationContext->getTraceContext());
+    }
+
+    /**
+     * @dataProvider invalidSampleRandDataProvider
+     */
+    public function testInvalidSampleRandIsIgnored(string $sampleRand): void
+    {
+        $propagationContext = PropagationContext::fromHeaders(
+            '566e3688a61d4bc888951642d6f14a19-566e3688a61d4bc8-1',
+            'sentry-sample_rate=0.4,sentry-sample_rand=' . rawurlencode($sampleRand)
+        );
+
+        $generatedSampleRand = $propagationContext->getSampleRand();
+
+        $this->assertNotNull($generatedSampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $generatedSampleRand);
+        $this->assertLessThan(0.4, $generatedSampleRand);
+    }
+
+    public function testSampleRandIsIgnoredWithoutSentryTraceHeader(): void
+    {
+        $propagationContext = PropagationContext::fromHeaders('', 'sentry-sample_rand=-1.0');
+        $sampleRand = $propagationContext->getSampleRand();
+
+        $this->assertNotNull($sampleRand);
+        $this->assertGreaterThanOrEqual(0.0, $sampleRand);
+        $this->assertLessThanOrEqual(1.0, $sampleRand);
+    }
+
+    public static function invalidSampleRandDataProvider(): iterable
+    {
+        yield ['-1.0'];
+        yield ['1'];
+        yield ['2.0'];
+        yield ['foo'];
     }
 
     public function testSampleRandRangeWhenParentNotSampledAndSampleRateProvided(): void

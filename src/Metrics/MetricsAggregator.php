@@ -17,7 +17,7 @@ use Sentry\State\Scope;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
 use Sentry\Unit;
-use Sentry\Util\RingBuffer;
+use Sentry\Util\TelemetryStorage;
 
 /**
  * @internal
@@ -29,16 +29,6 @@ final class MetricsAggregator
      */
     public const METRICS_BUFFER_SIZE = 1000;
 
-    /**
-     * @var RingBuffer<Metric>
-     */
-    private $metrics;
-
-    public function __construct()
-    {
-        $this->metrics = new RingBuffer(self::METRICS_BUFFER_SIZE);
-    }
-
     private const METRIC_TYPES = [
         CounterMetric::TYPE => CounterMetric::class,
         DistributionMetric::TYPE => DistributionMetric::class,
@@ -46,8 +36,13 @@ final class MetricsAggregator
     ];
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @var TelemetryStorage<Metric>|null
+     */
+    private $metrics;
+
+    /**
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function add(
         string $type,
@@ -58,6 +53,7 @@ final class MetricsAggregator
     ): void {
         $hub = SentrySdk::getCurrentHub();
         $client = $hub->getClient();
+        $metricFlushThreshold = null;
 
         if (!\is_int($value) && !\is_float($value)) {
             if ($client !== null) {
@@ -67,36 +63,34 @@ final class MetricsAggregator
             return;
         }
 
-        if ($client instanceof Client) {
+        if ($client !== null) {
             $options = $client->getOptions();
-
-            if ($options->getEnableMetrics() === false) {
-                return;
-            }
+            $metricFlushThreshold = $options->getMetricFlushThreshold();
 
             $defaultAttributes = [
-                'sentry.sdk.name' => $client->getSdkIdentifier(),
-                'sentry.sdk.version' => $client->getSdkVersion(),
                 'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
                 'server.address' => $options->getServerName(),
             ];
 
-            if ($options->shouldSendDefaultPii()) {
-                $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
-                    $user = $scope->getUser();
-                    if ($user !== null) {
-                        if ($user->getId() !== null) {
-                            $defaultAttributes['user.id'] = $user->getId();
-                        }
-                        if ($user->getEmail() !== null) {
-                            $defaultAttributes['user.email'] = $user->getEmail();
-                        }
-                        if ($user->getUsername() !== null) {
-                            $defaultAttributes['user.name'] = $user->getUsername();
-                        }
-                    }
-                });
+            if ($client instanceof Client) {
+                $defaultAttributes['sentry.sdk.name'] = $client->getSdkIdentifier();
+                $defaultAttributes['sentry.sdk.version'] = $client->getSdkVersion();
             }
+
+            $hub->configureScope(static function (Scope $scope) use (&$defaultAttributes) {
+                $user = $scope->getUser();
+                if ($user !== null) {
+                    if ($user->getId() !== null) {
+                        $defaultAttributes['user.id'] = $user->getId();
+                    }
+                    if ($user->getEmail() !== null) {
+                        $defaultAttributes['user.email'] = $user->getEmail();
+                    }
+                    if ($user->getUsername() !== null) {
+                        $defaultAttributes['user.name'] = $user->getUsername();
+                    }
+                }
+            });
 
             $release = $options->getRelease();
             if ($release !== null) {
@@ -115,19 +109,30 @@ final class MetricsAggregator
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         if ($client !== null) {
-            $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
-            $metric = $beforeSendMetric($metric);
-            if ($metric === null) {
+            try {
+                $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
+                $metric = $beforeSendMetric($metric);
+                if ($metric === null) {
+                    return;
+                }
+            } catch (\Throwable $exception) {
+                $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
+
                 return;
             }
         }
 
-        $this->metrics->push($metric);
+        $metrics = $this->getStorage($metricFlushThreshold);
+        $metrics->push($metric);
+
+        if ($metricFlushThreshold !== null && \count($metrics) >= $metricFlushThreshold) {
+            $this->flush($hub);
+        }
     }
 
     public function flush(?HubInterface $hub = null): ?EventId
     {
-        if ($this->metrics->isEmpty()) {
+        if ($this->metrics === null || $this->metrics->isEmpty()) {
             return null;
         }
 
@@ -150,5 +155,22 @@ final class MetricsAggregator
 
         /** @var array{trace_id: string, span_id: string} $traceContext */
         return $traceContext;
+    }
+
+    /**
+     * @return TelemetryStorage<Metric>
+     */
+    private function getStorage(?int $metricFlushThreshold = null): TelemetryStorage
+    {
+        if ($this->metrics === null) {
+            /** @var TelemetryStorage<Metric> $metrics */
+            $metrics = $metricFlushThreshold !== null
+                ? TelemetryStorage::unbounded()
+                : TelemetryStorage::bounded(self::METRICS_BUFFER_SIZE);
+
+            $this->metrics = $metrics;
+        }
+
+        return $this->metrics;
     }
 }

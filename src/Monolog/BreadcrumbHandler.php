@@ -26,11 +26,11 @@ final class BreadcrumbHandler extends AbstractProcessingHandler
     private $hub;
 
     /**
-     * @param HubInterface $hub    The hub to which errors are reported
-     * @param int|string   $level  The minimum logging level at which this
-     *                             handler will be triggered
-     * @param bool         $bubble Whether the messages that are handled can
-     *                             bubble up the stack or not
+     * @param HubInterface              $hub    The hub to which errors are reported
+     * @param int|string|Level|LogLevel $level  The minimum logging level at which this
+     *                                          handler will be triggered
+     * @param bool                      $bubble Whether the messages that are handled can
+     *                                          bubble up the stack or not
      *
      * @phpstan-param int|string|Level|LogLevel::* $level
      */

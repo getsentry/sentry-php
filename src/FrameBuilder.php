@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\DataCollection\KeyValueDataFilter;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Util\PrefixStripper;
 
@@ -131,11 +132,16 @@ final class FrameBuilder
 
         $excludedAppPaths = $this->options->getInAppExcludedPaths();
         $includedAppPaths = $this->options->getInAppIncludedPaths();
+
+        if ($excludedAppPaths === [] && $includedAppPaths === []) {
+            return true;
+        }
+
         $absoluteFilePath = @realpath($file) ?: $file;
         $isInApp = true;
 
         foreach ($excludedAppPaths as $excludedAppPath) {
-            if (mb_substr($absoluteFilePath, 0, mb_strlen($excludedAppPath)) === $excludedAppPath) {
+            if (strncmp($absoluteFilePath, $excludedAppPath, \strlen($excludedAppPath)) === 0) {
                 $isInApp = false;
 
                 break;
@@ -143,7 +149,7 @@ final class FrameBuilder
         }
 
         foreach ($includedAppPaths as $includedAppPath) {
-            if (mb_substr($absoluteFilePath, 0, mb_strlen($includedAppPath)) === $includedAppPath) {
+            if (strncmp($absoluteFilePath, $includedAppPath, \strlen($includedAppPath)) === 0) {
                 $isInApp = true;
 
                 break;
@@ -165,6 +171,13 @@ final class FrameBuilder
     private function getFunctionArguments(array $backtraceFrame): array
     {
         if (!isset($backtraceFrame['function'], $backtraceFrame['args'])) {
+            return [];
+        }
+
+        $dataCollection = $this->options->getDataCollection();
+        $filter = $dataCollection === null ? null : new KeyValueDataFilter($dataCollection->getStackFrameVariables());
+
+        if ($filter !== null && !$filter->isEnabled()) {
             return [];
         }
 
@@ -194,6 +207,10 @@ final class FrameBuilder
             foreach ($backtraceFrame['args'] as $parameterPosition => $parameterValue) {
                 $argumentValues['param' . $parameterPosition] = $parameterValue;
             }
+        }
+
+        if ($filter !== null) {
+            return $filter->filterKeyValueData($argumentValues, [$this->representationSerializer, 'representationSerialize']) ?? [];
         }
 
         foreach ($argumentValues as $argumentName => $argumentValue) {

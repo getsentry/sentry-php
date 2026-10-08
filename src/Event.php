@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\Attachment\Attachment;
 use Sentry\ClientReport\DiscardedEvent;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
@@ -210,6 +211,11 @@ final class Event
      * @var Profile|null The profile data
      */
     private $profile;
+
+    /**
+     * @var Attachment[]
+     */
+    private $attachments = [];
 
     /**
      * @var DiscardedEvent[]
@@ -988,6 +994,22 @@ final class Event
         }
 
         return null;
+    }
+
+    /**
+     * @return Attachment[]
+     */
+    public function getAttachments(): array
+    {
+        return $this->attachments;
+    }
+
+    /**
+     * @param Attachment[] $attachments
+     */
+    public function setAttachments(array $attachments): void
+    {
+        $this->attachments = $attachments;
     }
 
     /**

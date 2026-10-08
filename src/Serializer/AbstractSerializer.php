@@ -139,6 +139,10 @@ abstract class AbstractSerializer
                     return $this->formatDate($value);
                 }
 
+                if ($value instanceof \UnitEnum) {
+                    return $this->serializeValue($value);
+                }
+
                 if ($this->serializeAllObjects || ($value instanceof \stdClass)) {
                     return $this->serializeObject($value, $_depth);
                 }
@@ -158,7 +162,8 @@ abstract class AbstractSerializer
      * Find class serializers for a object.
      *
      * Registered serializers with the `class_serializers` option take precedence over
-     * objects implementing the `SerializableInterface`.
+     * objects implementing the `SerializableInterface`. A serializer registered for
+     * the `object` type matches any object and is tried last.
      *
      * @param object $object
      *
@@ -167,9 +172,12 @@ abstract class AbstractSerializer
     protected function resolveClassSerializers($object): array
     {
         $serializers = [];
+        $objectSerializer = null;
 
         foreach ($this->options->getClassSerializers() as $type => $serializer) {
-            if ($object instanceof $type) {
+            if ($type === 'object') {
+                $objectSerializer = $serializer;
+            } elseif ($object instanceof $type) {
                 $serializers[] = $serializer;
             }
         }
@@ -178,6 +186,10 @@ abstract class AbstractSerializer
             $serializers[] = static function (SerializableInterface $object): ?array {
                 return $object->toSentry();
             };
+        }
+
+        if ($objectSerializer !== null) {
+            $serializers[] = $objectSerializer;
         }
 
         return $serializers;
@@ -247,8 +259,13 @@ abstract class AbstractSerializer
 
         if ($value instanceof \UnitEnum) {
             $reflection = new \ReflectionObject($value);
+            $enumValue = $reflection->getName() . '::' . $value->name;
 
-            return 'Enum ' . $reflection->getName() . '::' . $value->name;
+            if ($value instanceof \BackedEnum) {
+                return 'Enum ' . $enumValue . '(' . $value->value . ')';
+            }
+
+            return 'Enum ' . $enumValue;
         }
 
         if (\is_object($value)) {

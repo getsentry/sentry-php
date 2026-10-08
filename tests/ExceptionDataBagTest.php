@@ -15,7 +15,7 @@ final class ExceptionDataBagTest extends TestCase
     /**
      * @dataProvider constructorDataProvider
      */
-    public function testConstructor(array $constructorArgs, string $expectedType, string $expectedValue, ?Stacktrace $expectedStackTrace, ?ExceptionMechanism $expectedExceptionMechansim)
+    public function testConstructor(array $constructorArgs, string $expectedType, string $expectedValue, ?Stacktrace $expectedStackTrace, ?ExceptionMechanism $expectedExceptionMechansim): void
     {
         $exceptionDataBag = new ExceptionDataBag(...$constructorArgs);
 
