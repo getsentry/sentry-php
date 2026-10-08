@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 4.34.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.34.0.
+
+### Features
+
+- Add the `$includeChannel` argument to the Monolog `LogsHandler` to attach the Monolog channel as the `channel` attribute on Sentry logs. [(#2029)](https://github.com/getsentry/sentry-php/pull/2029)
+
+  ```php
+  $logger->pushHandler(new \Sentry\Monolog\LogsHandler(LogLevel::info(), true, true));
+  ```
+
+### Bug Fixes
+
+- Always filter "remember me" cookies, such as Laravel's `remember_web_*` and Symfony's `REMEMBERME`, when collecting HTTP data. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+- Collect cleared cookies with an empty value instead of `[Filtered]`. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+- Replace invalid UTF-8 in collected HTTP bodies instead of filtering the whole body, and stop escaping non-ASCII characters. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+
+### Misc
+
+- Cache source code excerpts per event in `FrameContextifierIntegration` so duplicate frames don't read the same file again. [(#2163)](https://github.com/getsentry/sentry-php/pull/2163)
+
 ## 4.33.2
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.2.

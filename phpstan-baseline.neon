@@ -193,12 +193,6 @@ parameters:
 			path: src/Monolog/LogsHandler.php
 
 		-
-			message: '#^Method Sentry\\Monolog\\LogsHandler\:\:compileAttributes\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Monolog/LogsHandler.php
-
-		-
 			message: '#^Parameter \#1 \$level of static method Sentry\\Monolog\\LogsHandler\:\:getSentryLogLevelFromMonologLevel\(\) expects int, mixed given\.$#'
 			identifier: argument.type
 			count: 2
