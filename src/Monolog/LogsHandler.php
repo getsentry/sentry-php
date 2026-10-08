@@ -31,14 +31,16 @@ class LogsHandler implements HandlerInterface
 
     /**
      * Whether to include the channel name as an attribute in the Sentry logs.
+     *
+     * @var bool
      */
-    private bool $includeChannel;
+    private $includeChannel;
 
     /**
      * Creates a new Monolog handler that converts Monolog logs to Sentry logs.
      *
-     * @param LogLevel|\Monolog\Level|int|null $logLevel the minimum logging level at which this handler will be triggered and collects the logs
-     * @param bool                             $bubble   whether the messages that are handled can bubble up the stack or not
+     * @param LogLevel|\Monolog\Level|int|null $logLevel       the minimum logging level at which this handler will be triggered and collects the logs
+     * @param bool                             $bubble         whether the messages that are handled can bubble up the stack or not
      * @param bool                             $includeChannel whether to include the channel name as an attribute in the Sentry logs
      */
     public function __construct($logLevel = null, bool $bubble = true, bool $includeChannel = false)
