@@ -210,6 +210,17 @@ final class HttpSpanDataCollectorTest extends TestCase
         );
     }
 
+    public function testClearedCookiesHaveAnEmptyValue(): void
+    {
+        $this->assertSame(
+            ['http.response.header.set-cookie' => ['theme=', 'session_id=[Filtered]']],
+            HttpSpanDataCollector::collectCookiePairs(self::policy(), HttpMessageType::outgoingResponse(), [
+                ['theme', null],
+                ['session_id', null],
+            ])
+        );
+    }
+
     public function testCookiesFollowTheConfiguredCollectionBehavior(): void
     {
         $this->assertSame(
@@ -252,10 +263,16 @@ final class HttpSpanDataCollectorTest extends TestCase
             ['http.response.body.data' => '[Filtered]'],
         ];
 
-        yield 'bodies that cannot be encoded are filtered' => [
+        yield 'invalid UTF-8 is replaced instead of filtering the whole body' => [
             ['name' => "Al\xB1ce"],
             '',
-            ['http.response.body.data' => '[Filtered]'],
+            ['http.response.body.data' => "{\"name\":\"Al\u{FFFD}ce\"}"],
+        ];
+
+        yield 'non-ASCII characters are not escaped' => [
+            '{"name":"Jürgen 日本語"}',
+            'application/json',
+            ['http.response.body.data' => '{"name":"Jürgen 日本語"}'],
         ];
 
         yield 'empty bodies are not collected' => [

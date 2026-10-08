@@ -14,6 +14,8 @@ final class HttpCookieParser
      * @param string[] $headers
      *
      * @return array<int, array{string, string}>
+     *
+     * @deprecated Use splitCookieHeaders() instead, which keeps the order and duplicate names of the cookies. To be removed in 5.x.
      */
     public static function parseCookieHeaders(array $headers): array
     {
@@ -36,6 +38,8 @@ final class HttpCookieParser
      * @param string[] $headers
      *
      * @return array<int, array{string, string}>
+     *
+     * @deprecated Use splitSetCookieHeaders() instead, which keeps cookies without a name. To be removed in 5.x.
      */
     public static function parseSetCookieHeaders(array $headers): array
     {

@@ -7,6 +7,8 @@ namespace Sentry\DataCollection;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Sentry\Exception\JsonException;
+use Sentry\Util\JSON;
 
 /**
  * Collects request and response data (cookies, headers, body) and returns them as array
@@ -226,7 +228,8 @@ final class HttpSpanDataCollector
             return KeyValueDataFilter::FILTERED_VALUE;
         }
 
-        if (!\is_scalar($value)) {
+        // Cleared cookies have no value, which must not look like a filtered value
+        if ($value !== null && !\is_scalar($value)) {
             return $name . '=' . KeyValueDataFilter::FILTERED_VALUE;
         }
 
@@ -241,7 +244,11 @@ final class HttpSpanDataCollector
     private static function formatBody(HttpMessageType $type, $body): array
     {
         if (\is_array($body)) {
-            $body = json_encode($body) ?: KeyValueDataFilter::FILTERED_VALUE;
+            try {
+                $body = JSON::encode($body);
+            } catch (JsonException $exception) {
+                $body = KeyValueDataFilter::FILTERED_VALUE;
+            }
         }
 
         if (!\is_string($body)) {
