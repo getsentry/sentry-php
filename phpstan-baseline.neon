@@ -1,331 +1,625 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method Sentry\\\\Client\\:\\:getIntegration\\(\\) should return \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null but returns \\(T of Sentry\\\\Integration\\\\IntegrationInterface\\)\\|null\\.$#"
+			message: '#^Method Sentry\\Client\:\:getIntegration\(\) should return \(T of Sentry\\Integration\\IntegrationInterface\)\|null but returns \(T of Sentry\\Integration\\IntegrationInterface\)\|null\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Client.php
 
 		-
-			message: "#^Offset 'host' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
+			message: '#^Method Sentry\\Event\:\:getMetricsSummary\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Event.php
+
+		-
+			message: '#^Method Sentry\\Event\:\:setMetricsSummary\(\) has parameter \$metricsSummary with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Event.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects CurlShareHandle, object\|resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/HttpClient/HttpClient.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects array\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/HttpClient/HttpClient.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects int, float given\.$#'
+			identifier: argument.type
 			count: 2
-			path: src/Dsn.php
+			path: src/HttpClient/HttpClient.php
 
 		-
-			message: "#^Offset 'path' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
-			count: 4
-			path: src/Dsn.php
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/HttpClient/HttpClient.php
 
 		-
-			message: "#^Offset 'scheme' does not exist on array\\{scheme\\?\\: string, host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
+			message: '#^Method Sentry\\HttpClient\\Request\:\:getStringBody\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
 			count: 1
-			path: src/Dsn.php
+			path: src/HttpClient/Request.php
 
 		-
-			message: "#^Offset 'user' does not exist on array\\{scheme\\: 'http'\\|'https', host\\?\\: string, port\\?\\: int\\<0, 65535\\>, user\\?\\: string, pass\\?\\: string, path\\?\\: string, query\\?\\: string, fragment\\?\\: string\\}\\.$#"
+			message: '#^Method Sentry\\Integration\\IntegrationRegistry\:\:getIntegrationsToSetup\(\) should return array\<Sentry\\Integration\\IntegrationInterface\> but returns array\<object\|string\>\.$#'
+			identifier: return.type
 			count: 1
-			path: src/Dsn.php
+			path: src/Integration/IntegrationRegistry.php
 
 		-
-			message: "#^Method Sentry\\\\Event\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(object\|non\-falsy\-string\)\: mixed\)\|null, ''get_class'' given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Event.php
+			path: src/Integration/IntegrationRegistry.php
 
 		-
-			message: "#^Method Sentry\\\\Event\\:\\:setMetricsSummary\\(\\) has parameter \\$metricsSummary with no value type specified in iterable type array\\.$#"
+			message: '#^Parameter \#1 \$object of function get_class expects object, object\|string given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Event.php
+			path: src/Integration/IntegrationRegistry.php
 
 		-
-			message: "#^Parameter \\#2 \\.\\.\\.\\$values of function sprintf expects bool\\|float\\|int\\|string\\|null, mixed given\\.$#"
+			message: '#^Parameter \#1 \$transaction of method Sentry\\Event\:\:setTransaction\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Integration/TransactionIntegration.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Logger/DebugLogger.php
 
 		-
-			message: "#^Parameter \\#1 \\$level of method Monolog\\\\Handler\\\\AbstractHandler\\:\\:__construct\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, int\\|Monolog\\\\Level\\|string given\\.$#"
+			message: '#^PHPDoc tag @var with type Sentry\\Metrics\\Types\\Metric is not subtype of native type Sentry\\Metrics\\Types\\CounterMetric\|Sentry\\Metrics\\Types\\DistributionMetric\|Sentry\\Metrics\\Types\\GaugeMetric\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Metrics/MetricsAggregator.php
+
+		-
+			message: '#^Binary operation "\+" between array\<mixed\>\|DateTimeImmutable\|int\|string and array\<mixed\>\|DateTimeImmutable\|int\|string results in an error\.$#'
+			identifier: binaryOp.invalid
 			count: 1
 			path: src/Monolog/BreadcrumbHandler.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeBreadcrumbCallback\\(\\) should return callable\\(Sentry\\\\Breadcrumb\\)\\: \\(Sentry\\\\Breadcrumb\\|null\\) but returns mixed\\.$#"
+			message: '#^Parameter \#1 \$level of method Monolog\\Handler\\AbstractHandler\:\:__construct\(\) expects 100\|200\|250\|300\|400\|500\|550\|600\|''ALERT''\|''alert''\|''CRITICAL''\|''critical''\|''DEBUG''\|''debug''\|''EMERGENCY''\|''emergency''\|''ERROR''\|''error''\|''INFO''\|''info''\|''NOTICE''\|''notice''\|''WARNING''\|''warning''\|Monolog\\Level, int\|Monolog\\Level\|string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '#^Parameter \#1 \$level of method Sentry\\Monolog\\BreadcrumbHandler\:\:getBreadcrumbLevel\(\) expects int\|Monolog\\Level, array\<mixed\>\|DateTimeImmutable\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '#^Parameter \#1 \$level of method Sentry\\Monolog\\BreadcrumbHandler\:\:getBreadcrumbType\(\) expects int, array\<mixed\>\|DateTimeImmutable\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '#^Parameter \#3 \$category of class Sentry\\Breadcrumb constructor expects string, array\<mixed\>\|DateTimeImmutable\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '#^Parameter \#4 \$message of class Sentry\\Breadcrumb constructor expects string\|null, array\<mixed\>\|DateTimeImmutable\|int\|string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '#^Method Sentry\\Monolog\\ExceptionToSentryIssueHandler\:\:getArrayFieldFromRecord\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Monolog/ExceptionToSentryIssueHandler.php
+
+		-
+			message: '#^Cannot access offset ''exception'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Parameter \#1 \$context of method Sentry\\Monolog\\Handler\:\:getMonologContextData\(\) expects array\<mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Parameter \#1 \$context of method Sentry\\Monolog\\Handler\:\:getMonologExtraData\(\) expects array\<mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Parameter \#1 \$level of static method Sentry\\Monolog\\Handler\:\:getSeverityFromLevel\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Parameter \#1 \$message of method Sentry\\Event\:\:setMessage\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/Handler.php
+
+		-
+			message: '#^Method Sentry\\Monolog\\LogToSentryIssueHandler\:\:getArrayFieldFromRecord\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Monolog/LogToSentryIssueHandler.php
+
+		-
+			message: '#^Parameter \#1 \$level of static method Sentry\\Monolog\\LogToSentryIssueHandler\:\:getSeverityFromLevel\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogToSentryIssueHandler.php
+
+		-
+			message: '#^Parameter \#1 \$message of method Sentry\\Event\:\:setMessage\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogToSentryIssueHandler.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogToSentryIssueHandler.php
+
+		-
+			message: '#^Cannot access offset ''exception'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Method Sentry\\Monolog\\LogsHandler\:\:compileAttributes\(\) should return array\<string, mixed\> but returns array\<mixed, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Parameter \#1 \$level of static method Sentry\\Monolog\\LogsHandler\:\:getSentryLogLevelFromMonologLevel\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Parameter \#1 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Parameter \#2 \$message of method Sentry\\Logs\\LogsAggregator\:\:add\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Parameter \#2 \.\.\.\$arrays of function array_merge expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Monolog/LogsHandler.php
+
+		-
+			message: '#^Method Sentry\\Options\:\:getBeforeBreadcrumbCallback\(\) should return callable\(Sentry\\Breadcrumb\)\: \(Sentry\\Breadcrumb\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getBeforeSendCallback\(\) should return callable\(Sentry\\Event, Sentry\\EventHint\|null\)\: \(Sentry\\Event\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendCheckInCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getBeforeSendCheckInCallback\(\) should return callable\(Sentry\\Event, Sentry\\EventHint\|null\)\: \(Sentry\\Event\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendLogCallback\\(\\) should return callable\\(Sentry\\\\Logs\\\\Log\\)\\: \\(Sentry\\\\Logs\\\\Log\\|null\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getBeforeSendLogCallback\(\) should return callable\(Sentry\\Logs\\Log\)\: \(Sentry\\Logs\\Log\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendMetricsCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getBeforeSendMetricsCallback\(\) should return callable\(Sentry\\Event, Sentry\\EventHint\|null\)\: \(Sentry\\Event\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getBeforeSendTransactionCallback\\(\\) should return callable\\(Sentry\\\\Event, Sentry\\\\EventHint\\|null\\)\\: \\(Sentry\\\\Event\\|null\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getBeforeSendTransactionCallback\(\) should return callable\(Sentry\\Event, Sentry\\EventHint\|null\)\: \(Sentry\\Event\|null\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getClassSerializers\\(\\) should return array\\<string, callable\\(\\)\\: mixed\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getClassSerializers\(\) should return array\<string, callable\(\)\: mixed\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getContextLines\\(\\) should return int\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getContextLines\(\) should return int\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getDsn\\(\\) should return Sentry\\\\Dsn\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getDsn\(\) should return Sentry\\Dsn\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getEnableLogs\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getEnableLogs\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getEnableTracing\\(\\) should return bool\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getEnableTracing\(\) should return bool\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getEnvironment\\(\\) should return string\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getEnvironment\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getErrorTypes\\(\\) should return int but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getErrorTypes\(\) should return int but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpClient\\(\\) should return Sentry\\\\HttpClient\\\\HttpClientInterface\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpClient\(\) should return Sentry\\HttpClient\\HttpClientInterface\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpConnectTimeout\\(\\) should return float but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpConnectTimeout\(\) should return float but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxy\\(\\) should return string\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpProxy\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpProxyAuthentication\\(\\) should return string\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpProxyAuthentication\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpSslNativeCa\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpSslNativeCa\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpSslVerifyPeer\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpSslVerifyPeer\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getHttpTimeout\\(\\) should return float but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getHttpTimeout\(\) should return float but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreExceptions\\(\\) should return array\\<int, class\\-string\\<Throwable\\>\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getIgnoreExceptions\(\) should return list\<class\-string\<Throwable\>\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getIgnoreTransactions\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getIgnoreTransactions\(\) should return array\<string\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getInAppExcludedPaths\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getInAppExcludedPaths\(\) should return array\<string\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getInAppIncludedPaths\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getInAppIncludedPaths\(\) should return array\<string\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getIntegrations\\(\\) should return array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\|\\(callable\\(array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\)\\: array\\<Sentry\\\\Integration\\\\IntegrationInterface\\>\\) but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getIntegrations\(\) should return array\<Sentry\\Integration\\IntegrationInterface\>\|\(callable\(array\<Sentry\\Integration\\IntegrationInterface\>\)\: array\<Sentry\\Integration\\IntegrationInterface\>\) but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getLogger\\(\\) should return Psr\\\\Log\\\\LoggerInterface\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getLogger\(\) should return Psr\\Log\\LoggerInterface\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getMaxBreadcrumbs\\(\\) should return int but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getMaxBreadcrumbs\(\) should return int but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getMaxRequestBodySize\\(\\) should return string but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getMaxRequestBodySize\(\) should return string but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getMaxValueLength\\(\\) should return int but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getMaxValueLength\(\) should return int but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getOrgId\\(\\) should return int\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getOrgId\(\) should return int\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getPrefixes\\(\\) should return array\\<string\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getPrefixes\(\) should return array\<string\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getRelease\\(\\) should return string\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getRelease\(\) should return string\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getSampleRate\\(\\) should return float but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getSampleRate\(\) should return float but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getServerName\\(\\) should return string but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getServerName\(\) should return string but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getSpotlightUrl\\(\\) should return string but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getSpotlightUrl\(\) should return string but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTags\\(\\) should return array\\<string, string\\> but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getTags\(\) should return array\<string, string\> but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTracePropagationTargets\\(\\) should return array\\<string\\>\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getTracePropagationTargets\(\) should return array\<string\>\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampleRate\\(\\) should return float\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getTracesSampleRate\(\) should return float\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTracesSampler\\(\\) should return \\(callable\\(Sentry\\\\Tracing\\\\SamplingContext\\)\\: float\\)\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getTracesSampler\(\) should return \(callable\(Sentry\\Tracing\\SamplingContext\)\: float\)\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:getTransport\\(\\) should return Sentry\\\\Transport\\\\TransportInterface\\|null but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:getTransport\(\) should return Sentry\\Transport\\TransportInterface\|null but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:hasDefaultIntegrations\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:hasDefaultIntegrations\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:isHttpCompressionEnabled\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:isHttpCompressionEnabled\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachMetricCodeLocations\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:shouldAttachMetricCodeLocations\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldAttachStacktrace\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:shouldAttachStacktrace\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldCaptureSilencedErrors\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:shouldCaptureSilencedErrors\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Method Sentry\\\\Options\\:\\:shouldSendDefaultPii\\(\\) should return bool but returns mixed\\.$#"
+			message: '#^Method Sentry\\Options\:\:shouldSendDefaultPii\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Options.php
 
 		-
-			message: "#^Argument of an invalid type object supplied for foreach, only iterables are supported\\.$#"
+			message: '#^Argument of an invalid type object supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
 			count: 1
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: "#^Property Sentry\\\\Tracing\\\\PropagationContext\\:\\:\\$parentSampled is never read, only written\\.$#"
+			message: '#^Parameter \#3 \$value of function curl_setopt expects int, float given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Spotlight/SpotlightClient.php
+
+		-
+			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Spotlight/SpotlightClient.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Tracing/DynamicSamplingContext.php
+
+		-
+			message: '#^Property Sentry\\Tracing\\PropagationContext\:\:\$parentSampled is never read, only written\.$#'
+			identifier: property.onlyWritten
 			count: 1
 			path: src/Tracing/PropagationContext.php
 
 		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:getMetricsSummary\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: '#^Strict comparison using \!\=\= between Sentry\\Options and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Tracing/PropagationContext.php
+
+		-
+			message: '#^Method Sentry\\Tracing\\Span\:\:getMetricsSummary\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: src/Tracing/Span.php
 
 		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$tags with no value type specified in iterable type array\\.$#"
+			message: '#^Method Sentry\\Tracing\\Span\:\:setMetricsSummary\(\) has parameter \$tags with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
 			count: 1
 			path: src/Tracing/Span.php
 
 		-
-			message: "#^Method Sentry\\\\Tracing\\\\Span\\:\\:setMetricsSummary\\(\\) has parameter \\$value with no type specified\\.$#"
+			message: '#^Method Sentry\\Tracing\\Span\:\:setMetricsSummary\(\) has parameter \$value with no type specified\.$#'
+			identifier: missingType.parameter
 			count: 1
 			path: src/Tracing/Span.php
 
 		-
-			message: "#^Parameter \\#1 \\$email of method Sentry\\\\UserDataBag\\:\\:setEmail\\(\\) expects string\\|null, mixed given\\.$#"
+			message: '#^Property Sentry\\Tracing\\TransactionMetadata\:\:\$parentSamplingRate \(float\|int\|null\) is never assigned int so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: src/Tracing/TransactionMetadata.php
+
+		-
+			message: '#^Property Sentry\\Tracing\\TransactionMetadata\:\:\$sampleRand \(float\|int\|null\) is never assigned int so it can be removed from the property type\.$#'
+			identifier: property.unusedType
+			count: 1
+			path: src/Tracing/TransactionMetadata.php
+
+		-
+			message: '#^Parameter \#1 \$email of method Sentry\\UserDataBag\:\:setEmail\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$id of method Sentry\\\\UserDataBag\\:\\:setId\\(\\) expects int\\|string\\|null, mixed given\\.$#"
+			message: '#^Parameter \#1 \$id of method Sentry\\UserDataBag\:\:setId\(\) expects int\|string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$ipAddress of method Sentry\\\\UserDataBag\\:\\:setIpAddress\\(\\) expects string\\|null, mixed given\\.$#"
+			message: '#^Parameter \#1 \$ipAddress of method Sentry\\UserDataBag\:\:setIpAddress\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$segment of method Sentry\\\\UserDataBag\\:\\:setSegment\\(\\) expects string\\|null, mixed given\\.$#"
+			message: '#^Parameter \#1 \$segment of method Sentry\\UserDataBag\:\:setSegment\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Parameter \\#1 \\$username of method Sentry\\\\UserDataBag\\:\\:setUsername\\(\\) expects string\\|null, mixed given\\.$#"
+			message: '#^Parameter \#1 \$username of method Sentry\\UserDataBag\:\:setUsername\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
 
 		-
-			message: "#^Method Sentry\\\\Util\\\\JSON\\:\\:encode\\(\\) should return string but returns string\\|false\\.$#"
+			message: '#^PHPDoc tag @var with type list\<array\{function\?\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: string, args\?\: array\<mixed\>\}\> is not subtype of native type list\<array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\}\>\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: src/Util/CodeLocationResolver.php
+
+		-
+			message: '#^Method Sentry\\Util\\JSON\:\:encode\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
 			count: 1
 			path: src/Util/JSON.php
+
+		-
+			message: '#^Method Sentry\\Util\\RingBuffer\:\:count\(\) should return int\<0, max\> but returns int\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Util/RingBuffer.php
+
+		-
+			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:bounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Util/TelemetryStorage.php
+
+		-
+			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:unbounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Util/TelemetryStorage.php
