@@ -19,7 +19,7 @@ parameters:
 			path: src/Event.php
 
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects CurlShareHandle\|CurlSharePersistentHandle, object\|resource given\.$#'
+			message: '#^Parameter \#3 \$value of function curl_setopt expects CurlShareHandle, object\|resource given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/HttpClient/HttpClient.php
@@ -40,12 +40,6 @@ parameters:
 			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
 			identifier: argument.type
 			count: 2
-			path: src/HttpClient/HttpClient.php
-
-		-
-			message: '#^Property Sentry\\HttpClient\\HttpClient\:\:\$shareHandle \(object\|resource\|null\) is never assigned resource so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
 			path: src/HttpClient/HttpClient.php
 
 		-
