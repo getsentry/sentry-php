@@ -146,11 +146,13 @@ class LogsHandler implements HandlerInterface
      */
     protected function compileAttributes($record): array
     {
-        return array_merge(
-            $this->includeChannel ? ['channel' => $record['channel']] : [],
-            $record['context'],
-            $record['extra'],
-            ['sentry.origin' => 'auto.log.monolog']
-        );
+        $attributes = array_merge($record['context'], $record['extra'], ['sentry.origin' => 'auto.log.monolog']);
+
+        // Context and extra take precedence over the channel, matching the previous merge order
+        if ($this->includeChannel && !\array_key_exists('channel', $attributes)) {
+            $attributes['channel'] = $record['channel'];
+        }
+
+        return $attributes;
     }
 }
