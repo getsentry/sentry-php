@@ -25,15 +25,16 @@ final class HttpSpanDataCollector
      */
     public static function collectServerRequest(DataCollectionPolicy $policy, ServerRequestInterface $request): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
         $type = HttpMessageType::incomingRequest();
+        $body = self::collectBodySource($policy, $type, new ServerRequestBodySource($request));
+
+        if ($policy->isLegacyMode()) {
+            return $body;
+        }
 
         return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $request->getHeaders()))
             + self::collectServerRequestCookies($policy, $request)
-            + self::formatBody($type, HttpBodyCollector::collectServerRequest($policy, $request));
+            + $body;
     }
 
     /**
@@ -41,13 +42,15 @@ final class HttpSpanDataCollector
      */
     public static function collectPsr7Request(DataCollectionPolicy $policy, HttpMessageType $type, RequestInterface $request): array
     {
+        $body = self::collectBodySource($policy, $type, new Psr7MessageBodySource($request));
+
         if ($policy->isLegacyMode()) {
-            return [];
+            return $body;
         }
 
         return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $request->getHeaders()))
             + self::collectCookieHeaders($policy, $type, $request->getHeader('Cookie'))
-            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($policy, $type, $request));
+            + $body;
     }
 
     /**
@@ -55,13 +58,15 @@ final class HttpSpanDataCollector
      */
     public static function collectPsr7Response(DataCollectionPolicy $policy, HttpMessageType $type, ResponseInterface $response): array
     {
+        $body = self::collectBodySource($policy, $type, new Psr7MessageBodySource($response));
+
         if ($policy->isLegacyMode()) {
-            return [];
+            return $body;
         }
 
         return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $response->getHeaders()))
             + self::collectCookieHeaders($policy, $type, $response->getHeader('Set-Cookie'))
-            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($policy, $type, $response));
+            + $body;
     }
 
     /**
@@ -110,17 +115,36 @@ final class HttpSpanDataCollector
     }
 
     /**
-     * @param mixed $body The raw body, or the body that was already parsed
+     * @param mixed    $body       The raw body, or the body that was already parsed
+     * @param int|null $bodyLength The length of the body, if it is known but not available as string
      *
-     * @return array<string, string>
+     * @return array<string, string|int>
      */
     public static function collectBody(DataCollectionPolicy $policy, HttpMessageType $type, $body, string $contentType = '', ?int $bodyLength = null): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
+        return self::collectBodySource($policy, $type, new InMemoryHttpBodySource($body, $contentType, $bodyLength));
+    }
+
+    /**
+     * Collects the body size and, unless the legacy options are used, the body data. The size holds
+     * no user data, so it is always collected.
+     *
+     * @return array<string, string|int>
+     */
+    private static function collectBodySource(DataCollectionPolicy $policy, HttpMessageType $type, HttpBodySourceInterface $source): array
+    {
+        $data = [];
+
+        if (!$policy->isLegacyMode()) {
+            $data = self::formatBody($type, HttpBodyCollector::collectSource($policy, $type, $source));
         }
 
-        return self::formatBody($type, HttpBodyCollector::collect($policy, $type, $body, $contentType, $bodyLength));
+        $size = $source->getKnownLength();
+        if ($size !== null) {
+            $data[self::getPrefix($type) . '.body.size'] = $size;
+        }
+
+        return $data;
     }
 
     /**

@@ -233,8 +233,8 @@ final class HttpSpanDataCollectorTest extends TestCase
     }
 
     /**
-     * @param mixed                 $body
-     * @param array<string, string> $expectedData
+     * @param mixed                     $body
+     * @param array<string, string|int> $expectedData
      *
      * @dataProvider bodyDataProvider
      */
@@ -248,7 +248,7 @@ final class HttpSpanDataCollectorTest extends TestCase
         yield 'raw bodies are parsed and encoded as JSON' => [
             '{"status":"ok","token":"secret"}',
             'application/json',
-            ['http.response.body.data' => '{"status":"ok","token":"[Filtered]"}'],
+            ['http.response.body.data' => '{"status":"ok","token":"[Filtered]"}', 'http.response.body.size' => 32],
         ];
 
         yield 'parsed bodies are encoded as JSON' => [
@@ -260,7 +260,7 @@ final class HttpSpanDataCollectorTest extends TestCase
         yield 'bodies that cannot be parsed are filtered' => [
             'Hello World',
             'text/plain',
-            ['http.response.body.data' => '[Filtered]'],
+            ['http.response.body.data' => '[Filtered]', 'http.response.body.size' => 11],
         ];
 
         yield 'invalid UTF-8 is replaced instead of filtering the whole body' => [
@@ -272,13 +272,13 @@ final class HttpSpanDataCollectorTest extends TestCase
         yield 'non-ASCII characters are not escaped' => [
             '{"name":"Jürgen 日本語"}',
             'application/json',
-            ['http.response.body.data' => '{"name":"Jürgen 日本語"}'],
+            ['http.response.body.data' => '{"name":"Jürgen 日本語"}', 'http.response.body.size' => 28],
         ];
 
-        yield 'empty bodies are not collected' => [
+        yield 'empty bodies are not collected, but their size is' => [
             '',
             'application/json',
-            [],
+            ['http.response.body.size' => 0],
         ];
     }
 
@@ -295,19 +295,38 @@ final class HttpSpanDataCollectorTest extends TestCase
         $this->assertSame([], HttpSpanDataCollector::collectServerRequest($policy, $request));
     }
 
-    public function testNothingIsCollectedWithLegacyOptions(): void
+    public function testBodySizeIsCollectedWhenCollectionIsDisabled(): void
+    {
+        $policy = self::policy([
+            'cookies' => ['mode' => 'off'],
+            'http_headers' => ['mode' => 'off'],
+            'http_bodies' => [],
+        ]);
+
+        $request = new ServerRequest('POST', 'https://example.com/', ['Content-Type' => 'application/json', 'Content-Length' => '16'], '{"name":"Alice"}');
+        $response = new Response(200, ['Content-Type' => 'application/json', 'Content-Length' => '15'], '{"status":"ok"}');
+
+        $this->assertSame(['http.request.body.size' => 16], HttpSpanDataCollector::collectServerRequest($policy, $request));
+        $this->assertSame(['http.request.body.size' => 16], HttpSpanDataCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
+        $this->assertSame(['http.response.body.size' => 15], HttpSpanDataCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
+        $this->assertSame(['http.response.body.size' => 15], HttpSpanDataCollector::collectBody($policy, HttpMessageType::outgoingResponse(), '{"status":"ok"}'));
+        $this->assertSame(['http.response.body.size' => 1024], HttpSpanDataCollector::collectBody($policy, HttpMessageType::outgoingResponse(), null, '', 1024));
+    }
+
+    public function testOnlyTheBodySizeIsCollectedWithLegacyOptions(): void
     {
         $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
         $type = HttpMessageType::incomingRequest();
         $request = (new ServerRequest('POST', 'https://example.com/', ['Content-Type' => 'application/json', 'Content-Length' => '16'], '{"name":"Alice"}'))->withCookieParams(['theme' => 'dark']);
 
-        $this->assertSame([], HttpSpanDataCollector::collectServerRequest($policy, $request));
-        $this->assertSame([], HttpSpanDataCollector::collectPsr7Request($policy, $type, $request));
+        $this->assertSame(['http.request.body.size' => 16], HttpSpanDataCollector::collectServerRequest($policy, $request));
+        $this->assertSame(['http.request.body.size' => 16], HttpSpanDataCollector::collectPsr7Request($policy, $type, $request));
         $this->assertSame([], HttpSpanDataCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), new Response(200, ['Content-Type' => 'application/json'], '{"status":"ok"}')));
         $this->assertSame([], HttpSpanDataCollector::collectHeaders($policy, $type, ['Content-Type' => ['application/json']]));
         $this->assertSame([], HttpSpanDataCollector::collectCookieHeaders($policy, $type, ['theme=dark']));
         $this->assertSame([], HttpSpanDataCollector::collectCookiePairs($policy, $type, [['theme', 'dark']]));
         $this->assertSame([], HttpSpanDataCollector::collectBody($policy, $type, ['name' => 'Alice']));
+        $this->assertSame(['http.request.body.size' => 16], HttpSpanDataCollector::collectBody($policy, $type, '{"name":"Alice"}'));
     }
 
     /**
