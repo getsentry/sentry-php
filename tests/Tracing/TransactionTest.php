@@ -10,8 +10,11 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\Profiling\Profile;
+use Sentry\Profiling\ProfilerInterface;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
+use Sentry\Tests\StubLogger;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -83,6 +86,66 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext(), $hub);
         $transaction->finish();
+    }
+
+    public function testFinishIncludesTheCustomProfile(): void
+    {
+        $profile = new Profile();
+        $profiler = $this->createMock(ProfilerInterface::class);
+        $profiler->expects($this->once())->method('stop');
+        $profiler->expects($this->once())->method('getProfile')->willReturn($profile);
+        $options = new Options([
+            'profiler_factory' => static function () use ($profiler): ProfilerInterface {
+                return $profiler;
+            },
+        ]);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+        $hub = $this->createMock(HubInterface::class);
+        $hub->method('getClient')->willReturn($client);
+        $hub->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event) use ($profile): bool {
+                return $event->getSdkMetadata('profile') === $profile;
+            }));
+
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true), $hub);
+        $transaction->initProfiler();
+        $transaction->finish();
+        $transaction->finish();
+    }
+
+    public function testProfilerExceptionDoesNotPreventFinishingTheTransaction(): void
+    {
+        StubLogger::$logs = [];
+        $exception = new \RuntimeException('test');
+        $profiler = $this->createMock(ProfilerInterface::class);
+        $profiler->expects($this->once())->method('stop')->willThrowException($exception);
+        $profiler->expects($this->never())->method('getProfile');
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options([
+            'logger' => StubLogger::getInstance(),
+            'profiler_factory' => static function () use ($profiler): ProfilerInterface {
+                return $profiler;
+            },
+        ]));
+        $hub = $this->createMock(HubInterface::class);
+        $hub->method('getClient')->willReturn($client);
+        $hub->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event): bool {
+                return $event->getSdkMetadata('profile') === null;
+            }));
+
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true), $hub);
+        $transaction->initProfiler();
+        $transaction->finish();
+
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'Failed to stop the profiler. Reason: "test".',
+            'context' => ['exception' => $exception],
+        ], StubLogger::$logs);
     }
 
     public function testFluentApi(): void

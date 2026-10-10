@@ -305,6 +305,33 @@ final class Options
     }
 
     /**
+     * Gets the factory used to create a profiler for each sampled transaction.
+     *
+     * @phpstan-return null|callable(Options): Profiling\ProfilerInterface
+     */
+    public function getProfilerFactory(): ?callable
+    {
+        /** @var callable(Options): Profiling\ProfilerInterface|null $value */
+        $value = $this->options['profiler_factory'];
+
+        return $value;
+    }
+
+    /**
+     * Sets the factory used to create a profiler for each sampled transaction.
+     * Return a new profiler for each transaction so concurrent profiles remain independent.
+     * When null, the SDK uses its default Excimer profiler.
+     *
+     * @param ?callable $factory The factory
+     *
+     * @phpstan-param null|callable(Options): Profiling\ProfilerInterface $factory
+     */
+    public function setProfilerFactory(?callable $factory): self
+    {
+        return $this->updateOptions(['profiler_factory' => $factory]);
+    }
+
+    /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
      * set and `enable_tracing` is set and not false.
@@ -1262,6 +1289,7 @@ final class Options
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
+        $resolver->setAllowedTypes('profiler_factory', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
@@ -1347,6 +1375,7 @@ final class Options
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'profiles_sampler' => null,
+            'profiler_factory' => null,
             'attach_stacktrace' => false,
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
