@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use GuzzleHttp\Exception\RequestException as GuzzleRequestException;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -91,13 +92,11 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $parentSpan, $breadcrumbUrl, $policy) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($hub, $spanAndBreadcrumbData, $childSpan, $breadcrumbUrl, $policy) {
                     if ($childSpan !== null) {
                         // We finish the span (which means setting the span end timestamp) first to ensure the measured time
                         // the span spans is as close to only the HTTP request time and do the data collection afterwards
                         $childSpan->finish();
-
-                        $hub->setSpan($parentSpan);
                     }
 
                     $response = null;
@@ -150,7 +149,19 @@ final class GuzzleTracingMiddleware
                     return $responseOrException;
                 };
 
-                return $handler($request, $options)->then($handlerPromiseCallback, $handlerPromiseCallback);
+                try {
+                    /** @var PromiseInterface $promise */
+                    $promise = $handler($request, $options);
+                } finally {
+                    // The span is the current span only while the next handlers run, so that their spans
+                    // are its children. The promise can resolve after other requests started (e.g.
+                    // concurrent requests): those must not become children of this span
+                    if ($childSpan !== null) {
+                        $hub->setSpan($parentSpan);
+                    }
+                }
+
+                return $promise->then($handlerPromiseCallback, $handlerPromiseCallback);
             };
         };
     }
