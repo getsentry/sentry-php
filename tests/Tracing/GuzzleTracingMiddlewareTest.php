@@ -6,6 +6,7 @@ namespace Sentry\Tests\Tracing;
 
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Promise\FulfilledPromise;
+use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\RejectedPromise;
 use GuzzleHttp\Psr7\Request;
@@ -533,6 +534,72 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
         $this->assertSame('request', $spanData['http.request.header.123']);
         $this->assertSame('response', $spanData['http.response.header.456']);
+    }
+
+    public function testTraceConcurrentRequests(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        SentrySdk::setCurrentHub($hub);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+
+        $sentRequests = [];
+        $pendingPromises = [];
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function (Request $request) use ($hub, &$sentRequests, &$pendingPromises): PromiseInterface {
+            $sentRequests[] = [$request, $hub->getSpan()];
+
+            return $pendingPromises[] = new Promise();
+        });
+
+        $promise1 = $function(new Request('GET', 'https://www.example.com/1'), []);
+        $promise2 = $function(new Request('GET', 'https://www.example.com/2'), []);
+
+        $pendingPromises[0]->resolve(new Response(200));
+        $pendingPromises[1]->resolve(new Response(200));
+        $promise1->wait();
+        $promise2->wait();
+
+        $recorder = $transaction->getSpanRecorder();
+        $this->assertNotNull($recorder);
+        $spans = $recorder->getSpans();
+        $this->assertCount(3, $spans);
+
+        foreach ([1, 2] as $i) {
+            [$request, $currentSpanDuringRequest] = $sentRequests[$i - 1];
+            $span = $spans[$i];
+
+            $this->assertSame('GET https://www.example.com/' . $i, $span->getDescription());
+            $this->assertEquals($transaction->getSpanId(), $span->getParentSpanId());
+            $this->assertSame($span, $currentSpanDuringRequest);
+            $this->assertSame($span->toTraceparent(), $request->getHeaderLine('sentry-trace'));
+            $this->assertNotNull($span->getEndTimestamp());
+        }
+
+        $this->assertSame($transaction, $hub->getSpan());
+    }
+
+    public function testTraceRestoresTheCurrentSpanWhenTheHandlerThrows(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+        $exception = new \RuntimeException('Handler error');
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function () use ($exception): PromiseInterface {
+            throw $exception;
+        });
+
+        try {
+            $function(new Request('GET', 'https://www.example.com'), []);
+            $this->fail('The handler exception must be rethrown.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame($exception, $e);
+        }
+
+        $this->assertSame($transaction, $hub->getSpan());
     }
 
     public function testTracePreservesExplicitSpanDataInLegacyMode(): void
