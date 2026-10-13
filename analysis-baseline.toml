@@ -1132,7 +1132,7 @@ count = 10
 file = "src/Profiling/ExcimerLogConverter.php"
 code = "mixed-assignment"
 message = "Assigning `nonnull` type to a variable may lead to unexpected behavior."
-count = 1
+count = 3
 
 [[issues]]
 file = "src/Profiling/ExcimerLogConverter.php"
