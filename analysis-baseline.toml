@@ -1183,6 +1183,12 @@ message = "Cannot perform array access on value of type `unknown-ref(ExcimerLogE
 count = 2
 
 [[issues]]
+file = "src/Profiling/ProfileDataBuffer.php"
+code = "property-type-coercion"
+message = "A value of a less specific type `array<array-key, array<mixed, int>>` is being assigned to property `$$frameIndices` (array<string, array<int, int>>)."
+count = 1
+
+[[issues]]
 file = "src/Profiling/Profiler.php"
 code = "invalid-method-access"
 message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerProfiler)`)."

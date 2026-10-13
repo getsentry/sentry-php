@@ -40,9 +40,9 @@ final class ProfileDataBuffer
     private $frames = [];
 
     /**
-     * @var array<string, int>
+     * @var array<string, array<int, int>> 2D array where the first key is the file and the second is the line
      */
-    private $frameHashMap = [];
+    private $frameIndices = [];
 
     /**
      * @var array<int, array<int, int>>
@@ -50,9 +50,9 @@ final class ProfileDataBuffer
     private $stacks = [];
 
     /**
-     * @var array<string, int>
+     * @var array<string, int> Keys are comma separated frame indices
      */
-    private $stackHashMap = [];
+    private $stackIndices = [];
 
     /**
      * @var ProfileSample[]
@@ -86,9 +86,7 @@ final class ProfileDataBuffer
             $absolutePath = $frame['file'];
             $lineno = $frame['line'];
 
-            $frameKey = "{$absolutePath}:{$lineno}";
-
-            $frameIndex = $this->frameHashMap[$frameKey] ?? null;
+            $frameIndex = $this->frameIndices[$absolutePath][$lineno] ?? null;
 
             if ($frameIndex === null) {
                 $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
@@ -106,21 +104,24 @@ final class ProfileDataBuffer
                     $function = $file;
                 }
 
-                $this->frameHashMap[$frameKey] = $frameIndex = \count($this->frames);
+                $frameIndex = \count($this->frames);
+                $this->frameIndices[$absolutePath][$lineno] = $frameIndex;
                 $this->frames[] = new ProfileFrame($absolutePath, $file, $function, $module, $lineno);
             }
 
             $stackFrames[] = $frameIndex;
         }
 
-        $stackHash = md5(serialize($stackFrames));
+        $stackKey = implode(',', $stackFrames);
+        $stackIndex = $this->stackIndices[$stackKey] ?? null;
 
-        if (\array_key_exists($stackHash, $this->stackHashMap) === false) {
-            $this->stackHashMap[$stackHash] = \count($this->stacks);
+        if ($stackIndex === null) {
+            $stackIndex = \count($this->stacks);
+            $this->stackIndices[$stackKey] = $stackIndex;
             $this->stacks[] = $stackFrames;
         }
 
-        $this->samples[] = new ProfileSample($this->stackHashMap[$stackHash], $timestamp);
+        $this->samples[] = new ProfileSample($stackIndex, $timestamp);
     }
 
     /**
@@ -131,9 +132,9 @@ final class ProfileDataBuffer
         $profileData = new ProfileData($this->frames, $this->stacks, $this->samples);
 
         $this->frames = [];
-        $this->frameHashMap = [];
+        $this->frameIndices = [];
         $this->stacks = [];
-        $this->stackHashMap = [];
+        $this->stackIndices = [];
         $this->samples = [];
 
         return $profileData;
