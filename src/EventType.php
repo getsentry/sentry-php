@@ -52,6 +52,11 @@ final class EventType implements \Stringable
         return self::getInstance('trace_metric');
     }
 
+    public static function profileChunk(): self
+    {
+        return self::getInstance('profile_chunk');
+    }
+
     public static function clientReport(): self
     {
         return self::getInstance('client_report');
@@ -70,6 +75,7 @@ final class EventType implements \Stringable
             self::checkIn(),
             self::logs(),
             self::metrics(),
+            self::profileChunk(),
             self::clientReport(),
         ];
     }
@@ -79,6 +85,7 @@ final class EventType implements \Stringable
         switch ($this) {
             case self::metrics():
             case self::logs():
+            case self::profileChunk():
             case self::clientReport():
                 return false;
             default:
