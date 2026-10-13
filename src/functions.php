@@ -12,6 +12,7 @@ use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\Profiling\Profiles;
 use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
@@ -513,6 +514,14 @@ function metrics(): Metrics
 function traceMetrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
+}
+
+/**
+ * Get the Sentry Profiles client.
+ */
+function profiler(): Profiles
+{
+    return Profiles::getInstance();
 }
 
 /**
