@@ -39,10 +39,12 @@ final class ExcimerLogConverter
     public static function convert(iterable $entries, ?Options $options = null): ProfileData
     {
         $frames = [];
-        $frameHashMap = [];
+        // 2D array where the first key is the file and the second is the line
+        $frameIndices = [];
 
         $stacks = [];
-        $stackHashMap = [];
+        // Keys are comma separated frame indices
+        $stackIndices = [];
 
         $samples = [];
         $previousTimestamp = null;
@@ -64,9 +66,7 @@ final class ExcimerLogConverter
                 $absolutePath = $frame['file'];
                 $lineno = $frame['line'];
 
-                $frameKey = "{$absolutePath}:{$lineno}";
-
-                $frameIndex = $frameHashMap[$frameKey] ?? null;
+                $frameIndex = $frameIndices[$absolutePath][$lineno] ?? null;
 
                 if ($frameIndex === null) {
                     $file = self::stripPrefixFromFilePath($options, $absolutePath);
@@ -86,17 +86,20 @@ final class ExcimerLogConverter
                         $function = $file;
                     }
 
-                    $frameHashMap[$frameKey] = $frameIndex = \count($frames);
+                    $frameIndex = \count($frames);
+                    $frameIndices[$absolutePath][$lineno] = $frameIndex;
                     $frames[] = new ProfileFrame($absolutePath, $file, $function, $module, $lineno);
                 }
 
                 $stackFrames[] = $frameIndex;
             }
 
-            $stackHash = md5(serialize($stackFrames));
+            $stackKey = implode(',', $stackFrames);
+            $stackIndex = $stackIndices[$stackKey] ?? null;
 
-            if (\array_key_exists($stackHash, $stackHashMap) === false) {
-                $stackHashMap[$stackHash] = \count($stacks);
+            if ($stackIndex === null) {
+                $stackIndex = \count($stacks);
+                $stackIndices[$stackKey] = $stackIndex;
                 $stacks[] = $stackFrames;
             }
 
@@ -111,7 +114,7 @@ final class ExcimerLogConverter
                 $sampleTimestamp = $previousTimestamp + ($timestamp - $previousTimestamp) / $eventCount;
             }
 
-            $samples[] = new ProfileSample($stackHashMap[$stackHash], $sampleTimestamp);
+            $samples[] = new ProfileSample($stackIndex, $sampleTimestamp);
 
             $previousTimestamp = $timestamp;
         }
