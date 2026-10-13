@@ -40,7 +40,7 @@ final class ProfileDataBuffer
     private $frames = [];
 
     /**
-     * @var array<string, array<int, int>> 2D array where the first key is the file and the second is the line
+     * @var array<string, array<int, array<string, array<string, int>>>> 4D array keyed by file, line, class and function, as different functions can share a line (e.g. closures)
      */
     private $frameIndices = [];
 
@@ -85,8 +85,10 @@ final class ProfileDataBuffer
         foreach ($trace as $frame) {
             $absolutePath = $frame['file'];
             $lineno = $frame['line'];
+            $className = $frame['class'] ?? '';
+            $functionName = $frame['function'] ?? '';
 
-            $frameIndex = $this->frameIndices[$absolutePath][$lineno] ?? null;
+            $frameIndex = $this->frameIndices[$absolutePath][$lineno][$className][$functionName] ?? null;
 
             if ($frameIndex === null) {
                 $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
@@ -105,7 +107,7 @@ final class ProfileDataBuffer
                 }
 
                 $frameIndex = \count($this->frames);
-                $this->frameIndices[$absolutePath][$lineno] = $frameIndex;
+                $this->frameIndices[$absolutePath][$lineno][$className][$functionName] = $frameIndex;
                 $this->frames[] = new ProfileFrame($absolutePath, $file, $function, $module, $lineno);
             }
 
