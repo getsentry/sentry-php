@@ -18,6 +18,7 @@ use Sentry\State\Hub;
 use Sentry\State\Scope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\TransactionContext;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 
@@ -140,7 +141,7 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init();
 
         SentrySdk::withContext(function (): void {
-            $transaction = SentrySdk::getCurrentHub()->startTransaction(new \Sentry\Tracing\TransactionContext('request-1'));
+            $transaction = SentrySdk::getCurrentHub()->startTransaction(new TransactionContext('request-1'));
             SentrySdk::getCurrentHub()->setSpan($transaction);
 
             $this->assertSame($transaction, SentrySdk::getCurrentHub()->getSpan());
@@ -442,6 +443,110 @@ final class SentrySdkTest extends TestCase
         $this->assertCount(2, StubTransport::$events);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextStopsProfilerForUnfinishedRootSpans(): void
+    {
+        StubTransport::$events = [];
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        self::busyWait(0.05);
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertNotNull(StubTransport::$events[0]->getProfileChunk());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextKeepsProfilerRunningForRootSpansOfOtherContexts(): void
+    {
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $transaction = SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+
+        SentrySdk::startContext();
+        SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+        SentrySdk::endContext();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $transaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextKeepsProfilerRunningWhileAnotherExecutionSharesTheContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+
+        // A child coroutine of the request shares its context and ends first
+        $storage->share('child');
+        $storage->switchTo('child');
+
+        SentrySdk::endContext();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $storage->switchTo('default');
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testWithContextKeepsProfilerRunningWhileAnotherExecutionSharesTheContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::withContext(static function () use ($storage): void {
+            SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+
+            // A detached child coroutine shares the context and outlives the callback
+            $storage->share('child');
+        });
+
+        $this->assertTrue($profiler->isRunning());
+
+        $storage->switchTo('child');
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
     public function testFlushFlushesClientTransport(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -600,6 +705,15 @@ final class SentrySdkTest extends TestCase
         });
 
         return $value;
+    }
+
+    private static function initWithProfileLifecycleTrace(): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
     }
 
     private static function busyWait(float $seconds): void
