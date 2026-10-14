@@ -24,6 +24,16 @@ final class ContinuousProfiler
     private const MAX_STACK_DEPTH = 128;
 
     /**
+     * @var int The maximum number of samples in a profile chunk (~60s at 101 Hz)
+     */
+    private const MAX_SAMPLES_PER_CHUNK = 6060;
+
+    /**
+     * @var float The maximum duration of a profile chunk in seconds, Relay rejects chunks longer than 66 seconds
+     */
+    private const MAX_CHUNK_DURATION = 60.0;
+
+    /**
      * @var \ExcimerProfiler|null
      */
     private $profiler;
@@ -42,6 +52,27 @@ final class ContinuousProfiler
      * @var bool|null
      */
     private $sampled;
+
+    /**
+     * @var ProfileDataBuffer|null The samples of the next chunk, converted as they are collected
+     */
+    private $buffer;
+
+    /**
+     * @var int
+     */
+    private $maxSamplesPerChunk;
+
+    /**
+     * @var float
+     */
+    private $maxChunkDuration;
+
+    public function __construct(int $maxSamplesPerChunk = self::MAX_SAMPLES_PER_CHUNK, float $maxChunkDuration = self::MAX_CHUNK_DURATION)
+    {
+        $this->maxSamplesPerChunk = $maxSamplesPerChunk;
+        $this->maxChunkDuration = $maxChunkDuration;
+    }
 
     public function start(): void
     {
@@ -78,34 +109,51 @@ final class ContinuousProfiler
         }
 
         // Excimer measures sample timestamps from the construction of the profiler
-        $this->startTimestamp = microtime(true);
-        $this->profiler = new \ExcimerProfiler();
-        $this->profilerId = SentryUid::generate();
+        $startTimestamp = microtime(true);
+        $profiler = new \ExcimerProfiler();
+        $profilerId = SentryUid::generate();
 
-        $this->profiler->setEventType(\EXCIMER_REAL);
-        $this->profiler->setPeriod(self::SAMPLE_RATE);
-        $this->profiler->setMaxDepth(self::MAX_STACK_DEPTH);
+        $profiler->setEventType(\EXCIMER_REAL);
+        $profiler->setPeriod(self::SAMPLE_RATE);
+        $profiler->setMaxDepth(self::MAX_STACK_DEPTH);
+        $profiler->setFlushCallback(function ($excimerLog): void {
+            // The callback runs while sampling the application, so nothing may be thrown into the application code
+            try {
+                $this->bufferSamples($excimerLog);
+            } catch (\Throwable $exception) {
+                $client = SentrySdk::getCurrentHub()->getClient();
 
-        $this->profiler->start();
+                if ($client !== null) {
+                    $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunk.', ['exception' => $exception]);
+                }
+            }
+        }, $this->maxSamplesPerChunk);
+
+        $this->profiler = $profiler;
+        $this->profilerId = $profilerId;
+        $this->startTimestamp = $startTimestamp;
+        $this->buffer = new ProfileDataBuffer($options);
+
+        $profiler->start();
     }
 
     public function stop(): void
     {
-        if ($this->profiler === null || $this->profilerId === null || $this->startTimestamp === null) {
+        if ($this->profiler === null) {
             return;
         }
 
         $this->profiler->stop();
 
-        $excimerLog = $this->profiler->flush();
-        $profilerId = $this->profilerId;
-        $startTimestamp = $this->startTimestamp;
+        // Passes the remaining samples to the flush callback
+        $this->profiler->flush();
+
+        $this->captureBuffer();
 
         $this->profiler = null;
         $this->profilerId = null;
         $this->startTimestamp = null;
-
-        $this->captureChunk($profilerId, $startTimestamp, $excimerLog);
+        $this->buffer = null;
     }
 
     public function isRunning(): bool
@@ -119,28 +167,63 @@ final class ContinuousProfiler
     }
 
     /**
-     * @param \ExcimerLog $excimerLog
+     * Buffers the samples, the buffer is sent once it holds enough samples or would exceed the
+     * maximum duration of a chunk.
+     *
+     * When calling blocking operations, excimer may not produce samples for the entire duration,
+     * so the duration between the first and last sample can exceed the maximum duration of a chunk
+     * long before the buffer is full.
+     *
+     * @param iterable<\ExcimerLogEntry> $entries
      */
-    private function captureChunk(string $profilerId, float $startTimestamp, $excimerLog): void
+    private function bufferSamples(iterable $entries): void
     {
+        $buffer = $this->buffer;
+
+        if ($buffer === null) {
+            return;
+        }
+
+        foreach ($entries as $entry) {
+            $bufferStartTimestamp = $buffer->getStartTimestamp();
+
+            if ($bufferStartTimestamp !== null && $entry->getTimestamp() - $bufferStartTimestamp >= $this->maxChunkDuration) {
+                $this->captureBuffer();
+            }
+
+            $buffer->add($entry);
+        }
+
+        if ($buffer->getSampleCount() >= $this->maxSamplesPerChunk) {
+            $this->captureBuffer();
+        }
+    }
+
+    private function captureBuffer(): void
+    {
+        if ($this->buffer === null || $this->profilerId === null || $this->startTimestamp === null) {
+            return;
+        }
+
+        $profileData = $this->buffer->takeProfileData();
+        $sampleCount = \count($profileData->getSamples());
+
+        if ($sampleCount === 0) {
+            return;
+        }
+
         $client = SentrySdk::getCurrentHub()->getClient();
         if ($client === null) {
             return;
         }
 
-        if ($excimerLog->count() < ProfileChunk::MIN_SAMPLE_COUNT) {
+        if ($sampleCount < ProfileChunk::MIN_SAMPLE_COUNT) {
             $client->getOptions()->getLoggerOrNullLogger()->debug('The profile chunk does not contain enough samples, the profile chunk will be discarded.');
 
             return;
         }
 
-        $buffer = new ProfileDataBuffer($client->getOptions());
-
-        foreach ($excimerLog as $entry) {
-            $buffer->add($entry);
-        }
-
-        $profileChunk = new ProfileChunk($profilerId, $startTimestamp, $buffer->takeProfileData(), $client->getOptions());
+        $profileChunk = new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions());
 
         $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
     }

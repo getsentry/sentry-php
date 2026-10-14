@@ -34,6 +34,32 @@ final class ProfileDataBufferTest extends TestCase
         $this->assertEquals($expectedData, $buffer->takeProfileData());
     }
 
+    public function testTakeProfileDataEmptiesTheBuffer(): void
+    {
+        $entry = [
+            'trace' => [
+                [
+                    'file' => '/var/www/html/index.php',
+                    'line' => 42,
+                ],
+            ],
+            'timestamp' => 0.001,
+        ];
+
+        $buffer = new ProfileDataBuffer();
+        $buffer->add($entry);
+
+        $this->assertSame(0.001, $buffer->getStartTimestamp());
+        $this->assertEquals([new ProfileSample(0, 0.001)], $buffer->takeProfileData()->getSamples());
+        $this->assertSame(0, $buffer->getSampleCount());
+        $this->assertNull($buffer->getStartTimestamp());
+
+        $buffer->add(['timestamp' => 0.002] + $entry);
+
+        $this->assertSame(0.002, $buffer->getStartTimestamp());
+        $this->assertEquals([new ProfileSample(0, 0.002)], $buffer->takeProfileData()->getSamples());
+    }
+
     public static function addDataProvider(): \Generator
     {
         $excimerLog = [

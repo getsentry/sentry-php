@@ -126,6 +126,19 @@ final class ProfileDataBuffer
         $this->samples[] = new ProfileSample($stackIndex, $timestamp);
     }
 
+    public function getSampleCount(): int
+    {
+        return \count($this->samples);
+    }
+
+    /**
+     * Gets the timestamp of the first collected sample, if any.
+     */
+    public function getStartTimestamp(): ?float
+    {
+        return isset($this->samples[0]) ? $this->samples[0]->getTimestamp() : null;
+    }
+
     /**
      * Returns the collected samples and empties the buffer for the next ones.
      */

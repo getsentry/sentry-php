@@ -1052,14 +1052,14 @@ count = 55
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
-code = "invalid-iterator"
-message = "The expression provided to `foreach` is not iterable. It resolved to type `unknown-ref(ExcimerLog)`, which is not iterable."
+code = "impossible-assignment"
+message = "Invalid assignment: the right-hand side has type `never` and cannot produce a value."
 count = 1
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "invalid-method-access"
-message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerLog)`)."
+message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerLogEntry)`)."
 count = 1
 
 [[issues]]
@@ -1071,25 +1071,19 @@ count = 2
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-argument"
-message = '''Invalid argument type for argument #1 of `Sentry\Profiling\ProfileDataBuffer::add`: expected `array{'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}|unknown-ref(ExcimerLogEntry)`, but found `mixed`.'''
+message = 'Invalid argument type for argument #1 of `Sentry\Profiling\ContinuousProfiler::bufferSamples`: expected `iterable<mixed, unknown-ref(ExcimerLogEntry)>`, but found `mixed`.'
 count = 1
-
-[[issues]]
-file = "src/Profiling/ContinuousProfiler.php"
-code = "mixed-argument"
-message = 'Invalid argument type for argument #3 of `Sentry\Profiling\ContinuousProfiler::captureChunk`: expected `unknown-ref(ExcimerLog)`, but found `mixed`.'
-count = 1
-
-[[issues]]
-file = "src/Profiling/ContinuousProfiler.php"
-code = "mixed-assignment"
-message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
-count = 2
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-operand"
-message = "Left operand in `<` comparison has `mixed` type."
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
+message = "Left operand in binary operation has type `mixed`."
 count = 1
 
 [[issues]]
@@ -1101,7 +1095,7 @@ count = 1
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "non-existent-class-like"
-message = "Cannot find class, interface, enum, or type alias `ExcimerLog`."
+message = "Cannot find class, interface, enum, or type alias `ExcimerLogEntry`."
 count = 1
 
 [[issues]]
