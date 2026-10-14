@@ -59,6 +59,14 @@ class Profiles
     }
 
     /**
+     * Sends the samples collected so far to Sentry, the profiler keeps running.
+     */
+    public function flush(): void
+    {
+        $this->continuousProfiler->flush();
+    }
+
+    /**
      * Get the continuous profiler.
      *
      * @internal
