@@ -7,6 +7,7 @@ namespace Sentry\Tracing;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Profiling\Profiler;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
@@ -151,6 +152,8 @@ final class Transaction extends Span
         if ($this->profiler !== null) {
             $this->profiler->stop();
         }
+
+        Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $this->getSpanId());
 
         if ($this->endTimestamp !== null) {
             // Transaction was already finished once and we don't want to re-flush it
