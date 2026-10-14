@@ -183,6 +183,12 @@ final class Transaction extends Span
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
+        $profilerId = $this->data['profiler_id'] ?? null;
+
+        if (\is_string($profilerId)) {
+            $event->setContext('profile', ['profiler_id' => $profilerId]);
+        }
+
         if ($this->profiler !== null) {
             $profile = $this->profiler->getProfile();
             if ($profile !== null) {
