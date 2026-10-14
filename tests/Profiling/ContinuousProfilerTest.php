@@ -188,6 +188,73 @@ final class ContinuousProfilerTest extends TestCase
         $profiler->stop();
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testRunningProfilerSendsChunksWhenEnoughSamplesWereCollected(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(5);
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.2);
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertGreaterThanOrEqual(2, \count(StubTransport::$events));
+
+        $profiler->stop();
+
+        $chunkIds = [];
+
+        foreach (StubTransport::$events as $event) {
+            $profileChunk = $event->getProfileChunk();
+
+            $this->assertNotNull($profileChunk);
+            $this->assertSame($profilerId, $profileChunk->getProfilerId());
+
+            $chunkIds[] = $profileChunk->getChunkId();
+        }
+
+        $this->assertSame($chunkIds, array_unique($chunkIds));
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testChunksAreSplitByDuration(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(6060, 0.1);
+        $profiler->start();
+
+        self::busyWait(0.05);
+        // Excimer records a single sample for the whole time the application is blocked
+        usleep(200000);
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertCount(2, StubTransport::$events);
+
+        foreach (StubTransport::$events as $event) {
+            $profileChunk = $event->getProfileChunk();
+
+            $this->assertNotNull($profileChunk);
+
+            $payload = $profileChunk->getFormattedData($event);
+
+            $this->assertNotNull($payload);
+
+            $samples = $payload['profile']['samples'];
+
+            $this->assertLessThan(0.1, end($samples)['timestamp'] - $samples[0]['timestamp']);
+        }
+    }
+
     private function bindClient(array $options): void
     {
         SentrySdk::init()->bindClient(new Client(new Options($options), StubTransport::getInstance()));
