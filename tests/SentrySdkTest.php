@@ -6,11 +6,13 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\Options;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -406,6 +408,40 @@ final class SentrySdkTest extends TestCase
         SentrySdk::endContext(12);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testFlushSendsCollectedProfileSamplesAndKeepsProfiling(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init()->bindClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.05);
+
+        SentrySdk::flush();
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
+        $this->assertCount(1, StubTransport::$events);
+
+        $profileChunk = StubTransport::$events[0]->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+        $this->assertSame($profilerId, $profileChunk->getProfilerId());
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertCount(2, StubTransport::$events);
+    }
+
     public function testFlushFlushesClientTransport(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -564,5 +600,14 @@ final class SentrySdkTest extends TestCase
         });
 
         return $value;
+    }
+
+    private static function busyWait(float $seconds): void
+    {
+        $end = microtime(true) + $seconds;
+
+        while (microtime(true) < $end) {
+            // Burn CPU so that Excimer collects samples
+        }
     }
 }
