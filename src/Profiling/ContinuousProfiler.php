@@ -127,6 +127,11 @@ final class ContinuousProfiler
         $profiler->setEventType(\EXCIMER_REAL);
         $profiler->setPeriod(self::SAMPLE_RATE);
         $profiler->setMaxDepth(self::MAX_STACK_DEPTH);
+        // Concurrent runtimes such as Swoole switch between coroutines, so each sample is buffered right after it was
+        // taken to attribute it to the thread of the logical execution that was running. Otherwise, the samples are
+        // buffered once a chunk is full or the profiler is flushed or stopped.
+        $maxSamples = $this->threadProvider->isConcurrent() ? 1 : $this->maxSamplesPerChunk;
+
         $profiler->setFlushCallback(function ($excimerLog): void {
             // The callback runs while sampling the application, so nothing may be thrown into the application code
             try {
@@ -138,7 +143,7 @@ final class ContinuousProfiler
                     $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunk.', ['exception' => $exception]);
                 }
             }
-        }, $this->maxSamplesPerChunk);
+        }, $maxSamples);
 
         $this->profiler = $profiler;
         $this->profilerId = $profilerId;
