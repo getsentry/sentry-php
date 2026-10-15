@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/Swoole.stub';
+
 if (extension_loaded('excimer')) {
     return;
 }

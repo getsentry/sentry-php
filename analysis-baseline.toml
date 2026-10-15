@@ -1279,6 +1279,12 @@ message = "Undefined constant: `EXCIMER_REAL`."
 count = 1
 
 [[issues]]
+file = "src/Profiling/SwooleThreadProvider.php"
+code = "non-existent-method"
+message = 'Method `getCid` does not exist on type `Swoole\Coroutine`.'
+count = 1
+
+[[issues]]
 file = "src/Serializer/AbstractSerializer.php"
 code = "generic-object-iteration"
 message = "Iterating over a generic `object`. This will iterate its public properties."

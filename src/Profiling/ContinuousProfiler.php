@@ -82,7 +82,7 @@ final class ContinuousProfiler
     {
         $this->maxSamplesPerChunk = $maxSamplesPerChunk;
         $this->maxChunkDuration = $maxChunkDuration;
-        $this->threadProvider = new MainThreadProvider();
+        $this->threadProvider = self::createThreadProvider();
     }
 
     public function start(): void
@@ -315,6 +315,16 @@ final class ContinuousProfiler
         $profileChunk = new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions());
 
         $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+    }
+
+    private static function createThreadProvider(): ThreadProviderInterface
+    {
+        // Swoole and OpenSwoole interleave coroutines in one process, which are attributed to their own threads
+        if (\extension_loaded('swoole') || \extension_loaded('openswoole')) {
+            return new SwooleThreadProvider();
+        }
+
+        return new MainThreadProvider();
     }
 
     private function isSessionSampled(?float $sampleRate): bool

@@ -1,0 +1,17 @@
+<?php
+
+namespace Swoole {
+    if (extension_loaded('swoole') || extension_loaded('openswoole')) {
+        return;
+    }
+
+    class Coroutine
+    {
+        /**
+         * Gets the ID of the running coroutine, or -1 outside of a coroutine.
+         */
+        public static function getCid(): int
+        {
+        }
+    }
+}
