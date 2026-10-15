@@ -303,6 +303,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'trace_ignore_status_codes',
+            [404, [500, 599]],
+            'getTraceIgnoreStatusCodes',
+            'setTraceIgnoreStatusCodes',
+        ];
+
+        yield [
             'before_send',
             static function (): void {},
             'getBeforeSendCallback',
@@ -619,6 +626,7 @@ final class OptionsTest extends TestCase
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
+            'trace_ignore_status_codes' => [],
             'before_send' => \Closure::class,
             'before_send_transaction' => \Closure::class,
             'before_send_check_in' => \Closure::class,
@@ -870,6 +878,59 @@ final class OptionsTest extends TestCase
             [Options::DEFAULT_MAX_BREADCRUMBS + 1, Options::DEFAULT_MAX_BREADCRUMBS + 1],
             ['string', Options::DEFAULT_MAX_BREADCRUMBS],
             ['1', Options::DEFAULT_MAX_BREADCRUMBS],
+        ];
+    }
+
+    /**
+     * @dataProvider traceIgnoreStatusCodesOptionValidatesInputValueDataProvider
+     */
+    public function testTraceIgnoreStatusCodesOptionValidatesInputValue(array $value, array $expectedValue): void
+    {
+        $options = new Options(['trace_ignore_status_codes' => $value]);
+
+        $this->assertSame($expectedValue, $options->getTraceIgnoreStatusCodes());
+    }
+
+    public static function traceIgnoreStatusCodesOptionValidatesInputValueDataProvider(): \Generator
+    {
+        yield 'Status codes and ranges' => [
+            [404, [500, 599]],
+            [404, [500, 599]],
+        ];
+
+        yield 'Single status code range' => [
+            [[404, 404]],
+            [[404, 404]],
+        ];
+
+        yield 'String status code' => [
+            ['404'],
+            [],
+        ];
+
+        yield 'Range with more than two elements' => [
+            [[400, 450, 499]],
+            [],
+        ];
+
+        yield 'Range with a single element' => [
+            [[400]],
+            [],
+        ];
+
+        yield 'Range with non-integer bounds' => [
+            [['400', '499']],
+            [],
+        ];
+
+        yield 'Range with lower bound greater than upper bound' => [
+            [[599, 500]],
+            [],
+        ];
+
+        yield 'Range with string keys' => [
+            [['min' => 500, 'max' => 599]],
+            [],
         ];
     }
 

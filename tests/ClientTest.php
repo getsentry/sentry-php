@@ -855,6 +855,111 @@ final class ClientTest extends TestCase
         $client->captureEvent($event);
     }
 
+    /**
+     * @dataProvider traceIgnoreStatusCodesDataProvider
+     */
+    public function testProcessEventDiscardsEventWhenTraceIgnoreStatusCodesMatches(?int $statusCode, array $ignoredStatusCodes, bool $shouldIgnore): void
+    {
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /api/users');
+
+        if ($statusCode !== null) {
+            $event->setContext('trace', [
+                'data' => ['http.response.status_code' => $statusCode],
+            ]);
+        }
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+
+        if ($shouldIgnore) {
+            $logger->expects($this->once())
+                   ->method('info')
+                   ->with(
+                       new StringMatchesFormatDescription('The transaction [%s] will be discarded because its HTTP status code %d matches an entry in "trace_ignore_status_codes".'),
+                       $this->callback(static function (array $context): bool {
+                           return isset($context['event']) && $context['event'] instanceof Event;
+                       })
+                   );
+        } else {
+            $logger->expects($this->never())
+                   ->method('info');
+        }
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        if ($shouldIgnore) {
+            $transport->expects($this->never())
+                      ->method('send');
+        } else {
+            $transport->expects($this->once())
+                      ->method('send')
+                      ->with($event)
+                      ->willReturnCallback(static function (Event $event): Result {
+                          return new Result(ResultStatus::success(), $event);
+                      });
+        }
+
+        $client = ClientBuilder::create(['trace_ignore_status_codes' => $ignoredStatusCodes])
+                               ->setTransport($transport)
+                               ->setLogger($logger)
+                               ->getClient();
+
+        $client->captureEvent($event);
+    }
+
+    public static function traceIgnoreStatusCodesDataProvider(): \Generator
+    {
+        yield 'Default does not ignore any status code' => [
+            404,
+            [],
+            false,
+        ];
+
+        yield 'Exact status code match' => [
+            404,
+            [404],
+            true,
+        ];
+
+        yield 'Exact status code no match' => [
+            200,
+            [404],
+            false,
+        ];
+
+        yield 'Range lower bound match' => [
+            500,
+            [[500, 599]],
+            true,
+        ];
+
+        yield 'Range upper bound match' => [
+            599,
+            [[500, 599]],
+            true,
+        ];
+
+        yield 'Range no match' => [
+            404,
+            [[500, 599]],
+            false,
+        ];
+
+        yield 'Mixed status codes and ranges, second matches' => [
+            503,
+            [404, [500, 599]],
+            true,
+        ];
+
+        yield 'Transaction without status code' => [
+            null,
+            [404, [500, 599]],
+            false,
+        ];
+    }
+
     public static function ignoreTransactionsDataProvider(): \Generator
     {
         yield 'Exact string match' => [
