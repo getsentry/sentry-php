@@ -86,6 +86,7 @@ use Sentry\Transport\TransportInterface;
  *     spotlight_url?: string,
  *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
+ *     trace_ignore_status_codes?: array<int|array{int, int}>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
