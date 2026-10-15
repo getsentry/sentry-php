@@ -15,7 +15,6 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
-use Sentry\Profiling\ProfileChunk;
 use Sentry\Profiling\Profiles;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
@@ -368,9 +367,11 @@ class Hub implements HubInterface
 
             // Backfill profiling data because the profiler was started after the transaction
             if ($profilerId !== null) {
+                $threadProvider = $continuousProfiler->getThreadProvider();
+
                 $transaction->setData([
-                    'thread.id' => ProfileChunk::THREAD_ID,
-                    'thread.name' => ProfileChunk::THREAD_NAME,
+                    'thread.id' => $threadProvider->getThreadId(),
+                    'thread.name' => $threadProvider->getThreadName(),
                     'profiler_id' => $profilerId,
                 ]);
             }

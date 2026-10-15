@@ -10,6 +10,7 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
+use Sentry\Profiling\ThreadProviderInterface;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tests\StubTransport;
@@ -253,6 +254,45 @@ final class ContinuousProfilerTest extends TestCase
 
             $this->assertLessThan(0.1, end($samples)['timestamp'] - $samples[0]['timestamp']);
         }
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSamplesAreAttributedToTheThreadOfTheThreadProvider(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->setThreadProvider(new class implements ThreadProviderInterface {
+            public function getThreadId(): string
+            {
+                return '42';
+            }
+
+            public function getThreadName(): string
+            {
+                return 'worker';
+            }
+
+            public function isConcurrent(): bool
+            {
+                return false;
+            }
+        });
+
+        $profiler->start();
+        self::busyWait(0.05);
+        $profiler->stop();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $payload = $event->getProfileChunk()->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+        $this->assertSame(['42'], array_values(array_unique(array_column($payload['profile']['samples'], 'thread_id'))));
+        $this->assertEquals((object) ['42' => ['name' => 'worker']], $payload['profile']['thread_metadata']);
     }
 
     private function bindClient(array $options): void

@@ -67,6 +67,15 @@ class Profiles
     }
 
     /**
+     * Sets the provider of the threads samples and spans are attributed to, which lets concurrent
+     * runtimes attribute them to their logical executions.
+     */
+    public function setThreadProvider(ThreadProviderInterface $threadProvider): void
+    {
+        $this->continuousProfiler->setThreadProvider($threadProvider);
+    }
+
+    /**
      * Get the continuous profiler.
      *
      * @internal
