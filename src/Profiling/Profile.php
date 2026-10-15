@@ -11,7 +11,6 @@ use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
-use Sentry\Util\PrefixStripper;
 use Sentry\Util\SentryUid;
 
 /**
@@ -19,6 +18,8 @@ use Sentry\Util\SentryUid;
  * All fields are none otpional.
  *
  * @see https://develop.sentry.dev/sdk/sample-format/
+ *
+ * @phpstan-import-type ExcimerLogStackEntry from ProfileDataBuffer
  *
  * @phpstan-type SentryProfileFrame array{
  *     abs_path: string,
@@ -62,24 +63,11 @@ use Sentry\Util\SentryUid;
  *        stacks: array<int, array<int, int>>,
  *    },
  * }
- * @phpstan-type ExcimerLogStackEntryTrace array{
- *     file: string,
- *     line: int,
- *     class?: string,
- *     function?: string,
- *     closure_line?: int,
- * }
- * @phpstan-type ExcimerLogStackEntry array{
- *     trace: array<int, ExcimerLogStackEntryTrace>,
- *     timestamp: float
- * }
  *
  * @internal
  */
 final class Profile
 {
-    use PrefixStripper;
-
     /**
      * @var string The version of the profile format
      */
@@ -180,74 +168,34 @@ final class Profile
             return null;
         }
 
+        $buffer = new ProfileDataBuffer($this->options);
+
+        foreach ($this->excimerLog as $entry) {
+            $buffer->add($entry);
+        }
+
+        $profileData = $buffer->takeProfileData();
+
         $frames = [];
-        $frameHashMap = [];
 
-        $stacks = [];
-        $stackHashMap = [];
-
-        $registerStack = static function (array $stack) use (&$stacks, &$stackHashMap): int {
-            $stackHash = md5(serialize($stack));
-
-            if (\array_key_exists($stackHash, $stackHashMap) === false) {
-                $stackHashMap[$stackHash] = \count($stacks);
-                $stacks[] = $stack;
-            }
-
-            return $stackHashMap[$stackHash];
-        };
+        foreach ($profileData->getFrames() as $frame) {
+            $frames[] = [
+                'filename' => $frame->getFilename(),
+                'abs_path' => $frame->getAbsPath(),
+                'module' => $frame->getModule(),
+                'function' => $frame->getFunction(),
+                'lineno' => $frame->getLineno(),
+            ];
+        }
 
         $samples = [];
-
         $duration = 0;
 
-        $loggedStacks = $this->prepareStacks();
-        foreach ($loggedStacks as $stack) {
-            $stackFrames = [];
-
-            foreach ($stack['trace'] as $frame) {
-                $absolutePath = $frame['file'];
-                $lineno = $frame['line'];
-
-                $frameKey = "{$absolutePath}:{$lineno}";
-
-                $frameIndex = $frameHashMap[$frameKey] ?? null;
-
-                if ($frameIndex === null) {
-                    $file = $this->stripPrefixFromFilePath($this->options, $absolutePath);
-                    $module = null;
-
-                    if (isset($frame['class'], $frame['function'])) {
-                        // Class::method
-                        $function = $frame['class'] . '::' . $frame['function'];
-                        $module = $frame['class'];
-                    } elseif (isset($frame['function'])) {
-                        // {closure}
-                        $function = $frame['function'];
-                    } else {
-                        // /index.php
-                        $function = $file;
-                    }
-
-                    $frameHashMap[$frameKey] = $frameIndex = \count($frames);
-                    $frames[] = [
-                        'filename' => $file,
-                        'abs_path' => $absolutePath,
-                        'module' => $module,
-                        'function' => $function,
-                        'lineno' => $lineno,
-                    ];
-                }
-
-                $stackFrames[] = $frameIndex;
-            }
-
-            $stackId = $registerStack($stackFrames);
-
-            $duration = $stack['timestamp'];
+        foreach ($profileData->getSamples() as $sample) {
+            $duration = $sample->getTimestamp();
 
             $samples[] = [
-                'stack_id' => $stackId,
+                'stack_id' => $sample->getStackId(),
                 'thread_id' => self::THREAD_ID,
                 'elapsed_since_start_ns' => (int) round($duration * 1e+9),
             ];
@@ -295,33 +243,9 @@ final class Profile
             'profile' => [
                 'frames' => $frames,
                 'samples' => $samples,
-                'stacks' => $stacks,
+                'stacks' => $profileData->getStacks(),
             ],
         ];
-    }
-
-    /**
-     * This method is mainly used to be able to mock the ExcimerLog class in the tests.
-     *
-     * @return array<int, ExcimerLogStackEntry>
-     */
-    private function prepareStacks(): array
-    {
-        $stacks = [];
-
-        foreach ($this->excimerLog as $stack) {
-            if ($stack instanceof \ExcimerLogEntry) {
-                $stacks[] = [
-                    'trace' => $stack->getTrace(),
-                    'timestamp' => $stack->getTimestamp(),
-                ];
-            } else {
-                /** @var ExcimerLogStackEntry $stack */
-                $stacks[] = $stack;
-            }
-        }
-
-        return $stacks;
     }
 
     private function validateExcimerLog(): bool
