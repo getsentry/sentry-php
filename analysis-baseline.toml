@@ -1066,7 +1066,7 @@ count = 2
 file = "src/Profiling/ContinuousProfiler.php"
 code = "invalid-method-access"
 message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerProfiler)`)."
-count = 4
+count = 5
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
