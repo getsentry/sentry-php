@@ -65,12 +65,12 @@ final class ProfileDataBuffer
     }
 
     /**
-     * Adds a log entry. The timestamp of the sample is the number of seconds elapsed
-     * since the profiler was started, as reported by Excimer.
+     * Adds a log entry taken on the given thread. The timestamp of the sample is the
+     * number of seconds elapsed since the profiler was started, as reported by Excimer.
      *
      * @param \ExcimerLogEntry|ExcimerLogStackEntry $entry
      */
-    public function add($entry): void
+    public function add($entry, string $threadId, string $threadName): void
     {
         if ($entry instanceof \ExcimerLogEntry) {
             $trace = $entry->getTrace();
@@ -123,7 +123,7 @@ final class ProfileDataBuffer
             $this->stacks[] = $stackFrames;
         }
 
-        $this->samples[] = new ProfileSample($stackIndex, $timestamp);
+        $this->samples[] = new ProfileSample($stackIndex, $timestamp, $threadId, $threadName);
     }
 
     public function getSampleCount(): int

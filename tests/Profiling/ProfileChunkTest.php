@@ -105,6 +105,28 @@ final class ProfileChunkTest extends TestCase
         $this->assertStringContainsString('"thread_metadata":{"0":{"name":"main"}}', JSON::encode($payload));
     }
 
+    public function testGetFormattedDataAttributesSamplesToThreads(): void
+    {
+        $chunk = new ProfileChunk(self::PROFILER_ID, self::START_TIMESTAMP, new ProfileData(
+            [new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42)],
+            [[0]],
+            [
+                new ProfileSample(0, 0.01, '1', 'coroutine 1'),
+                new ProfileSample(0, 0.02, '2', 'coroutine 2'),
+                new ProfileSample(0, 0.03, '1', 'coroutine 1'),
+            ]
+        ));
+
+        $payload = $chunk->getFormattedData(Event::createEvent());
+
+        $this->assertNotNull($payload);
+        $this->assertSame(['1', '2', '1'], array_column($payload['profile']['samples'], 'thread_id'));
+        $this->assertEquals((object) [
+            '1' => ['name' => 'coroutine 1'],
+            '2' => ['name' => 'coroutine 2'],
+        ], $payload['profile']['thread_metadata']);
+    }
+
     public function testGetFormattedDataOmitsMissingRelease(): void
     {
         $chunk = new ProfileChunk(self::PROFILER_ID, self::START_TIMESTAMP, self::getProfileData());
@@ -121,7 +143,7 @@ final class ProfileChunkTest extends TestCase
         $chunk = new ProfileChunk(self::PROFILER_ID, self::START_TIMESTAMP, new ProfileData(
             [new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42)],
             [[0]],
-            [new ProfileSample(0, 0.01)]
+            [new ProfileSample(0, 0.01, '0', 'main')]
         ));
 
         $this->assertNull($chunk->getFormattedData(Event::createEvent()));
@@ -147,7 +169,7 @@ final class ProfileChunkTest extends TestCase
         $buffer = new ProfileDataBuffer($options);
 
         foreach (self::getExcimerLog() as $entry) {
-            $buffer->add($entry);
+            $buffer->add($entry, ProfileChunk::THREAD_ID, ProfileChunk::THREAD_NAME);
         }
 
         return $buffer->takeProfileData();

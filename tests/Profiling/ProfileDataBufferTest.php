@@ -28,10 +28,42 @@ final class ProfileDataBufferTest extends TestCase
         $buffer = new ProfileDataBuffer($options);
 
         foreach ($excimerLog as $entry) {
-            $buffer->add($entry);
+            $buffer->add($entry, '0', 'main');
         }
 
         $this->assertEquals($expectedData, $buffer->takeProfileData());
+    }
+
+    public function testAddAttributesSamplesToThreads(): void
+    {
+        $entry = [
+            'trace' => [
+                [
+                    'file' => '/var/www/html/index.php',
+                    'line' => 42,
+                ],
+            ],
+            'timestamp' => 0.001,
+        ];
+
+        $buffer = new ProfileDataBuffer();
+        $buffer->add($entry, '1', 'coroutine 1');
+        $buffer->add(['timestamp' => 0.002] + $entry, '2', 'coroutine 2');
+        $buffer->add(['timestamp' => 0.003] + $entry, '1', 'coroutine 1');
+
+        $this->assertEquals(new ProfileData(
+            [
+                new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42),
+            ],
+            [
+                [0],
+            ],
+            [
+                new ProfileSample(0, 0.001, '1', 'coroutine 1'),
+                new ProfileSample(0, 0.002, '2', 'coroutine 2'),
+                new ProfileSample(0, 0.003, '1', 'coroutine 1'),
+            ]
+        ), $buffer->takeProfileData());
     }
 
     public function testTakeProfileDataEmptiesTheBuffer(): void
@@ -47,17 +79,17 @@ final class ProfileDataBufferTest extends TestCase
         ];
 
         $buffer = new ProfileDataBuffer();
-        $buffer->add($entry);
+        $buffer->add($entry, '0', 'main');
 
         $this->assertSame(0.001, $buffer->getStartTimestamp());
-        $this->assertEquals([new ProfileSample(0, 0.001)], $buffer->takeProfileData()->getSamples());
+        $this->assertEquals([new ProfileSample(0, 0.001, '0', 'main')], $buffer->takeProfileData()->getSamples());
         $this->assertSame(0, $buffer->getSampleCount());
         $this->assertNull($buffer->getStartTimestamp());
 
-        $buffer->add(['timestamp' => 0.002] + $entry);
+        $buffer->add(['timestamp' => 0.002] + $entry, '1', 'coroutine 1');
 
         $this->assertSame(0.002, $buffer->getStartTimestamp());
-        $this->assertEquals([new ProfileSample(0, 0.002)], $buffer->takeProfileData()->getSamples());
+        $this->assertEquals([new ProfileSample(0, 0.002, '1', 'coroutine 1')], $buffer->takeProfileData()->getSamples());
     }
 
     public static function addDataProvider(): \Generator
@@ -116,9 +148,9 @@ final class ProfileDataBufferTest extends TestCase
                     [1, 2, 0],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
-                    new ProfileSample(0, 0.002),
-                    new ProfileSample(1, 0.003),
+                    new ProfileSample(0, 0.001, '0', 'main'),
+                    new ProfileSample(0, 0.002, '0', 'main'),
+                    new ProfileSample(1, 0.003, '0', 'main'),
                 ]
             ),
         ];
@@ -136,9 +168,9 @@ final class ProfileDataBufferTest extends TestCase
                     [1, 2, 0],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
-                    new ProfileSample(0, 0.002),
-                    new ProfileSample(1, 0.003),
+                    new ProfileSample(0, 0.001, '0', 'main'),
+                    new ProfileSample(0, 0.002, '0', 'main'),
+                    new ProfileSample(1, 0.003, '0', 'main'),
                 ]
             ),
             new Options([
@@ -179,8 +211,8 @@ final class ProfileDataBufferTest extends TestCase
                     [1],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
-                    new ProfileSample(1, 0.002),
+                    new ProfileSample(0, 0.001, '0', 'main'),
+                    new ProfileSample(1, 0.002, '0', 'main'),
                 ]
             ),
         ];
@@ -231,11 +263,11 @@ final class ProfileDataBufferTest extends TestCase
                     [0, 1],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
-                    new ProfileSample(1, 0.002),
-                    new ProfileSample(2, 0.003),
-                    new ProfileSample(3, 0.004),
-                    new ProfileSample(0, 0.005),
+                    new ProfileSample(0, 0.001, '0', 'main'),
+                    new ProfileSample(1, 0.002, '0', 'main'),
+                    new ProfileSample(2, 0.003, '0', 'main'),
+                    new ProfileSample(3, 0.004, '0', 'main'),
+                    new ProfileSample(0, 0.005, '0', 'main'),
                 ]
             ),
         ];
@@ -269,7 +301,7 @@ final class ProfileDataBufferTest extends TestCase
                     [0, 1],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
+                    new ProfileSample(0, 0.001, '0', 'main'),
                 ]
             ),
         ];
@@ -309,8 +341,8 @@ final class ProfileDataBufferTest extends TestCase
                     [1],
                 ],
                 [
-                    new ProfileSample(0, 0.001),
-                    new ProfileSample(1, 0.002),
+                    new ProfileSample(0, 0.001, '0', 'main'),
+                    new ProfileSample(1, 0.002, '0', 'main'),
                 ]
             ),
         ];
