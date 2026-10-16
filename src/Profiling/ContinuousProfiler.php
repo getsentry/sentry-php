@@ -54,6 +54,11 @@ final class ContinuousProfiler
     private $sampled;
 
     /**
+     * @var array<string, true> The span IDs of the sampled root spans the profiler is running for
+     */
+    private $activeRootSpans = [];
+
+    /**
      * @var ProfileDataBuffer|null The samples of the next chunk, converted as they are collected
      */
     private $buffer;
@@ -137,6 +142,31 @@ final class ContinuousProfiler
         $profiler->start();
     }
 
+    /**
+     * Starts the profiler for a sampled root span, it keeps running until all of them are finished.
+     */
+    public function startForRootSpan(string $spanId): void
+    {
+        $this->start();
+
+        if ($this->profiler !== null) {
+            $this->activeRootSpans[$spanId] = true;
+        }
+    }
+
+    public function stopForRootSpan(string $spanId): void
+    {
+        if (!isset($this->activeRootSpans[$spanId])) {
+            return;
+        }
+
+        unset($this->activeRootSpans[$spanId]);
+
+        if ($this->activeRootSpans === []) {
+            $this->stop();
+        }
+    }
+
     public function stop(): void
     {
         if ($this->profiler === null) {
@@ -153,6 +183,7 @@ final class ContinuousProfiler
         $this->profiler = null;
         $this->profilerId = null;
         $this->startTimestamp = null;
+        $this->activeRootSpans = [];
         $this->buffer = null;
     }
 
