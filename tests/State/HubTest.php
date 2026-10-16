@@ -17,6 +17,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
+use Sentry\Profiling\ProfilerInterface;
 use Sentry\Severity;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
@@ -915,6 +916,61 @@ final class HubTest extends TestCase
 
         $this->assertTrue($transaction->getSampled());
         $this->assertNotNull($transaction->getProfiler());
+    }
+
+    public function testStartTransactionCreatesAProfilerForEachSampledTransaction(): void
+    {
+        $profilers = [
+            $this->createMock(ProfilerInterface::class),
+            $this->createMock(ProfilerInterface::class),
+        ];
+        foreach ($profilers as $profiler) {
+            $profiler->expects($this->once())->method('start');
+        }
+        $calls = 0;
+        $options = new Options([
+            'traces_sample_rate' => 1.0,
+            'profiles_sample_rate' => 1.0,
+        ]);
+        $options->setProfilerFactory(function (Options $factoryOptions) use ($options, $profilers, &$calls): ProfilerInterface {
+            $this->assertSame($options, $factoryOptions);
+
+            return $profilers[$calls++];
+        });
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn($options);
+        $hub = new Hub($client);
+
+        foreach ($profilers as $profiler) {
+            $transaction = $hub->startTransaction(new TransactionContext());
+
+            $this->assertSame($profiler, $transaction->getProfiler());
+        }
+    }
+
+    public function testProfilerFactoryExceptionDropsProfileAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $exception = new \RuntimeException('test');
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options([
+            'logger' => StubLogger::getInstance(),
+            'traces_sample_rate' => 1.0,
+            'profiles_sample_rate' => 1.0,
+            'profiler_factory' => static function () use ($exception): void {
+                throw $exception;
+            },
+        ]));
+
+        $transaction = (new Hub($client))->startTransaction(new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'Failed to start the profiler. Reason: "test".',
+            'context' => ['exception' => $exception],
+        ], StubLogger::$logs);
     }
 
     public function testStartTransactionDoesNotStartProfilerWhenProfilesSamplerReturnsZero(): void

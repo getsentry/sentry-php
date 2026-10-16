@@ -184,6 +184,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'profiler_factory',
+            static function (): void {},
+            'getProfilerFactory',
+            'setProfilerFactory',
+        ];
+
+        yield [
             'attach_stacktrace',
             false,
             'shouldAttachStacktrace',
@@ -606,6 +613,7 @@ final class OptionsTest extends TestCase
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'profiles_sampler' => null,
+            'profiler_factory' => null,
             'attach_stacktrace' => false,
             'attach_metric_code_locations' => false,
             'context_lines' => 5,
