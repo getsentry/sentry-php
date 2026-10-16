@@ -34,7 +34,7 @@ final class ProfileChunkTest extends TestCase
         ])));
 
         $this->assertSame(self::PROFILER_ID, $chunk->getProfilerId());
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $chunk->getChunkId());
+        $this->assertSame(1, preg_match('/^[0-9a-f]{32}$/', $chunk->getChunkId()));
         $this->assertNotSame(self::PROFILER_ID, $chunk->getChunkId());
 
         $this->assertEquals([
