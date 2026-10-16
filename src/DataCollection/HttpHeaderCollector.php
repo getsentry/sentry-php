@@ -43,7 +43,13 @@ final class HttpHeaderCollector
         $behavior = $type->isRequest() ? $httpHeaders['request'] : $httpHeaders['response'];
         $filtered = (new KeyValueDataFilter($behavior))->filterHeaders($headers);
 
-        if ($filtered === null || $piiSanitizeHeaders === null) {
+        if ($filtered === null) {
+            return null;
+        }
+
+        $filtered = self::filterRefererUrls($policy, $type, $filtered);
+
+        if ($piiSanitizeHeaders === null) {
             return $filtered;
         }
 
@@ -70,6 +76,30 @@ final class HttpHeaderCollector
         }
 
         return self::sanitize($headers, $piiSanitizeHeaders ?? self::DEFAULT_PII_SANITIZE_HEADERS);
+    }
+
+    /**
+     * The `Referer` header contains a URL, so it is collected like any other URL to apply the query param collection behavior.
+     *
+     * @param array<array-key, string[]> $headers
+     *
+     * @return array<array-key, string[]>
+     */
+    private static function filterRefererUrls(DataCollectionPolicy $policy, HttpMessageType $type, array $headers): array
+    {
+        foreach ($headers as $name => $values) {
+            if (strtolower((string) $name) !== 'referer') {
+                continue;
+            }
+
+            foreach ($values as $headerLine => $headerValue) {
+                if ($headerValue !== KeyValueDataFilter::FILTERED_VALUE) {
+                    $headers[$name][$headerLine] = HttpUrlCollector::collect($policy, $type, $headerValue) ?? KeyValueDataFilter::FILTERED_VALUE;
+                }
+            }
+        }
+
+        return $headers;
     }
 
     /**

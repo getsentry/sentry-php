@@ -22,6 +22,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'Content-Type' => 'application/json',
             'Authorization' => 'Bearer secret',
             'X-Forwarded-For' => ['192.0.2.1', '198.51.100.1'],
+            'Referer' => 'https://example.com/login?token=secret',
             'Cookie' => 'theme=dark; session_id=secret',
         ], '{"name":"Alice","password":"secret"}'))->withCookieParams(['theme' => 'dark', 'session_id' => 'secret']);
 
@@ -30,6 +31,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'http.request.header.content-type' => 'application/json',
             'http.request.header.authorization' => '[Filtered]',
             'http.request.header.x-forwarded-for' => '192.0.2.1, 198.51.100.1',
+            'http.request.header.referer' => 'https://example.com/login?token=[Filtered]',
             'http.request.header.cookie' => ['theme=dark', 'session_id=[Filtered]'],
             'http.request.body.data' => '{"name":"Alice","password":"[Filtered]"}',
         ], HttpSpanDataCollector::collectServerRequest(self::policy(), $request));

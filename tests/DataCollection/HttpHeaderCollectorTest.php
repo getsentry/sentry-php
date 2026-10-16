@@ -173,6 +173,70 @@ final class HttpHeaderCollectorTest extends TestCase
         $this->assertNull(HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']], ['x-tenant-id']));
     }
 
+    /**
+     * @dataProvider refererHeaderDataProvider
+     *
+     * @param array<string, mixed>    $dataCollection
+     * @param array<string, string[]> $headers
+     * @param array<string, string[]> $expectedHeaders
+     */
+    public function testRefererQueryStringFollowsTheQueryParamCollectionBehavior(array $dataCollection, array $headers, array $expectedHeaders): void
+    {
+        $this->assertSame($expectedHeaders, HttpHeaderCollector::collect($this->policy($dataCollection), HttpMessageType::incomingRequest(), $headers));
+    }
+
+    public static function refererHeaderDataProvider(): \Generator
+    {
+        yield 'sensitive query params are filtered' => [
+            [],
+            ['ReFeReR' => ['https://example.com/search?token=secret&q=a%20b%26c#results']],
+            ['ReFeReR' => ['https://example.com/search?token=[Filtered]&q=a%20b%26c#results']],
+        ];
+
+        yield 'configured query param terms are applied' => [
+            ['url_query_params' => ['mode' => 'allowList', 'terms' => ['q']]],
+            ['Referer' => ['https://example.com/search?q=php&page=2']],
+            ['Referer' => ['https://example.com/search?q=php&page=[Filtered]']],
+        ];
+
+        yield 'query string is removed when query params are not collected' => [
+            ['url_query_params' => ['mode' => 'off']],
+            ['Referer' => ['https://example.com/search?q=php']],
+            ['Referer' => ['https://example.com/search']],
+        ];
+
+        yield 'credentials are filtered' => [
+            [],
+            ['Referer' => ['https://user:pass@example.com/']],
+            ['Referer' => ['https://[Filtered]:[Filtered]@example.com/']],
+        ];
+
+        yield 'unparseable URL is filtered' => [
+            [],
+            ['Referer' => ['http://:80']],
+            ['Referer' => ['[Filtered]']],
+        ];
+
+        yield 'header filtered by the header collection behavior stays filtered' => [
+            ['http_headers' => ['mode' => 'allowList', 'terms' => ['x-request-id']]],
+            ['Referer' => ['https://example.com/search?q=php']],
+            ['Referer' => ['[Filtered]']],
+        ];
+
+        yield 'other URL headers are not changed' => [
+            [],
+            ['X-Referer' => ['https://example.com/search?token=secret']],
+            ['X-Referer' => ['https://example.com/search?token=secret']],
+        ];
+    }
+
+    public function testRefererIsNotChangedInLegacyMode(): void
+    {
+        $headers = ['Referer' => ['https://example.com/search?token=secret']];
+
+        $this->assertSame($headers, HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), $headers));
+    }
+
     public function testUnavailableHeadersAreNotCollected(): void
     {
         $this->assertNull(HttpHeaderCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), null));
