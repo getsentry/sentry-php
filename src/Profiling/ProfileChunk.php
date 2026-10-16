@@ -57,12 +57,12 @@ final class ProfileChunk
     /**
      * @var string
      */
-    private const THREAD_ID = '0';
+    public const THREAD_ID = '0';
 
     /**
      * @var string
      */
-    private const THREAD_NAME = 'main';
+    public const THREAD_NAME = 'main';
 
     /**
      * @var int we need at least 2 samples otherwise the event is dropped
