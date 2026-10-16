@@ -187,6 +187,17 @@ final class ContinuousProfiler
         $this->buffer = null;
     }
 
+    public function flush(): void
+    {
+        if ($this->profiler === null) {
+            return;
+        }
+
+        $this->profiler->flush();
+
+        $this->captureBuffer();
+    }
+
     public function isRunning(): bool
     {
         return $this->profiler !== null;
