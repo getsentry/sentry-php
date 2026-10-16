@@ -171,7 +171,7 @@ final class Profile
         $buffer = new ProfileDataBuffer($this->options);
 
         foreach ($this->excimerLog as $entry) {
-            $buffer->add($entry);
+            $buffer->add($entry, ProfileChunk::THREAD_ID, ProfileChunk::THREAD_NAME);
         }
 
         $profileData = $buffer->takeProfileData();

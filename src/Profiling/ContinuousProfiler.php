@@ -253,7 +253,7 @@ final class ContinuousProfiler
                 $this->captureBuffer();
             }
 
-            $buffer->add($entry);
+            $buffer->add($entry, ProfileChunk::THREAD_ID, ProfileChunk::THREAD_NAME);
         }
 
         if ($buffer->getSampleCount() >= $this->maxSamplesPerChunk) {

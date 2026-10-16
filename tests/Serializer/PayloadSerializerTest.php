@@ -553,8 +553,8 @@ TEXT
             [new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42)],
             [[0]],
             [
-                new ProfileSample(0, 0.25),
-                new ProfileSample(0, 0.5),
+                new ProfileSample(0, 0.25, '0', 'main'),
+                new ProfileSample(0, 0.5, '0', 'main'),
             ]
         ));
         $chunkId = $profileChunk->getChunkId();

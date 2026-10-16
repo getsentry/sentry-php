@@ -137,12 +137,17 @@ final class ProfileChunk
         }
 
         $samples = [];
+        $threadMetadata = [];
 
         foreach ($this->profileData->getSamples() as $sample) {
             $samples[] = [
                 'stack_id' => $sample->getStackId(),
-                'thread_id' => self::THREAD_ID,
+                'thread_id' => $sample->getThreadId(),
                 'timestamp' => $this->startTimestamp + $sample->getTimestamp(),
+            ];
+
+            $threadMetadata[$sample->getThreadId()] = [
+                'name' => $sample->getThreadName(),
             ];
         }
 
@@ -161,11 +166,7 @@ final class ProfileChunk
                 'samples' => $samples,
                 'stacks' => $this->profileData->getStacks(),
                 // cast to object to force object serialization
-                'thread_metadata' => (object) [
-                    self::THREAD_ID => [
-                        'name' => self::THREAD_NAME,
-                    ],
-                ],
+                'thread_metadata' => (object) $threadMetadata,
             ],
         ];
 
