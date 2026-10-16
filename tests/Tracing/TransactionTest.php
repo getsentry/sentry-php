@@ -11,7 +11,9 @@ use Sentry\Event;
 use Sentry\EventId;
 use Sentry\EventType;
 use Sentry\Options;
+use Sentry\Profiling\MainThreadProvider;
 use Sentry\Profiling\Profiles;
+use Sentry\Profiling\ThreadProviderInterface;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
@@ -126,6 +128,52 @@ final class TransactionTest extends TestCase
         $this->assertSame($profileData, $event->getContexts()['trace']['data']);
         $this->assertSame($profileData, $profiledSpan->getData());
         $this->assertSame([], $unprofiledSpan->getData());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSpansCreatedWhileProfilingAreLinkedToTheThreadOfTheThreadProvider(): void
+    {
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options([
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
+
+        $profiles = Profiles::getInstance();
+        $profiles->setThreadProvider(new class implements ThreadProviderInterface {
+            public function getThreadId(): string
+            {
+                return '42';
+            }
+
+            public function getThreadName(): string
+            {
+                return 'worker';
+            }
+
+            public function isConcurrent(): bool
+            {
+                return false;
+            }
+        });
+
+        $profiler = $profiles->continuousProfiler();
+
+        try {
+            $profiler->start();
+
+            $transaction = new Transaction(TransactionContext::make()->setSampled(true), $hub);
+            $transaction->initSpanRecorder();
+
+            $span = $transaction->startChild(new SpanContext());
+        } finally {
+            $profiler->stop();
+            $profiles->setThreadProvider(new MainThreadProvider());
+        }
+
+        $this->assertSame('42', $span->getData('thread.id'));
+        $this->assertSame('worker', $span->getData('thread.name'));
     }
 
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void

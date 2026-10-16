@@ -59,6 +59,11 @@ final class ContinuousProfiler
     private $activeRootSpans = [];
 
     /**
+     * @var ThreadProviderInterface
+     */
+    private $threadProvider;
+
+    /**
      * @var ProfileDataBuffer|null The samples of the next chunk, converted as they are collected
      */
     private $buffer;
@@ -77,6 +82,7 @@ final class ContinuousProfiler
     {
         $this->maxSamplesPerChunk = $maxSamplesPerChunk;
         $this->maxChunkDuration = $maxChunkDuration;
+        $this->threadProvider = new MainThreadProvider();
     }
 
     public function start(): void
@@ -229,8 +235,21 @@ final class ContinuousProfiler
     }
 
     /**
-     * Buffers the samples, the buffer is sent once it holds enough samples or would exceed the
-     * maximum duration of a chunk.
+     * Sets the provider of the threads samples and spans are attributed to.
+     */
+    public function setThreadProvider(ThreadProviderInterface $threadProvider): void
+    {
+        $this->threadProvider = $threadProvider;
+    }
+
+    public function getThreadProvider(): ThreadProviderInterface
+    {
+        return $this->threadProvider;
+    }
+
+    /**
+     * Buffers the samples with the thread of the logical execution that is running, the buffer
+     * is sent once it holds enough samples or would exceed the maximum duration of a chunk.
      *
      * When calling blocking operations, excimer may not produce samples for the entire duration,
      * so the duration between the first and last sample can exceed the maximum duration of a chunk
@@ -246,6 +265,9 @@ final class ContinuousProfiler
             return;
         }
 
+        $threadId = $this->threadProvider->getThreadId();
+        $threadName = $this->threadProvider->getThreadName();
+
         foreach ($entries as $entry) {
             $bufferStartTimestamp = $buffer->getStartTimestamp();
 
@@ -253,7 +275,7 @@ final class ContinuousProfiler
                 $this->captureBuffer();
             }
 
-            $buffer->add($entry, ProfileChunk::THREAD_ID, ProfileChunk::THREAD_NAME);
+            $buffer->add($entry, $threadId, $threadName);
         }
 
         if ($buffer->getSampleCount() >= $this->maxSamplesPerChunk) {

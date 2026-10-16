@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\EventId;
-use Sentry\Profiling\ProfileChunk;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -117,11 +116,14 @@ class Span
      */
     public function __construct(?SpanContext $context = null)
     {
-        $profilerId = Profiles::getInstance()->continuousProfiler()->getProfilerId();
+        $continuousProfiler = Profiles::getInstance()->continuousProfiler();
+        $profilerId = $continuousProfiler->getProfilerId();
         if ($profilerId !== null) {
+            $threadProvider = $continuousProfiler->getThreadProvider();
+
             $this->data = [
-                'thread.id' => ProfileChunk::THREAD_ID,
-                'thread.name' => ProfileChunk::THREAD_NAME,
+                'thread.id' => $threadProvider->getThreadId(),
+                'thread.name' => $threadProvider->getThreadName(),
                 'profiler_id' => $profilerId,
             ];
         }
