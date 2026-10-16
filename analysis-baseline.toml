@@ -1071,7 +1071,7 @@ count = 55
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "invalid-argument"
-message = '''Invalid argument type for argument #1 of `Sentry\Profiling\ExcimerLogConverter::convert`: expected `iterable<mixed, array{'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}|unknown-ref(ExcimerLogEntry)>`, but found `unknown-ref(ExcimerLog)`.'''
+message = '''Invalid argument type for argument #1 of `Sentry\Profiling\ExcimerLogConverter::convert`: expected `iterable<mixed, array{'event_count'?: int, 'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}|unknown-ref(ExcimerLogEntry)>`, but found `unknown-ref(ExcimerLog)`.'''
 count = 1
 
 [[issues]]

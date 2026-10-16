@@ -28,6 +28,8 @@ final class ContinuousProfilerTest extends TestCase
     {
         $this->bindClient(['profile_session_sample_rate' => 1.0]);
 
+        $startTimestamp = microtime(true);
+
         $profiler = new ContinuousProfiler();
         $profiler->start();
 
@@ -38,11 +40,11 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertNotNull($profilerId);
         $this->assertSame(1, preg_match('/^[0-9a-f]{32}$/', $profilerId));
 
-        $startTimestamp = microtime(true);
         self::busyWait(0.1);
-        $endTimestamp = microtime(true);
 
         $profiler->stop();
+
+        $endTimestamp = microtime(true);
 
         $this->assertFalse($profiler->isRunning());
         $this->assertNull($profiler->getProfilerId());
@@ -62,9 +64,10 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertNotNull($payload);
         $this->assertGreaterThanOrEqual(2, \count($payload['profile']['samples']));
 
+        // Excimer timestamps samples with its own clock, so they are only roughly within the profiled time
         foreach ($payload['profile']['samples'] as $sample) {
-            $this->assertGreaterThanOrEqual($startTimestamp, $sample['timestamp']);
-            $this->assertLessThanOrEqual($endTimestamp, $sample['timestamp']);
+            $this->assertGreaterThan($startTimestamp - 0.1, $sample['timestamp']);
+            $this->assertLessThan($endTimestamp + 0.1, $sample['timestamp']);
         }
     }
 
