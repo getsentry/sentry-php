@@ -131,7 +131,11 @@ final class SentrySdk
      */
     public static function endContext(?int $timeout = null): void
     {
-        self::getRuntimeContextManager()->endContext($timeout);
+        $runtimeContextManager = self::getRuntimeContextManager();
+
+        self::stopProfilingForActiveContext($runtimeContextManager);
+
+        $runtimeContextManager->endContext($timeout);
     }
 
     /**
@@ -159,6 +163,8 @@ final class SentrySdk
             return $callback();
         } finally {
             if ($startedNewContext) {
+                self::stopProfilingForActiveContext($runtimeContextManager);
+
                 $runtimeContextManager->endContext($timeout);
             }
         }
@@ -194,6 +200,19 @@ final class SentrySdk
 
         if ($client !== null) {
             $client->flush();
+        }
+    }
+
+    /**
+     * Stops profiling for the root spans that the ending context never finished, before the
+     * client transport is flushed.
+     */
+    private static function stopProfilingForActiveContext(RuntimeContextManager $runtimeContextManager): void
+    {
+        $runtimeContext = $runtimeContextManager->getActiveContext();
+
+        if ($runtimeContext !== null) {
+            Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
         }
     }
 

@@ -177,7 +177,7 @@ final class RuntimeContextManager
         }
     }
 
-    private function getActiveContext(): ?RuntimeContext
+    public function getActiveContext(): ?RuntimeContext
     {
         if ($this->runtimeContextStorage !== null) {
             return $this->runtimeContextStorage->get();

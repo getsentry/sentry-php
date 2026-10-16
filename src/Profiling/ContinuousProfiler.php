@@ -54,7 +54,7 @@ final class ContinuousProfiler
     private $sampled;
 
     /**
-     * @var array<string, true> The span IDs of the sampled root spans the profiler is running for
+     * @var array<string, string> The runtime context IDs of the sampled root spans the profiler is running for, keyed by span ID
      */
     private $activeRootSpans = [];
 
@@ -150,7 +150,7 @@ final class ContinuousProfiler
         $this->start();
 
         if ($this->profiler !== null) {
-            $this->activeRootSpans[$spanId] = true;
+            $this->activeRootSpans[$spanId] = SentrySdk::getCurrentRuntimeContext()->getId();
         }
     }
 
@@ -163,6 +163,26 @@ final class ContinuousProfiler
         unset($this->activeRootSpans[$spanId]);
 
         if ($this->activeRootSpans === []) {
+            $this->stop();
+        }
+    }
+
+    /**
+     * Releases the root spans of an ending runtime context that were never finished.
+     */
+    public function stopForRuntimeContext(string $runtimeContextId): void
+    {
+        $released = false;
+
+        foreach ($this->activeRootSpans as $spanId => $rootSpanRuntimeContextId) {
+            if ($rootSpanRuntimeContextId === $runtimeContextId) {
+                unset($this->activeRootSpans[$spanId]);
+
+                $released = true;
+            }
+        }
+
+        if ($released && $this->activeRootSpans === []) {
             $this->stop();
         }
     }
