@@ -295,6 +295,102 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertEquals((object) ['42' => ['name' => 'worker']], $payload['profile']['thread_metadata']);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testEachSampleIsAttributedToTheThreadRunningWhenItWasTakenIfTheThreadProviderIsConcurrent(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->setThreadProvider(new class implements ThreadProviderInterface {
+            /**
+             * @var int
+             */
+            private $threadId = 0;
+
+            public function getThreadId(): string
+            {
+                // Another logical execution runs every time the thread is asked for
+                return (string) ++$this->threadId;
+            }
+
+            public function getThreadName(): string
+            {
+                return 'thread ' . $this->threadId;
+            }
+
+            public function isConcurrent(): bool
+            {
+                return true;
+            }
+        });
+
+        $profiler->start();
+        self::busyWait(0.05);
+        $profiler->stop();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $payload = $event->getProfileChunk()->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+
+        $threadIds = array_column($payload['profile']['samples'], 'thread_id');
+
+        $this->assertGreaterThanOrEqual(2, \count($threadIds));
+        $this->assertSame($threadIds, array_values(array_unique($threadIds)));
+
+        foreach ($threadIds as $threadId) {
+            $this->assertSame(['name' => 'thread ' . $threadId], $payload['profile']['thread_metadata']->{$threadId});
+        }
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSamplesAreBufferedTogetherIfTheThreadProviderIsNotConcurrent(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->setThreadProvider(new class implements ThreadProviderInterface {
+            /**
+             * @var int
+             */
+            private $threadId = 0;
+
+            public function getThreadId(): string
+            {
+                // Another logical execution runs every time the thread is asked for
+                return (string) ++$this->threadId;
+            }
+
+            public function getThreadName(): string
+            {
+                return 'thread ' . $this->threadId;
+            }
+
+            public function isConcurrent(): bool
+            {
+                return false;
+            }
+        });
+
+        $profiler->start();
+        self::busyWait(0.05);
+        $profiler->stop();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $payload = $event->getProfileChunk()->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+        $this->assertSame(['1'], array_values(array_unique(array_column($payload['profile']['samples'], 'thread_id'))));
+    }
+
     private function bindClient(array $options): void
     {
         SentrySdk::init()->bindClient(new Client(new Options($options), StubTransport::getInstance()));
