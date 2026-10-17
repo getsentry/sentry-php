@@ -10,6 +10,8 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
+use Sentry\Profiling\MainThreadProvider;
+use Sentry\Profiling\SwooleThreadProvider;
 use Sentry\Profiling\ThreadProviderInterface;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
@@ -253,6 +255,17 @@ final class ContinuousProfilerTest extends TestCase
             $samples = $payload['profile']['samples'];
 
             $this->assertLessThan(0.1, end($samples)['timestamp'] - $samples[0]['timestamp']);
+        }
+    }
+
+    public function testCoroutinesAreAttributedToTheirOwnThreadsWhenSwooleIsLoaded(): void
+    {
+        $profiler = new ContinuousProfiler();
+
+        if (\extension_loaded('swoole') || \extension_loaded('openswoole')) {
+            $this->assertInstanceOf(SwooleThreadProvider::class, $profiler->getThreadProvider());
+        } else {
+            $this->assertInstanceOf(MainThreadProvider::class, $profiler->getThreadProvider());
         }
     }
 
