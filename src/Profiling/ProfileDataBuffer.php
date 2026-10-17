@@ -65,6 +65,14 @@ final class ProfileDataBuffer
     }
 
     /**
+     * Sets the options to strip the prefixes of the paths of frames that are collected from now on.
+     */
+    public function setOptions(Options $options): void
+    {
+        $this->options = $options;
+    }
+
+    /**
      * Adds a log entry taken on the given thread. The timestamp of the sample is the
      * number of seconds elapsed since the profiler was started, as reported by Excimer.
      *
