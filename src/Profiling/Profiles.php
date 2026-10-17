@@ -34,7 +34,8 @@ class Profiles
 
     /**
      * Starts the continuous profiler if the "profile_lifecycle" option is set to "manual"
-     * and the profiling session is sampled.
+     * and the profiling session is sampled. It can be started before the SDK is initialized,
+     * the collected samples are then discarded if the client that is bound decides so.
      */
     public function start(): void
     {
@@ -76,10 +77,14 @@ class Profiles
         return $this->continuousProfiler;
     }
 
+    /**
+     * Without a client the lifecycle is not known yet, so the profiler is controlled manually until a client
+     * is bound, which decides whether the collected samples are kept.
+     */
     private function isManualLifecycle(): bool
     {
         $client = SentrySdk::getCurrentHub()->getClient();
 
-        return $client !== null && $client->getOptions()->getProfileLifecycle() === 'manual';
+        return $client === null || $client->getOptions()->getProfileLifecycle() === 'manual';
     }
 }
