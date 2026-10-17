@@ -124,6 +124,7 @@ final class RuntimeContextManager
         }
 
         Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
+        Profiles::getInstance()->continuousProfiler()->capturePendingChunks();
 
         $logger = $this->getLoggerFromHub($runtimeContext->getHub());
 
