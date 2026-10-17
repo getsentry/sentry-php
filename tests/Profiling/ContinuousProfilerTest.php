@@ -493,9 +493,151 @@ final class ContinuousProfilerTest extends TestCase
         $profiler->stop();
     }
 
-    private function bindClient(array $options): void
+    /**
+     * @requires extension excimer
+     */
+    public function testStartWithoutClientKeepsTheSamplesIfTheBoundClientSamplesTheSession(): void
     {
-        SentrySdk::init()->bindClient(new Client(new Options($options), StubTransport::getInstance()));
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        self::busyWait(0.05);
+
+        $bindTimestamp = microtime(true);
+
+        $profiler->onClientBound($this->bindClient(['profile_session_sample_rate' => 1.0]));
+
+        $this->assertTrue($profiler->isRunning());
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $profileChunk = StubTransport::$events[0]->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData(StubTransport::$events[0]);
+
+        $this->assertNotNull($payload);
+        $this->assertLessThan($bindTimestamp, $payload['profile']['samples'][0]['timestamp']);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartWithoutClientDiscardsTheSamplesIfTheBoundClientDoesNotSampleTheSession(): void
+    {
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->onClientBound($this->bindClient(['profile_session_sample_rate' => 0.0]));
+
+        $this->assertFalse($profiler->isRunning());
+
+        $profiler->stop();
+        $profiler->start();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertSame([], StubTransport::$events);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartWithoutClientDiscardsTheSamplesIfTheBoundClientUsesTheTraceLifecycle(): void
+    {
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->onClientBound($this->bindClient([
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]));
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertSame([], StubTransport::$events);
+
+        $profiler->startForRootSpan('566e3688a61d4bc8');
+
+        $this->assertTrue($profiler->isRunning());
+
+        $profiler->stopForRootSpan('566e3688a61d4bc8');
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testChunksFilledBeforeAClientIsBoundAreDropped(): void
+    {
+        $profiler = new ContinuousProfiler(5);
+        $profiler->start();
+
+        self::busyWait(0.2);
+
+        $bindTimestamp = microtime(true);
+
+        $profiler->onClientBound($this->bindClient(['profile_session_sample_rate' => 1.0]));
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $samplesBeforeBind = 0;
+
+        foreach (StubTransport::$events as $event) {
+            $profileChunk = $event->getProfileChunk();
+
+            $this->assertNotNull($profileChunk);
+
+            $payload = $profileChunk->getFormattedData($event);
+
+            $this->assertNotNull($payload);
+
+            foreach ($payload['profile']['samples'] as $sample) {
+                if ($sample['timestamp'] < $bindTimestamp) {
+                    ++$samplesBeforeBind;
+                }
+            }
+        }
+
+        // Only the samples of the chunk that was not full yet when the client was bound are kept
+        $this->assertLessThan(5, $samplesBeforeBind);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSamplesAreNotSentBeforeTheSessionIsDecided(): void
+    {
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        // The client is bound without deciding the session of this profiler
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertSame([], StubTransport::$events);
+    }
+
+    private function bindClient(array $options): Client
+    {
+        $client = new Client(new Options($options), StubTransport::getInstance());
+
+        SentrySdk::init()->bindClient($client);
+
+        return $client;
     }
 
     /**

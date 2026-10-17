@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Sentry\Profiling;
 
+use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Util\SentryUid;
 
@@ -54,7 +56,7 @@ final class ContinuousProfiler
     private $startTimestamp;
 
     /**
-     * @var bool|null
+     * @var bool|null Whether the profiling session is sampled, undecided while a profiler started before a client was bound
      */
     private $sampled;
 
@@ -90,6 +92,11 @@ final class ContinuousProfiler
         $this->threadProvider = self::createThreadProvider();
     }
 
+    /**
+     * The profiler is started even if the SDK is not initialized yet. Once init is called, it will keep or discard
+     * the samples, based on the configured options. Only for manual profiling, `trace` will start with the
+     * transaction anyway.
+     */
     public function start(): void
     {
         $this->restartInForkedProcess();
@@ -99,29 +106,16 @@ final class ContinuousProfiler
         }
 
         $client = SentrySdk::getCurrentHub()->getClient();
-        if ($client === null) {
-            return;
-        }
+        $options = $client !== null ? $client->getOptions() : null;
 
-        $options = $client->getOptions();
-        $logger = $options->getLoggerOrNullLogger();
-
-        if ($options->getProfilesSampleRate() !== null || $options->getProfilesSampler() !== null) {
-            $logger->warning('Continuous profiling is disabled because transaction based profiling is configured with the "profiles_sample_rate" or "profiles_sampler" option.');
-
-            return;
-        }
-
-        if ($this->sampled === null) {
-            $this->sampled = $this->isSessionSampled($options->getProfileSessionSampleRate());
-        }
-
-        if (!$this->sampled) {
+        if ($options !== null && !$this->isSessionEnabled($options)) {
             return;
         }
 
         if (!\extension_loaded('excimer')) {
-            $logger->warning('The continuous profiler was started but is not available because the "excimer" extension is not loaded.');
+            if ($options !== null) {
+                $options->getLoggerOrNullLogger()->warning('The continuous profiler was started but is not available because the "excimer" extension is not loaded.');
+            }
 
             return;
         }
@@ -204,6 +198,31 @@ final class ContinuousProfiler
         if ($released && $this->activeRootSpans === []) {
             $this->stop();
         }
+    }
+
+    /**
+     * Keeps a profiler started before a client was bound running if it is used manually and the
+     * profiling session is sampled, otherwise its samples are discarded.
+     */
+    public function onClientBound(ClientInterface $client): void
+    {
+        if ($this->profiler === null || $this->sampled !== null) {
+            return;
+        }
+
+        $options = $client->getOptions();
+
+        if ($options->getProfileLifecycle() === 'manual' && $this->isSessionEnabled($options)) {
+            if ($this->buffer !== null) {
+                $this->buffer->setOptions($options);
+            }
+
+            return;
+        }
+
+        $this->profiler->stop();
+
+        $this->clearProfiler();
     }
 
     public function stop(): void
@@ -313,7 +332,8 @@ final class ContinuousProfiler
         $profileData = $this->buffer->takeProfileData();
         $sampleCount = \count($profileData->getSamples());
 
-        if ($sampleCount === 0) {
+        // Samples collected before a client was bound are only sent once it decided to keep the session
+        if ($sampleCount === 0 || $this->sampled === null) {
             return;
         }
 
@@ -379,6 +399,24 @@ final class ContinuousProfiler
         }
 
         return new MainThreadProvider();
+    }
+
+    /**
+     * Decides whether the profiling session is sampled, unless continuous profiling is disabled by the options.
+     */
+    private function isSessionEnabled(Options $options): bool
+    {
+        if ($options->getProfilesSampleRate() !== null || $options->getProfilesSampler() !== null) {
+            $options->getLoggerOrNullLogger()->warning('Continuous profiling is disabled because transaction based profiling is configured with the "profiles_sample_rate" or "profiles_sampler" option.');
+
+            return false;
+        }
+
+        if ($this->sampled === null) {
+            $this->sampled = $this->isSessionSampled($options->getProfileSessionSampleRate());
+        }
+
+        return $this->sampled;
     }
 
     private function isSessionSampled(?float $sampleRate): bool
