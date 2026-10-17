@@ -12,6 +12,7 @@ use Sentry\Event;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\Options;
+use Sentry\Profiling\ContinuousProfiler;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
@@ -547,6 +548,38 @@ final class SentrySdkTest extends TestCase
         $this->assertFalse($profiler->isRunning());
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextCapturesTheProfileChunksCompletedWhileSampling(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init()->bindClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = new ContinuousProfiler(5);
+        $previousProfiler = self::replaceContinuousProfiler($profiler);
+
+        try {
+            $profiler->start();
+
+            SentrySdk::startContext();
+
+            self::busyWait(0.2);
+
+            $this->assertSame([], StubTransport::$events);
+
+            SentrySdk::endContext();
+
+            $this->assertTrue($profiler->isRunning());
+            $this->assertGreaterThanOrEqual(2, \count(StubTransport::$events));
+        } finally {
+            $profiler->stop();
+
+            self::replaceContinuousProfiler($previousProfiler);
+        }
+    }
+
     public function testFlushFlushesClientTransport(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -714,6 +747,27 @@ final class SentrySdkTest extends TestCase
             'profile_lifecycle' => 'trace',
             'profile_session_sample_rate' => 1.0,
         ]), StubTransport::getInstance()));
+    }
+
+    /**
+     * Replaces the continuous profiler of the SDK, so that a test can complete chunks quickly, and
+     * returns the previous one.
+     */
+    private static function replaceContinuousProfiler(ContinuousProfiler $continuousProfiler): ContinuousProfiler
+    {
+        $profiles = Profiles::getInstance();
+        $previousContinuousProfiler = $profiles->continuousProfiler();
+
+        $reflectionProperty = new \ReflectionProperty(Profiles::class, 'continuousProfiler');
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
+        $reflectionProperty->setValue($profiles, $continuousProfiler);
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(false);
+        }
+
+        return $previousContinuousProfiler;
     }
 
     private static function busyWait(float $seconds): void

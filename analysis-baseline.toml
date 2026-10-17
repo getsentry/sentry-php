@@ -1066,12 +1066,12 @@ count = 2
 file = "src/Profiling/ContinuousProfiler.php"
 code = "invalid-method-access"
 message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerProfiler)`)."
-count = 3
+count = 4
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-argument"
-message = 'Invalid argument type for argument #1 of `Sentry\Profiling\ContinuousProfiler::captureChunks`: expected `iterable<mixed, unknown-ref(ExcimerLogEntry)>`, but found `mixed`.'
+message = 'Invalid argument type for argument #1 of `Sentry\Profiling\ContinuousProfiler::completeChunks`: expected `iterable<mixed, unknown-ref(ExcimerLogEntry)>`, but found `mixed`.'
 count = 1
 
 [[issues]]
