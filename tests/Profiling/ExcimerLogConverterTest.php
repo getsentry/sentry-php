@@ -229,5 +229,60 @@ final class ExcimerLogConverterTest extends TestCase
                 ]
             ),
         ];
+
+        $frameA = [
+            'file' => '/var/www/html/a.php',
+            'line' => 1,
+            'function' => 'a',
+        ];
+        $frameB = [
+            'file' => '/var/www/html/b.php',
+            'line' => 2,
+            'function' => 'b',
+        ];
+
+        yield 'Stacks are only deduplicated if they contain the same frames in the same order' => [
+            [
+                [
+                    'trace' => [$frameA],
+                    'timestamp' => 0.001,
+                ],
+                [
+                    'trace' => [$frameA, $frameA],
+                    'timestamp' => 0.002,
+                ],
+                [
+                    'trace' => [$frameB, $frameA],
+                    'timestamp' => 0.003,
+                ],
+                [
+                    'trace' => [$frameA, $frameB],
+                    'timestamp' => 0.004,
+                ],
+                [
+                    'trace' => [$frameA],
+                    'timestamp' => 0.005,
+                ],
+            ],
+            new ProfileData(
+                [
+                    new ProfileFrame('/var/www/html/a.php', '/var/www/html/a.php', 'a', null, 1),
+                    new ProfileFrame('/var/www/html/b.php', '/var/www/html/b.php', 'b', null, 2),
+                ],
+                [
+                    [0],
+                    [0, 0],
+                    [1, 0],
+                    [0, 1],
+                ],
+                [
+                    new ProfileSample(0, 0.001),
+                    new ProfileSample(1, 0.002),
+                    new ProfileSample(2, 0.003),
+                    new ProfileSample(3, 0.004),
+                    new ProfileSample(0, 0.005),
+                ]
+            ),
+        ];
     }
 }
