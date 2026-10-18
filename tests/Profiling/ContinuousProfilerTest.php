@@ -649,6 +649,130 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertSame([], StubTransport::$events);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testIdleTimeIsSentAsSampleWithoutStack(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $idleTimestamp = microtime(true);
+        $profiler->markIdle();
+
+        // Excimer records a single sample for the whole time the application is idle
+        usleep(200000);
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $samples = self::getSamplesOfSingleChunk();
+        $idleSampleIndices = array_keys(array_filter($samples, static function (array $sample): bool {
+            return $sample['stack'] === [];
+        }));
+
+        $this->assertCount(1, $idleSampleIndices);
+
+        $idleSample = $samples[$idleSampleIndices[0]];
+        $nextSample = $samples[$idleSampleIndices[0] + 1];
+
+        $this->assertGreaterThanOrEqual($idleTimestamp, $idleSample['timestamp']);
+        $this->assertLessThan($idleTimestamp + 0.1, $idleSample['timestamp']);
+        // The sample taken when the application ran again is not moved back into the idle time
+        $this->assertGreaterThan($idleTimestamp + 0.15, $nextSample['timestamp']);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testIdleTimeLastsUntilTheApplicationIsMarkedBusy(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->markIdle();
+
+        usleep(200000);
+        // Code that runs while the application is idle, e.g. a health check outside of a runtime context
+        self::busyWait(0.02);
+        usleep(200000);
+        self::busyWait(0.02);
+
+        $profiler->markBusy();
+
+        // A wait while the application is busy, e.g. for a database query
+        usleep(200000);
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $idleSamples = array_filter(self::getSamplesOfSingleChunk(), static function (array $sample): bool {
+            return $sample['stack'] === [];
+        });
+
+        $this->assertCount(2, $idleSamples);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testMarkIdleCapturesTheChunksEndingWithTheIdleTime(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(6060, 65.0, 0.05);
+        $profiler->start();
+
+        self::busyWait(0.1);
+
+        $idleTimestamp = microtime(true);
+
+        // The flush interval passed, so the samples are flushed once the idle time is marked
+        $profiler->markIdle();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $samples = self::getSamplesOfSingleChunk();
+        $lastSample = end($samples);
+
+        $this->assertNotFalse($lastSample);
+        $this->assertSame([], $lastSample['stack']);
+        $this->assertGreaterThanOrEqual($idleTimestamp, $lastSample['timestamp']);
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testIdleTimeIsNotSentWhileTheApplicationKeepsRunning(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->markIdle();
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        foreach (self::getSamplesOfSingleChunk() as $sample) {
+            $this->assertNotSame([], $sample['stack']);
+        }
+    }
+
     private function bindClient(array $options): Client
     {
         $client = new Client(new Options($options), StubTransport::getInstance());
@@ -699,6 +823,30 @@ final class ContinuousProfilerTest extends TestCase
     /**
      * @return array<int, string|null>
      */
+    /**
+     * @return array<int, array{stack: int[], timestamp: float}>
+     */
+    private static function getSamplesOfSingleChunk(): array
+    {
+        self::assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $profileChunk = $event->getProfileChunk();
+
+        self::assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData($event);
+
+        self::assertNotNull($payload);
+
+        return array_map(static function (array $sample) use ($payload): array {
+            return [
+                'stack' => $payload['profile']['stacks'][$sample['stack_id']],
+                'timestamp' => $sample['timestamp'],
+            ];
+        }, $payload['profile']['samples']);
+    }
+
     private static function getChunkProfilerIds(): array
     {
         return array_map(static function (Event $event): ?string {

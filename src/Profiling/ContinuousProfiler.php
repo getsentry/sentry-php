@@ -12,6 +12,8 @@ use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
 /**
+ * @phpstan-import-type ExcimerLogStackEntry from ExcimerLogConverter
+ *
  * @internal
  */
 final class ContinuousProfiler
@@ -72,6 +74,12 @@ final class ContinuousProfiler
      * @var float
      */
     private $nextFlushTimestamp = 0.0;
+
+    /**
+     * @var array<int, array{float, float|null}> The start and end of the times the application was idle, as seconds since
+     *                                           the start of the running profiler, without an end while it is still idle
+     */
+    private $idlePeriods = [];
 
     /**
      * @var bool|null Whether the profiling session is sampled, undecided while a profiler started before a client was bound
@@ -298,6 +306,51 @@ final class ContinuousProfiler
         }
     }
 
+    /**
+     * Marks that the application became idle, e.g. a worker waiting for the next request, until it is marked busy
+     * again. The time no code runs in between is sent as idle instead of being attributed to the stack of the next
+     * sample, e.g. a health check that runs while the application is idle.
+     *
+     * The pending chunks are captured afterwards, so that their samples end with the idle time. Otherwise, a long
+     * idle time could not be added to a chunk, as the next sample is too far away to share one.
+     */
+    public function markIdle(): void
+    {
+        $this->restartInForkedProcess();
+
+        if ($this->startTimestamp === null) {
+            return;
+        }
+
+        $idleTimestamp = microtime(true) - $this->startTimestamp;
+        $lastIndex = \count($this->idlePeriods) - 1;
+
+        // Within a busy time shorter than a tick, no sample can cover several ticks, so the idle time continues
+        if ($lastIndex >= 0 && ($this->idlePeriods[$lastIndex][1] === null || $idleTimestamp - $this->idlePeriods[$lastIndex][1] < self::SAMPLE_RATE)) {
+            $this->idlePeriods[$lastIndex][1] = null;
+        } else {
+            $this->idlePeriods[] = [$idleTimestamp, null];
+        }
+
+        $this->capturePendingChunks();
+    }
+
+    /**
+     * Marks that the application is busy again, e.g. a worker that starts handling a request.
+     */
+    public function markBusy(): void
+    {
+        $this->restartInForkedProcess();
+
+        $lastIndex = \count($this->idlePeriods) - 1;
+
+        if ($this->startTimestamp === null || $lastIndex < 0 || $this->idlePeriods[$lastIndex][1] !== null) {
+            return;
+        }
+
+        $this->idlePeriods[$lastIndex][1] = microtime(true) - $this->startTimestamp;
+    }
+
     public function isRunning(): bool
     {
         return $this->profiler !== null;
@@ -324,12 +377,19 @@ final class ContinuousProfiler
     private function completeChunks(iterable $entries): void
     {
         $chunkEntries = [];
+        $chunkStartTimestamp = 0.0;
 
-        foreach ($entries as $entry) {
-            if ($chunkEntries !== [] && $entry->getTimestamp() - $chunkEntries[0]->getTimestamp() >= $this->maxChunkDuration) {
+        foreach ($this->addIdleSamples($entries) as $entry) {
+            $timestamp = $entry instanceof \ExcimerLogEntry ? $entry->getTimestamp() : $entry['timestamp'];
+
+            if ($chunkEntries !== [] && $timestamp - $chunkStartTimestamp >= $this->maxChunkDuration) {
                 $this->completeChunk($chunkEntries);
 
                 $chunkEntries = [];
+            }
+
+            if ($chunkEntries === []) {
+                $chunkStartTimestamp = $timestamp;
             }
 
             $chunkEntries[] = $entry;
@@ -339,7 +399,66 @@ final class ContinuousProfiler
     }
 
     /**
-     * @param \ExcimerLogEntry[] $entries
+     * Excimer only samples while code runs, so it records the ticks of an idle application with the next sample.
+     * A sample without a stack is added before such a sample taken while the application was idle, at the first of
+     * its ticks, as well as after the last sample if the application became idle since then.
+     *
+     * @param iterable<\ExcimerLogEntry> $entries
+     *
+     * @return array<int, \ExcimerLogEntry|ExcimerLogStackEntry>
+     */
+    private function addIdleSamples(iterable $entries): array
+    {
+        $entriesWithIdleSamples = [];
+        $idleIndex = 0;
+        $previousTimestamp = null;
+
+        foreach ($entries as $entry) {
+            $timestamp = $entry->getTimestamp();
+            $eventCount = $entry->getEventCount();
+
+            while (isset($this->idlePeriods[$idleIndex]) && $this->idlePeriods[$idleIndex][1] !== null && $this->idlePeriods[$idleIndex][1] < $timestamp) {
+                ++$idleIndex;
+            }
+
+            $idlePeriod = $this->idlePeriods[$idleIndex] ?? null;
+
+            if ($idlePeriod !== null && $idlePeriod[0] <= $timestamp && $eventCount > 1) {
+                if ($previousTimestamp !== null) {
+                    // The ticks fired evenly since the previous sample, so the first one fired one tick after it
+                    $firstTickTimestamp = $previousTimestamp + ($timestamp - $previousTimestamp) / $eventCount;
+                } else {
+                    // Without a previous sample, the ticks fired one sample period apart until this sample
+                    $firstTickTimestamp = $timestamp - ($eventCount - 1) * self::SAMPLE_RATE;
+                }
+
+                // The idle sample starts at the first tick, or when the application became idle if that was later
+                $entriesWithIdleSamples[] = ['trace' => [], 'timestamp' => max($idlePeriod[0], $firstTickTimestamp)];
+            }
+
+            $entriesWithIdleSamples[] = $entry;
+            $previousTimestamp = $timestamp;
+        }
+
+        $lastIdlePeriod = $this->idlePeriods[\count($this->idlePeriods) - 1] ?? null;
+
+        // The application became idle after the last sample, so the samples end with the idle time
+        if ($lastIdlePeriod !== null && $previousTimestamp !== null && $lastIdlePeriod[0] > $previousTimestamp) {
+            $entriesWithIdleSamples[] = ['trace' => [], 'timestamp' => $lastIdlePeriod[0]];
+        }
+
+        // Only the idle time that did not end yet matters for the next samples
+        $this->idlePeriods = [];
+
+        if ($lastIdlePeriod !== null && $lastIdlePeriod[1] === null) {
+            $this->idlePeriods[] = $lastIdlePeriod;
+        }
+
+        return $entriesWithIdleSamples;
+    }
+
+    /**
+     * @param array<int, \ExcimerLogEntry|ExcimerLogStackEntry> $entries
      */
     private function completeChunk(array $entries): void
     {
@@ -347,7 +466,10 @@ final class ContinuousProfiler
             return;
         }
 
-        $sampleCount = \count($entries);
+        // Like Relay, only the samples with a stack are counted
+        $sampleCount = \count(array_filter($entries, static function ($entry): bool {
+            return $entry instanceof \ExcimerLogEntry;
+        }));
 
         // Samples collected before a client was bound are only sent once it decided to keep the session
         if ($sampleCount === 0 || $this->sampled === null) {
@@ -381,6 +503,7 @@ final class ContinuousProfiler
         $this->profilerId = null;
         $this->processId = null;
         $this->startTimestamp = null;
+        $this->idlePeriods = [];
 
         // A forked process inherits the completed chunks, which the parent process captures itself
         $this->pendingChunks->drain();

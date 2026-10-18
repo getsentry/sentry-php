@@ -580,6 +580,168 @@ final class SentrySdkTest extends TestCase
         }
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextMarksTheProfilerIdleOnceNoOtherContextIsActive(): void
+    {
+        StubTransport::$events = [];
+
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+        SentrySdk::init()->bindClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = new ContinuousProfiler();
+        $previousProfiler = self::replaceContinuousProfiler($profiler);
+
+        try {
+            $profiler->start();
+
+            $storage->switchTo('first');
+            SentrySdk::startContext();
+
+            $storage->switchTo('second');
+            SentrySdk::startContext();
+
+            $storage->switchTo('first');
+            SentrySdk::endContext();
+
+            // The second context is still active, e.g. waiting for a database query
+            usleep(200000);
+            self::busyWait(0.05);
+
+            $idleTimestamp = microtime(true);
+
+            $storage->switchTo('second');
+            SentrySdk::endContext();
+
+            // No code runs until the next context starts
+            usleep(200000);
+            self::busyWait(0.05);
+        } finally {
+            $profiler->stop();
+
+            self::replaceContinuousProfiler($previousProfiler);
+        }
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $profileChunk = $event->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+
+        $idleSamples = array_values(array_filter($payload['profile']['samples'], static function (array $sample) use ($payload): bool {
+            return $payload['profile']['stacks'][$sample['stack_id']] === [];
+        }));
+
+        $this->assertCount(1, $idleSamples);
+        $this->assertGreaterThanOrEqual($idleTimestamp, $idleSamples[0]['timestamp']);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartContextEndsTheIdleTimeOfTheProfiler(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init()->bindClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = new ContinuousProfiler();
+        $previousProfiler = self::replaceContinuousProfiler($profiler);
+
+        try {
+            $profiler->start();
+
+            SentrySdk::startContext();
+            self::busyWait(0.05);
+            SentrySdk::endContext();
+
+            // A health check that runs without a runtime context while the worker is idle
+            usleep(200000);
+            self::busyWait(0.02);
+            usleep(200000);
+            self::busyWait(0.02);
+
+            SentrySdk::startContext();
+
+            // A wait while handling the request, e.g. for a database query
+            usleep(200000);
+            self::busyWait(0.05);
+        } finally {
+            $profiler->stop();
+
+            self::replaceContinuousProfiler($previousProfiler);
+        }
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $profileChunk = $event->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+
+        $idleSamples = array_filter($payload['profile']['samples'], static function (array $sample) use ($payload): bool {
+            return $payload['profile']['stacks'][$sample['stack_id']] === [];
+        });
+
+        // The waits before and after the health check are idle, the wait while handling the request is not
+        $this->assertCount(2, $idleSamples);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextCapturesTheProfileChunksAfterMarkingTheProfilerIdle(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init()->bindClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = new ContinuousProfiler(6060, 65.0, 0.05);
+        $previousProfiler = self::replaceContinuousProfiler($profiler);
+
+        try {
+            $profiler->start();
+
+            SentrySdk::startContext();
+
+            self::busyWait(0.1);
+
+            SentrySdk::endContext();
+
+            $this->assertCount(1, StubTransport::$events);
+        } finally {
+            $profiler->stop();
+
+            self::replaceContinuousProfiler($previousProfiler);
+        }
+
+        $event = StubTransport::$events[0];
+        $profileChunk = $event->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData($event);
+
+        $this->assertNotNull($payload);
+
+        // The chunk ends with the idle time, as the next sample can be too far away to share a chunk with it
+        $lastSample = end($payload['profile']['samples']);
+
+        $this->assertNotFalse($lastSample);
+        $this->assertSame([], $payload['profile']['stacks'][$lastSample['stack_id']]);
+    }
+
     public function testFlushFlushesClientTransport(): void
     {
         /** @var ClientInterface&MockObject $client */

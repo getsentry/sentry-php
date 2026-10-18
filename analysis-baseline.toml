@@ -1088,9 +1088,21 @@ count = 6
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
+code = "less-specific-nested-return-statement"
+message = '''Returned type `list<array{'timestamp': mixed, 'trace': array{}}|unknown-ref(ExcimerLogEntry)>` is less specific than the declared return type `array<int, array{'event_count'?: int, 'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}|unknown-ref(ExcimerLogEntry)>` for function `Sentry\Profiling\ContinuousProfiler::addIdleSamples` due to nested 'mixed'.'''
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #1 of `Sentry\Profiling\ContinuousProfiler::completeChunks`: expected `iterable<mixed, unknown-ref(ExcimerLogEntry)>`, but found `mixed`.'
 count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 6
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
@@ -1101,14 +1113,38 @@ count = 1
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-operand"
+message = "Left operand in `>` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
 message = "Left operand in binary operation has type `mixed`."
+count = 7
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
+message = "Right operand in `<=` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
+message = "Right operand in `<` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
+message = "Right operand in `>` comparison has `mixed` type."
 count = 1
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
 code = "mixed-operand"
 message = "Right operand in binary operation has type `mixed`."
-count = 1
+count = 5
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
@@ -1120,7 +1156,7 @@ count = 1
 file = "src/Profiling/ContinuousProfiler.php"
 code = "non-existent-class-like"
 message = "Cannot find class, interface, enum, or type alias `ExcimerLogEntry`."
-count = 2
+count = 4
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
@@ -1130,8 +1166,20 @@ count = 1
 
 [[issues]]
 file = "src/Profiling/ContinuousProfiler.php"
+code = "non-existent-class-like"
+message = "Class, Interface, or Trait `ExcimerLogEntry` does not exist."
+count = 2
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
 code = "non-existent-constant"
 message = "Undefined constant: `EXCIMER_REAL`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "possibly-invalid-array-access"
+message = "Cannot perform array access on value of type `unknown-ref(ExcimerLogEntry)`."
 count = 1
 
 [[issues]]
