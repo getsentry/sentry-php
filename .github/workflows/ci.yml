@@ -43,6 +43,10 @@ jobs:
         dependencies:
           - lowest
           - highest
+        # Excimer is not available on Windows
+        include:
+          - os: ubuntu-latest
+            extensions: excimer
 
     steps:
       - name: Checkout
@@ -55,6 +59,7 @@ jobs:
         with:
           php-version: ${{ matrix.php.version }}
           coverage: xdebug
+          extensions: ${{ matrix.extensions }}
 
       - name: Setup Problem Matchers for PHPUnit
         run: echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
