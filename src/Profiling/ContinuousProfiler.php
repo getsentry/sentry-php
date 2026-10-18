@@ -7,6 +7,7 @@ namespace Sentry\Profiling;
 use Sentry\Event;
 use Sentry\SentrySdk;
 use Sentry\Util\SentryUid;
+use Sentry\Util\TelemetryStorage;
 
 /**
  * @internal
@@ -35,6 +36,17 @@ final class ContinuousProfiler
     private const MAX_CHUNK_DURATION = 65.0;
 
     /**
+     * @var int
+     */
+    private const MAX_PENDING_CHUNKS = 10;
+
+    /**
+     * @var float The time in seconds after which the samples are flushed when capturing the pending chunks, shorter than
+     *            the maximum duration of a chunk, so that they fit into one chunk
+     */
+    private const FLUSH_INTERVAL = 60.0;
+
+    /**
      * @var \ExcimerProfiler|null
      */
     private $profiler;
@@ -50,6 +62,11 @@ final class ContinuousProfiler
     private $startTimestamp;
 
     /**
+     * @var float
+     */
+    private $nextFlushTimestamp = 0.0;
+
+    /**
      * @var bool|null
      */
     private $sampled;
@@ -58,6 +75,11 @@ final class ContinuousProfiler
      * @var array<string, string> The runtime context IDs of the sampled root spans the profiler is running for, keyed by span ID
      */
     private $activeRootSpans = [];
+
+    /**
+     * @var TelemetryStorage<ProfileChunk>
+     */
+    private $pendingChunks;
 
     /**
      * @var int
@@ -69,10 +91,20 @@ final class ContinuousProfiler
      */
     private $maxChunkDuration;
 
-    public function __construct(int $maxSamplesPerChunk = self::MAX_SAMPLES_PER_CHUNK, float $maxChunkDuration = self::MAX_CHUNK_DURATION)
+    /**
+     * @var float
+     */
+    private $flushInterval;
+
+    public function __construct(int $maxSamplesPerChunk = self::MAX_SAMPLES_PER_CHUNK, float $maxChunkDuration = self::MAX_CHUNK_DURATION, float $flushInterval = self::FLUSH_INTERVAL)
     {
+        /** @var TelemetryStorage<ProfileChunk> $pendingChunks */
+        $pendingChunks = TelemetryStorage::bounded(self::MAX_PENDING_CHUNKS);
+
         $this->maxSamplesPerChunk = $maxSamplesPerChunk;
         $this->maxChunkDuration = $maxChunkDuration;
+        $this->flushInterval = $flushInterval;
+        $this->pendingChunks = $pendingChunks;
     }
 
     public function start(): void
@@ -118,14 +150,16 @@ final class ContinuousProfiler
         $profiler->setPeriod(self::SAMPLE_RATE);
         $profiler->setMaxDepth(self::MAX_STACK_DEPTH);
         $profiler->setFlushCallback(function ($excimerLog): void {
+            $this->nextFlushTimestamp = microtime(true) + $this->flushInterval;
+
             // The callback runs while sampling the application, so nothing may be thrown into the application code
             try {
-                $this->captureChunks($excimerLog);
+                $this->completeChunks($excimerLog);
             } catch (\Throwable $exception) {
                 $client = SentrySdk::getCurrentHub()->getClient();
 
                 if ($client !== null) {
-                    $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunk.', ['exception' => $exception]);
+                    $client->getOptions()->getLoggerOrNullLogger()->error('Failed to complete the profile chunks.', ['exception' => $exception]);
                 }
             }
         }, $this->maxSamplesPerChunk);
@@ -133,6 +167,7 @@ final class ContinuousProfiler
         $this->profiler = $profiler;
         $this->profilerId = $profilerId;
         $this->startTimestamp = $startTimestamp;
+        $this->nextFlushTimestamp = $startTimestamp + $this->flushInterval;
 
         $profiler->start();
     }
@@ -193,6 +228,8 @@ final class ContinuousProfiler
         // Passes the remaining samples to the flush callback
         $this->profiler->flush();
 
+        $this->capturePendingChunks();
+
         $this->profiler = null;
         $this->profilerId = null;
         $this->startTimestamp = null;
@@ -206,6 +243,30 @@ final class ContinuousProfiler
         }
 
         $this->profiler->flush();
+
+        $this->capturePendingChunks();
+    }
+
+    public function capturePendingChunks(): void
+    {
+        if ($this->profiler !== null && microtime(true) >= $this->nextFlushTimestamp) {
+            $this->profiler->flush();
+        }
+
+        if ($this->pendingChunks->isEmpty()) {
+            return;
+        }
+
+        $profileChunks = $this->pendingChunks->drain();
+        $client = SentrySdk::getCurrentHub()->getClient();
+
+        if ($client === null) {
+            return;
+        }
+
+        foreach ($profileChunks as $profileChunk) {
+            $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+        }
     }
 
     public function isRunning(): bool
@@ -225,13 +286,13 @@ final class ContinuousProfiler
      *
      * @param iterable<\ExcimerLogEntry> $entries
      */
-    private function captureChunks(iterable $entries): void
+    private function completeChunks(iterable $entries): void
     {
         $chunkEntries = [];
 
         foreach ($entries as $entry) {
             if ($chunkEntries !== [] && $entry->getTimestamp() - $chunkEntries[0]->getTimestamp() >= $this->maxChunkDuration) {
-                $this->captureChunk($chunkEntries);
+                $this->completeChunk($chunkEntries);
 
                 $chunkEntries = [];
             }
@@ -239,13 +300,13 @@ final class ContinuousProfiler
             $chunkEntries[] = $entry;
         }
 
-        $this->captureChunk($chunkEntries);
+        $this->completeChunk($chunkEntries);
     }
 
     /**
      * @param \ExcimerLogEntry[] $entries
      */
-    private function captureChunk(array $entries): void
+    private function completeChunk(array $entries): void
     {
         if ($this->profilerId === null || $this->startTimestamp === null) {
             return;
@@ -270,9 +331,7 @@ final class ContinuousProfiler
 
         $profileData = ExcimerLogConverter::convert($entries, $client->getOptions());
 
-        $profileChunk = new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions());
-
-        $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+        $this->pendingChunks->push(new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions()));
     }
 
     private function isSessionSampled(?float $sampleRate): bool
