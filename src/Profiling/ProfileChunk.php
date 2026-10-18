@@ -67,7 +67,7 @@ final class ProfileChunk
     /**
      * @var int we need at least 2 samples otherwise the event is dropped
      */
-    private const MIN_SAMPLE_COUNT = 2;
+    public const MIN_SAMPLE_COUNT = 2;
 
     /**
      * @var string

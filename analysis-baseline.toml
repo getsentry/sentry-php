@@ -1051,6 +1051,66 @@ message = "A value of a less specific type `array<array-key, mixed>` is being as
 count = 55
 
 [[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "invalid-argument"
+message = '''Invalid argument type for argument #1 of `Sentry\Profiling\ExcimerLogConverter::convert`: expected `iterable<mixed, array{'event_count'?: int, 'timestamp': float, 'trace': array<int, array{'class'?: string, 'closure_line'?: int, 'file': string, 'function'?: string, 'line': int}>}|unknown-ref(ExcimerLogEntry)>`, but found `unknown-ref(ExcimerLog)`.'''
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerLog)`)."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "invalid-method-access"
+message = "Attempting to access a method on a non-object type (`unknown-ref(ExcimerProfiler)`)."
+count = 2
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-argument"
+message = 'Invalid argument type for argument #3 of `Sentry\Profiling\ContinuousProfiler::captureChunk`: expected `unknown-ref(ExcimerLog)`, but found `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "mixed-operand"
+message = "Left operand in `<` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "non-existent-class"
+message = "Class `ExcimerProfiler` not found."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "non-existent-class-like"
+message = "Cannot find class, interface, enum, or type alias `ExcimerLog`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "non-existent-class-like"
+message = "Cannot find class, interface, enum, or type alias `ExcimerProfiler`."
+count = 1
+
+[[issues]]
+file = "src/Profiling/ContinuousProfiler.php"
+code = "non-existent-constant"
+message = "Undefined constant: `EXCIMER_REAL`."
+count = 1
+
+[[issues]]
 file = "src/Profiling/ExcimerLogConverter.php"
 code = "invalid-iterator"
 message = "The expression provided to `foreach` is not iterable. It resolved to type `mixed`, which is not iterable."
