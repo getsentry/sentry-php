@@ -41,6 +41,11 @@ final class RuntimeContextManager
      */
     private $runtimeContextStorage;
 
+    /**
+     * @var int The number of started runtime contexts that were not ended yet
+     */
+    private $activeContextCount = 0;
+
     public function __construct(HubInterface $baseHub, ?RuntimeContextStorageInterface $runtimeContextStorage = null)
     {
         $this->baseHub = $baseHub;
@@ -105,6 +110,13 @@ final class RuntimeContextManager
 
         $this->setActiveContext(new RuntimeContext($this->generateRuntimeContextId(), $hub ?? $this->createHubFromBaseHub()));
 
+        ++$this->activeContextCount;
+
+        // The first active context ends the idle time, which started when the last one ended
+        if ($this->activeContextCount === 1) {
+            Profiles::getInstance()->continuousProfiler()->markBusy();
+        }
+
         return true;
     }
 
@@ -123,12 +135,23 @@ final class RuntimeContextManager
             return;
         }
 
+        $this->activeContextCount = max(0, $this->activeContextCount - 1);
+
         Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
-        Profiles::getInstance()->continuousProfiler()->capturePendingChunks();
+
+        // Without another active context, the profiler captures its chunks once it marked the idle time below
+        if ($this->activeContextCount > 0) {
+            Profiles::getInstance()->continuousProfiler()->capturePendingChunks();
+        }
 
         $logger = $this->getLoggerFromHub($runtimeContext->getHub());
 
         $this->flushRuntimeContextResources($runtimeContext, $timeout, $logger);
+
+        // Without another active context, the application is idle until the next one starts, e.g. a worker waiting for the next request
+        if ($this->activeContextCount === 0) {
+            Profiles::getInstance()->continuousProfiler()->markIdle();
+        }
     }
 
     /**

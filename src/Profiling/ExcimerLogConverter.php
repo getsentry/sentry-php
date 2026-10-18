@@ -118,7 +118,8 @@ final class ExcimerLogConverter
 
             $samples[] = new ProfileSample($stackIndex, $sampleTimestamp);
 
-            $previousTimestamp = $timestamp;
+            // A sample without a stack marks idle time, so the ticks of the next sample were idle and it is not moved
+            $previousTimestamp = $trace === [] ? null : $timestamp;
         }
 
         return new ProfileData($frames, $stacks, $samples);
