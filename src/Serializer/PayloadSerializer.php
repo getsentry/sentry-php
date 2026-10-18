@@ -13,6 +13,7 @@ use Sentry\Serializer\EnvelopItems\ClientReportItem;
 use Sentry\Serializer\EnvelopItems\EventItem;
 use Sentry\Serializer\EnvelopItems\LogsItem;
 use Sentry\Serializer\EnvelopItems\MetricsItem;
+use Sentry\Serializer\EnvelopItems\ProfileChunkItem;
 use Sentry\Serializer\EnvelopItems\ProfileItem;
 use Sentry\Serializer\EnvelopItems\TransactionItem;
 use Sentry\Tracing\DynamicSamplingContext;
@@ -90,6 +91,9 @@ final class PayloadSerializer implements PayloadSerializerInterface
                 break;
             case EventType::metrics():
                 $items[] = MetricsItem::toEnvelopeItem($event);
+                break;
+            case EventType::profileChunk():
+                $items[] = ProfileChunkItem::toEnvelopeItem($event);
                 break;
             case EventType::clientReport():
                 $items[] = ClientReportItem::toEnvelopeItem($event);
