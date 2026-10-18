@@ -39,7 +39,7 @@ final class ExcimerLogConverter
     public static function convert(iterable $entries, ?Options $options = null): ProfileData
     {
         $frames = [];
-        // 2D array where the first key is the file and the second is the line
+        // 4D array keyed by file, line, class and function, as different functions can share a line (e.g. closures)
         $frameIndices = [];
 
         $stacks = [];
@@ -65,8 +65,10 @@ final class ExcimerLogConverter
             foreach ($trace as $frame) {
                 $absolutePath = $frame['file'];
                 $lineno = $frame['line'];
+                $className = $frame['class'] ?? '';
+                $functionName = $frame['function'] ?? '';
 
-                $frameIndex = $frameIndices[$absolutePath][$lineno] ?? null;
+                $frameIndex = $frameIndices[$absolutePath][$lineno][$className][$functionName] ?? null;
 
                 if ($frameIndex === null) {
                     $file = self::stripPrefixFromFilePath($options, $absolutePath);
@@ -87,7 +89,7 @@ final class ExcimerLogConverter
                     }
 
                     $frameIndex = \count($frames);
-                    $frameIndices[$absolutePath][$lineno] = $frameIndex;
+                    $frameIndices[$absolutePath][$lineno][$className][$functionName] = $frameIndex;
                     $frames[] = new ProfileFrame($absolutePath, $file, $function, $module, $lineno);
                 }
 
