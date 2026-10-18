@@ -239,6 +239,37 @@ final class HubTest extends TestCase
     }
 
     /**
+     * @requires extension excimer
+     */
+    public function testBindClientStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $hub = new Hub();
+        $hub->bindClient(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testConstructorStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        new Hub(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
      * @dataProvider captureMessageDataProvider
      */
     public function testCaptureMessage(array $functionCallArgs, array $expectedFunctionCallArgs, PropagationContext $propagationContext): void

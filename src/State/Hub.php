@@ -47,6 +47,10 @@ class Hub implements HubInterface
     public function __construct(?ClientInterface $client = null, ?Scope $scope = null)
     {
         $this->stack[] = new Layer($client, $scope ?? new Scope());
+
+        if ($client !== null) {
+            Profiles::getInstance()->continuousProfiler()->onClientBound($client);
+        }
     }
 
     /**
@@ -118,6 +122,8 @@ class Hub implements HubInterface
     {
         $layer = $this->getStackTop();
         $layer->setClient($client);
+
+        Profiles::getInstance()->continuousProfiler()->onClientBound($client);
     }
 
     /**
