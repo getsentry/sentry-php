@@ -57,6 +57,11 @@ final class ContinuousProfiler
     private $profilerId;
 
     /**
+     * @var int|false|null The ID of the process the running profiler samples
+     */
+    private $processId;
+
+    /**
      * @var float|null The start time of the running profiler as a Unix timestamp with microseconds
      */
     private $startTimestamp;
@@ -109,6 +114,8 @@ final class ContinuousProfiler
 
     public function start(): void
     {
+        $this->restartInForkedProcess();
+
         if ($this->profiler !== null) {
             return;
         }
@@ -166,6 +173,7 @@ final class ContinuousProfiler
 
         $this->profiler = $profiler;
         $this->profilerId = $profilerId;
+        $this->processId = getmypid();
         $this->startTimestamp = $startTimestamp;
         $this->nextFlushTimestamp = $startTimestamp + $this->flushInterval;
 
@@ -219,6 +227,8 @@ final class ContinuousProfiler
 
     public function stop(): void
     {
+        $this->restartInForkedProcess();
+
         if ($this->profiler === null) {
             return;
         }
@@ -230,14 +240,15 @@ final class ContinuousProfiler
 
         $this->capturePendingChunks();
 
-        $this->profiler = null;
-        $this->profilerId = null;
-        $this->startTimestamp = null;
+        $this->clearProfiler();
+
         $this->activeRootSpans = [];
     }
 
     public function flush(): void
     {
+        $this->restartInForkedProcess();
+
         if ($this->profiler === null) {
             return;
         }
@@ -249,6 +260,8 @@ final class ContinuousProfiler
 
     public function capturePendingChunks(): void
     {
+        $this->restartInForkedProcess();
+
         if ($this->profiler !== null && microtime(true) >= $this->nextFlushTimestamp) {
             $this->profiler->flush();
         }
@@ -274,8 +287,14 @@ final class ContinuousProfiler
         return $this->profiler !== null;
     }
 
+    /**
+     * Gets the ID of the running profiler, which is restarted first if the process was forked,
+     * so that spans created in the forked process are linked to the profiler sampling it.
+     */
     public function getProfilerId(): ?string
     {
+        $this->restartInForkedProcess();
+
         return $this->profilerId;
     }
 
@@ -332,6 +351,46 @@ final class ContinuousProfiler
         $profileData = ExcimerLogConverter::convert($entries, $client->getOptions());
 
         $this->pendingChunks->push(new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions()));
+    }
+
+    private function clearProfiler(): void
+    {
+        // Clear the flush callback so that the samples are discarded
+        if ($this->profiler !== null) {
+            $this->profiler->clearFlushCallback();
+        }
+
+        $this->profiler = null;
+        $this->profilerId = null;
+        $this->processId = null;
+        $this->startTimestamp = null;
+
+        // A forked process inherits the completed chunks, which the parent process captures itself
+        $this->pendingChunks->drain();
+    }
+
+    /**
+     * Excimer does not sample in a forked process, so the profiler inherited from the parent process
+     * is replaced by a new one sampling this process, while the parent process keeps its own samples.
+     */
+    private function restartInForkedProcess(): void
+    {
+        if ($this->profiler === null || $this->processId === getmypid()) {
+            return;
+        }
+
+        // The timer of the inherited profiler does not exist in this process, so tearing it down emits warnings
+        set_error_handler(static function (): bool {
+            return true;
+        });
+
+        try {
+            $this->clearProfiler();
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->start();
     }
 
     private function isSessionSampled(?float $sampleRate): bool
