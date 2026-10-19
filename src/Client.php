@@ -285,6 +285,14 @@ class Client implements ClientInterface
      */
     private function prepareEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?Event
     {
+        $sampleRate = $this->options->getSampleRate();
+
+        if (EventType::event() === $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $this->getEventDescription($event)), ['event' => $event]);
+
+            return null;
+        }
+
         if ($hint !== null) {
             if ($hint->exception !== null && empty($event->getExceptions())) {
                 $this->addThrowableToEvent($event, $hint->exception, $hint);
@@ -314,22 +322,7 @@ class Client implements ClientInterface
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
-        $eventDescription = \sprintf(
-            '%s%s [%s]',
-            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
-            (string) $event->getType(),
-            (string) $event->getId()
-        );
-
-        $isEvent = EventType::event() === $event->getType();
-        $sampleRate = $this->options->getSampleRate();
-
-        // only sample with the `sample_rate` on errors/messages
-        if ($isEvent && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-            $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $eventDescription), ['event' => $event]);
-
-            return null;
-        }
+        $eventDescription = $this->getEventDescription($event);
 
         $event = $this->applyIgnoreOptions($event, $eventDescription);
 
@@ -366,6 +359,16 @@ class Client implements ClientInterface
         }
 
         return $event;
+    }
+
+    private function getEventDescription(Event $event): string
+    {
+        return \sprintf(
+            '%s%s [%s]',
+            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
+            (string) $event->getType(),
+            (string) $event->getId()
+        );
     }
 
     /**
@@ -525,6 +528,11 @@ class Client implements ClientInterface
     private function addMissingStacktraceToEvent(Event $event): void
     {
         if (!$this->options->shouldAttachStacktrace()) {
+            return;
+        }
+
+        // Only error events carry a stacktrace, for any other type it would be discarded
+        if ($event->getType() !== EventType::event()) {
             return;
         }
 
