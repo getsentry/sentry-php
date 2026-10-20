@@ -1611,7 +1611,7 @@ final class Options
                 continue;
             }
 
-            if (!\is_array($statusCodes[$key]) || !self::isStatusCodeRange($statusCodes[$key])) {
+            if (!self::isStatusCodeRange($statusCodes[$key])) {
                 return false;
             }
         }
@@ -1622,11 +1622,12 @@ final class Options
     /**
      * Checks whether the given value is an inclusive `[min, max]` range of status codes.
      *
-     * @param mixed[] $range The value to check
+     * @param mixed $range The value to check
      */
-    private static function isStatusCodeRange(array $range): bool
+    private static function isStatusCodeRange($range): bool
     {
-        return array_keys($range) === [0, 1]
+        return \is_array($range)
+            && array_keys($range) === [0, 1]
             && \is_int($range[0])
             && \is_int($range[1])
             && $range[0] <= $range[1];

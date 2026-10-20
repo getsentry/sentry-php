@@ -437,19 +437,14 @@ class Client implements ClientInterface
      */
     private function getTransactionHttpStatusCode(Event $event): ?int
     {
-        $contexts = $event->getContexts();
+        $traceData = $event->getContexts()['trace']['data'] ?? null;
+        $statusCode = \is_array($traceData) ? $traceData['http.response.status_code'] ?? null : null;
 
-        if (!isset($contexts['trace']['data']) || !\is_array($contexts['trace']['data'])) {
-            return null;
+        if (\is_int($statusCode)) {
+            return $statusCode;
         }
 
-        $traceData = $contexts['trace']['data'];
-
-        if (!isset($traceData['http.response.status_code']) || !\is_int($traceData['http.response.status_code'])) {
-            return null;
-        }
-
-        return $traceData['http.response.status_code'];
+        return null;
     }
 
     /**
@@ -469,7 +464,7 @@ class Client implements ClientInterface
 
             [$min, $max] = $ignoredStatusCode;
 
-            if ($statusCode >= $min && $statusCode <= $max) {
+            if ($min <= $statusCode && $statusCode <= $max) {
                 return true;
             }
         }
