@@ -31,6 +31,11 @@ class DataCategory
         return self::getInstance('transaction');
     }
 
+    public static function span(): self
+    {
+        return self::getInstance('span');
+    }
+
     // TODO: not sure if this should be called monitor or checkIn.
     public static function checkIn(): self
     {
@@ -52,9 +57,19 @@ class DataCategory
         return self::getInstance('profile');
     }
 
+    public static function attachment(): self
+    {
+        return self::getInstance('attachment');
+    }
+
     public static function metric(): self
     {
         return self::getInstance('trace_metric');
+    }
+
+    public static function metricBytes(): self
+    {
+        return self::getInstance('trace_metric_byte');
     }
 
     public static function internal(): self

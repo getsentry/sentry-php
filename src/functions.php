@@ -80,6 +80,7 @@ use Sentry\Transport\TransportInterface;
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
+ *     send_client_reports?: bool,
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,

@@ -487,6 +487,12 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: '#^Method Sentry\\Options\:\:shouldSendClientReports\(\) should return bool but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Options.php
+
+		-
 			message: '#^Method Sentry\\Options\:\:shouldSendDefaultPii\(\) should return bool but returns mixed\.$#'
 			identifier: return.type
 			count: 1

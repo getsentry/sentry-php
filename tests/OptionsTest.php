@@ -380,6 +380,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'send_client_reports',
+            false,
+            'shouldSendClientReports',
+            'setSendClientReports',
+        ];
+
+        yield [
             'data_collection',
             (new DataCollectionOptions())->setUserInfo(false),
             'getDataCollection',
@@ -635,6 +642,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'send_client_reports' => true,
             'data_collection' => null,
             'max_value_length' => 1024,
             'transport' => null,

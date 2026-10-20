@@ -1041,6 +1041,12 @@ count = 1
 [[issues]]
 file = "src/Options.php"
 code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `Sentry\Options::shouldSendClientReports`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
 message = 'Could not infer a precise return type for function `Sentry\Options::shouldSendDefaultPii`. Saw type `mixed`.'
 count = 1
 
