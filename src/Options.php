@@ -1020,9 +1020,7 @@ final class Options
      */
     public function getMaxBreadth(): ?int
     {
-        $maxBreadth = $this->options['max_breadth'];
-
-        return \is_int($maxBreadth) ? $maxBreadth : null;
+        return $this->options['max_breadth'];
     }
 
     /**
