@@ -1015,6 +1015,26 @@ final class Options
     }
 
     /**
+     * Gets the maximum number of items serialized from an array or an object,
+     * or null if there is no limit.
+     */
+    public function getMaxBreadth(): ?int
+    {
+        return $this->options['max_breadth'];
+    }
+
+    /**
+     * Sets the maximum number of items serialized from an array or an object,
+     * such as the arguments of the stack frames.
+     *
+     * @param int|null $maxBreadth The number of items after which the next ones are left out, or null for no limit
+     */
+    public function setMaxBreadth(?int $maxBreadth): self
+    {
+        return $this->updateOptions(['max_breadth' => $maxBreadth]);
+    }
+
+    /**
      * Gets the http proxy setting.
      */
     public function getHttpProxy(): ?string
@@ -1292,6 +1312,7 @@ final class Options
         $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
+        $resolver->setAllowedTypes('max_breadth', ['null', 'int']);
         $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
         $resolver->setAllowedTypes('http_client', ['null', HttpClientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
@@ -1312,6 +1333,7 @@ final class Options
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
+        $resolver->setAllowedValues('max_breadth', \Closure::fromCallable([$this, 'validateMaxBreadthOption']));
         $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
@@ -1401,6 +1423,7 @@ final class Options
             'in_app_include' => [],
             'send_default_pii' => false,
             'max_value_length' => 1024,
+            'max_breadth' => null,
             'transport' => null,
             'http_client' => null,
             'http_proxy' => null,
@@ -1576,6 +1599,16 @@ final class Options
     private function validateContextLinesOption(?int $contextLines): bool
     {
         return $contextLines === null || $contextLines >= 0;
+    }
+
+    /**
+     * Validates that the value passed to the "max_breadth" option is valid.
+     *
+     * @param int|null $maxBreadth The value to validate
+     */
+    private function validateMaxBreadthOption(?int $maxBreadth): bool
+    {
+        return $maxBreadth === null || $maxBreadth > 0;
     }
 
     /**
