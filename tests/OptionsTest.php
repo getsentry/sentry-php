@@ -417,6 +417,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'max_breadth',
+            10,
+            'getMaxBreadth',
+            'setMaxBreadth',
+        ];
+
+        yield [
             'transport',
             new HttpTransport(new Options(), new HttpClient('foo', 'bar'), new PayloadSerializer(new Options())),
             'getTransport',
@@ -645,6 +652,7 @@ final class OptionsTest extends TestCase
             'send_default_pii' => false,
             'data_collection' => null,
             'max_value_length' => 1024,
+            'max_breadth' => null,
             'transport' => null,
             'http_client' => null,
             'http_proxy' => null,
@@ -932,6 +940,25 @@ final class OptionsTest extends TestCase
             [['min' => 500, 'max' => 599]],
             [],
         ];
+    }
+  
+    /*
+     * @dataProvider maxBreadthOptionValidatesInputValueDataProvider
+     */
+    public function testMaxBreadthOptionValidatesInputValue(?int $value, ?int $expectedValue): void
+    {
+        $options = new Options(['max_breadth' => $value]);
+
+        $this->assertSame($expectedValue, $options->getMaxBreadth());
+    }
+
+    public static function maxBreadthOptionValidatesInputValueDataProvider(): \Generator
+    {
+        yield [null, null];
+        yield [1, 1];
+        yield [10, 10];
+        yield [0, null];
+        yield [-1, null];
     }
 
     /**

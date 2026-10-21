@@ -361,6 +361,40 @@ final class ClientTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider captureEventDoesNotAttachStacktraceToNonErrorEventsDataProvider
+     */
+    public function testCaptureEventDoesNotAttachStacktraceToNonErrorEvents(Event $event): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+                  ->method('send')
+                  ->with($this->callback(static function (Event $event): bool {
+                      return $event->getStacktrace() === null;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+                               ->setTransport($transport)
+                               ->getClient();
+
+        $this->assertNotNull($client->captureEvent($event));
+    }
+
+    public static function captureEventDoesNotAttachStacktraceToNonErrorEventsDataProvider(): \Generator
+    {
+        yield 'transaction' => [Event::createTransaction()];
+
+        yield 'check-in' => [Event::createCheckIn()];
+
+        yield 'logs' => [Event::createLogs()];
+
+        yield 'metrics' => [Event::createMetrics()];
+    }
+
     public function testCaptureEventPrefersExplicitStacktrace(): void
     {
         $stacktrace = new Stacktrace([
@@ -650,6 +684,29 @@ final class ClientTest extends TestCase
                                ->getClient();
 
         $client->captureEvent(Event::createEvent());
+    }
+
+    public function testProcessEventDoesNotBuildStacktracesWhenEventIsNotSampled(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The event [%s] will be discarded because it has been sampled.'),
+                   $this->callback(static function (array $context): bool {
+                       return $context['event'] instanceof Event
+                           && $context['event']->getExceptions() === []
+                           && $context['event']->getStacktrace() === null;
+                   })
+               );
+
+        $client = ClientBuilder::create(['sample_rate' => 0, 'attach_stacktrace' => true])
+                               ->setTransport($this->createMock(TransportInterface::class))
+                               ->setLogger($logger)
+                               ->getClient();
+
+        $client->captureException(new \Exception('foo'));
+        $client->captureMessage('foo');
     }
 
     public function testProcessEventCapturesEventWhenSampleRateOptionIsAboveZero(): void
