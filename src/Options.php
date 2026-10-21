@@ -627,6 +627,33 @@ final class Options
     }
 
     /**
+     * Gets the HTTP status codes of incoming requests whose transactions are
+     * not sent to Sentry. Each entry is either a single status code or an
+     * inclusive `[min, max]` range.
+     *
+     * @return array<int|array{int, int}>
+     */
+    public function getTraceIgnoreStatusCodes(): array
+    {
+        /** @var array<int|array{int, int}> $statusCodes */
+        $statusCodes = $this->options['trace_ignore_status_codes'];
+
+        return $statusCodes;
+    }
+
+    /**
+     * Sets the HTTP status codes of incoming requests whose transactions are
+     * not sent to Sentry. A transaction is discarded when the value of its
+     * `http.response.status_code` data matches one of the entries.
+     *
+     * @param array<int|array{int, int}> $statusCodes A list of status codes or inclusive `[min, max]` ranges, e.g. `[404, [500, 599]]`
+     */
+    public function setTraceIgnoreStatusCodes(array $statusCodes): self
+    {
+        return $this->updateOptions(['trace_ignore_status_codes' => $statusCodes]);
+    }
+
+    /**
      * Gets a callback that will be invoked before an event is sent to the server.
      * If `null` is returned it won't be sent.
      *
@@ -1301,6 +1328,7 @@ final class Options
         $resolver->setAllowedTypes('before_send_metric', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
+        $resolver->setAllowedTypes('trace_ignore_status_codes', 'array');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
         $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('strict_trace_propagation', 'bool');
@@ -1332,6 +1360,7 @@ final class Options
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
+        $resolver->setAllowedValues('trace_ignore_status_codes', \Closure::fromCallable([$this, 'validateTraceIgnoreStatusCodesOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
         $resolver->setAllowedValues('max_breadth', \Closure::fromCallable([$this, 'validateMaxBreadthOption']));
         $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
@@ -1388,6 +1417,7 @@ final class Options
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
+            'trace_ignore_status_codes' => [],
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
@@ -1589,6 +1619,41 @@ final class Options
         }
 
         return true;
+    }
+
+    /**
+     * Validates that the value passed to the "trace_ignore_status_codes" option
+     * is a list of status codes or inclusive `[min, max]` ranges.
+     *
+     * @param mixed[] $statusCodes The value to validate
+     */
+    private function validateTraceIgnoreStatusCodesOption(array $statusCodes): bool
+    {
+        foreach (array_keys($statusCodes) as $key) {
+            if (\is_int($statusCodes[$key])) {
+                continue;
+            }
+
+            if (!self::isStatusCodeRange($statusCodes[$key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks whether the given value is an inclusive `[min, max]` range of status codes.
+     *
+     * @param mixed $range The value to check
+     */
+    private static function isStatusCodeRange($range): bool
+    {
+        return \is_array($range)
+            && array_keys($range) === [0, 1]
+            && \is_int($range[0])
+            && \is_int($range[1])
+            && $range[0] <= $range[1];
     }
 
     /**
