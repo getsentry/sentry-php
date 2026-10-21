@@ -81,20 +81,12 @@ final class GuzzleTracingMiddleware
                 }
 
                 if (self::shouldAttachTracingHeaders($sdkOptions, $request)) {
-                    // Propagate the span of the given hub, which is not necessarily the current hub
-                    $span = $hub->getSpan();
-                    if ($span !== null && $sdkOptions !== null && $sdkOptions->isTracingEnabled()) {
-                        $traceParent = $span->toTraceparent();
-                        $baggage = $span->toBaggage();
-                    } else {
-                        $traceParent = getTraceparent();
-                        $baggage = getBaggage();
-                    }
-
+                    $traceParent = getTraceparent($hub);
                     if ($traceParent !== '') {
                         $request = $request->withHeader('sentry-trace', $traceParent);
                     }
 
+                    $baggage = getBaggage($hub);
                     if ($baggage !== '') {
                         $request = $request->withHeader('baggage', $baggage);
                     }
