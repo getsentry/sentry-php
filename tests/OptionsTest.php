@@ -941,7 +941,7 @@ final class OptionsTest extends TestCase
             [],
         ];
     }
-  
+
     /**
      * @dataProvider maxBreadthOptionValidatesInputValueDataProvider
      */
