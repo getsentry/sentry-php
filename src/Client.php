@@ -435,6 +435,46 @@ class Client implements ClientInterface
         return false;
     }
 
+    /**
+     * Gets the HTTP status code of the response from the transaction data.
+     */
+    private function getTransactionHttpStatusCode(Event $event): ?int
+    {
+        $traceData = $event->getContexts()['trace']['data'] ?? null;
+        $statusCode = \is_array($traceData) ? $traceData['http.response.status_code'] ?? null : null;
+
+        if (\is_int($statusCode)) {
+            return $statusCode;
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if an HTTP status code matches one of the status codes or
+     * inclusive ranges configured in the "trace_ignore_status_codes" option.
+     */
+    private function shouldIgnoreStatusCode(int $statusCode): bool
+    {
+        foreach ($this->options->getTraceIgnoreStatusCodes() as $ignoredStatusCode) {
+            if (\is_int($ignoredStatusCode)) {
+                if ($statusCode === $ignoredStatusCode) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            [$min, $max] = $ignoredStatusCode;
+
+            if ($min <= $statusCode && $statusCode <= $max) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function applyIgnoreOptions(Event $event, string $eventDescription): ?Event
     {
         if ($event->getType() === EventType::event()) {
@@ -459,13 +499,20 @@ class Client implements ClientInterface
         if ($event->getType() === EventType::transaction()) {
             $transactionName = $event->getTransaction();
 
-            if ($transactionName === null) {
-                return $event;
-            }
-
-            if ($this->shouldIgnoreTransaction($transactionName)) {
+            if ($transactionName !== null && $this->shouldIgnoreTransaction($transactionName)) {
                 $this->logger->info(
                     \sprintf('The %s will be discarded because it matches a entry in "ignore_transactions".', $eventDescription),
+                    ['event' => $event]
+                );
+
+                return null;
+            }
+
+            $statusCode = $this->getTransactionHttpStatusCode($event);
+
+            if ($statusCode !== null && $this->shouldIgnoreStatusCode($statusCode)) {
+                $this->logger->info(
+                    \sprintf('The %s will be discarded because its HTTP status code %d matches an entry in "trace_ignore_status_codes".', $eventDescription, $statusCode),
                     ['event' => $event]
                 );
 
