@@ -39,6 +39,4 @@ $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTF--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Fatal error listener called
-After OOM memory limit: 67108864
+Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A

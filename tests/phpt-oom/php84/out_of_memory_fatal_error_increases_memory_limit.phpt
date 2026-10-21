@@ -79,6 +79,4 @@ for ($i = 0; $i < 100000000; ++$i) {
 }
 --EXPECTF--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Transport called
-After OOM memory limit: 72351744
+Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A

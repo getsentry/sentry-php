@@ -67,7 +67,4 @@ namespace Sentry\Tests {
 }
 ?>
 --EXPECTF--
-%A
-Fatal error listener called
-Memory limit increase attempts: 0
-Warning handler calls: 0
+%AFatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A

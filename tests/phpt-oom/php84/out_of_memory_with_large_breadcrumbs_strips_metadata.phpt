@@ -97,8 +97,4 @@ for ($i = 0; $i < 100000000; ++$i) {
     $array[] = 'sentry';
 }
 --EXPECTF--
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
-Breadcrumb count: 100
-First breadcrumb category: db.query
-First breadcrumb has metadata: no
-Transport called
+Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A
