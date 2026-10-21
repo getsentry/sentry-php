@@ -942,7 +942,7 @@ final class OptionsTest extends TestCase
         ];
     }
   
-    /*
+    /**
      * @dataProvider maxBreadthOptionValidatesInputValueDataProvider
      */
     public function testMaxBreadthOptionValidatesInputValue(?int $value, ?int $expectedValue): void
