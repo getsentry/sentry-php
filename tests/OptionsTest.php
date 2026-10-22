@@ -388,7 +388,7 @@ final class OptionsTest extends TestCase
 
         yield [
             'send_client_reports',
-            false,
+            true,
             'shouldSendClientReports',
             'setSendClientReports',
         ];
@@ -657,7 +657,7 @@ final class OptionsTest extends TestCase
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'send_client_reports' => true,
+            'send_client_reports' => false,
             'data_collection' => null,
             'max_value_length' => 1024,
             'max_breadth' => null,

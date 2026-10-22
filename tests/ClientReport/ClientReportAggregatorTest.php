@@ -37,6 +37,7 @@ class ClientReportAggregatorTest extends TestCase
         StubLogger::$logs = [];
         SentrySdk::init()->bindClient(new Client(new Options([
             'logger' => StubLogger::getInstance(),
+            'send_client_reports' => true,
         ]), StubTransport::getInstance()));
     }
 

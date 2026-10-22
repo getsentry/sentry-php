@@ -1471,7 +1471,7 @@ final class Options
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
-            'send_client_reports' => true,
+            'send_client_reports' => false,
             'max_value_length' => 1024,
             'max_breadth' => null,
             'transport' => null,
