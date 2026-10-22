@@ -1,5 +1,10 @@
 --TEST--
 Test that OOM handling skips the memory limit increase when current usage is already higher
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID < 80200) {
+    die('skip - only works for PHP 8.2 and above');
+}
 --INI--
 memory_limit=67108864
 --FILE--
@@ -67,4 +72,7 @@ namespace Sentry\Tests {
 }
 ?>
 --EXPECTF--
-%AFatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A
+%A
+Fatal error listener called
+Memory limit increase attempts: 0
+Warning handler calls: 0

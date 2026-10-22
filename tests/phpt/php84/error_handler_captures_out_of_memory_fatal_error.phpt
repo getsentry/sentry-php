@@ -2,8 +2,8 @@
 Test catching out of memory fatal error without increasing memory limit
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID >= 80500) {
-    die('skip - only works for PHP 8.4 and below');
+if (PHP_VERSION_ID < 80200 || PHP_VERSION_ID >= 80500) {
+    die('skip - only works for PHP 8.2 to 8.4');
 }
 --INI--
 memory_limit=67108864
@@ -39,4 +39,6 @@ $foo = str_repeat('x', 1024 * 1024 * 1024);
 ?>
 --EXPECTF--
 Before OOM memory limit: 67108864
-Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d%A
+Fatal error: Allowed memory size of %d bytes exhausted (tried to allocate %d bytes) in %s on line %d
+Fatal error listener called
+After OOM memory limit: 67108864
