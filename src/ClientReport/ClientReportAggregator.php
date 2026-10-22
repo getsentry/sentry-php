@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\ClientReport;
 
 use Sentry\Event;
+use Sentry\EventType;
 use Sentry\State\HubAdapter;
 use Sentry\Transport\DataCategory;
 
@@ -32,6 +33,10 @@ class ClientReportAggregator
 
     public function add(DataCategory $category, Reason $reason, int $quantity): void
     {
+        if (!$this->isEnabled()) {
+            return;
+        }
+
         $category = $category->getValue();
         $reason = $reason->getValue();
         if ($quantity <= 0) {
@@ -48,6 +53,44 @@ class ClientReportAggregator
             return;
         }
         $this->reports[$category][$reason] = ($this->reports[$category][$reason] ?? 0) + $quantity;
+    }
+
+    /**
+     * Records a discarded event in all the data categories it accounts for, e.g. a
+     * transaction also discards its spans and its profile.
+     */
+    public function addEvent(Event $event, Reason $reason): void
+    {
+        if (!$this->isEnabled()) {
+            return;
+        }
+
+        switch ($event->getType()) {
+            case EventType::event():
+                $this->add(DataCategory::error(), $reason, 1);
+                $this->addAttachments($event, $reason);
+                break;
+            case EventType::transaction():
+                $this->add(DataCategory::transaction(), $reason, 1);
+                // Relay extracts an additional span from the transaction itself
+                $this->add(DataCategory::span(), $reason, \count($event->getSpans()) + 1);
+
+                if ($event->getSdkMetadata('profile') !== null) {
+                    $this->add(DataCategory::profile(), $reason, 1);
+                }
+
+                $this->addAttachments($event, $reason);
+                break;
+            case EventType::checkIn():
+                $this->add(DataCategory::checkIn(), $reason, 1);
+                break;
+            case EventType::logs():
+                $this->add(DataCategory::logItem(), $reason, \count($event->getLogs()));
+                break;
+            case EventType::metrics():
+                $this->add(DataCategory::metric(), $reason, \count($event->getMetrics()));
+                break;
+        }
     }
 
     public function flush(): void
@@ -70,6 +113,26 @@ class ClientReportAggregator
         // can be sent on the next flush, or it gets discarded anyway.
         if ($client !== null && $client->captureEvent($event) !== null) {
             $this->reports = [];
+        }
+    }
+
+    private function isEnabled(): bool
+    {
+        $client = HubAdapter::getInstance()->getClient();
+
+        return $client !== null && $client->getOptions()->shouldSendClientReports();
+    }
+
+    private function addAttachments(Event $event, Reason $reason): void
+    {
+        $bytes = 0;
+
+        foreach ($event->getAttachments() as $attachment) {
+            $bytes += $attachment->getSize() ?? 0;
+        }
+
+        if ($bytes > 0) {
+            $this->add(DataCategory::attachment(), $reason, $bytes);
         }
     }
 

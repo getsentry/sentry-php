@@ -1006,6 +1006,24 @@ final class Options
     }
 
     /**
+     * Returns whether the SDK should record and send client reports about discarded telemetry.
+     */
+    public function shouldSendClientReports(): bool
+    {
+        return $this->options['send_client_reports'];
+    }
+
+    /**
+     * Sets whether the SDK should record and send client reports about discarded telemetry.
+     *
+     * @param bool $enable Flag indicating if client reports will be sent
+     */
+    public function setSendClientReports(bool $enable): self
+    {
+        return $this->updateOptions(['send_client_reports' => $enable]);
+    }
+
+    /**
      * Returns whether the default integrations are enabled.
      */
     public function hasDefaultIntegrations(): bool
@@ -1338,6 +1356,7 @@ final class Options
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
+        $resolver->setAllowedTypes('send_client_reports', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_value_length', 'int');
         $resolver->setAllowedTypes('max_breadth', ['null', 'int']);
@@ -1452,6 +1471,7 @@ final class Options
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'send_client_reports' => false,
             'max_value_length' => 1024,
             'max_breadth' => null,
             'transport' => null,
