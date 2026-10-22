@@ -683,6 +683,45 @@ final class FunctionsTest extends TestCase
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true,sentry-sample_rand=0.25', $baggage);
     }
 
+    public function testTraceHeadersUseTheGivenHub(): void
+    {
+        $currentHubClient = $this->createMock(ClientInterface::class);
+        $currentHubClient->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1.0]));
+
+        $currentHub = new Hub($currentHubClient);
+        $currentHub->setSpan($currentHub->startTransaction(new TransactionContext()));
+
+        SentrySdk::setCurrentHub($currentHub);
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1.0]));
+
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+
+        $this->assertSame($transaction->toTraceparent(), getTraceparent($hub));
+        $this->assertSame($transaction->toBaggage(), getBaggage($hub));
+    }
+
+    public function testBaggageUsesTheGivenHubWithoutASpan(): void
+    {
+        $currentHubClient = $this->createMock(ClientInterface::class);
+        $currentHubClient->method('getOptions')->willReturn(new Options(['release' => 'current-hub-release']));
+
+        SentrySdk::setCurrentHub(new Hub($currentHubClient));
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['release' => 'given-hub-release']));
+
+        $hub = new Hub($client);
+
+        $baggage = getBaggage($hub);
+
+        $this->assertStringContainsString('sentry-release=given-hub-release', $baggage);
+        $this->assertStringNotContainsString('current-hub-release', $baggage);
+    }
+
     public function testGetOtlpTracesEndpointUrlFallsBackToDsn(): void
     {
         $client = $this->createMock(ClientInterface::class);
