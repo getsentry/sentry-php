@@ -1,5 +1,10 @@
 --TEST--
 Test that OOM handling does not capture warnings from the memory limit increase attempt
+--SKIPIF--
+<?php
+if (PHP_VERSION_ID < 80200) {
+    die('skip - only works for PHP 8.2 and above');
+}
 --INI--
 memory_limit=67108864
 --FILE--

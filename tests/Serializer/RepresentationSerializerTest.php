@@ -159,8 +159,8 @@ final class RepresentationSerializerTest extends AbstractSerializerTest
     /**
      * @return RepresentationSerializer
      */
-    protected function createSerializer(): AbstractSerializer
+    protected function createSerializer(?Options $options = null): AbstractSerializer
     {
-        return new RepresentationSerializer(new Options());
+        return new RepresentationSerializer($options ?? new Options());
     }
 }
