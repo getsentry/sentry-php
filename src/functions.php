@@ -447,12 +447,12 @@ function getBaggage(?HubInterface $hub = null): string
     }
 
     $baggage = '';
-    $hub->configureScope(static function (Scope $scope) use (&$baggage) {
+    $hub->configureScope(static function (Scope $scope) use (&$baggage, $hub) {
         if ($scope->hasExternalPropagationContext()) {
             return;
         }
 
-        $baggage = $scope->getPropagationContext()->toBaggage();
+        $baggage = $scope->getPropagationContext()->toBaggage($hub);
     });
 
     return $baggage;

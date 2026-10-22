@@ -704,6 +704,24 @@ final class FunctionsTest extends TestCase
         $this->assertSame($transaction->toBaggage(), getBaggage($hub));
     }
 
+    public function testBaggageUsesTheGivenHubWithoutASpan(): void
+    {
+        $currentHubClient = $this->createMock(ClientInterface::class);
+        $currentHubClient->method('getOptions')->willReturn(new Options(['release' => 'current-hub-release']));
+
+        SentrySdk::setCurrentHub(new Hub($currentHubClient));
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['release' => 'given-hub-release']));
+
+        $hub = new Hub($client);
+
+        $baggage = getBaggage($hub);
+
+        $this->assertStringContainsString('sentry-release=given-hub-release', $baggage);
+        $this->assertStringNotContainsString('current-hub-release', $baggage);
+    }
+
     public function testGetOtlpTracesEndpointUrlFallsBackToDsn(): void
     {
         $client = $this->createMock(ClientInterface::class);
