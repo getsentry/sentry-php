@@ -67,11 +67,6 @@ class DataCategory
         return self::getInstance('trace_metric');
     }
 
-    public static function metricBytes(): self
-    {
-        return self::getInstance('trace_metric_byte');
-    }
-
     public static function internal(): self
     {
         return self::getInstance('internal');

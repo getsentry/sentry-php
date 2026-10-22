@@ -17,8 +17,6 @@ use Sentry\Metrics\Types\DistributionMetric;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\SentrySdk;
-use Sentry\Serializer\EnvelopItems\LogsItem;
-use Sentry\Serializer\EnvelopItems\MetricsItem;
 use Sentry\State\Hub;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
@@ -184,41 +182,29 @@ class ClientReportAggregatorTest extends TestCase
     public function testAddEventForLogs(): void
     {
         $event = Event::createLogs()->setLogs([
-            (new Log(1597790835.123456, '566e3688a61d4bc888951642d6f14a19', LogLevel::info(), 'User jane logged in from 10.0.0.1'))
-                ->setAttribute('sentry.release', '1.2.3')
-                ->setAttribute('sentry.environment', 'production')
-                ->setAttribute('sentry.sdk.name', 'sentry.php')
-                ->setAttribute('sentry.message.template', 'User %s logged in from %s')
-                ->setAttribute('sentry.message.parameter.0', 'jane')
-                ->setAttribute('user.id', 42)
-                ->setAttribute('duration', 12.5)
-                ->setAttribute('http.ok', true),
-            new Log(1597790835.123456, '566e3688a61d4bc888951642d6f14a19', LogLevel::error(), 'Something went wrong'),
+            new Log(1597790835.0, '566e3688a61d4bc888951642d6f14a19', LogLevel::info(), 'foo'),
+            new Log(1597790835.0, '566e3688a61d4bc888951642d6f14a19', LogLevel::error(), 'bar'),
         ]);
 
         ClientReportAggregator::getInstance()->addEvent($event, Reason::ratelimitBackoff());
 
-        $reports = self::getClientReports();
-
-        $this->assertSame(['log_item', 'log_byte'], array_keys($reports));
-        $this->assertSame(['ratelimit_backoff' => 2], $reports['log_item']);
-        $this->assertEstimatedSize(LogsItem::toEnvelopeItem($event), $reports['log_byte']['ratelimit_backoff']);
+        $this->assertClientReports([
+            'log_item' => ['ratelimit_backoff' => 2],
+        ]);
     }
 
     public function testAddEventForMetrics(): void
     {
         $event = Event::createMetrics()->setMetrics([
-            new CounterMetric('api.requests', 1, new TraceId('566e3688a61d4bc888951642d6f14a19'), new SpanId('566e3688a61d4bc8'), ['sentry.environment' => 'production', 'route' => 'users.show', 'cached' => false], 1597790835.123456, null),
-            new DistributionMetric('api.duration', 12.75, new TraceId('566e3688a61d4bc888951642d6f14a19'), new SpanId('566e3688a61d4bc8'), ['sentry.environment' => 'production'], 1597790835.123456, Unit::millisecond()),
+            new CounterMetric('foo', 1, new TraceId('566e3688a61d4bc888951642d6f14a19'), new SpanId('566e3688a61d4bc8'), [], 1597790835.0, null),
+            new DistributionMetric('bar', 12.75, new TraceId('566e3688a61d4bc888951642d6f14a19'), new SpanId('566e3688a61d4bc8'), [], 1597790835.0, Unit::millisecond()),
         ]);
 
         ClientReportAggregator::getInstance()->addEvent($event, Reason::ratelimitBackoff());
 
-        $reports = self::getClientReports();
-
-        $this->assertSame(['trace_metric', 'trace_metric_byte'], array_keys($reports));
-        $this->assertSame(['ratelimit_backoff' => 2], $reports['trace_metric']);
-        $this->assertEstimatedSize(MetricsItem::toEnvelopeItem($event), $reports['trace_metric_byte']['ratelimit_backoff']);
+        $this->assertClientReports([
+            'trace_metric' => ['ratelimit_backoff' => 2],
+        ]);
     }
 
     public function testAddEventIgnoresClientReports(): void
@@ -238,16 +224,5 @@ class ClientReportAggregatorTest extends TestCase
         ClientReportAggregator::getInstance()->addEvent(Event::createEvent(), Reason::beforeSend());
 
         $this->assertClientReports([]);
-    }
-
-    /**
-     * Asserts that the estimated size is within 5% of the serialized items, so that a change of the
-     * serialized format must be reflected in the estimate.
-     */
-    private function assertEstimatedSize(string $envelopeItem, int $estimatedSize): void
-    {
-        $serializedSize = \strlen(explode("\n", $envelopeItem, 2)[1]);
-
-        $this->assertEqualsWithDelta($serializedSize, $estimatedSize, $serializedSize * 0.05);
     }
 }

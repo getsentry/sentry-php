@@ -15,27 +15,17 @@ trait ClientReportAssertions
      */
     protected function assertClientReports(array $expected): void
     {
-        $this->assertSame(self::sortClientReports($expected), self::sortClientReports(self::getClientReports()));
-    }
-
-    /**
-     * Returns the client reports recorded so far.
-     *
-     * @return array<string, array<string, int>> the quantities keyed by category and reason
-     */
-    protected static function getClientReports(): array
-    {
         $reflectionProperty = new \ReflectionProperty(ClientReportAggregator::class, 'reports');
         if (\PHP_VERSION_ID < 80100) {
             $reflectionProperty->setAccessible(true);
         }
-        /** @var array<string, array<string, int>> $reports */
-        $reports = $reflectionProperty->getValue(ClientReportAggregator::getInstance());
+        /** @var array<string, array<string, int>> $actual */
+        $actual = $reflectionProperty->getValue(ClientReportAggregator::getInstance());
         if (\PHP_VERSION_ID < 80100) {
             $reflectionProperty->setAccessible(false);
         }
 
-        return $reports;
+        $this->assertSame(self::sortClientReports($expected), self::sortClientReports($actual));
     }
 
     /**
