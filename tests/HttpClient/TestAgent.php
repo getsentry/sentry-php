@@ -32,7 +32,7 @@ trait TestAgent
     protected $agentOutputFile;
 
     /**
-     * @var int the port on which the agent is listening, this default value was randomly chosen
+     * @var int the port on which the agent is listening, a free port is picked on every start
      */
     protected $agentPort = 45848;
 
@@ -54,6 +54,10 @@ trait TestAgent
         }
 
         $this->agentOutputFile = $outputFile;
+
+        // Use a fresh port for every agent so a previous agent that is still
+        // shutting down cannot answer the readiness probe in place of this one
+        $this->agentPort = $this->findFreePort();
 
         $pipes = [];
 
@@ -214,6 +218,21 @@ trait TestAgent
             'messages' => $decoded['messages'] ?? [],
             'connections' => $decoded['connections'] ?? 0,
         ];
+    }
+
+    private function findFreePort(): int
+    {
+        $socket = stream_socket_server('tcp://127.0.0.1:0', $errorNo, $errorMessage);
+
+        if ($socket === false) {
+            throw new \RuntimeException(\sprintf('Failed to find a free port for the test agent: [%d] %s', $errorNo, $errorMessage));
+        }
+
+        $address = (string) stream_socket_get_name($socket, false);
+
+        fclose($socket);
+
+        return (int) substr($address, (int) strrpos($address, ':') + 1);
     }
 
     private function killAgentProcess(int $pid): void

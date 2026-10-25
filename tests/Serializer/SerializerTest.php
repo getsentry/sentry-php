@@ -126,6 +126,112 @@ final class SerializerTest extends AbstractSerializerTest
         ], $this->invokeSerialization($serializer, $object));
     }
 
+    public function testObjectClassSerializerMatchesAnyObject(): void
+    {
+        $orderId = new class {
+            public function id(): string
+            {
+                return 'order-1';
+            }
+        };
+
+        $customerId = new class {
+            public function id(): string
+            {
+                return 'customer-1';
+            }
+        };
+
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                'object' => static function ($object): ?array {
+                    if (!method_exists($object, 'id')) {
+                        return null;
+                    }
+
+                    return [
+                        'id' => $object->id(),
+                    ];
+                },
+            ],
+        ]));
+
+        $this->assertSame([
+            'class' => \get_class($orderId),
+            'data' => [
+                'id' => 'order-1',
+            ],
+        ], $this->invokeSerialization($serializer, $orderId));
+
+        $this->assertSame([
+            'class' => \get_class($customerId),
+            'data' => [
+                'id' => 'customer-1',
+            ],
+        ], $this->invokeSerialization($serializer, $customerId));
+    }
+
+    public function testObjectClassSerializerThatReturnsNullFallsBackToDefault(): void
+    {
+        $object = new class {};
+
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                'object' => static function (): ?array {
+                    return null;
+                },
+            ],
+        ]));
+
+        $this->assertSame('Object ' . \get_class($object), $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testObjectClassSerializerIsTriedAfterTypedSerializers(): void
+    {
+        $object = new class {};
+        $objectClass = \get_class($object);
+
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                'object' => static function (): array {
+                    return ['serializer' => 'object'];
+                },
+                $objectClass => static function (): array {
+                    return ['serializer' => 'typed'];
+                },
+            ],
+        ]));
+
+        $this->assertSame([
+            'class' => $objectClass,
+            'data' => [
+                'serializer' => 'typed',
+            ],
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testObjectClassSerializerIsTriedAfterSerializableInterface(): void
+    {
+        $object = $this->createMock(SerializableInterface::class);
+        $object->method('toSentry')
+            ->willReturn(['serializer' => 'serializable']);
+
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                'object' => static function (): array {
+                    return ['serializer' => 'object'];
+                },
+            ],
+        ]));
+
+        $this->assertSame([
+            'class' => \get_class($object),
+            'data' => [
+                'serializer' => 'serializable',
+            ],
+        ], $this->invokeSerialization($serializer, $object));
+    }
+
     public function testSerializableObject(): void
     {
         $serializer = $this->createSerializer();

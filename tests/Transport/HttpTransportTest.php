@@ -8,6 +8,7 @@ use PHPUnit\Framework\Constraint\StringMatchesFormatDescription;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Sentry\Attachment\Attachment;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Response;
@@ -279,6 +280,50 @@ final class HttpTransportTest extends TestCase
     /**
      * @group time-sensitive
      */
+    public function testSendBacksOffWhenRateLimitedResponseHasBody(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $event = Event::createEvent();
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->willReturn('{"foo":"bar"}');
+
+        // Sentry replies to rate limited envelopes with a JSON body, which the
+        // default HTTP client exposes as the response error.
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn(new Response(
+                429,
+                [
+                    'Retry-After' => ['60'],
+                    'X-Sentry-Rate-Limits' => ['60:error:organization'],
+                ],
+                '{"detail":"event submission rejected with_reason: RateLimited"}'
+            ));
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $transport->send($event);
+
+        // The rate limit must be respected, so no second HTTP request is made
+        $result = $transport->send($event);
+
+        $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
+    }
+
+    /**
+     * @group time-sensitive
+     */
     public function testDropsProfileAndSendsTransactionWhenProfileRateLimited(): void
     {
         ClockMock::withClockMock(1644105600);
@@ -329,6 +374,116 @@ final class HttpTransportTest extends TestCase
 
         // profile information is removed because it was rate limited
         $this->assertNull($event->getSdkMetadata('profile'));
+    }
+
+    /**
+     * @group time-sensitive
+     *
+     * @dataProvider eventsWithAttachmentsDataProvider
+     */
+    public function testDropsAttachmentsAndSendsEventWhenAttachmentsRateLimited(callable $eventFactory, string $rateLimitsHeader): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/1']),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        /** @var Event $event */
+        $event = $eventFactory();
+        $event->setAttachments([Attachment::fromBytes('test.txt', 'test')]);
+
+        $this->payloadSerializer->expects($this->exactly(2))
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->exactly(2))
+            ->method('sendRequest')
+            ->willReturnOnConsecutiveCalls(
+                new Response(200, ['X-Sentry-Rate-Limits' => [$rateLimitsHeader]], ''),
+                new Response(200, [], '')
+            );
+
+        // First request informs about the attachment rate limit
+        $result = $transport->send($event);
+
+        $this->assertEquals(ResultStatus::success(), $result->getStatus());
+
+        // attachments are still present
+        $this->assertCount(1, $event->getAttachments());
+
+        $event = $eventFactory();
+        $event->setAttachments([Attachment::fromBytes('test.txt', 'test')]);
+
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with(
+                $this->stringContains('Rate limit exceeded for sending requests of type "attachment".'),
+                ['event' => $event]
+            );
+
+        $result = $transport->send($event);
+
+        // Sending the event is successful because only attachments are rate limited
+        $this->assertEquals(ResultStatus::success(), $result->getStatus());
+
+        // attachments are removed because they were rate limited
+        $this->assertSame([], $event->getAttachments());
+    }
+
+    public static function eventsWithAttachmentsDataProvider(): \Generator
+    {
+        yield 'Event with attachment rate limit' => [
+            [Event::class, 'createEvent'],
+            '60:attachment:organization',
+        ];
+
+        yield 'Event with attachment_item rate limit' => [
+            [Event::class, 'createEvent'],
+            '60:attachment_item:organization',
+        ];
+
+        yield 'Transaction with attachment rate limit' => [
+            [Event::class, 'createTransaction'],
+            '60:attachment:organization',
+        ];
+    }
+
+    /**
+     * @group time-sensitive
+     */
+    public function testKeepsAttachmentsWhenNotRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        $transport = new HttpTransport(
+            new Options(['dsn' => 'http://public@example.com/1']),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $this->payloadSerializer->expects($this->exactly(2))
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->exactly(2))
+            ->method('sendRequest')
+            ->willReturn(new Response(200, ['X-Sentry-Rate-Limits' => ['60:profile:organization']], ''));
+
+        // First request informs about a rate limit unrelated to attachments
+        $transport->send(Event::createEvent());
+
+        $event = Event::createEvent();
+        $event->setAttachments([Attachment::fromBytes('test.txt', 'test')]);
+
+        $result = $transport->send($event);
+
+        $this->assertEquals(ResultStatus::success(), $result->getStatus());
+        $this->assertCount(1, $event->getAttachments());
     }
 
     /**

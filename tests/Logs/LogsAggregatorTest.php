@@ -12,6 +12,7 @@ use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -31,9 +32,7 @@ final class LogsAggregatorTest extends TestCase
      */
     public function testAttributes(array $attributes, array $expected): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -89,9 +88,7 @@ final class LogsAggregatorTest extends TestCase
      */
     public function testMessageFormatting(string $message, array $values, string $expected): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);
@@ -163,7 +160,6 @@ final class LogsAggregatorTest extends TestCase
     public function testAttributesAreAddedToLogMessage(): void
     {
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'send_default_pii' => true,
             'release' => '1.0.0',
             'environment' => 'production',
@@ -214,7 +210,6 @@ final class LogsAggregatorTest extends TestCase
     public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
     {
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'send_default_pii' => false,
         ])->getClient();
 
@@ -242,13 +237,34 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('my_user', $attributes->get('user.name')->getValue());
     }
 
+    public function testBeforeSendLogExceptionDropsLogAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $client = ClientBuilder::create([
+            'before_send_log' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'logger' => StubLogger::getInstance(),
+        ])->getClient();
+        SentrySdk::setCurrentHub(new Hub($client));
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $this->assertEmpty($aggregator->all());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "before_send_log" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
+    }
+
     public function testFlushesImmediatelyWhenThresholdIsReached(): void
     {
         StubTransport::$events = [];
 
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'log_flush_threshold' => 2,
         ])->setTransport($transport)->getClient();
 
@@ -277,7 +293,6 @@ final class LogsAggregatorTest extends TestCase
 
         $transport = new StubTransport();
         $client = ClientBuilder::create([
-            'enable_logs' => true,
             'log_flush_threshold' => null,
         ])->setTransport($transport)->getClient();
 
@@ -295,9 +310,7 @@ final class LogsAggregatorTest extends TestCase
 
     public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $propagationContext = PropagationContext::fromDefaults();
         $propagationContext->setTraceId(new TraceId('771a43a4192642f0b136d5159a501700'));
@@ -321,9 +334,7 @@ final class LogsAggregatorTest extends TestCase
 
     public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         $hub = new Hub($client);
         SentrySdk::setCurrentHub($hub);

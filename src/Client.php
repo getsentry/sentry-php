@@ -32,7 +32,7 @@ class Client implements ClientInterface
     /**
      * The version of the SDK.
      */
-    public const SDK_VERSION = '4.29.0';
+    public const SDK_VERSION = '4.34.0';
 
     /**
      * Regex pattern to detect if a string is a regex pattern (starts and ends with / optionally followed by flags).
@@ -285,6 +285,14 @@ class Client implements ClientInterface
      */
     private function prepareEvent(Event $event, ?EventHint $hint = null, ?Scope $scope = null): ?Event
     {
+        $sampleRate = $this->options->getSampleRate();
+
+        if (EventType::event() === $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
+            $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $this->getEventDescription($event)), ['event' => $event]);
+
+            return null;
+        }
+
         if ($hint !== null) {
             if ($hint->exception !== null && empty($event->getExceptions())) {
                 $this->addThrowableToEvent($event, $hint->exception, $hint);
@@ -314,22 +322,7 @@ class Client implements ClientInterface
             $event->setEnvironment($this->options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT);
         }
 
-        $eventDescription = \sprintf(
-            '%s%s [%s]',
-            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
-            (string) $event->getType(),
-            (string) $event->getId()
-        );
-
-        $isEvent = EventType::event() === $event->getType();
-        $sampleRate = $this->options->getSampleRate();
-
-        // only sample with the `sample_rate` on errors/messages
-        if ($isEvent && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
-            $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $eventDescription), ['event' => $event]);
-
-            return null;
-        }
+        $eventDescription = $this->getEventDescription($event);
 
         $event = $this->applyIgnoreOptions($event, $eventDescription);
 
@@ -366,6 +359,16 @@ class Client implements ClientInterface
         }
 
         return $event;
+    }
+
+    private function getEventDescription(Event $event): string
+    {
+        return \sprintf(
+            '%s%s [%s]',
+            $event->getLevel() !== null ? $event->getLevel() . ' ' : '',
+            (string) $event->getType(),
+            (string) $event->getId()
+        );
     }
 
     /**
@@ -432,6 +435,46 @@ class Client implements ClientInterface
         return false;
     }
 
+    /**
+     * Gets the HTTP status code of the response from the transaction data.
+     */
+    private function getTransactionHttpStatusCode(Event $event): ?int
+    {
+        $traceData = $event->getContexts()['trace']['data'] ?? null;
+        $statusCode = \is_array($traceData) ? $traceData['http.response.status_code'] ?? null : null;
+
+        if (\is_int($statusCode)) {
+            return $statusCode;
+        }
+
+        return null;
+    }
+
+    /**
+     * Checks if an HTTP status code matches one of the status codes or
+     * inclusive ranges configured in the "trace_ignore_status_codes" option.
+     */
+    private function shouldIgnoreStatusCode(int $statusCode): bool
+    {
+        foreach ($this->options->getTraceIgnoreStatusCodes() as $ignoredStatusCode) {
+            if (\is_int($ignoredStatusCode)) {
+                if ($statusCode === $ignoredStatusCode) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            [$min, $max] = $ignoredStatusCode;
+
+            if ($min <= $statusCode && $statusCode <= $max) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function applyIgnoreOptions(Event $event, string $eventDescription): ?Event
     {
         if ($event->getType() === EventType::event()) {
@@ -456,13 +499,20 @@ class Client implements ClientInterface
         if ($event->getType() === EventType::transaction()) {
             $transactionName = $event->getTransaction();
 
-            if ($transactionName === null) {
-                return $event;
-            }
-
-            if ($this->shouldIgnoreTransaction($transactionName)) {
+            if ($transactionName !== null && $this->shouldIgnoreTransaction($transactionName)) {
                 $this->logger->info(
                     \sprintf('The %s will be discarded because it matches a entry in "ignore_transactions".', $eventDescription),
+                    ['event' => $event]
+                );
+
+                return null;
+            }
+
+            $statusCode = $this->getTransactionHttpStatusCode($event);
+
+            if ($statusCode !== null && $this->shouldIgnoreStatusCode($statusCode)) {
+                $this->logger->info(
+                    \sprintf('The %s will be discarded because its HTTP status code %d matches an entry in "trace_ignore_status_codes".', $eventDescription, $statusCode),
                     ['event' => $event]
                 );
 
@@ -477,11 +527,29 @@ class Client implements ClientInterface
     {
         switch ($event->getType()) {
             case EventType::event():
-                return ($this->options->getBeforeSendCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             case EventType::transaction():
-                return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send_transaction" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             case EventType::checkIn():
-                return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+                try {
+                    return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
+                } catch (\Throwable $exception) {
+                    $this->logger->error(\sprintf('The "before_send_check_in" callback failed with exception: "%s".', $exception->getMessage()));
+
+                    return null;
+                }
             default:
                 return $event;
         }
@@ -507,6 +575,11 @@ class Client implements ClientInterface
     private function addMissingStacktraceToEvent(Event $event): void
     {
         if (!$this->options->shouldAttachStacktrace()) {
+            return;
+        }
+
+        // Only error events carry a stacktrace, for any other type it would be discarded
+        if ($event->getType() !== EventType::event()) {
             return;
         }
 

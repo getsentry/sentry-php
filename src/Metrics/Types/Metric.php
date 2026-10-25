@@ -42,7 +42,7 @@ abstract class Metric
     private $unit;
 
     /**
-     * @param array<string, int|float|string|bool> $attributes
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function __construct(
         string $name,

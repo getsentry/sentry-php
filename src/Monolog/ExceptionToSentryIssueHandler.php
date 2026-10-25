@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\Monolog;
 
-use Monolog\Handler\AbstractHandler;
+use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\LogRecord;
@@ -15,8 +15,10 @@ use Sentry\State\Scope;
 /**
  * This Monolog handler will collect monolog events and send them to sentry.
  */
-class ExceptionToSentryIssueHandler extends AbstractHandler
+class ExceptionToSentryIssueHandler extends AbstractProcessingHandler
 {
+    use CompatibilityProcessingHandlerTrait;
+
     /**
      * @var HubInterface
      */
@@ -44,6 +46,21 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
             return false;
         }
 
+        /** @phpstan-ignore argument.type */
+        return parent::handle($record);
+    }
+
+    /**
+     * @param array<string, mixed>|LogRecord $record
+     */
+    protected function doWrite($record): void
+    {
+        // A processor may have removed the exception from the context
+        $exception = $this->getExceptionFromRecord($record);
+        if ($exception === null) {
+            return;
+        }
+
         $this->hub->withScope(function (Scope $scope) use ($record, $exception): void {
             $scope->setExtra('monolog.channel', $record['channel']);
             $scope->setExtra('monolog.level', $record['level_name']);
@@ -63,8 +80,6 @@ class ExceptionToSentryIssueHandler extends AbstractHandler
 
             $this->hub->captureException($exception);
         });
-
-        return $this->bubble === false;
     }
 
     /**

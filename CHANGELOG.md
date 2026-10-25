@@ -1,5 +1,128 @@
 # CHANGELOG
 
+## 4.34.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.34.0.
+
+### Features
+
+- Add the `$includeChannel` argument to the Monolog `LogsHandler` to attach the Monolog channel as the `channel` attribute on Sentry logs. [(#2029)](https://github.com/getsentry/sentry-php/pull/2029)
+
+  ```php
+  $logger->pushHandler(new \Sentry\Monolog\LogsHandler(LogLevel::info(), true, true));
+  ```
+
+### Bug Fixes
+
+- Always filter "remember me" cookies, such as Laravel's `remember_web_*` and Symfony's `REMEMBERME`, when collecting HTTP data. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+- Collect cleared cookies with an empty value instead of `[Filtered]`. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+- Replace invalid UTF-8 in collected HTTP bodies instead of filtering the whole body, and stop escaping non-ASCII characters. [(#2250)](https://github.com/getsentry/sentry-php/pull/2250)
+
+### Misc
+
+- Cache source code excerpts per event in `FrameContextifierIntegration` so duplicate frames don't read the same file again. [(#2163)](https://github.com/getsentry/sentry-php/pull/2163)
+
+## 4.33.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.2.
+
+### Bug Fixes
+
+- Collect cookies as string arrays in the form of `key=value` instead of maps and bodies as JSON strings. [(#2246)](https://github.com/getsentry/sentry-php/pull/2246)
+
+### Misc
+
+- Only read the request body in `RequestIntegration` for error events, as it is not used for transactions. [(#2247)](https://github.com/getsentry/sentry-php/pull/2247)
+- Add `HttpSpanDataCollector` to share HTTP span attribute names and formats with the framework integrations. [(#2246)](https://github.com/getsentry/sentry-php/pull/2246)
+
+## 4.33.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.1.
+
+### Bug Fixes
+
+- Join multiple values of the same header into a single comma-separated string in Guzzle span data. [(#2241)](https://github.com/getsentry/sentry-php/pull/2241)
+
+## 4.33.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.33.0.
+
+### Features
+
+- Add the `data_collection` option to control which potentially sensitive data the SDK collects. Setting it to any value other than `null` opts into the new behavior and ignores `send_default_pii`. [(#2227)](https://github.com/getsentry/sentry-php/pull/2227)
+
+  ```php
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'data_collection' => [
+          'cookies' => ['mode' => 'allowList', 'terms' => ['locale']],
+          'http_bodies' => ['incomingRequest'],
+          'stack_frame_variables' => false,
+      ],
+  ]);
+  ```
+
+- Allow registering a fallback serializer for any object by using `object` as the key in `class_serializers`. [(#2232)](https://github.com/getsentry/sentry-php/pull/2232)
+- Apply rate limits to attachments. [(#2233)](https://github.com/getsentry/sentry-php/pull/2233)
+
+### Bug Fixes
+
+- Respect rate limits on `429` responses that include a response body. [(#2225)](https://github.com/getsentry/sentry-php/pull/2225)
+- Parse every limit in the `X-Sentry-Rate-Limits` header instead of falling back to the default duration for all but the first one. [(#2226)](https://github.com/getsentry/sentry-php/pull/2226)
+- Keep the longest rate limit when multiple limits apply to the same category, apply the default rate limit to `429` responses without rate limit headers, and handle decimal durations. [(#2234)](https://github.com/getsentry/sentry-php/pull/2234)
+
+### Misc
+
+- Exclude development files from the distributed package. [(#2230)](https://github.com/getsentry/sentry-php/pull/2230)
+
+## 4.32.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.32.0.
+
+### Features
+
+- Add attachment support (backport from v5). [(#2217)](https://github.com/getsentry/sentry-php/pull/2217)
+- Support concurrent runtime contexts with `RuntimeContextStorageInterface` and `SentrySdk::setRuntimeContextStorage()`, allowing integrations to isolate telemetry from overlapping executions. [(#2190)](https://github.com/getsentry/sentry-php/pull/2190)
+- Allow passing a `HubInterface` to `startContext()` when starting an isolated runtime context. [(#2191)](https://github.com/getsentry/sentry-php/pull/2191)
+- Handle exceptions thrown by user-provided callbacks without crashing the application. [(#2199)](https://github.com/getsentry/sentry-php/pull/2199)
+
+### Bug Fixes
+
+- Avoid PHP 8.5 warnings when serializing `INF`, `NAN`, and floats outside the integer range. [(#2192)](https://github.com/getsentry/sentry-php/pull/2192)
+
+## 4.31.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.31.0.
+
+### Features
+
+- Always capture logs and metrics when their APIs or integrations are used. The deprecated `enable_logs` and `enable_metrics` options no longer have any effect. To disable sending, return `null` from `before_send_log` or `before_send_metric`. [(#2187)](https://github.com/getsentry/sentry-php/pull/2187)
+
+### Misc
+
+- Accept `null` metric attribute values in public type declarations. [(#2185)](https://github.com/getsentry/sentry-php/pull/2185)
+- Add the missing `enable_metrics` option to the `init()` PHPDoc. [(#2184)](https://github.com/getsentry/sentry-php/pull/2184)
+- Add the Yii3 community integration to the README. [(#2180)](https://github.com/getsentry/sentry-php/pull/2180)
+
+## 4.30.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.30.0.
+
+### Features
+
+- Add support for `guzzlehttp/psr7` 3.x and `guzzlehttp/promises` 3.x. [(#2164)](https://github.com/getsentry/sentry-php/pull/2164)
+
+### Bug Fixes
+
+- Strip breadcrumb metadata when capturing out-of-memory errors to prevent events with large breadcrumbs from being silently dropped. [(#2150)](https://github.com/getsentry/sentry-php/pull/2150)
+
+### Misc
+
+- Use the SDK's internal options resolver and fall back to safe defaults when option values are invalid. [(#2151)](https://github.com/getsentry/sentry-php/pull/2151)
+- Improve `RingBuffer` performance by using native PHP arrays. [(#2159)](https://github.com/getsentry/sentry-php/pull/2159)
+- Improve stack trace construction performance. [(#2160)](https://github.com/getsentry/sentry-php/pull/2160)
+- Correct `BreadcrumbHandler` PHPDoc parameter types for static analysis tools. [(#2152)](https://github.com/getsentry/sentry-php/pull/2152)
+
 ## 4.29.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.29.0.

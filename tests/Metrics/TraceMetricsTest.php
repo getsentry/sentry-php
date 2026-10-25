@@ -129,7 +129,7 @@ final class TraceMetricsTest extends TestCase
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, $metrics);
     }
 
-    public function testEnableMetrics(): void
+    public function testMetricSentWhenEnableMetricsIsFalse(): void
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options([
             'enable_metrics' => false,
@@ -138,7 +138,30 @@ final class TraceMetricsTest extends TestCase
         traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
         traceMetrics()->flush();
 
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertCount(1, StubTransport::$events[0]->getMetrics());
+        $this->assertSame('test-count', StubTransport::$events[0]->getMetrics()[0]->getName());
+    }
+
+    public function testBeforeSendMetricExceptionDropsMetricAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'before_send_metric' => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'logger' => StubLogger::getInstance(),
+        ]), StubTransport::getInstance()));
+
+        traceMetrics()->count('test-count', 2);
+        traceMetrics()->flush();
+
         $this->assertEmpty(StubTransport::$events);
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'The "before_send_metric" callback failed with exception: "test".',
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testBeforeSendMetricAltersContent(): void
@@ -190,6 +213,20 @@ final class TraceMetricsTest extends TestCase
 
         $this->assertEquals('test-gauge', $metric->getName());
         $this->assertEquals(10.50, $metric->getValue());
+    }
+
+    public function testNullAttributeValueIsStringified(): void
+    {
+        traceMetrics()->count('test-count', 2, ['foo' => null]);
+        traceMetrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $event = StubTransport::$events[0];
+
+        $this->assertCount(1, $event->getMetrics());
+        $metric = $event->getMetrics()[0];
+
+        $this->assertSame('null', $metric->getAttributes()->toSimpleArray()['foo']);
     }
 
     public function testInvalidTypeIsDiscarded(): void

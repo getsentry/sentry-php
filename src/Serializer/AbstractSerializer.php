@@ -44,6 +44,12 @@ abstract class AbstractSerializer
     public const WESTERN_MB_DETECT_ORDER = 'UTF-8, ASCII, ISO-8859-1, ISO-8859-2, ISO-8859-3, ISO-8859-4, ISO-8859-5, ISO-8859-6, ISO-8859-7, ISO-8859-8, ISO-8859-9, ISO-8859-10, ISO-8859-13, ISO-8859-14, ISO-8859-15, ISO-8859-16, Windows-1251, Windows-1252, Windows-1254';
 
     /**
+     * The key under which the number of items left out by the `max_breadth`
+     * option is reported.
+     */
+    private const TRUNCATED_KEY = '{truncated}';
+
+    /**
      * The maximum depth to reach when serializing recursively.
      *
      * @var int
@@ -108,8 +114,15 @@ abstract class AbstractSerializer
 
             if (\is_array($value)) {
                 $serializedArray = [];
+                $maxBreadth = $this->options->getMaxBreadth();
 
                 foreach ($value as $k => $v) {
+                    if ($maxBreadth !== null && \count($serializedArray) >= $maxBreadth) {
+                        $serializedArray[self::TRUNCATED_KEY] = $this->formatTruncatedItems(\count($value) - $maxBreadth);
+
+                        break;
+                    }
+
                     $serializedArray[$k] = $this->serializeRecursively($v, $_depth + 1);
                 }
 
@@ -162,7 +175,8 @@ abstract class AbstractSerializer
      * Find class serializers for a object.
      *
      * Registered serializers with the `class_serializers` option take precedence over
-     * objects implementing the `SerializableInterface`.
+     * objects implementing the `SerializableInterface`. A serializer registered for
+     * the `object` type matches any object and is tried last.
      *
      * @param object $object
      *
@@ -171,9 +185,12 @@ abstract class AbstractSerializer
     protected function resolveClassSerializers($object): array
     {
         $serializers = [];
+        $objectSerializer = null;
 
         foreach ($this->options->getClassSerializers() as $type => $serializer) {
-            if ($object instanceof $type) {
+            if ($type === 'object') {
+                $objectSerializer = $serializer;
+            } elseif ($object instanceof $type) {
                 $serializers[] = $serializer;
             }
         }
@@ -182,6 +199,10 @@ abstract class AbstractSerializer
             $serializers[] = static function (SerializableInterface $object): ?array {
                 return $object->toSentry();
             };
+        }
+
+        if ($objectSerializer !== null) {
+            $serializers[] = $objectSerializer;
         }
 
         return $serializers;
@@ -201,8 +222,17 @@ abstract class AbstractSerializer
 
         $hashes[] = spl_object_hash($object);
         $serializedObject = [];
+        $maxBreadth = $this->options->getMaxBreadth();
+        $truncatedItems = 0;
 
         foreach ($object as $key => &$value) {
+            if ($maxBreadth !== null && \count($serializedObject) >= $maxBreadth) {
+                // the properties of an object cannot be counted without walking them, so only count the next ones
+                ++$truncatedItems;
+
+                continue;
+            }
+
             if (\is_object($value)) {
                 $serializedObject[$key] = $this->serializeObject($value, $_depth + 1, $hashes);
             } else {
@@ -210,7 +240,19 @@ abstract class AbstractSerializer
             }
         }
 
+        if ($truncatedItems > 0) {
+            $serializedObject[self::TRUNCATED_KEY] = $this->formatTruncatedItems($truncatedItems);
+        }
+
         return $serializedObject;
+    }
+
+    /**
+     * Describes the number of items left out because of the `max_breadth` option.
+     */
+    private function formatTruncatedItems(int $count): string
+    {
+        return \sprintf('%d more item%s', $count, $count === 1 ? '' : 's');
     }
 
     /**

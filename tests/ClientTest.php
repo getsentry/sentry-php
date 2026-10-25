@@ -361,6 +361,40 @@ final class ClientTest extends TestCase
         ];
     }
 
+    /**
+     * @dataProvider captureEventDoesNotAttachStacktraceToNonErrorEventsDataProvider
+     */
+    public function testCaptureEventDoesNotAttachStacktraceToNonErrorEvents(Event $event): void
+    {
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+        $transport->expects($this->once())
+                  ->method('send')
+                  ->with($this->callback(static function (Event $event): bool {
+                      return $event->getStacktrace() === null;
+                  }))
+                  ->willReturnCallback(static function (Event $event): Result {
+                      return new Result(ResultStatus::success(), $event);
+                  });
+
+        $client = ClientBuilder::create(['attach_stacktrace' => true])
+                               ->setTransport($transport)
+                               ->getClient();
+
+        $this->assertNotNull($client->captureEvent($event));
+    }
+
+    public static function captureEventDoesNotAttachStacktraceToNonErrorEventsDataProvider(): \Generator
+    {
+        yield 'transaction' => [Event::createTransaction()];
+
+        yield 'check-in' => [Event::createCheckIn()];
+
+        yield 'logs' => [Event::createLogs()];
+
+        yield 'metrics' => [Event::createMetrics()];
+    }
+
     public function testCaptureEventPrefersExplicitStacktrace(): void
     {
         $stacktrace = new Stacktrace([
@@ -652,6 +686,29 @@ final class ClientTest extends TestCase
         $client->captureEvent(Event::createEvent());
     }
 
+    public function testProcessEventDoesNotBuildStacktracesWhenEventIsNotSampled(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))
+               ->method('info')
+               ->with(
+                   new StringMatchesFormatDescription('The event [%s] will be discarded because it has been sampled.'),
+                   $this->callback(static function (array $context): bool {
+                       return $context['event'] instanceof Event
+                           && $context['event']->getExceptions() === []
+                           && $context['event']->getStacktrace() === null;
+                   })
+               );
+
+        $client = ClientBuilder::create(['sample_rate' => 0, 'attach_stacktrace' => true])
+                               ->setTransport($this->createMock(TransportInterface::class))
+                               ->setLogger($logger)
+                               ->getClient();
+
+        $client->captureException(new \Exception('foo'));
+        $client->captureMessage('foo');
+    }
+
     public function testProcessEventCapturesEventWhenSampleRateOptionIsAboveZero(): void
     {
         $transport = $this->createMock(TransportInterface::class);
@@ -855,6 +912,111 @@ final class ClientTest extends TestCase
         $client->captureEvent($event);
     }
 
+    /**
+     * @dataProvider traceIgnoreStatusCodesDataProvider
+     */
+    public function testProcessEventDiscardsEventWhenTraceIgnoreStatusCodesMatches(?int $statusCode, array $ignoredStatusCodes, bool $shouldIgnore): void
+    {
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /api/users');
+
+        if ($statusCode !== null) {
+            $event->setContext('trace', [
+                'data' => ['http.response.status_code' => $statusCode],
+            ]);
+        }
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+
+        if ($shouldIgnore) {
+            $logger->expects($this->once())
+                   ->method('info')
+                   ->with(
+                       new StringMatchesFormatDescription('The transaction [%s] will be discarded because its HTTP status code %d matches an entry in "trace_ignore_status_codes".'),
+                       $this->callback(static function (array $context): bool {
+                           return isset($context['event']) && $context['event'] instanceof Event;
+                       })
+                   );
+        } else {
+            $logger->expects($this->never())
+                   ->method('info');
+        }
+
+        /** @var TransportInterface&MockObject $transport */
+        $transport = $this->createMock(TransportInterface::class);
+
+        if ($shouldIgnore) {
+            $transport->expects($this->never())
+                      ->method('send');
+        } else {
+            $transport->expects($this->once())
+                      ->method('send')
+                      ->with($event)
+                      ->willReturnCallback(static function (Event $event): Result {
+                          return new Result(ResultStatus::success(), $event);
+                      });
+        }
+
+        $client = ClientBuilder::create(['trace_ignore_status_codes' => $ignoredStatusCodes])
+                               ->setTransport($transport)
+                               ->setLogger($logger)
+                               ->getClient();
+
+        $client->captureEvent($event);
+    }
+
+    public static function traceIgnoreStatusCodesDataProvider(): \Generator
+    {
+        yield 'Default does not ignore any status code' => [
+            404,
+            [],
+            false,
+        ];
+
+        yield 'Exact status code match' => [
+            404,
+            [404],
+            true,
+        ];
+
+        yield 'Exact status code no match' => [
+            200,
+            [404],
+            false,
+        ];
+
+        yield 'Range lower bound match' => [
+            500,
+            [[500, 599]],
+            true,
+        ];
+
+        yield 'Range upper bound match' => [
+            599,
+            [[500, 599]],
+            true,
+        ];
+
+        yield 'Range no match' => [
+            404,
+            [[500, 599]],
+            false,
+        ];
+
+        yield 'Mixed status codes and ranges, second matches' => [
+            503,
+            [404, [500, 599]],
+            true,
+        ];
+
+        yield 'Transaction without status code' => [
+            null,
+            [404, [500, 599]],
+            false,
+        ];
+    }
+
     public static function ignoreTransactionsDataProvider(): \Generator
     {
         yield 'Exact string match' => [
@@ -922,6 +1084,33 @@ final class ClientTest extends TestCase
             ['GET /health', '/^DELETE \/api\/.*$/'],
             true,
         ];
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send',
+            Event::createEvent(),
+            'The "before_send" callback failed with exception: "test".'
+        );
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendTransactionCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send_transaction',
+            Event::createTransaction(),
+            'The "before_send_transaction" callback failed with exception: "test".'
+        );
+    }
+
+    public function testProcessEventDiscardsEventWhenBeforeSendCheckInCallbackThrows(): void
+    {
+        $this->assertCallbackFailureDropsEvent(
+            'before_send_check_in',
+            Event::createCheckIn(),
+            'The "before_send_check_in" callback failed with exception: "test".'
+        );
     }
 
     public function testProcessEventDiscardsEventWhenBeforeSendCallbackReturnsNull(): void
@@ -1000,6 +1189,28 @@ final class ClientTest extends TestCase
                                ->getClient();
 
         $client->captureEvent(Event::createCheckIn());
+    }
+
+    private function assertCallbackFailureDropsEvent(string $option, Event $event, string $message): void
+    {
+        StubLogger::$logs = [];
+        StubTransport::$events = [];
+
+        $client = ClientBuilder::create([
+            $option => static function (): void {
+                throw new \RuntimeException('test');
+            },
+            'default_integrations' => false,
+            'logger' => StubLogger::getInstance(),
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        $this->assertNull($client->captureEvent($event));
+        $this->assertEmpty(StubTransport::$events);
+        $this->assertContains([
+            'level' => 'error',
+            'message' => $message,
+            'context' => [],
+        ], StubLogger::$logs);
     }
 
     public function testProcessEventDiscardsEventWhenEventProcessorReturnsNull(): void

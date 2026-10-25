@@ -41,8 +41,8 @@ final class MetricsAggregator
     private $metrics;
 
     /**
-     * @param int|float                            $value
-     * @param array<string, int|float|string|bool> $attributes
+     * @param int|float                                 $value
+     * @param array<string, int|float|string|bool|null> $attributes
      */
     public function add(
         string $type,
@@ -66,10 +66,6 @@ final class MetricsAggregator
         if ($client !== null) {
             $options = $client->getOptions();
             $metricFlushThreshold = $options->getMetricFlushThreshold();
-
-            if ($options->getEnableMetrics() === false) {
-                return;
-            }
 
             $defaultAttributes = [
                 'sentry.environment' => $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT,
@@ -113,9 +109,15 @@ final class MetricsAggregator
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         if ($client !== null) {
-            $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
-            $metric = $beforeSendMetric($metric);
-            if ($metric === null) {
+            try {
+                $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
+                $metric = $beforeSendMetric($metric);
+                if ($metric === null) {
+                    return;
+                }
+            } catch (\Throwable $exception) {
+                $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
+
                 return;
             }
         }

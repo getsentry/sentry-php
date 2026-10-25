@@ -1,5 +1,5 @@
 --TEST--
-Test that resetting the fatal error handler state re-arms OOM handling
+Test that resetting the fatal error handler state re-arms OOM handling only when the reservation was released
 --FILE--
 <?php
 
@@ -49,8 +49,21 @@ var_dump(getErrorHandlerStaticProperty('disableFatalErrorHandler'));
 var_dump(getErrorHandlerStaticProperty('didIncreaseMemoryLimit'));
 var_dump(\strlen(getErrorHandlerStaticProperty('reservedMemory')));
 
+setErrorHandlerStaticProperty('reservedMemory', 'existing reservation');
+setErrorHandlerStaticProperty('disableFatalErrorHandler', true);
+setErrorHandlerStaticProperty('didIncreaseMemoryLimit', true);
+
+ErrorHandler::resetFatalErrorHandlerState();
+
+var_dump(getErrorHandlerStaticProperty('disableFatalErrorHandler'));
+var_dump(getErrorHandlerStaticProperty('didIncreaseMemoryLimit'));
+var_dump(getErrorHandlerStaticProperty('reservedMemory'));
+
 ?>
 --EXPECT--
 bool(false)
 bool(false)
 int(1234)
+bool(false)
+bool(false)
+string(20) "existing reservation"
