@@ -46,6 +46,21 @@ final class KeyValueDataFilterTest extends TestCase
         ], $filtered);
     }
 
+    public function testFilterKeyValueDataFiltersUrlSignatures(): void
+    {
+        $filtered = (new KeyValueDataFilter(KeyValueCollectionBehavior::allowList(['expires', 'signature', 'X-Amz-Signature'])))->filterPairs([
+            ['expires', '1767225600'],
+            ['signature', '2f9401580f014c7f58ea4e30989d59ba36addc2b'],
+            ['X-Amz-Signature', 'a4e30989d59ba36addc2b2f9401580f014c7f58e'],
+        ]);
+
+        $this->assertSame([
+            ['expires', '1767225600'],
+            ['signature', '[Filtered]'],
+            ['X-Amz-Signature', '[Filtered]'],
+        ], $filtered);
+    }
+
     public function testFilterKeyValueDataCombinesMandatoryAndCustomDenyListTerms(): void
     {
         $behavior = KeyValueCollectionBehavior::denyList(['custom-field']);
