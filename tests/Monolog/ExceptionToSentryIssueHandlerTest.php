@@ -6,6 +6,7 @@ namespace Sentry\Tests\Monolog;
 
 use Monolog\Logger;
 use Monolog\LogRecord;
+use Monolog\Processor\PsrLogMessageProcessor;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\ClientInterface;
@@ -95,6 +96,42 @@ final class ExceptionToSentryIssueHandlerTest extends TestCase
 
         $this->assertTrue($handler->isHandling($record));
         $this->assertTrue($handler->handle($record));
+    }
+
+    public function testHandleAppliesProcessors(): void
+    {
+        $exception = new \RuntimeException('boom');
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureException')
+            ->with(
+                $this->identicalTo($exception),
+                $this->callback(function (Scope $scopeArg): bool {
+                    $event = $scopeArg->applyToEvent(Event::createEvent());
+
+                    $this->assertNotNull($event);
+                    $this->assertSame('Failed to sync user john', $event->getExtra()['monolog.message']);
+
+                    return true;
+                }),
+                null
+            );
+
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()));
+        $handler->pushProcessor(new PsrLogMessageProcessor());
+
+        $handler->handle(RecordFactory::create(
+            'Failed to sync user {username}',
+            Logger::ERROR,
+            'channel.foo',
+            [
+                'username' => 'john',
+                'exception' => $exception,
+            ],
+            []
+        ));
     }
 
     /**

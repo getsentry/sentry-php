@@ -71,6 +71,7 @@ use Sentry\Transport\TransportInterface;
  *     log_flush_threshold?: int|null,
  *     metric_flush_threshold?: int|null,
  *     max_breadcrumbs?: int,
+ *     max_breadth?: int|null,
  *     max_request_body_size?: "none"|"never"|"small"|"medium"|"always",
  *     max_value_length?: int,
  *     org_id?: int|null,
@@ -80,12 +81,14 @@ use Sentry\Transport\TransportInterface;
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
+ *     send_client_reports?: bool,
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,
  *     spotlight_url?: string,
  *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
+ *     trace_ignore_status_codes?: array<int|array{int, int}>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
@@ -381,16 +384,16 @@ function getOtlpTracesEndpointUrl(): ?string
  * This function is context aware, as in it either returns the traceparent based
  * on the current span, or the scope's propagation context.
  */
-function getTraceparent(): string
+function getTraceparent(?HubInterface $hub = null): string
 {
-    $hub = SentrySdk::getCurrentHub();
+    $hub = $hub ?? SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
     if ($client !== null) {
         $options = $client->getOptions();
 
         if ($options->isTracingEnabled()) {
-            $span = SentrySdk::getCurrentHub()->getSpan();
+            $span = $hub->getSpan();
             if ($span !== null) {
                 return $span->toTraceparent();
             }
@@ -428,16 +431,16 @@ function getW3CTraceparent(): string
  * This function is context aware, as in it either returns the baggage based
  * on the current span or the scope's propagation context.
  */
-function getBaggage(): string
+function getBaggage(?HubInterface $hub = null): string
 {
-    $hub = SentrySdk::getCurrentHub();
+    $hub = $hub ?? SentrySdk::getCurrentHub();
     $client = $hub->getClient();
 
     if ($client !== null) {
         $options = $client->getOptions();
 
         if ($options->isTracingEnabled()) {
-            $span = SentrySdk::getCurrentHub()->getSpan();
+            $span = $hub->getSpan();
             if ($span !== null) {
                 return $span->toBaggage();
             }
@@ -445,12 +448,12 @@ function getBaggage(): string
     }
 
     $baggage = '';
-    $hub->configureScope(static function (Scope $scope) use (&$baggage) {
+    $hub->configureScope(static function (Scope $scope) use (&$baggage, $hub) {
         if ($scope->hasExternalPropagationContext()) {
             return;
         }
 
-        $baggage = $scope->getPropagationContext()->toBaggage();
+        $baggage = $scope->getPropagationContext()->toBaggage($hub);
     });
 
     return $baggage;

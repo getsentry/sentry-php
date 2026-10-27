@@ -580,6 +580,36 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertSame($transaction, $hub->getSpan());
     }
 
+    public function testTraceHeadersUseTheSpanOfTheGivenHub(): void
+    {
+        $currentHubClient = $this->createMock(ClientInterface::class);
+        $currentHubClient->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
+        $currentHub = new Hub($currentHubClient);
+        SentrySdk::setCurrentHub($currentHub);
+        $currentHub->setSpan($currentHub->startTransaction(new TransactionContext()));
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
+        $hub = new Hub($client);
+        $transaction = $hub->startTransaction(new TransactionContext());
+        $hub->setSpan($transaction);
+
+        $sentRequests = [];
+        $function = (GuzzleTracingMiddleware::trace($hub))(static function (Request $request) use ($hub, &$sentRequests): PromiseInterface {
+            $sentRequests[] = [$request, $hub->getSpan()];
+
+            return new FulfilledPromise(new Response());
+        });
+
+        $function(new Request('GET', 'https://www.example.com'), []);
+
+        [$request, $span] = $sentRequests[0];
+
+        $this->assertNotSame($transaction, $span);
+        $this->assertSame($span->toTraceparent(), $request->getHeaderLine('sentry-trace'));
+        $this->assertSame($span->toBaggage(), $request->getHeaderLine('baggage'));
+    }
+
     public function testTraceRestoresTheCurrentSpanWhenTheHandlerThrows(): void
     {
         $client = $this->createMock(ClientInterface::class);

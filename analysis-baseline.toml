@@ -631,6 +631,12 @@ message = 'Possible argument type mismatch for argument #1 of `Monolog\Handler\A
 count = 1
 
 [[issues]]
+file = "src/Monolog/ExceptionToSentryIssueHandler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #1 of `Monolog\Handler\AbstractProcessingHandler::handle`: expected `Monolog\LogRecord`, but possibly received `Monolog\LogRecord|array<string, mixed>`.'
+count = 1
+
+[[issues]]
 file = "src/Monolog/Handler.php"
 code = "mixed-argument"
 message = '''Invalid argument type for argument #1 of `Monolog\Handler\AbstractHandler::__construct`: expected `enum(Monolog\Level)|int(100)|int(200)|int(250)|int(300)|int(400)|int(500)|int(550)|int(600)|string('ALERT')|string('CRITICAL')|string('DEBUG')|string('EMERGENCY')|string('ERROR')|string('INFO')|string('NOTICE')|string('WARNING')|string('alert')|string('critical')|string('debug')|string('emergency')|string('error')|string('info')|string('notice')|string('warning')`, but found `mixed`.'''
@@ -933,6 +939,12 @@ count = 1
 [[issues]]
 file = "src/Options.php"
 code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `Sentry\Options::getMaxBreadth`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
 message = 'Could not infer a precise return type for function `Sentry\Options::getMaxRequestBodySize`. Saw type `mixed`.'
 count = 1
 
@@ -1036,6 +1048,12 @@ count = 1
 file = "src/Options.php"
 code = "mixed-return-statement"
 message = 'Could not infer a precise return type for function `Sentry\Options::shouldCaptureSilencedErrors`. Saw type `mixed`.'
+count = 1
+
+[[issues]]
+file = "src/Options.php"
+code = "mixed-return-statement"
+message = 'Could not infer a precise return type for function `Sentry\Options::shouldSendClientReports`. Saw type `mixed`.'
 count = 1
 
 [[issues]]
