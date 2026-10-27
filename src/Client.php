@@ -6,6 +6,8 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
@@ -356,6 +358,8 @@ class Client implements ClientInterface
                 ),
                 ['event' => $beforeSendCallback]
             );
+
+            ClientReportAggregator::getInstance()->addEvent($beforeSendCallback, Reason::beforeSend());
         }
 
         return $event;

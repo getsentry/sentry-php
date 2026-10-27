@@ -17,16 +17,20 @@ use Sentry\ExceptionMechanism;
 use Sentry\Frame;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
 final class ClientTest extends TestCase
 {
+    use ClientReportAssertions;
+
     public function testConstructorSetupsIntegrations(): void
     {
         $integrationCalled = false;
@@ -535,6 +539,22 @@ final class ClientTest extends TestCase
             Event::createMetrics(),
             false,
         ];
+    }
+
+    public function testProcessEventRecordsClientReportWhenBeforeSendDiscardsEvent(): void
+    {
+        $client = ClientBuilder::create([
+            'before_send' => static function (): ?Event {
+                return null;
+            },
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $client->captureEvent(Event::createEvent());
+
+        $this->assertClientReports(['error' => ['before_send' => 1]]);
     }
 
     /**
