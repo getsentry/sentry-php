@@ -253,19 +253,20 @@ final class ContinuousProfiler
             $this->profiler->flush();
         }
 
-        if ($this->pendingChunks->isEmpty()) {
-            return;
-        }
-
-        $profileChunks = $this->pendingChunks->drain();
         $client = SentrySdk::getCurrentHub()->getClient();
 
-        if ($client === null) {
+        // Without a client the chunks stay pending until they can be sent
+        if ($client === null || $this->pendingChunks->isEmpty()) {
             return;
         }
 
-        foreach ($profileChunks as $profileChunk) {
-            $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+        // Stopping or flushing the profiler and ending a runtime context must not fail because of a chunk
+        try {
+            foreach ($this->pendingChunks->drain() as $profileChunk) {
+                $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+            }
+        } catch (\Throwable $exception) {
+            $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunks.', ['exception' => $exception]);
         }
     }
 
