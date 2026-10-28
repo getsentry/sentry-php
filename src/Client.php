@@ -342,6 +342,8 @@ class Client implements ClientInterface
                     ['event' => $beforeEventProcessors]
                 );
 
+                ClientReportAggregator::getInstance()->addEvent($beforeEventProcessors, Reason::eventProcessor());
+
                 return null;
             }
         }
