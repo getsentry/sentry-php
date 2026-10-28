@@ -38,6 +38,10 @@ final class KeyValueDataFilter
 
         // Filters the "remember me" cookies of Laravel and Symfony
         'remember',
+
+        // Filters the signatures of Laravel signed URLs and of presigned S3 URLs (`X-Amz-Signature`),
+        // either of which grants access to whatever the URL points to
+        'signature',
     ];
 
     private const EXCLUDED_HEADERS = [

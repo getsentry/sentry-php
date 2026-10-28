@@ -87,6 +87,7 @@ final class HttpUrlCollectorTest extends TestCase
         yield 'keep URLs without credentials' => ['https://example.com:8080/a#fragment', 'https://example.com:8080/a#fragment'];
         yield 'keep the fragment as it appears' => ['https://example.com/a#tab[]=one', 'https://example.com/a#tab[]=one'];
         yield 'relative URL' => ['/a?token=secret', '/a?token=[Filtered]'];
+        yield 'signed URL' => ['https://example.com/a?expires=1767225600&signature=secret', 'https://example.com/a?expires=1767225600&signature=[Filtered]'];
         yield 'query string that is falsy' => ['https://example.com/?0', 'https://example.com/?0'];
         yield 'empty query string' => ['https://example.com/?', 'https://example.com/'];
     }
