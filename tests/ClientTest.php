@@ -575,6 +575,20 @@ final class ClientTest extends TestCase
         $this->assertClientReports(['error' => ['event_processor' => 1]]);
     }
 
+    public function testProcessEventRecordsClientReportWhenEventIsSampled(): void
+    {
+        $client = ClientBuilder::create([
+            'sample_rate' => 0.0,
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $client->captureEvent(Event::createEvent());
+
+        $this->assertClientReports(['error' => ['sample_rate' => 1]]);
+    }
+
     /**
      * @dataProvider processEventChecksBeforeSendTransactionOptionDataProvider
      */
