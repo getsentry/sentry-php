@@ -9,18 +9,24 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Sentry\Attachment\Attachment;
+use Sentry\Client;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Response;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
+use Sentry\SentrySdk;
 use Sentry\Serializer\PayloadSerializerInterface;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Transport\HttpTransport;
 use Sentry\Transport\ResultStatus;
 
 final class HttpTransportTest extends TestCase
 {
+    use ClientReportAssertions;
+
     /**
      * @var LoggerInterface&MockObject
      */
@@ -275,6 +281,45 @@ final class HttpTransportTest extends TestCase
         $result = $transport->send($event);
 
         $this->assertSame(ResultStatus::rateLimit(), $result->getStatus());
+    }
+
+    /**
+     * @group time-sensitive
+     */
+    public function testRecordsClientReportWhenEventIsRateLimited(): void
+    {
+        ClockMock::withClockMock(1644105600);
+
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn(new Response(429, ['Retry-After' => ['60']], ''));
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        // The first event is sent and the server replies with a HTTP 429
+        $transport->send(Event::createEvent());
+
+        $this->assertClientReports([]);
+
+        // The second event is dropped because the rate limit is in effect
+        $transport->send(Event::createEvent());
+
+        $this->assertClientReports(['error' => ['ratelimit_backoff' => 1]]);
     }
 
     /**

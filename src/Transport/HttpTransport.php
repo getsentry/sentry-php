@@ -6,6 +6,8 @@ namespace Sentry\Transport;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\HttpClient\Request;
@@ -97,6 +99,8 @@ class HttpTransport implements TransportInterface
                     \sprintf('Rate limit exceeded for sending requests of type "%s".', (string) $eventType),
                     ['event' => $event]
                 );
+
+                ClientReportAggregator::getInstance()->addEvent($event, Reason::ratelimitBackoff());
 
                 return new Result(ResultStatus::rateLimit());
             }
