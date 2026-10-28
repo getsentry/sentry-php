@@ -112,6 +112,7 @@ class HttpTransport implements TransportInterface
                 if ($this->rateLimiter->isRateLimited(RateLimiter::DATA_CATEGORY_PROFILE)) {
                     // Just remove profiling data so the normal transaction can be sent.
                     $event->setSdkMetadata('profile', null);
+                    ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::ratelimitBackoff(), 1);
                     $this->logger->warning(
                         'Rate limit exceeded for sending requests of type "profile". The profile has been dropped.',
                         ['event' => $event]
