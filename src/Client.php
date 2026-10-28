@@ -292,6 +292,8 @@ class Client implements ClientInterface
         if (EventType::event() === $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $this->getEventDescription($event)), ['event' => $event]);
 
+            ClientReportAggregator::getInstance()->addEvent($event, Reason::sampleRate());
+
             return null;
         }
 
