@@ -63,8 +63,6 @@ use Sentry\Util\SentryUid;
  *        stacks: array<int, array<int, int>>,
  *    },
  * }
- *
- * @internal
  */
 final class Profile
 {
@@ -125,6 +123,8 @@ final class Profile
     }
 
     /**
+     * Entry timestamps are offsets in seconds from the profile's start timestamp.
+     *
      * @param \ExcimerLog|array<int, ExcimerLogStackEntry> $excimerLog
      */
     public function setExcimerLog($excimerLog): void
@@ -132,6 +132,9 @@ final class Profile
         $this->excimerLog = $excimerLog;
     }
 
+    /**
+     * @internal
+     */
     public function setEventId(EventId $eventId): void
     {
         $this->eventId = $eventId;
@@ -139,6 +142,8 @@ final class Profile
 
     /**
      * @return SentryProfile|null
+     *
+     * @internal
      */
     public function getFormattedData(Event $event): ?array
     {

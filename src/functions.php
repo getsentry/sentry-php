@@ -79,6 +79,7 @@ use Sentry\Transport\TransportInterface;
  *     prefixes?: array<string>,
  *     profile_lifecycle?: "manual"|"trace",
  *     profile_session_sample_rate?: int|float|null,
+ *     profiler_factory?: callable|null,
  *     profiles_sample_rate?: int|float|null,
  *     profiles_sampler?: callable|null,
  *     release?: string|null,

@@ -317,6 +317,19 @@ final class Options
     }
 
     /**
+     * Gets the factory used to create a profiler for each sampled transaction.
+     *
+     * @phpstan-return null|callable(Options): Profiling\ProfilerInterface
+     */
+    public function getProfilerFactory(): ?callable
+    {
+        /** @var callable(Options): Profiling\ProfilerInterface|null $value */
+        $value = $this->options['profiler_factory'];
+
+        return $value;
+    }
+
+    /**
      * Sets the sampling factor to apply to continuous profiling sessions. A
      * value of 0 or null disables continuous profiling, and a value of 1
      * profiles every session. It has no effect if transaction-based profiling
@@ -359,6 +372,20 @@ final class Options
     public function setProfileLifecycle(string $profileLifecycle): self
     {
         return $this->updateOptions(['profile_lifecycle' => $profileLifecycle]);
+    }
+
+    /**
+     * Sets the factory used to create a profiler for each sampled transaction.
+     * Return a new profiler for each transaction so concurrent profiles remain independent.
+     * When null, the SDK uses its default Excimer profiler.
+     *
+     * @param ?callable $factory The factory
+     *
+     * @phpstan-param null|callable(Options): Profiling\ProfilerInterface $factory
+     */
+    public function setProfilerFactory(?callable $factory): self
+    {
+        return $this->updateOptions(['profiler_factory' => $factory]);
     }
 
     /**
@@ -1386,6 +1413,7 @@ final class Options
         $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profile_session_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('profile_lifecycle', 'string');
+        $resolver->setAllowedTypes('profiler_factory', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
@@ -1479,6 +1507,7 @@ final class Options
             'profiles_sampler' => null,
             'profile_session_sample_rate' => null,
             'profile_lifecycle' => 'manual',
+            'profiler_factory' => null,
             'attach_stacktrace' => false,
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.

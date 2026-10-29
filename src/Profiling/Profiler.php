@@ -11,7 +11,7 @@ use Sentry\Options;
 /**
  * @internal
  */
-final class Profiler
+final class Profiler implements ProfilerInterface
 {
     /**
      * @var \ExcimerProfiler|null
