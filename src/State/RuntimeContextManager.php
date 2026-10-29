@@ -136,7 +136,14 @@ final class RuntimeContextManager
      */
     public function discardActiveContext(): void
     {
-        $this->removeActiveContext();
+        $runtimeContext = $this->removeActiveContext();
+
+        if ($runtimeContext === null) {
+            return;
+        }
+
+        // The root spans of a discarded context are not finished anymore, so they must not keep the profiler running
+        Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
     }
 
     private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ?int $timeout, LoggerInterface $logger): void

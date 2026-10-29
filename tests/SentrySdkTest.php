@@ -472,6 +472,25 @@ final class SentrySdkTest extends TestCase
     /**
      * @requires extension excimer
      */
+    public function testInitStopsProfilerForUnfinishedRootSpansOfTheDiscardedContext(): void
+    {
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        SentrySdk::init();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
     public function testEndContextKeepsProfilerRunningForRootSpansOfOtherContexts(): void
     {
         self::initWithProfileLifecycleTrace();

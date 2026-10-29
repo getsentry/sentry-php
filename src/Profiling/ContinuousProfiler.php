@@ -397,6 +397,10 @@ final class ContinuousProfiler
             return;
         }
 
+        // The parent process finishes its own root spans, so a profiler running for them is not restarted
+        $restart = $this->activeRootSpans === [];
+        $this->activeRootSpans = [];
+
         // The timer of the inherited profiler does not exist in this process, so tearing it down emits warnings
         set_error_handler(static function (): bool {
             return true;
@@ -408,7 +412,9 @@ final class ContinuousProfiler
             restore_error_handler();
         }
 
-        $this->start();
+        if ($restart) {
+            $this->start();
+        }
     }
 
     /**

@@ -441,6 +441,40 @@ final class ContinuousProfilerTest extends TestCase
     }
 
     /**
+     * The root spans of the parent process are finished by the parent process, so they must not keep the
+     * profiler of a forked process running once the root spans of the forked process are finished.
+     *
+     * @requires extension excimer
+     * @requires extension pcntl
+     */
+    public function testForkedProcessIsNotProfiledForTheRootSpansOfTheParentProcess(): void
+    {
+        $this->bindClient([
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->startForRootSpan('566e3688a61d4bc8');
+
+        $result = $this->runInForkedProcess(static function () use ($profiler): array {
+            $profiler->startForRootSpan('b0e6f15b45c36b12');
+            $profiler->stopForRootSpan('b0e6f15b45c36b12');
+
+            return ['isRunning' => $profiler->isRunning()];
+        });
+
+        $this->assertFalse($result['isRunning']);
+
+        // The parent process keeps profiling for its own root span
+        $this->assertTrue($profiler->isRunning());
+
+        $profiler->stopForRootSpan('566e3688a61d4bc8');
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
      * Destroying the profiler inherited by a forked process passes the samples it has not flushed yet
      * to the flush callback. The parent process sends those samples itself, so the forked process must
      * not send them under the profiler ID of the parent process.
@@ -685,11 +719,35 @@ final class ContinuousProfilerTest extends TestCase
      * report to the test directly, it writes its result to a file and kills itself, so the test
      * runner does not shut down a second time.
      *
+     * On Linux, Excimer does not reset its locks in a forked process, so a fork while its timer thread
+     * holds one leaves the forked process waiting for that lock forever. Such a process is killed and
+     * the callback is run in a new one.
+     *
      * @param callable(): array<string, mixed> $callback
      *
      * @return array<string, mixed>
      */
     private function runInForkedProcess(callable $callback): array
+    {
+        for ($attempt = 1; $attempt <= 3; ++$attempt) {
+            $result = $this->tryRunInForkedProcess($callback, 10.0);
+
+            if ($result !== null) {
+                $this->assertArrayNotHasKey('error', $result, $result['error'] ?? '');
+
+                return $result;
+            }
+        }
+
+        $this->fail('The forked process did not report a result.');
+    }
+
+    /**
+     * @param callable(): array<string, mixed> $callback
+     *
+     * @return array<string, mixed>|null The result, or null if the forked process did not report one in time
+     */
+    private function tryRunInForkedProcess(callable $callback, float $timeout): ?array
     {
         $resultFile = tempnam(sys_get_temp_dir(), 'sentry-profiler-fork');
 
@@ -708,14 +766,23 @@ final class ContinuousProfilerTest extends TestCase
             posix_kill(getmypid(), \SIGKILL);
         }
 
-        pcntl_waitpid($pid, $status);
+        $deadline = microtime(true) + $timeout;
+
+        while (pcntl_waitpid($pid, $status, \WNOHANG) === 0) {
+            if (microtime(true) >= $deadline) {
+                posix_kill($pid, \SIGKILL);
+                pcntl_waitpid($pid, $status);
+
+                break;
+            }
+
+            usleep(10000);
+        }
 
         $result = json_decode((string) file_get_contents($resultFile), true);
         unlink($resultFile);
 
-        $this->assertArrayNotHasKey('error', $result, $result['error'] ?? '');
-
-        return $result;
+        return \is_array($result) ? $result : null;
     }
 
     /**
