@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## 4.35.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.35.0.
+
+### Features
+
+- Add the `trace_ignore_status_codes` option to discard transactions for incoming requests whose response status code matches. Each entry is either a status code or an inclusive `[min, max]` range. [(#2263)](https://github.com/getsentry/sentry-php/pull/2263)
+
+  ```php
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'traces_sample_rate' => 1.0,
+      'trace_ignore_status_codes' => [404, [500, 599]],
+  ]);
+  ```
+
+- Add the `max_breadth` option to limit how many items of an array or object are serialized in frame arguments and query bindings. Items past the limit are replaced by a `{truncated}` entry. [(#2283)](https://github.com/getsentry/sentry-php/pull/2283)
+- Add the `profiler_factory` option to use a custom profiler for transactions sampled for profiling, for example to keep samples from other requests out of a profile in async servers. [(#2253)](https://github.com/getsentry/sentry-php/pull/2253)
+
+  ```php
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'traces_sample_rate' => 1.0,
+      'profiles_sample_rate' => 1.0,
+      'profiler_factory' => static function (\Sentry\Options $options): \Sentry\Profiling\ProfilerInterface {
+          return new MyProfiler($options);
+      },
+  ]);
+  ```
+
+- Add the `send_client_reports` option to record telemetry discarded by `before_send` callbacks, event processors, `sample_rate` and active rate limits. It defaults to `false`. [(#2287)](https://github.com/getsentry/sentry-php/pull/2287), [(#2294)](https://github.com/getsentry/sentry-php/pull/2294), [(#2296)](https://github.com/getsentry/sentry-php/pull/2296), [(#2297)](https://github.com/getsentry/sentry-php/pull/2297), [(#2298)](https://github.com/getsentry/sentry-php/pull/2298), [(#2300)](https://github.com/getsentry/sentry-php/pull/2300), [(#2301)](https://github.com/getsentry/sentry-php/pull/2301), [(#2302)](https://github.com/getsentry/sentry-php/pull/2302)
+
+### Bug Fixes
+
+- Filter URL signatures, such as Laravel signed routes and presigned S3 URLs, when collecting query strings, headers and cookies. [(#2293)](https://github.com/getsentry/sentry-php/pull/2293)
+- Filter query parameters in `Referer` headers. [(#2256)](https://github.com/getsentry/sentry-php/pull/2256)
+- Run processors in `ExceptionToSentryIssueHandler`, so the `monolog.message` extra contains the interpolated message. [(#2290)](https://github.com/getsentry/sentry-php/pull/2290)
+- Propagate the trace of the hub passed to `GuzzleTracingMiddleware` instead of the current hub. `getTraceparent()` and `getBaggage()` now accept an optional hub. [(#2289)](https://github.com/getsentry/sentry-php/pull/2289)
+- Don't nest concurrent Guzzle requests under each other, and don't leave a finished request span as the current span. [(#2255)](https://github.com/getsentry/sentry-php/pull/2255)
+- Don't treat a list of two allowed option values as a callable during option validation. [(#2258)](https://github.com/getsentry/sentry-php/pull/2258)
+- Stop the profiler only once when a transaction is finished more than once, so its samples are not lost. [(#2253)](https://github.com/getsentry/sentry-php/pull/2253)
+
+### Misc
+
+- Only attach stacktraces from `attach_stacktrace` to error events, and skip preparing errors discarded by `sample_rate`. [(#2284)](https://github.com/getsentry/sentry-php/pull/2284)
+
 ## 4.34.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.34.0.
