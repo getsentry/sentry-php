@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
@@ -12,9 +13,12 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\Profiling\ProfilerInterface;
+use Sentry\Profiling\Profiles;
+use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
 use Sentry\Tests\StubLogger;
+use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -76,6 +80,55 @@ final class TransactionTest extends TestCase
         $eventId = $transaction->finish();
 
         $this->assertSame($expectedEventId, $eventId);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSpansCreatedWhileProfilingAreLinkedToTheProfile(): void
+    {
+        StubTransport::$events = [];
+
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options([
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true), $hub);
+        $transaction->initSpanRecorder();
+
+        $profiledSpan = $transaction->startChild(new SpanContext());
+        $profiledSpan->finish();
+
+        $profiler->stop();
+
+        $unprofiledSpan = $transaction->startChild(new SpanContext());
+        $unprofiledSpan->finish();
+
+        $transaction->finish();
+
+        $transactionEvents = array_values(array_filter(StubTransport::$events, static function (Event $event): bool {
+            return $event->getType() === EventType::transaction();
+        }));
+
+        $this->assertCount(1, $transactionEvents);
+
+        $event = $transactionEvents[0];
+        $profileData = [
+            'thread.id' => '0',
+            'thread.name' => 'main',
+            'profiler_id' => $profilerId,
+        ];
+
+        $this->assertSame(['profiler_id' => $profilerId], $event->getContexts()['profile']);
+        $this->assertSame($profileData, $event->getContexts()['trace']['data']);
+        $this->assertSame($profileData, $profiledSpan->getData());
+        $this->assertSame([], $unprofiledSpan->getData());
     }
 
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void

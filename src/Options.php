@@ -305,6 +305,18 @@ final class Options
     }
 
     /**
+     * Gets the sampling factor to apply to continuous profiling sessions. The
+     * sampling decision is made once per profiling session.
+     */
+    public function getProfileSessionSampleRate(): ?float
+    {
+        /** @var int|float|null $value */
+        $value = $this->options['profile_session_sample_rate'];
+
+        return $value;
+    }
+
+    /**
      * Gets the factory used to create a profiler for each sampled transaction.
      *
      * @phpstan-return null|callable(Options): Profiling\ProfilerInterface
@@ -315,6 +327,51 @@ final class Options
         $value = $this->options['profiler_factory'];
 
         return $value;
+    }
+
+    /**
+     * Sets the sampling factor to apply to continuous profiling sessions. A
+     * value of 0 or null disables continuous profiling, and a value of 1
+     * profiles every session. It has no effect if transaction-based profiling
+     * is configured via `profiles_sample_rate` or `profiles_sampler`.
+     *
+     * @param ?float $sampleRate The sampling factor
+     */
+    public function setProfileSessionSampleRate(?float $sampleRate): self
+    {
+        return $this->updateOptions(['profile_session_sample_rate' => $sampleRate]);
+    }
+
+    /**
+     * Gets how the lifecycle of the continuous profiler is controlled.
+     *
+     * @return 'manual'|'trace'
+     */
+    public function getProfileLifecycle(): string
+    {
+        /** @var 'manual'|'trace' $value */
+        $value = $this->options['profile_lifecycle'];
+
+        return $value;
+    }
+
+    /**
+     * Sets how the lifecycle of the continuous profiler is controlled.
+     *
+     * @param string $profileLifecycle The lifecycle mode. It can be set to one
+     *                                 of the following values:
+     *
+     *                                  - manual: the profiler is started and
+     *                                    stopped explicitly
+     *                                  - trace: the profiler runs automatically
+     *                                    while at least one sampled root
+     *                                    transaction is active
+     *
+     * @phpstan-param 'manual'|'trace' $profileLifecycle
+     */
+    public function setProfileLifecycle(string $profileLifecycle): self
+    {
+        return $this->updateOptions(['profile_lifecycle' => $profileLifecycle]);
     }
 
     /**
@@ -1354,6 +1411,8 @@ final class Options
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
+        $resolver->setAllowedTypes('profile_session_sample_rate', ['null', 'int', 'float']);
+        $resolver->setAllowedTypes('profile_lifecycle', 'string');
         $resolver->setAllowedTypes('profiler_factory', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('attach_metric_code_locations', 'bool');
@@ -1404,6 +1463,7 @@ final class Options
         $resolver->setAllowedTypes('data_collection', ['null', 'array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['none', 'never', 'small', 'medium', 'always']);
+        $resolver->setAllowedValues('profile_lifecycle', ['manual', 'trace']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
@@ -1445,6 +1505,8 @@ final class Options
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'profiles_sampler' => null,
+            'profile_session_sample_rate' => null,
+            'profile_lifecycle' => 'manual',
             'profiler_factory' => null,
             'attach_stacktrace' => false,
             /**

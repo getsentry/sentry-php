@@ -15,6 +15,8 @@ use Sentry\EventHint;
 use Sentry\EventId;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\MonitorConfig;
+use Sentry\Profiling\ProfileChunk;
+use Sentry\Profiling\Profiles;
 use Sentry\Severity;
 use Sentry\Tracing\SamplingContext;
 use Sentry\Tracing\Span;
@@ -45,6 +47,10 @@ class Hub implements HubInterface
     public function __construct(?ClientInterface $client = null, ?Scope $scope = null)
     {
         $this->stack[] = new Layer($client, $scope ?? new Scope());
+
+        if ($client !== null) {
+            Profiles::getInstance()->continuousProfiler()->onClientBound($client);
+        }
     }
 
     /**
@@ -116,6 +122,8 @@ class Hub implements HubInterface
     {
         $layer = $this->getStackTop();
         $layer->setClient($client);
+
+        Profiles::getInstance()->continuousProfiler()->onClientBound($client);
     }
 
     /**
@@ -282,6 +290,10 @@ class Hub implements HubInterface
 
             $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
 
+            if ($options !== null && $options->getProfileLifecycle() === 'trace') {
+                $logger->warning('The "profile_lifecycle" option is set to "trace" but tracing is not enabled, so no profiles will be collected.');
+            }
+
             return $transaction;
         }
 
@@ -353,6 +365,22 @@ class Hub implements HubInterface
         $logger->info(\sprintf('Transaction [%s] was started and sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
 
         $transaction->initSpanRecorder();
+
+        if ($options->getProfileLifecycle() === 'trace') {
+            $continuousProfiler = Profiles::getInstance()->continuousProfiler();
+            $continuousProfiler->startForRootSpan((string) $transaction->getSpanId());
+
+            $profilerId = $continuousProfiler->getProfilerId();
+
+            // Backfill profiling data because the profiler was started after the transaction
+            if ($profilerId !== null) {
+                $transaction->setData([
+                    'thread.id' => ProfileChunk::THREAD_ID,
+                    'thread.name' => ProfileChunk::THREAD_NAME,
+                    'profiler_id' => $profilerId,
+                ]);
+            }
+        }
 
         $profilesSampleSource = 'config:profiles_sample_rate';
         $profilesSampler = $options->getProfilesSampler();

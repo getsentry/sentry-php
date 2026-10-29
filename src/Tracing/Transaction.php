@@ -9,6 +9,7 @@ use Sentry\EventId;
 use Sentry\Profiling\Profile;
 use Sentry\Profiling\Profiler;
 use Sentry\Profiling\ProfilerInterface;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 
@@ -154,6 +155,8 @@ final class Transaction extends Span
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
+        Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $this->getSpanId());
+
         if ($this->endTimestamp !== null) {
             // Transaction was already finished once and we don't want to re-flush it
             return null;
@@ -186,6 +189,12 @@ final class Transaction extends Span
         $event->setContext('trace', $this->getTraceContext());
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
+
+        $profilerId = $this->data['profiler_id'] ?? null;
+
+        if (\is_string($profilerId)) {
+            $event->setContext('profile', ['profiler_id' => $profilerId]);
+        }
 
         if ($profile !== null) {
             $event->setSdkMetadata('profile', $profile);
