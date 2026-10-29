@@ -81,12 +81,12 @@ final class GuzzleTracingMiddleware
                 }
 
                 if (self::shouldAttachTracingHeaders($sdkOptions, $request)) {
-                    $traceParent = getTraceparent();
+                    $traceParent = getTraceparent($hub);
                     if ($traceParent !== '') {
                         $request = $request->withHeader('sentry-trace', $traceParent);
                     }
 
-                    $baggage = getBaggage();
+                    $baggage = getBaggage($hub);
                     if ($baggage !== '') {
                         $request = $request->withHeader('baggage', $baggage);
                     }
