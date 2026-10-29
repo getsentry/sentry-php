@@ -6,6 +6,8 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
@@ -290,6 +292,8 @@ class Client implements ClientInterface
         if (EventType::event() === $event->getType() && $sampleRate < 1 && mt_rand(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $this->getEventDescription($event)), ['event' => $event]);
 
+            ClientReportAggregator::getInstance()->addEvent($event, Reason::sampleRate());
+
             return null;
         }
 
@@ -340,6 +344,8 @@ class Client implements ClientInterface
                     ['event' => $beforeEventProcessors]
                 );
 
+                ClientReportAggregator::getInstance()->addEvent($beforeEventProcessors, Reason::eventProcessor());
+
                 return null;
             }
         }
@@ -356,6 +362,8 @@ class Client implements ClientInterface
                 ),
                 ['event' => $beforeSendCallback]
             );
+
+            ClientReportAggregator::getInstance()->addEvent($beforeSendCallback, Reason::beforeSend());
         }
 
         return $event;
