@@ -179,6 +179,15 @@ final class ContinuousProfiler
         $this->activeRootSpans = [];
     }
 
+    public function flush(): void
+    {
+        if ($this->profiler === null) {
+            return;
+        }
+
+        $this->profiler->flush();
+    }
+
     public function isRunning(): bool
     {
         return $this->profiler !== null;
