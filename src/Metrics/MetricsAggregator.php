@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Metrics;
 
 use Sentry\Client;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Metrics\Types\CounterMetric;
@@ -16,6 +18,7 @@ use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Transport\DataCategory;
 use Sentry\Unit;
 use Sentry\Util\TelemetryStorage;
 
@@ -113,6 +116,8 @@ final class MetricsAggregator
                 $beforeSendMetric = $client->getOptions()->getBeforeSendMetricCallback();
                 $metric = $beforeSendMetric($metric);
                 if ($metric === null) {
+                    ClientReportAggregator::getInstance()->add(DataCategory::metric(), Reason::beforeSend(), 1);
+
                     return;
                 }
             } catch (\Throwable $exception) {

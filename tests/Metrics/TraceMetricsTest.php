@@ -14,11 +14,14 @@ use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
 use Sentry\State\HubAdapter;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 
 use function Sentry\traceMetrics;
 
 final class TraceMetricsTest extends TestCase
 {
+    use ClientReportAssertions;
+
     protected function setUp(): void
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options(), StubTransport::getInstance()));
@@ -162,6 +165,22 @@ final class TraceMetricsTest extends TestCase
             'message' => 'The "before_send_metric" callback failed with exception: "test".',
             'context' => [],
         ], StubLogger::$logs);
+    }
+
+    public function testRecordsClientReportWhenBeforeSendMetricDiscardsMetric(): void
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'before_send_metric' => static function (): ?Metric {
+                return null;
+            },
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        traceMetrics()->count('test-count', 2);
+        traceMetrics()->flush();
+
+        $this->assertEmpty(StubTransport::$events);
+        $this->assertClientReports(['trace_metric' => ['before_send' => 1]]);
     }
 
     public function testBeforeSendMetricAltersContent(): void
