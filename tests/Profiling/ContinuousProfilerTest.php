@@ -569,6 +569,28 @@ final class ContinuousProfilerTest extends TestCase
     /**
      * @requires extension excimer
      */
+    public function testStartWithoutClientAfterReInitKeepsTheSessionUnsampled(): void
+    {
+        $profiler = new ContinuousProfiler();
+
+        $this->bindClient(['profile_session_sample_rate' => 0.0]);
+
+        $profiler->start();
+
+        SentrySdk::init();
+
+        $profiler->start();
+
+        $this->assertFalse($profiler->isRunning());
+
+        $profiler->onClientBound($this->bindClient(['profile_session_sample_rate' => 0.0]));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
     public function testStartWithoutClientDiscardsTheSamplesIfTheBoundClientUsesTheTraceLifecycle(): void
     {
         $profiler = new ContinuousProfiler();

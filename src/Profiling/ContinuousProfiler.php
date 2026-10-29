@@ -123,7 +123,8 @@ final class ContinuousProfiler
     {
         $this->restartInForkedProcess();
 
-        if ($this->profiler !== null) {
+        // The profiling session is decided once, so it is not restarted while no client is bound after a re-init
+        if ($this->profiler !== null || $this->sampled === false) {
             return;
         }
 
