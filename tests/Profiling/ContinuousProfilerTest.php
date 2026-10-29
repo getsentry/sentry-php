@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tests\Profiling;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
@@ -191,7 +193,7 @@ final class ContinuousProfilerTest extends TestCase
     /**
      * @requires extension excimer
      */
-    public function testRunningProfilerSendsChunksWhenEnoughSamplesWereCollected(): void
+    public function testRunningProfilerSendsChunksCompletedWhileSamplingWhenItIsFlushedOrStopped(): void
     {
         $this->bindClient(['profile_session_sample_rate' => 1.0]);
 
@@ -202,10 +204,22 @@ final class ContinuousProfilerTest extends TestCase
 
         self::busyWait(0.2);
 
+        // Sending while sampling would block the application, switch to another coroutine or fail outside of one
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame([], StubTransport::$events);
+
+        $profiler->flush();
+
         $this->assertTrue($profiler->isRunning());
         $this->assertGreaterThanOrEqual(2, \count(StubTransport::$events));
 
+        $flushedEvents = \count(StubTransport::$events);
+
+        self::busyWait(0.1);
+
         $profiler->stop();
+
+        $this->assertGreaterThan($flushedEvents, \count(StubTransport::$events));
 
         $chunkIds = [];
 
@@ -219,6 +233,122 @@ final class ContinuousProfilerTest extends TestCase
         }
 
         $this->assertSame($chunkIds, array_unique($chunkIds));
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testPendingChunksAreLimited(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(2);
+        $profiler->start();
+
+        // Completes many more chunks than the 10 pending chunks that are kept
+        self::busyWait(0.5);
+
+        $profiler->capturePendingChunks();
+
+        $this->assertCount(10, StubTransport::$events);
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testCapturePendingChunksFlushesTheSamplesOnceTheFlushIntervalPassed(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(6060, 65.0, 0.05);
+        $profiler->start();
+
+        // Collects far fewer samples than Excimer needs to flush them
+        self::busyWait(0.1);
+
+        $profiler->capturePendingChunks();
+
+        $this->assertTrue($profiler->isRunning());
+        // The flushed samples are shorter than a chunk, so they are not split
+        $this->assertCount(1, StubTransport::$events);
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testCapturePendingChunksKeepsTheSamplesUntilTheFlushIntervalPassed(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.1);
+
+        $profiler->capturePendingChunks();
+
+        $this->assertSame([], StubTransport::$events);
+
+        $profiler->stop();
+
+        $this->assertCount(1, StubTransport::$events);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testCapturePendingChunksKeepsTheChunksWhileNoClientIsBound(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(5);
+        $profiler->start();
+
+        try {
+            self::busyWait(0.1);
+
+            SentrySdk::init();
+
+            $profiler->capturePendingChunks();
+
+            $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+            $this->assertSame([], StubTransport::$events);
+
+            $profiler->capturePendingChunks();
+
+            $this->assertNotEmpty(StubTransport::$events);
+        } finally {
+            $profiler->stop();
+        }
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStopIsNotInterruptedWhenAChunkCannotBeSent(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['profile_session_sample_rate' => 1.0]));
+        $client->method('captureEvent')
+            ->willThrowException(new \RuntimeException('Failed to capture the event.'));
+
+        SentrySdk::init()->bindClient($client);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertFalse($profiler->isRunning());
     }
 
     /**
