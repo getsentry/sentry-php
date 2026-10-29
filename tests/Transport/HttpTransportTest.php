@@ -373,6 +373,10 @@ final class HttpTransportTest extends TestCase
     {
         ClockMock::withClockMock(1644105600);
 
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
         $transport = new HttpTransport(
             new Options(['dsn' => 'http://public@example.com/1']),
             $this->httpClient,
@@ -419,6 +423,7 @@ final class HttpTransportTest extends TestCase
 
         // profile information is removed because it was rate limited
         $this->assertNull($event->getSdkMetadata('profile'));
+        $this->assertClientReports(['profile' => ['ratelimit_backoff' => 1]]);
     }
 
     /**
