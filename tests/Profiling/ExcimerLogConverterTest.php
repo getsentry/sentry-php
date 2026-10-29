@@ -284,5 +284,80 @@ final class ExcimerLogConverterTest extends TestCase
                 ]
             ),
         ];
+
+        yield 'Closures on the same line as their caller are not merged into the caller frame' => [
+            [
+                [
+                    'trace' => [
+                        [
+                            'file' => '/var/www/html/index.php',
+                            'line' => 10,
+                            'function' => '{closure}',
+                            'closure_line' => 10,
+                        ],
+                        [
+                            'file' => '/var/www/html/index.php',
+                            'line' => 10,
+                            'class' => 'App\\Controller',
+                            'function' => 'index',
+                        ],
+                    ],
+                    'timestamp' => 0.001,
+                ],
+            ],
+            new ProfileData(
+                [
+                    new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '{closure}', null, 10),
+                    new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', 'App\\Controller::index', 'App\\Controller', 10),
+                ],
+                [
+                    [0, 1],
+                ],
+                [
+                    new ProfileSample(0, 0.001),
+                ]
+            ),
+        ];
+
+        yield 'Trait methods used by different classes are not merged' => [
+            [
+                [
+                    'trace' => [
+                        [
+                            'file' => '/var/www/html/ForwardsCalls.php',
+                            'line' => 5,
+                            'class' => 'App\\Foo',
+                            'function' => 'forwardCall',
+                        ],
+                    ],
+                    'timestamp' => 0.001,
+                ],
+                [
+                    'trace' => [
+                        [
+                            'file' => '/var/www/html/ForwardsCalls.php',
+                            'line' => 5,
+                            'class' => 'App\\Bar',
+                            'function' => 'forwardCall',
+                        ],
+                    ],
+                    'timestamp' => 0.002,
+                ],
+            ],
+            new ProfileData(
+                [
+                    new ProfileFrame('/var/www/html/ForwardsCalls.php', '/var/www/html/ForwardsCalls.php', 'App\\Foo::forwardCall', 'App\\Foo', 5),
+                    new ProfileFrame('/var/www/html/ForwardsCalls.php', '/var/www/html/ForwardsCalls.php', 'App\\Bar::forwardCall', 'App\\Bar', 5),
+                ],
+                [
+                    [0],
+                    [1],
+                ],
+                [
+                    new ProfileSample(0, 0.001),
+                    new ProfileSample(1, 0.002),
+                ]
+            ),
+        ];
     }
 }
