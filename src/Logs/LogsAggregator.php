@@ -138,6 +138,7 @@ final class LogsAggregator
             $log = ($options->getBeforeSendLogCallback())($log);
         } catch (\Throwable $exception) {
             $options->getLoggerOrNullLogger()->error(\sprintf('The "before_send_log" callback failed with exception: "%s".', $exception->getMessage()));
+            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::beforeSend(), 1);
 
             return;
         }

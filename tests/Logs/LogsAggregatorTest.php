@@ -249,6 +249,7 @@ final class LogsAggregatorTest extends TestCase
                 throw new \RuntimeException('test');
             },
             'logger' => StubLogger::getInstance(),
+            'send_client_reports' => true,
         ])->getClient();
         SentrySdk::setCurrentHub(new Hub($client));
         $aggregator = new LogsAggregator();
@@ -256,6 +257,7 @@ final class LogsAggregatorTest extends TestCase
         $aggregator->add(LogLevel::info(), 'Test message');
 
         $this->assertEmpty($aggregator->all());
+        $this->assertClientReports(['log_item' => ['before_send' => 1]]);
         $this->assertContains([
             'level' => 'error',
             'message' => 'The "before_send_log" callback failed with exception: "test".',
