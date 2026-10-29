@@ -7,11 +7,13 @@ namespace Sentry\Tests\Logs;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientBuilder;
+use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
@@ -23,6 +25,8 @@ use Sentry\UserDataBag;
 
 final class LogsAggregatorTest extends TestCase
 {
+    use ClientReportAssertions;
+
     /**
      * This test is kept simple to ensure the `LogAggregator` is able to handle attributes passed in different formats.
      *
@@ -257,6 +261,23 @@ final class LogsAggregatorTest extends TestCase
             'message' => 'The "before_send_log" callback failed with exception: "test".',
             'context' => [],
         ], StubLogger::$logs);
+    }
+
+    public function testRecordsClientReportWhenBeforeSendLogDiscardsLog(): void
+    {
+        $client = ClientBuilder::create([
+            'before_send_log' => static function (): ?Log {
+                return null;
+            },
+            'send_client_reports' => true,
+        ])->getClient();
+        SentrySdk::setCurrentHub(new Hub($client));
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $this->assertEmpty($aggregator->all());
+        $this->assertClientReports(['log_item' => ['before_send' => 1]]);
     }
 
     public function testFlushesImmediatelyWhenThresholdIsReached(): void
