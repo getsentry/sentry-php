@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Sentry\ErrorHandler;
+use Sentry\Profiling\Profiles;
 use Sentry\Tracing\PropagationContext;
 
 /**
@@ -121,6 +122,8 @@ final class RuntimeContextManager
         if ($runtimeContext === null) {
             return;
         }
+
+        Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
 
         $logger = $this->getLoggerFromHub($runtimeContext->getHub());
 
