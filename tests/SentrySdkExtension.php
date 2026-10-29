@@ -7,6 +7,7 @@ namespace Sentry\Tests;
 use PHPUnit\Runner\BeforeTestHook as BeforeTestHookInterface;
 use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\Integration\IntegrationRegistry;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 
@@ -53,6 +54,18 @@ final class SentrySdkExtension implements BeforeTestHookInterface
         }
 
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'externalPropagationContextCallback');
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
+        $reflectionProperty->setValue(null, null);
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(false);
+        }
+
+        // A profiler left running by a previous test keeps sampling, so it is stopped before the profiling session is reset
+        Profiles::getInstance()->continuousProfiler()->stop();
+
+        $reflectionProperty = new \ReflectionProperty(Profiles::class, 'instance');
         if (\PHP_VERSION_ID < 80100) {
             $reflectionProperty->setAccessible(true);
         }
