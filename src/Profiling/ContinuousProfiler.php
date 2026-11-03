@@ -535,6 +535,9 @@ final class ContinuousProfiler
         $restart = $this->activeRootSpans === [];
         $this->activeRootSpans = [];
 
+        // The parent process finishes its own requests, so they do not keep the profiler of this process running
+        $this->activeRequestCount = 0;
+
         // The timer of the inherited profiler does not exist in this process, so tearing it down emits warnings
         set_error_handler(static function (): bool {
             return true;

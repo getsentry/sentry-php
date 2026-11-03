@@ -475,6 +475,43 @@ final class ContinuousProfilerTest extends TestCase
     }
 
     /**
+     * The requests of the parent process are finished by the parent process, so they must not keep the
+     * profiler of a forked process running once the requests of the forked process are finished.
+     *
+     * @requires extension excimer
+     * @requires extension pcntl
+     */
+    public function testForkedProcessIsPausedRegardlessOfTheRequestsOfTheParentProcess(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+        $profiler->resume();
+
+        $result = $this->runInForkedProcess(static function () use ($profiler): array {
+            $profiler->resume();
+            $profiler->pause();
+
+            $isPaused = $profiler->isPaused();
+
+            $profiler->stop();
+
+            return ['isPaused' => $isPaused];
+        });
+
+        $this->assertTrue($result['isPaused']);
+
+        // The parent process keeps profiling for its own request
+        $profiler->resume();
+        $profiler->pause();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
+    /**
      * Destroying the profiler inherited by a forked process passes the samples it has not flushed yet
      * to the flush callback. The parent process sends those samples itself, so the forked process must
      * not send them under the profiler ID of the parent process.
