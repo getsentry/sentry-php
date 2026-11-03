@@ -159,6 +159,28 @@ abstract class AbstractSerializerTest extends TestCase
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithGetIdMethod(#foobar)', $result);
     }
 
+    public function testObjectsWithStaticGetIdMethodAreStringsWithoutDeprecations(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithStaticGetIdMethod();
+        $deprecations = [];
+
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, \E_DEPRECATED);
+
+        try {
+            $result = $this->invokeSerialization($serializer, $input);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithStaticGetIdMethod(#foobar)', $result);
+        $this->assertSame([], $deprecations);
+    }
+
     public function testObjectsAreNotStrings(): void
     {
         $serializer = $this->createSerializer();
@@ -777,6 +799,14 @@ class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
     public function getId()
     {
         return $this->id . 'bar';
+    }
+}
+
+class SerializerTestObjectWithStaticGetIdMethod extends SerializerTestObject
+{
+    public static function getId()
+    {
+        return 'foobar';
     }
 }
 

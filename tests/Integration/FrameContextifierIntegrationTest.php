@@ -38,7 +38,12 @@ final class FrameContextifierIntegrationTest extends TestCase
         }
 
         $options = new Options($options);
-        $integration = new FrameContextifierIntegration();
+        /** @var MockObject&LoggerInterface $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('warning');
+
+        $integration = new FrameContextifierIntegration($logger);
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -94,7 +99,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             3,
             2,
             2,
-            2,
+            1,
         ];
 
         yield 'long file with specified context' => [
@@ -110,7 +115,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             11,
             5,
             5,
-            2,
+            1,
         ];
 
         yield 'long file near beginning of file' => [
