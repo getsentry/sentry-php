@@ -202,6 +202,10 @@ final class HttpTransportTest extends TestCase
 
     public function testSendFailsDueToCurlError(): void
     {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
         $event = Event::createEvent();
 
         /** @var LoggerInterface&MockObject $logger */
@@ -234,6 +238,7 @@ final class HttpTransportTest extends TestCase
         $result = $transport->send($event);
 
         $this->assertSame(ResultStatus::unknown(), $result->getStatus());
+        $this->assertClientReports(['error' => ['network_error' => 1]]);
     }
 
     /**

@@ -150,6 +150,11 @@ class HttpTransport implements TransportInterface
         $this->rateLimiter->handleResponse($response);
 
         if ($response->hasError()) {
+            // A status code of 0 means that no response was received, e.g. the connection failed
+            if ($response->getStatusCode() === 0) {
+                ClientReportAggregator::getInstance()->addEvent($event, Reason::networkError());
+            }
+
             $this->logger->error(
                 \sprintf('Failed to send %s to %s. Reason: "%s".', $eventDescription, $targetDescription, $response->getError()),
                 ['event' => $event]
