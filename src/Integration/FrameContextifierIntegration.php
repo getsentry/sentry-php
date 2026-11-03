@@ -156,8 +156,14 @@ final class FrameContextifierIntegration implements IntegrationInterface
             $file->seek($target);
 
             while (!$file->eof()) {
-                /** @var string $line */
+                /** @var string|false $line */
                 $line = $file->current();
+
+                // Past the last line PHP < 8.6 returns an empty string and PHP >= 8.6 returns false
+                if ($line === false || $line === '') {
+                    break;
+                }
+
                 $line = rtrim($line, "\r\n");
 
                 if ($currentLineNumber === $lineNumber) {
