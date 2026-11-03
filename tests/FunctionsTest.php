@@ -926,6 +926,58 @@ final class FunctionsTest extends TestCase
         $profiler->stop();
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerPauseAndResumePauseAndResumeManualLifecycleProfiler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'manual',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        profiler()->start();
+        profiler()->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        profiler()->resume();
+
+        $this->assertFalse($profiler->isPaused());
+
+        profiler()->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerPauseDoesNotPauseTraceLifecycleProfiler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'trace',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        SentrySdk::setCurrentHub(new Hub($client));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        profiler()->pause();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
     private static function busyWait(float $seconds): void
     {
         $end = microtime(true) + $seconds;
