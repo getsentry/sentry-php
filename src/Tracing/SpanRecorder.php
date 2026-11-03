@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
+use Sentry\Transport\DataCategory;
+
 final class SpanRecorder
 {
     /**
@@ -35,6 +39,7 @@ final class SpanRecorder
     {
         if (\count($this->spans) > $this->maxSpans) {
             $span->detachSpanRecorder();
+            ClientReportAggregator::getInstance()->add(DataCategory::span(), Reason::bufferOverflow(), 1);
         } else {
             $this->spans[] = $span;
         }
