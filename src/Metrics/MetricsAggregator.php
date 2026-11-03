@@ -122,6 +122,7 @@ final class MetricsAggregator
                 }
             } catch (\Throwable $exception) {
                 $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
+                ClientReportAggregator::getInstance()->add(DataCategory::metric(), Reason::beforeSend(), 1);
 
                 return;
             }
