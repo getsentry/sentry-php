@@ -5,6 +5,10 @@ Test that when handling a out of memory error the memory limit is increased with
 if (PHP_VERSION_ID < 80500) {
     die('skip - only works for PHP 8.5 and above');
 }
+
+if (PHP_OS_FAMILY === 'Windows') {
+    die('skip - the memory limit is not increased on Windows since PHP 8.2.35, 8.3.36, 8.4.27 and 8.5.12');
+}
 --INI--
 memory_limit=67108864
 --FILE--

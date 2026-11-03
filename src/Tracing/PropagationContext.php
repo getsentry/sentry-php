@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\SentrySdk;
+use Sentry\State\IsolationScope;
 use Sentry\Tracing\Traits\TraceHeaderParserTrait;
 
 final class PropagationContext
@@ -80,11 +81,11 @@ final class PropagationContext
     /**
      * Returns a string that can be used for the `baggage` header & meta tag.
      */
-    public function toBaggage(): string
+    public function toBaggage(?IsolationScope $scope = null): string
     {
         if ($this->dynamicSamplingContext === null) {
             $this->dynamicSamplingContext = DynamicSamplingContext::fromOptionsAndPropagationContext(
-                SentrySdk::getClient()->getOptions(),
+                SentrySdk::getClient($scope)->getOptions(),
                 $this
             );
         }

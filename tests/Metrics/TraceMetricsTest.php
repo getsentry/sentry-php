@@ -16,12 +16,15 @@ use Sentry\Metrics\Types\Metric;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\UserDataBag;
 
 use function Sentry\traceMetrics;
 
 final class TraceMetricsTest extends TestCase
 {
+    use ClientReportAssertions;
+
     protected function setUp(): void
     {
         SentrySdk::init(new Client(new Options(), StubTransport::getInstance()));
@@ -200,6 +203,7 @@ final class TraceMetricsTest extends TestCase
                 throw new \RuntimeException('test');
             },
             'logger' => StubLogger::getInstance(),
+            'send_client_reports' => true,
         ]), StubTransport::getInstance()));
 
         traceMetrics()->count('test-count', 2);
@@ -211,6 +215,23 @@ final class TraceMetricsTest extends TestCase
             'message' => 'The "before_send_metric" callback failed with exception: "test".',
             'context' => [],
         ], StubLogger::$logs);
+        $this->assertClientReports(['trace_metric' => ['before_send' => 1]]);
+    }
+
+    public function testRecordsClientReportWhenBeforeSendMetricDiscardsMetric(): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'before_send_metric' => static function (): ?Metric {
+                return null;
+            },
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        traceMetrics()->count('test-count', 2);
+        traceMetrics()->flush();
+
+        $this->assertEmpty(StubTransport::$events);
+        $this->assertClientReports(['trace_metric' => ['before_send' => 1]]);
     }
 
     public function testBeforeSendMetricAltersContent(): void

@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Sentry\Tests\Serializer;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Options;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\Serializer\SerializerInterface;
 
 abstract class AbstractSerializerTest extends TestCase
 {
-    abstract protected function createSerializer(): AbstractSerializer;
+    abstract protected function createSerializer(?Options $options = null): AbstractSerializer;
 
     /**
      * This method is only existed because of testSerializeCallable.
@@ -156,6 +157,28 @@ abstract class AbstractSerializerTest extends TestCase
         $result = $this->invokeSerialization($serializer, $input);
 
         $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithGetIdMethod(#foobar)', $result);
+    }
+
+    public function testObjectsWithStaticGetIdMethodAreStringsWithoutDeprecations(): void
+    {
+        $serializer = $this->createSerializer();
+        $input = new SerializerTestObjectWithStaticGetIdMethod();
+        $deprecations = [];
+
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = $errstr;
+
+            return true;
+        }, \E_DEPRECATED);
+
+        try {
+            $result = $this->invokeSerialization($serializer, $input);
+        } finally {
+            restore_error_handler();
+        }
+
+        $this->assertSame('Object Sentry\Tests\Serializer\SerializerTestObjectWithStaticGetIdMethod(#foobar)', $result);
+        $this->assertSame([], $deprecations);
     }
 
     public function testObjectsAreNotStrings(): void
@@ -443,6 +466,57 @@ abstract class AbstractSerializerTest extends TestCase
         }
     }
 
+    public function testArrayItemsAreNotLimitedByDefault(): void
+    {
+        $input = array_fill(0, 100, 'foo');
+
+        $this->assertSame($input, $this->invokeSerialization($this->createSerializer(), $input));
+    }
+
+    /**
+     * @dataProvider maxBreadthLimitsTheItemsOfAnArrayDataProvider
+     */
+    public function testMaxBreadthLimitsTheItemsOfAnArray(int $maxBreadth, array $input, array $expectedResult): void
+    {
+        $serializer = $this->createSerializer(new Options(['max_breadth' => $maxBreadth]));
+
+        $this->assertSame($expectedResult, $this->invokeSerialization($serializer, $input));
+    }
+
+    public static function maxBreadthLimitsTheItemsOfAnArrayDataProvider(): \Generator
+    {
+        yield 'list longer than the limit' => [2, ['a', 'b', 'c', 'd', 'e'], ['a', 'b', '{truncated}' => '3 more items']];
+        yield 'map longer than the limit' => [2, ['a' => 'foo', 'b' => 'bar', 'c' => 'baz'], ['a' => 'foo', 'b' => 'bar', '{truncated}' => '1 more item']];
+        yield 'limit of one' => [1, ['a', 'b'], ['a', '{truncated}' => '1 more item']];
+        yield 'as many items as the limit' => [2, ['a', 'b'], ['a', 'b']];
+        yield 'fewer items than the limit' => [2, ['a'], ['a']];
+        yield 'empty array' => [2, [], []];
+    }
+
+    public function testMaxBreadthLimitsTheItemsOfNestedArrays(): void
+    {
+        $serializer = $this->createSerializer(new Options(['max_breadth' => 2]));
+        $input = [['a', 'b', 'c'], ['d', 'e', 'f'], ['g', 'h', 'i']];
+
+        $this->assertSame([['a', 'b', '{truncated}' => '1 more item'], ['d', 'e', '{truncated}' => '1 more item'], '{truncated}' => '1 more item'], $this->invokeSerialization($serializer, $input));
+    }
+
+    /**
+     * @dataProvider serializeAllObjectsDataProvider
+     */
+    public function testMaxBreadthLimitsThePropertiesOfAnObject(bool $serializeAllObjects): void
+    {
+        $serializer = $this->createSerializer(new Options(['max_breadth' => 2]));
+
+        if ($serializeAllObjects) {
+            $serializer->setSerializeAllObjects(true);
+        }
+
+        $input = (object) ['a' => 'foo', 'b' => 'bar', 'c' => 'baz', 'd' => 'qux'];
+
+        $this->assertSame(['a' => 'foo', 'b' => 'bar', '{truncated}' => '2 more items'], $this->invokeSerialization($serializer, $input));
+    }
+
     /**
      * @dataProvider serializeAllObjectsDataProvider
      */
@@ -705,6 +779,14 @@ class SerializerTestObjectWithGetIdMethod extends SerializerTestObject
     public function getId()
     {
         return $this->id . 'bar';
+    }
+}
+
+class SerializerTestObjectWithStaticGetIdMethod extends SerializerTestObject
+{
+    public static function getId()
+    {
+        return 'foobar';
     }
 }
 

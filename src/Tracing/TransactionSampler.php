@@ -125,7 +125,12 @@ final class TransactionSampler
         } elseif (self::sampleRate($profilesSampleRate)) {
             $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 
-            $transaction->initProfiler($options)->start();
+            try {
+                $transaction->initProfiler($options)->start();
+            } catch (\Throwable $exception) {
+                $transaction->detachProfiler();
+                $logger->error(\sprintf('Failed to start the profiler. Reason: "%s".', $exception->getMessage()), ['exception' => $exception]);
+            }
         } else {
             $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
         }

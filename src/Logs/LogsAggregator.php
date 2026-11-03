@@ -7,11 +7,14 @@ namespace Sentry\Logs;
 use Sentry\Attributes\Attribute;
 use Sentry\Client;
 use Sentry\ClientInterface;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
+use Sentry\Transport\DataCategory;
 use Sentry\Util\Arr;
 use Sentry\Util\Str;
 use Sentry\Util\TelemetryStorage;
@@ -131,6 +134,7 @@ final class LogsAggregator
             $log = ($options->getBeforeSendLogCallback())($log);
         } catch (\Throwable $exception) {
             $options->getLoggerOrNullLogger()->error(\sprintf('The "before_send_log" callback failed with exception: "%s".', $exception->getMessage()));
+            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::beforeSend(), 1);
 
             return;
         }
@@ -142,6 +146,8 @@ final class LogsAggregator
                     ['log' => $log]
                 );
             }
+
+            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::beforeSend(), 1);
 
             return;
         }

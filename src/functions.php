@@ -34,6 +34,21 @@ use Sentry\Transport\TransportInterface;
  *     before_send_transaction?: callable,
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
+ *     data_collection?: DataCollection\DataCollectionOptions|array{
+ *         user_info?: bool,
+ *         cookies?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         http_headers?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>}|array{
+ *             request?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *             response?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         },
+ *         http_bodies?: array<"incomingRequest"|"outgoingRequest"|"incomingResponse"|"outgoingResponse">|DataCollection\HttpMessageType[],
+ *         url_query_params?: array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         gen_ai?: array{inputs?: bool, outputs?: bool},
+ *         database_query_data?: bool,
+ *         queues?: bool,
+ *         stack_frame_variables?: bool|array{mode?: "off"|"denyList"|"allowList", terms?: array<string>},
+ *         frame_context_lines?: int,
+ *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
@@ -57,19 +72,23 @@ use Sentry\Transport\TransportInterface;
  *     log_flush_threshold?: int|null,
  *     metric_flush_threshold?: int|null,
  *     max_breadcrumbs?: int,
+ *     max_breadth?: int|null,
  *     max_request_body_size?: "never"|"small"|"medium"|"always",
  *     org_id?: int|null,
  *     prefixes?: array<string>,
+ *     profiler_factory?: callable|null,
  *     profiles_sample_rate?: int|float|null,
  *     profiles_sampler?: callable|null,
  *     release?: string|null,
  *     sample_rate?: float|int,
  *     send_attempts?: int,
+ *     send_client_reports?: bool,
  *     send_default_pii?: bool,
  *     server_name?: string,
  *     spotlight?: bool,
  *     strict_trace_continuation?: bool,
  *     tags?: array<string>,
+ *     trace_ignore_status_codes?: array<int|array{int, int}>,
  *     trace_propagation_targets?: array<string>|null,
  *     traces_sample_rate?: float|int|null,
  *     traces_sampler?: callable|null,
@@ -447,7 +466,7 @@ function getBaggage(?IsolationScope $scope = null): string
         return '';
     }
 
-    return $scope->getPropagationContext()->toBaggage();
+    return $scope->getPropagationContext()->toBaggage($scope);
 }
 
 /**

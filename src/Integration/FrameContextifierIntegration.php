@@ -6,6 +6,7 @@ namespace Sentry\Integration;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\Event;
 use Sentry\Frame;
 use Sentry\SentrySdk;
@@ -25,6 +26,15 @@ final class FrameContextifierIntegration implements IntegrationInterface
     private $logger;
 
     /**
+     * @var array<string, array{
+     *     pre_context: string[],
+     *     context_line: string|null,
+     *     post_context: string[]
+     * }> The excerpts read while processing the current event, keyed by "file:line"
+     */
+    private $excerptCache = [];
+
+    /**
      * Creates a new instance of this integration.
      *
      * @param LoggerInterface|null $logger A PSR-3 logger
@@ -42,23 +52,27 @@ final class FrameContextifierIntegration implements IntegrationInterface
         SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event): Event {
             $client = SentrySdk::getClient();
 
-            $maxContextLines = $client->getOptions()->getContextLines();
+            $maxContextLines = DataCollectionPolicy::fromOptions($client->getOptions())->getFrameContextLines();
             $integration = $client->getIntegration(self::class);
 
             if ($integration === null || $maxContextLines === null) {
                 return $event;
             }
 
-            $stacktrace = $event->getStacktrace();
+            try {
+                $stacktrace = $event->getStacktrace();
 
-            if ($stacktrace !== null) {
-                $integration->addContextToStacktraceFrames($maxContextLines, $stacktrace);
-            }
-
-            foreach ($event->getExceptions() as $exception) {
-                if ($exception->getStacktrace() !== null) {
-                    $integration->addContextToStacktraceFrames($maxContextLines, $exception->getStacktrace());
+                if ($stacktrace !== null) {
+                    $integration->addContextToStacktraceFrames($maxContextLines, $stacktrace);
                 }
+
+                foreach ($event->getExceptions() as $exception) {
+                    if ($exception->getStacktrace() !== null) {
+                        $integration->addContextToStacktraceFrames($maxContextLines, $exception->getStacktrace());
+                    }
+                }
+            } finally {
+                $integration->excerptCache = [];
             }
 
             return $event;
@@ -117,6 +131,12 @@ final class FrameContextifierIntegration implements IntegrationInterface
      */
     private function getSourceCodeExcerpt(int $maxContextLines, string $filePath, int $lineNumber): array
     {
+        $cacheKey = $filePath . ':' . $lineNumber;
+
+        if (isset($this->excerptCache[$cacheKey])) {
+            return $this->excerptCache[$cacheKey];
+        }
+
         $frame = [
             'pre_context' => [],
             'context_line' => null,
@@ -131,8 +151,14 @@ final class FrameContextifierIntegration implements IntegrationInterface
             $file->seek($target);
 
             while (!$file->eof()) {
-                /** @var string $line */
+                /** @var string|false $line */
                 $line = $file->current();
+
+                // Past the last line PHP < 8.6 returns an empty string and PHP >= 8.6 returns false
+                if ($line === false || $line === '') {
+                    break;
+                }
+
                 $line = rtrim($line, "\r\n");
 
                 if ($currentLineNumber === $lineNumber) {
@@ -151,6 +177,8 @@ final class FrameContextifierIntegration implements IntegrationInterface
 
                 $file->next();
             }
+
+            $this->excerptCache[$cacheKey] = $frame;
         } catch (\Throwable $exception) {
             $this->logger->warning(
                 \sprintf('Failed to get the source code excerpt for the file "%s".', $filePath),

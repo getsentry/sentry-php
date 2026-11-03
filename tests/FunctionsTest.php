@@ -940,6 +940,45 @@ final class FunctionsTest extends TestCase
         $this->assertSame('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-sample_rate=1,sentry-transaction=Test,sentry-release=1.0.0,sentry-environment=development,sentry-sampled=true,sentry-sample_rand=0.25', $baggage);
     }
 
+    public function testTraceHeadersUseTheGivenScope(): void
+    {
+        $currentClient = $this->createMock(ClientInterface::class);
+        $currentClient->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1.0]));
+
+        SentrySdk::init($currentClient);
+        SentrySdk::getIsolationScope()->setSpan(startTransaction(new TransactionContext()));
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1.0]));
+
+        $scope = new IsolationScope();
+        $scope->setClient($client);
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true), $scope);
+        $scope->setSpan($transaction);
+
+        $this->assertSame($transaction->toTraceparent(), getTraceparent($scope));
+        $this->assertSame($transaction->toBaggage(), getBaggage($scope));
+    }
+
+    public function testBaggageUsesTheGivenScopeWithoutASpan(): void
+    {
+        $currentClient = $this->createMock(ClientInterface::class);
+        $currentClient->method('getOptions')->willReturn(new Options(['release' => 'current-scope-release']));
+
+        SentrySdk::init($currentClient);
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options(['release' => 'given-scope-release']));
+
+        $scope = new IsolationScope();
+        $scope->setClient($client);
+
+        $baggage = getBaggage($scope);
+
+        $this->assertStringContainsString('sentry-release=given-scope-release', $baggage);
+        $this->assertStringNotContainsString('current-scope-release', $baggage);
+    }
+
     public function testGetOtlpTracesEndpointUrlFallsBackToDsn(): void
     {
         $client = $this->createMock(ClientInterface::class);
