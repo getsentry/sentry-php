@@ -154,6 +154,7 @@ final class TraceMetricsTest extends TestCase
                 throw new \RuntimeException('test');
             },
             'logger' => StubLogger::getInstance(),
+            'send_client_reports' => true,
         ]), StubTransport::getInstance()));
 
         traceMetrics()->count('test-count', 2);
@@ -165,6 +166,7 @@ final class TraceMetricsTest extends TestCase
             'message' => 'The "before_send_metric" callback failed with exception: "test".',
             'context' => [],
         ], StubLogger::$logs);
+        $this->assertClientReports(['trace_metric' => ['before_send' => 1]]);
     }
 
     public function testRecordsClientReportWhenBeforeSendMetricDiscardsMetric(): void
