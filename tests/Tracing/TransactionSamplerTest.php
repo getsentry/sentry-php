@@ -6,6 +6,7 @@ namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Options;
+use Sentry\Profiling\ProfilerInterface;
 use Sentry\Tests\StubLogger;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SamplingContext;
@@ -330,6 +331,56 @@ final class TransactionSamplerTest extends TestCase
             'level' => 'error',
             'message' => 'The "profiles_sampler" callback failed with exception: "test".',
             'context' => [],
+        ], StubLogger::$logs);
+    }
+
+    public function testCreatesAProfilerForEachSampledTransaction(): void
+    {
+        $profilers = [
+            $this->createMock(ProfilerInterface::class),
+            $this->createMock(ProfilerInterface::class),
+        ];
+        foreach ($profilers as $profiler) {
+            $profiler->expects($this->once())->method('start');
+        }
+        $calls = 0;
+        $options = new Options([
+            'traces_sample_rate' => 1.0,
+            'profiles_sample_rate' => 1.0,
+        ]);
+        $options->setProfilerFactory(function (Options $factoryOptions) use ($options, $profilers, &$calls): ProfilerInterface {
+            $this->assertSame($options, $factoryOptions);
+
+            return $profilers[$calls++];
+        });
+
+        foreach ($profilers as $profiler) {
+            $transaction = $this->sampleTransaction($options, new TransactionContext());
+
+            $this->assertSame($profiler, $transaction->getProfiler());
+        }
+    }
+
+    public function testProfilerFactoryExceptionDropsProfileAndIsLogged(): void
+    {
+        StubLogger::$logs = [];
+        $exception = new \RuntimeException('test');
+
+        $transaction = $this->sampleTransaction(new Options([
+            'logger' => StubLogger::getInstance(),
+            'traces_sample_rate' => 1.0,
+            'profiles_sample_rate' => 1.0,
+            'profiler_factory' => static function () use ($exception): void {
+                throw $exception;
+            },
+        ]), new TransactionContext());
+
+        $this->assertTrue($transaction->getSampled());
+        $this->assertNull($transaction->getProfiler());
+        $this->assertContains([
+            'level' => 'error',
+            'message' => 'Failed to start the profiler. Reason: "test".',
+            'context' => ['exception' => $exception],
         ], StubLogger::$logs);
     }
 

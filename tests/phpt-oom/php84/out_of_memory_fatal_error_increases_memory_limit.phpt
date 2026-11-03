@@ -2,8 +2,12 @@
 Test that when handling a out of memory error the memory limit is increased with 5 MiB and the event is serialized and ready to be sent
 --SKIPIF--
 <?php
-if (PHP_VERSION_ID >= 80500) {
-    die('skip - only works for PHP 8.4 and below');
+if (PHP_VERSION_ID < 80200 || PHP_VERSION_ID >= 80500) {
+    die('skip - only works for PHP 8.2 to 8.4');
+}
+
+if (PHP_OS_FAMILY === 'Windows') {
+    die('skip - the memory limit is not increased on Windows since PHP 8.2.35, 8.3.36 and 8.4.27');
 }
 --INI--
 memory_limit=67108864

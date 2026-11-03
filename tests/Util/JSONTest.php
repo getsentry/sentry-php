@@ -191,7 +191,7 @@ final class JSONTest extends TestCase
     public function testDecodeThrowsIfValueIsNotValidJson(): void
     {
         $this->expectException(JsonException::class);
-        $this->expectExceptionMessage('Could not decode value from JSON format. Error was: "Syntax error".');
+        $this->expectExceptionMessageMatches('/^Could not decode value from JSON format\. Error was: "Syntax error( near location 1:1)?"\.$/');
 
         JSON::decode('foo');
     }

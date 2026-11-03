@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\DataCollection\DataCollectionOptions;
 use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\IntegrationInterface;
@@ -59,6 +60,8 @@ final class Options
 
         $this->configureOptions($this->resolver);
 
+        // Make the logger available to normalizers of nested options such as `data_collection` while resolving
+        $this->options = ['logger' => $this->getLoggerOrNullLogger($options)];
         $this->options = $this->resolver->resolve($options, $this->getLoggerOrNullLogger($options));
     }
 
@@ -267,6 +270,33 @@ final class Options
     }
 
     /**
+     * Gets the factory used to create a profiler for each sampled transaction.
+     *
+     * @phpstan-return null|callable(Options): Profiling\ProfilerInterface
+     */
+    public function getProfilerFactory(): ?callable
+    {
+        /** @var callable(Options): Profiling\ProfilerInterface|null $value */
+        $value = $this->options['profiler_factory'];
+
+        return $value;
+    }
+
+    /**
+     * Sets the factory used to create a profiler for each sampled transaction.
+     * Return a new profiler for each transaction so concurrent profiles remain independent.
+     * When null, the SDK uses its default Excimer profiler.
+     *
+     * @param ?callable $factory The factory
+     *
+     * @phpstan-param null|callable(Options): Profiling\ProfilerInterface $factory
+     */
+    public function setProfilerFactory(?callable $factory): self
+    {
+        return $this->updateOptions(['profiler_factory' => $factory]);
+    }
+
+    /**
      * Gets whether tracing is enabled or not. The feature is enabled when at
      * least one of the `traces_sample_rate` and `traces_sampler` options is
      * set.
@@ -310,6 +340,29 @@ final class Options
     public function setContextLines(?int $contextLines): self
     {
         return $this->updateOptions(['context_lines' => $contextLines]);
+    }
+
+    /**
+     * Gets the data collection options. `null` means the legacy options such as
+     * `send_default_pii` are used instead.
+     */
+    public function getDataCollection(): ?DataCollectionOptions
+    {
+        /** @var DataCollectionOptions|null $dataCollection */
+        $dataCollection = $this->options['data_collection'];
+
+        return $dataCollection;
+    }
+
+    /**
+     * Sets the data collection options. Any value other than `null` opts into the
+     * data collection options and ignores the legacy options such as `send_default_pii`.
+     *
+     * @param DataCollectionOptions|array<string, mixed>|null $dataCollection
+     */
+    public function setDataCollection($dataCollection): self
+    {
+        return $this->updateOptions(['data_collection' => $dataCollection]);
     }
 
     /**
@@ -529,6 +582,33 @@ final class Options
     public function setIgnoreTransactions(array $ignoreTransaction): self
     {
         return $this->updateOptions(['ignore_transactions' => $ignoreTransaction]);
+    }
+
+    /**
+     * Gets the HTTP status codes of incoming requests whose transactions are
+     * not sent to Sentry. Each entry is either a single status code or an
+     * inclusive `[min, max]` range.
+     *
+     * @return array<int|array{int, int}>
+     */
+    public function getTraceIgnoreStatusCodes(): array
+    {
+        /** @var array<int|array{int, int}> $statusCodes */
+        $statusCodes = $this->options['trace_ignore_status_codes'];
+
+        return $statusCodes;
+    }
+
+    /**
+     * Sets the HTTP status codes of incoming requests whose transactions are
+     * not sent to Sentry. A transaction is discarded when the value of its
+     * `http.response.status_code` data matches one of the entries.
+     *
+     * @param array<int|array{int, int}> $statusCodes A list of status codes or inclusive `[min, max]` ranges, e.g. `[404, [500, 599]]`
+     */
+    public function setTraceIgnoreStatusCodes(array $statusCodes): self
+    {
+        return $this->updateOptions(['trace_ignore_status_codes' => $statusCodes]);
     }
 
     /**
@@ -836,6 +916,24 @@ final class Options
     }
 
     /**
+     * Returns whether the SDK should record and send client reports about discarded telemetry.
+     */
+    public function shouldSendClientReports(): bool
+    {
+        return $this->options['send_client_reports'];
+    }
+
+    /**
+     * Sets whether the SDK should record and send client reports about discarded telemetry.
+     *
+     * @param bool $enable Flag indicating if client reports will be sent
+     */
+    public function setSendClientReports(bool $enable): self
+    {
+        return $this->updateOptions(['send_client_reports' => $enable]);
+    }
+
+    /**
      * Returns whether the default integrations are enabled.
      */
     public function hasDefaultIntegrations(): bool
@@ -851,6 +949,26 @@ final class Options
     public function setDefaultIntegrations(bool $enable): self
     {
         return $this->updateOptions(['default_integrations' => $enable]);
+    }
+
+    /**
+     * Gets the maximum number of items serialized from an array or an object,
+     * or null if there is no limit.
+     */
+    public function getMaxBreadth(): ?int
+    {
+        return $this->options['max_breadth'];
+    }
+
+    /**
+     * Sets the maximum number of items serialized from an array or an object,
+     * such as the arguments of the stack frames.
+     *
+     * @param int|null $maxBreadth The number of items after which the next ones are left out, or null for no limit
+     */
+    public function setMaxBreadth(?int $maxBreadth): self
+    {
+        return $this->updateOptions(['max_breadth' => $maxBreadth]);
     }
 
     /**
@@ -1100,6 +1218,7 @@ final class Options
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
         $resolver->setAllowedTypes('profiles_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('profiles_sampler', ['null', 'callable']);
+        $resolver->setAllowedTypes('profiler_factory', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
         $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
@@ -1118,6 +1237,7 @@ final class Options
         $resolver->setAllowedTypes('before_send_metric', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
+        $resolver->setAllowedTypes('trace_ignore_status_codes', 'array');
         $resolver->setAllowedTypes('trace_propagation_targets', ['null', 'string[]']);
         $resolver->setAllowedTypes('strict_trace_continuation', 'bool');
         $resolver->setAllowedTypes('tags', 'string[]');
@@ -1126,7 +1246,9 @@ final class Options
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
         $resolver->setAllowedTypes('send_default_pii', 'bool');
+        $resolver->setAllowedTypes('send_client_reports', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
+        $resolver->setAllowedTypes('max_breadth', ['null', 'int']);
         $resolver->setAllowedTypes('transport', ['null', TransportInterface::class]);
         $resolver->setAllowedTypes('http_client', ['null', HttpClientInterface::class]);
         $resolver->setAllowedTypes('http_proxy', ['null', 'string']);
@@ -1140,16 +1262,20 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
+        $resolver->setAllowedTypes('data_collection', ['null', 'array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('dsn', \Closure::fromCallable([$this, 'validateDsnOption']));
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
+        $resolver->setAllowedValues('trace_ignore_status_codes', \Closure::fromCallable([$this, 'validateTraceIgnoreStatusCodesOption']));
         $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
+        $resolver->setAllowedValues('max_breadth', \Closure::fromCallable([$this, 'validateMaxBreadthOption']));
         $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
 
         $resolver->setNormalizer('dsn', \Closure::fromCallable([$this, 'normalizeDsnOption']));
+        $resolver->setNormalizer('data_collection', \Closure::fromCallable([$this, 'normalizeDataCollectionOption']));
 
         $resolver->setNormalizer('prefixes', function (array $value) {
             return array_map([$this, 'normalizeAbsolutePath'], $value);
@@ -1178,6 +1304,7 @@ final class Options
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'profiles_sampler' => null,
+            'profiler_factory' => null,
             'attach_stacktrace' => false,
             'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
@@ -1189,6 +1316,7 @@ final class Options
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
+            'trace_ignore_status_codes' => [],
             'before_send' => static function (Event $event): Event {
                 return $event;
             },
@@ -1215,6 +1343,8 @@ final class Options
             'in_app_exclude' => [],
             'in_app_include' => [],
             'send_default_pii' => false,
+            'send_client_reports' => false,
+            'max_breadth' => null,
             'transport' => null,
             'http_client' => null,
             'http_proxy' => null,
@@ -1228,6 +1358,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
+            'data_collection' => null,
         ]);
     }
 
@@ -1275,6 +1406,18 @@ final class Options
         }
 
         return $url;
+    }
+
+    /**
+     * @param array<string, mixed>|DataCollectionOptions|null $value
+     */
+    private function normalizeDataCollectionOption($value): ?DataCollectionOptions
+    {
+        if ($value === null || $value instanceof DataCollectionOptions) {
+            return $value;
+        }
+
+        return new DataCollectionOptions($value, $this->getLoggerOrNullLogger());
     }
 
     /**
@@ -1370,6 +1513,41 @@ final class Options
     }
 
     /**
+     * Validates that the value passed to the "trace_ignore_status_codes" option
+     * is a list of status codes or inclusive `[min, max]` ranges.
+     *
+     * @param mixed[] $statusCodes The value to validate
+     */
+    private function validateTraceIgnoreStatusCodesOption(array $statusCodes): bool
+    {
+        foreach (array_keys($statusCodes) as $key) {
+            if (\is_int($statusCodes[$key])) {
+                continue;
+            }
+
+            if (!self::isStatusCodeRange($statusCodes[$key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks whether the given value is an inclusive `[min, max]` range of status codes.
+     *
+     * @param mixed $range The value to check
+     */
+    private static function isStatusCodeRange($range): bool
+    {
+        return \is_array($range)
+            && array_keys($range) === [0, 1]
+            && \is_int($range[0])
+            && \is_int($range[1])
+            && $range[0] <= $range[1];
+    }
+
+    /**
      * Validates that the value passed to the "context_lines" option is valid.
      *
      * @param int|null $contextLines The value to validate
@@ -1377,6 +1555,16 @@ final class Options
     private function validateContextLinesOption(?int $contextLines): bool
     {
         return $contextLines === null || $contextLines >= 0;
+    }
+
+    /**
+     * Validates that the value passed to the "max_breadth" option is valid.
+     *
+     * @param int|null $maxBreadth The value to validate
+     */
+    private function validateMaxBreadthOption(?int $maxBreadth): bool
+    {
+        return $maxBreadth === null || $maxBreadth > 0;
     }
 
     /**

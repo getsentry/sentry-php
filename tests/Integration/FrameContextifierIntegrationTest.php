@@ -23,10 +23,27 @@ final class FrameContextifierIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(string $fixtureFilePath, int $lineNumber, int $contextLines, int $preContextCount, int $postContextCount): void
-    {
-        $options = new Options(['context_lines' => $contextLines]);
-        $integration = new FrameContextifierIntegration();
+    public function testInvoke(
+        string $fixtureFilePath,
+        int $lineNumber,
+        int $contextLines,
+        int $preContextCount,
+        int $postContextCount,
+        ?int $dataCollectionContextLines = null
+    ): void {
+        $options = ['context_lines' => $contextLines];
+
+        if ($dataCollectionContextLines !== null) {
+            $options['data_collection'] = ['frame_context_lines' => $dataCollectionContextLines];
+        }
+
+        $options = new Options($options);
+        /** @var MockObject&LoggerInterface $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->never())
+            ->method('warning');
+
+        $integration = new FrameContextifierIntegration($logger);
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */
@@ -82,7 +99,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             3,
             2,
             2,
-            2,
+            1,
         ];
 
         yield 'long file with specified context' => [
@@ -98,7 +115,7 @@ final class FrameContextifierIntegrationTest extends TestCase
             11,
             5,
             5,
-            2,
+            1,
         ];
 
         yield 'long file near beginning of file' => [
@@ -107,6 +124,24 @@ final class FrameContextifierIntegrationTest extends TestCase
             5,
             2,
             5,
+        ];
+
+        yield 'data collection context lines take precedence over legacy option' => [
+            realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
+            8,
+            1,
+            3,
+            3,
+            3,
+        ];
+
+        yield 'data collection can omit surrounding context lines' => [
+            realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
+            8,
+            5,
+            0,
+            0,
+            0,
         ];
     }
 

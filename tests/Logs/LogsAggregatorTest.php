@@ -9,12 +9,14 @@ use Sentry\Client;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
+use Sentry\Logs\Log;
 use Sentry\Logs\LogLevel;
 use Sentry\Logs\LogsAggregator;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Tracing\PropagationContext;
@@ -26,6 +28,8 @@ use Sentry\UserDataBag;
 
 final class LogsAggregatorTest extends TestCase
 {
+    use ClientReportAssertions;
+
     /**
      * This test is kept simple to ensure the `LogAggregator` is able to handle attributes passed in different formats.
      *
@@ -265,6 +269,7 @@ final class LogsAggregatorTest extends TestCase
                 throw new \RuntimeException('test');
             },
             'logger' => StubLogger::getInstance(),
+            'send_client_reports' => true,
         ])->getClient();
         SentrySdk::init($client);
         $aggregator = new LogsAggregator();
@@ -272,11 +277,29 @@ final class LogsAggregatorTest extends TestCase
         $aggregator->add(LogLevel::info(), 'Test message');
 
         $this->assertEmpty($aggregator->all());
+        $this->assertClientReports(['log_item' => ['before_send' => 1]]);
         $this->assertContains([
             'level' => 'error',
             'message' => 'The "before_send_log" callback failed with exception: "test".',
             'context' => [],
         ], StubLogger::$logs);
+    }
+
+    public function testRecordsClientReportWhenBeforeSendLogDiscardsLog(): void
+    {
+        $client = ClientBuilder::create([
+            'before_send_log' => static function (): ?Log {
+                return null;
+            },
+            'send_client_reports' => true,
+        ])->getClient();
+        SentrySdk::init($client);
+        $aggregator = new LogsAggregator();
+
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $this->assertEmpty($aggregator->all());
+        $this->assertClientReports(['log_item' => ['before_send' => 1]]);
     }
 
     public function testFlushesImmediatelyWhenThresholdIsReached(): void

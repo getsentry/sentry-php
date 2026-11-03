@@ -7,7 +7,9 @@ namespace Sentry\Tracing;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
+use Sentry\Profiling\Profile;
 use Sentry\Profiling\Profiler;
+use Sentry\Profiling\ProfilerInterface;
 use Sentry\SentrySdk;
 use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
@@ -38,7 +40,7 @@ final class Transaction extends Span
     protected $metadata;
 
     /**
-     * @var Profiler|null Reference instance to the {@see Profiler}
+     * @var ProfilerInterface|null
      */
     protected $profiler;
 
@@ -120,16 +122,22 @@ final class Transaction extends Span
         return $this;
     }
 
-    public function initProfiler(?Options $options = null): Profiler
+    public function initProfiler(?Options $options = null): ProfilerInterface
     {
         if ($this->profiler === null) {
-            $this->profiler = new Profiler($options ?? SentrySdk::getClient($this->scope)->getOptions());
+            $options = $options ?? SentrySdk::getClient($this->scope)->getOptions();
+
+            if (($factory = $options->getProfilerFactory()) !== null) {
+                $this->profiler = $factory($options);
+            } else {
+                $this->profiler = new Profiler($options);
+            }
         }
 
         return $this->profiler;
     }
 
-    public function getProfiler(): ?Profiler
+    public function getProfiler(): ?ProfilerInterface
     {
         return $this->profiler;
     }
@@ -146,14 +154,12 @@ final class Transaction extends Span
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
-        if ($this->profiler !== null) {
-            $this->profiler->stop();
-        }
-
         if ($this->endTimestamp !== null) {
             // Transaction was already finished once and we don't want to re-flush it
             return null;
         }
+
+        $profile = $this->profiler !== null ? $this->finishProfiler($this->profiler) : null;
 
         parent::finish($endTimestamp);
 
@@ -181,13 +187,23 @@ final class Transaction extends Span
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
 
-        if ($this->profiler !== null) {
-            $profile = $this->profiler->getProfile();
-            if ($profile !== null) {
-                $event->setSdkMetadata('profile', $profile);
-            }
+        if ($profile !== null) {
+            $event->setSdkMetadata('profile', $profile);
         }
 
         return EventRecorder::captureEvent($event, null, $this->scope);
+    }
+
+    private function finishProfiler(ProfilerInterface $profiler): ?Profile
+    {
+        try {
+            $profiler->stop();
+
+            return $this->sampled === true ? $profiler->getProfile() : null;
+        } catch (\Throwable $exception) {
+            SentrySdk::getClient($this->scope)->getOptions()->getLoggerOrNullLogger()->error(\sprintf('Failed to stop the profiler. Reason: "%s".', $exception->getMessage()), ['exception' => $exception]);
+
+            return null;
+        }
     }
 }

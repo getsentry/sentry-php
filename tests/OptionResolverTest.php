@@ -349,6 +349,31 @@ class OptionResolverTest extends TestCase
         ]], StubLogger::$logs);
     }
 
+    public function testAllowedValuesListThatLooksLikeACallableDoesNotTriggerTheAutoloader(): void
+    {
+        $resolver = new OptionsResolver();
+        $resolver->setAllowedValues('foo', ['manual', 'trace']);
+
+        $autoloadedClasses = [];
+        $autoloader = static function (string $className) use (&$autoloadedClasses): void {
+            $autoloadedClasses[] = $className;
+        };
+
+        spl_autoload_register($autoloader, true, true);
+
+        try {
+            $resolver->setDefaults(['foo' => 'manual']);
+
+            $this->assertSame(['foo' => 'trace'], $resolver->resolve(['foo' => 'trace']));
+            $this->assertSame(['foo' => 'manual'], $resolver->resolve(['foo' => 'invalid']));
+        } finally {
+            spl_autoload_unregister($autoloader);
+        }
+
+        $this->assertNotContains('manual', $autoloadedClasses);
+        $this->assertNotContains('trace', $autoloadedClasses);
+    }
+
     public function testNullAllowedValueDisablesNestedValueValidation(): void
     {
         $resolver = new OptionsResolver();
