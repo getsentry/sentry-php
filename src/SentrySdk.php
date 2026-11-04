@@ -168,10 +168,6 @@ final class SentrySdk
     /**
      * Forks the current isolation scope until {@see popIsolationScope()} is called.
      *
-     * Use this when a unit of work cannot be wrapped in {@see withIsolationScope()}, for
-     * example when it starts and ends in separate framework event listeners. Every push
-     * must be paired with a pop.
-     *
      * @return IsolationScope The forked isolation scope
      */
     public static function pushIsolationScope(): IsolationScope
