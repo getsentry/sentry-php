@@ -45,6 +45,11 @@ final class RuntimeContext
     private $lastEventId;
 
     /**
+     * @var IsolationScope[] The isolation scopes to restore when the pushed ones are popped
+     */
+    private $previousIsolationScopes = [];
+
+    /**
      * @internal
      */
     public function __construct(string $id, ?IsolationScope $isolationScope = null)
@@ -77,6 +82,39 @@ final class RuntimeContext
     public function setIsolationScope(IsolationScope $isolationScope): void
     {
         $this->isolationScope = $isolationScope;
+    }
+
+    /**
+     * Replaces the isolation scope with a clone of itself and returns the clone.
+     *
+     * @internal
+     */
+    public function pushIsolationScope(): IsolationScope
+    {
+        $this->previousIsolationScopes[] = $this->isolationScope;
+        $this->isolationScope = clone $this->isolationScope;
+
+        return $this->isolationScope;
+    }
+
+    /**
+     * Restores the isolation scope that was active before the last push.
+     *
+     * @internal
+     *
+     * @return bool Whether there was a pushed isolation scope to pop
+     */
+    public function popIsolationScope(): bool
+    {
+        $previousIsolationScope = array_pop($this->previousIsolationScopes);
+
+        if ($previousIsolationScope === null) {
+            return false;
+        }
+
+        $this->isolationScope = $previousIsolationScope;
+
+        return true;
     }
 
     /**

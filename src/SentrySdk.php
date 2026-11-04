@@ -166,6 +166,26 @@ final class SentrySdk
     }
 
     /**
+     * Forks the current isolation scope until {@see popIsolationScope()} is called.
+     *
+     * @return IsolationScope The forked isolation scope
+     */
+    public static function pushIsolationScope(): IsolationScope
+    {
+        return self::getCurrentRuntimeContext()->pushIsolationScope();
+    }
+
+    /**
+     * Restores the isolation scope that was active before the last {@see pushIsolationScope()} call.
+     *
+     * @return bool Whether there was a pushed isolation scope to pop
+     */
+    public static function popIsolationScope(): bool
+    {
+        return self::getCurrentRuntimeContext()->popIsolationScope();
+    }
+
+    /**
      * Gets the current runtime-local context.
      *
      * @internal
