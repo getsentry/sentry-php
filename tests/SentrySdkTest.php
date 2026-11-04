@@ -175,6 +175,91 @@ final class SentrySdkTest extends TestCase
         $this->assertSame($baselineSpan, SentrySdk::getIsolationScope()->getSpan());
     }
 
+    public function testPushIsolationScopeForksCurrentIsolationScope(): void
+    {
+        SentrySdk::init();
+
+        $previousScope = SentrySdk::getIsolationScope();
+        $previousScope->setTag('baseline', 'yes');
+
+        $pushedScope = SentrySdk::pushIsolationScope();
+        $pushedScope->setTag('job', 'yes');
+
+        $this->assertNotSame($previousScope, $pushedScope);
+        $this->assertSame($pushedScope, SentrySdk::getIsolationScope());
+
+        $event = SentrySdk::getGlobalScope()->merge($pushedScope)->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['baseline' => 'yes', 'job' => 'yes'], $event->getTags());
+
+        $this->assertTrue(SentrySdk::popIsolationScope());
+        $this->assertSame($previousScope, SentrySdk::getIsolationScope());
+
+        $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertSame(['baseline' => 'yes'], $event->getTags());
+    }
+
+    public function testPopIsolationScopeRestoresParentSpan(): void
+    {
+        SentrySdk::init();
+
+        $parentSpan = new Span(new SpanContext());
+        SentrySdk::getIsolationScope()->setSpan($parentSpan);
+
+        SentrySdk::pushIsolationScope()->setSpan(new Span(new SpanContext()));
+        SentrySdk::popIsolationScope();
+
+        $this->assertSame($parentSpan, SentrySdk::getIsolationScope()->getSpan());
+    }
+
+    public function testPopIsolationScopeRestoresScopesInReverseOrder(): void
+    {
+        SentrySdk::init();
+
+        $previousScope = SentrySdk::getIsolationScope();
+
+        $outerScope = SentrySdk::pushIsolationScope();
+        $innerScope = SentrySdk::pushIsolationScope();
+
+        $this->assertSame($innerScope, SentrySdk::getIsolationScope());
+        $this->assertTrue(SentrySdk::popIsolationScope());
+        $this->assertSame($outerScope, SentrySdk::getIsolationScope());
+        $this->assertTrue(SentrySdk::popIsolationScope());
+        $this->assertSame($previousScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testPopIsolationScopeReturnsFalseWhenNothingWasPushed(): void
+    {
+        SentrySdk::init();
+
+        $currentScope = SentrySdk::getIsolationScope();
+
+        $this->assertFalse(SentrySdk::popIsolationScope());
+        $this->assertSame($currentScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testPushedIsolationScopesBelongToTheCurrentContext(): void
+    {
+        SentrySdk::init();
+
+        $pushedScope = SentrySdk::pushIsolationScope();
+
+        SentrySdk::startContext();
+
+        $contextScope = SentrySdk::getIsolationScope();
+
+        $this->assertFalse(SentrySdk::popIsolationScope());
+        $this->assertSame($contextScope, SentrySdk::getIsolationScope());
+
+        SentrySdk::endContext();
+
+        $this->assertSame($pushedScope, SentrySdk::getIsolationScope());
+        $this->assertTrue(SentrySdk::popIsolationScope());
+    }
+
     public function testStartContextUsesProvidedIsolationScopeAsIs(): void
     {
         SentrySdk::init();
