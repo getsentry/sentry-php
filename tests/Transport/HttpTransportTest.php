@@ -242,6 +242,46 @@ final class HttpTransportTest extends TestCase
     }
 
     /**
+     * @dataProvider recordsClientReportForErrorResponseDataProvider
+     */
+    public function testRecordsClientReportForErrorResponse(Response $response): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->willReturn('{"foo":"bar"}');
+
+        $this->httpClient->expects($this->once())
+            ->method('sendRequest')
+            ->willReturn($response);
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $this->logger
+        );
+
+        $transport->send(Event::createEvent());
+
+        $this->assertClientReports(['error' => ['send_error' => 1]]);
+    }
+
+    public static function recordsClientReportForErrorResponseDataProvider(): iterable
+    {
+        yield 'client error with body' => [new Response(400, [], '{"detail":"invalid event"}')];
+
+        yield 'content too large' => [new Response(413, [], '')];
+
+        yield 'server error' => [new Response(500, [], '')];
+    }
+
+    /**
      * @group time-sensitive
      */
     public function testSendFailsDueToExceedingRateLimits(): void
