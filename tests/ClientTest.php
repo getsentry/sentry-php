@@ -589,6 +589,57 @@ final class ClientTest extends TestCase
         $this->assertClientReports(['error' => ['sample_rate' => 1]]);
     }
 
+    public function testCaptureExceptionRecordsClientReportWhenIgnoreExceptionsMatches(): void
+    {
+        $client = ClientBuilder::create([
+            'ignore_exceptions' => [\RuntimeException::class],
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $client->captureException(new \RuntimeException());
+
+        $this->assertClientReports(['error' => ['event_processor' => 1]]);
+    }
+
+    public function testProcessEventRecordsClientReportWhenIgnoreExceptionsMatches(): void
+    {
+        $client = ClientBuilder::create([
+            'ignore_exceptions' => [\RuntimeException::class],
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $event = Event::createEvent();
+        $event->setExceptions([new ExceptionDataBag(new \RuntimeException())]);
+
+        $client->captureEvent($event);
+
+        $this->assertClientReports(['error' => ['event_processor' => 1]]);
+    }
+
+    public function testProcessEventRecordsClientReportWhenIgnoreTransactionsMatches(): void
+    {
+        $client = ClientBuilder::create([
+            'ignore_transactions' => ['GET /health'],
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /health');
+
+        $client->captureEvent($event);
+
+        $this->assertClientReports([
+            'transaction' => ['event_processor' => 1],
+            'span' => ['event_processor' => 1],
+        ]);
+    }
+
     /**
      * @dataProvider processEventChecksBeforeSendTransactionOptionDataProvider
      */
