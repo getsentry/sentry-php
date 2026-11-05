@@ -149,6 +149,11 @@ class HttpTransport implements TransportInterface
         // must be recorded before bailing out on error responses.
         $this->rateLimiter->handleResponse($response);
 
+        // Sentry already records the outcome of rate limited requests, so a 429 isn't counted again
+        if ($response->getStatusCode() >= 400 && $response->getStatusCode() !== 429) {
+            ClientReportAggregator::getInstance()->addEvent($event, Reason::sendError());
+        }
+
         if ($response->hasError()) {
             // A status code of 0 means that no response was received, e.g. the connection failed
             if ($response->getStatusCode() === 0) {
