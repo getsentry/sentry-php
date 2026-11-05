@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Profiling\Profile;
@@ -12,6 +14,7 @@ use Sentry\Profiling\ProfilerInterface;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
+use Sentry\Transport\DataCategory;
 
 /**
  * This class stores all the information about a Transaction.
@@ -167,6 +170,14 @@ final class Transaction extends Span
         parent::finish($endTimestamp);
 
         if ($this->sampled !== true) {
+            $client = $this->hub->getClient();
+
+            // Unsampled transactions have no span recorder, so only the span of the transaction itself is dropped
+            if ($client !== null && $client->getOptions()->isTracingEnabled()) {
+                ClientReportAggregator::getInstance()->add(DataCategory::transaction(), Reason::sampleRate(), 1);
+                ClientReportAggregator::getInstance()->add(DataCategory::span(), Reason::sampleRate(), 1);
+            }
+
             return null;
         }
 

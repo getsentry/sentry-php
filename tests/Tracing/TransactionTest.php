@@ -17,6 +17,7 @@ use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
 use Sentry\State\HubInterface;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
@@ -29,6 +30,8 @@ use Sentry\Tracing\TransactionContext;
  */
 final class TransactionTest extends TestCase
 {
+    use ClientReportAssertions;
+
     public function testFinish(): void
     {
         ClockMock::withClockMock(1600640877);
@@ -139,6 +142,34 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext(), $hub);
         $transaction->finish();
+    }
+
+    public function testFinishRecordsClientReportIfNotSampled(): void
+    {
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options([
+            'traces_sample_rate' => 0,
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $hub->startTransaction(new TransactionContext())->finish();
+
+        $this->assertClientReports([
+            'transaction' => ['sample_rate' => 1],
+            'span' => ['sample_rate' => 1],
+        ]);
+    }
+
+    public function testFinishDoesNotRecordClientReportIfTracingIsDisabled(): void
+    {
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $hub->startTransaction(new TransactionContext())->finish();
+
+        $this->assertClientReports([]);
     }
 
     public function testFinishIncludesTheCustomProfile(): void
