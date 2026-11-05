@@ -339,6 +339,7 @@ class Client implements ClientInterface
 
         if ($scope !== null) {
             $beforeEventProcessors = $event;
+            $spanCountBeforeEventProcessors = \count($event->getSpans());
             $event = $scope->applyToEvent($event, $hint, $this->options);
 
             if ($event === null) {
@@ -351,9 +352,12 @@ class Client implements ClientInterface
 
                 return null;
             }
+
+            $this->recordRemovedSpans($spanCountBeforeEventProcessors, $event, Reason::eventProcessor());
         }
 
         $beforeSendCallback = $event;
+        $spanCountBeforeSendCallback = \count($event->getSpans());
         $event = $this->applyBeforeSendCallback($event, $hint);
 
         if ($event === null) {
@@ -367,9 +371,22 @@ class Client implements ClientInterface
             );
 
             ClientReportAggregator::getInstance()->addEvent($beforeSendCallback, Reason::beforeSend());
+
+            return null;
         }
 
+        $this->recordRemovedSpans($spanCountBeforeSendCallback, $event, Reason::beforeSend());
+
         return $event;
+    }
+
+    private function recordRemovedSpans(int $spanCountBefore, Event $event, Reason $reason): void
+    {
+        $removedSpans = $spanCountBefore - \count($event->getSpans());
+
+        if ($removedSpans > 0) {
+            ClientReportAggregator::getInstance()->add(DataCategory::span(), $reason, $removedSpans);
+        }
     }
 
     private function getEventDescription(Event $event): string
