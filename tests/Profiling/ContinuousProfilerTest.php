@@ -14,6 +14,7 @@ use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 
 final class ContinuousProfilerTest extends TestCase
@@ -21,6 +22,7 @@ final class ContinuousProfilerTest extends TestCase
     protected function setUp(): void
     {
         StubTransport::$events = [];
+        StubLogger::$logs = [];
     }
 
     /**
@@ -188,6 +190,53 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertTrue($profiler->isRunning());
 
         $profiler->stop();
+    }
+
+    public function testStartWarnsOnceIfTransactionBasedProfilingIsConfigured(): void
+    {
+        $this->bindClient([
+            'profiles_sample_rate' => 1.0,
+            'profile_session_sample_rate' => 1.0,
+            'logger' => StubLogger::getInstance(),
+        ]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->startForRootSpan('span-1');
+        $profiler->startForRootSpan('span-2');
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertSame([
+            [
+                'level' => 'warning',
+                'message' => 'Continuous profiling is disabled because transaction based profiling is configured with the "profiles_sample_rate" or "profiles_sampler" option.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
+    }
+
+    public function testStartWarnsOnceIfTheExcimerExtensionIsNotLoaded(): void
+    {
+        if (\extension_loaded('excimer')) {
+            $this->markTestSkipped('This test requires the "excimer" extension to not be loaded.');
+        }
+
+        $this->bindClient([
+            'profile_session_sample_rate' => 1.0,
+            'logger' => StubLogger::getInstance(),
+        ]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+        $profiler->start();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertSame([
+            [
+                'level' => 'warning',
+                'message' => 'The continuous profiler was started but is not available because the "excimer" extension is not loaded.',
+                'context' => [],
+            ],
+        ], StubLogger::$logs);
     }
 
     /**

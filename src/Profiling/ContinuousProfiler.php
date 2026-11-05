@@ -74,7 +74,8 @@ final class ContinuousProfiler
     private $nextFlushTimestamp = 0.0;
 
     /**
-     * @var bool|null Whether the profiling session is sampled, undecided while a profiler started before a client was bound
+     * @var bool|null Whether the profiling session is sampled, false once continuous profiling is disabled,
+     *                undecided while a profiler started before a client was bound
      */
     private $sampled;
 
@@ -124,6 +125,7 @@ final class ContinuousProfiler
         $this->restartInForkedProcess();
 
         // The profiling session is decided once, so it is not restarted while no client is bound after a re-init
+        // and the warnings about a disabled session are not repeated
         if ($this->profiler !== null || $this->sampled === false) {
             return;
         }
@@ -136,8 +138,11 @@ final class ContinuousProfiler
         }
 
         if (!\extension_loaded('excimer')) {
+            // The warning is logged once a client is bound, the session is only disabled then
             if ($options !== null) {
                 $options->getLoggerOrNullLogger()->warning('The continuous profiler was started but is not available because the "excimer" extension is not loaded.');
+
+                $this->sampled = false;
             }
 
             return;
@@ -418,12 +423,15 @@ final class ContinuousProfiler
     }
 
     /**
-     * Decides whether the profiling session is sampled, unless continuous profiling is disabled by the options.
+     * Decides whether the profiling session is sampled, the session is disabled instead if transaction based
+     * profiling is configured by the options.
      */
     private function isSessionEnabled(Options $options): bool
     {
         if ($options->getProfilesSampleRate() !== null || $options->getProfilesSampler() !== null) {
             $options->getLoggerOrNullLogger()->warning('Continuous profiling is disabled because transaction based profiling is configured with the "profiles_sample_rate" or "profiles_sampler" option.');
+
+            $this->sampled = false;
 
             return false;
         }
