@@ -524,6 +524,43 @@ final class ContinuousProfilerTest extends TestCase
     }
 
     /**
+     * The requests of the parent process are finished by the parent process, so they must not keep the
+     * profiler of a forked process running once the requests of the forked process are finished.
+     *
+     * @requires extension excimer
+     * @requires extension pcntl
+     */
+    public function testForkedProcessIsPausedRegardlessOfTheRequestsOfTheParentProcess(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+        $profiler->resume();
+
+        $result = $this->runInForkedProcess(static function () use ($profiler): array {
+            $profiler->resume();
+            $profiler->pause();
+
+            $isPaused = $profiler->isPaused();
+
+            $profiler->stop();
+
+            return ['isPaused' => $isPaused];
+        });
+
+        $this->assertTrue($result['isPaused']);
+
+        // The parent process keeps profiling for its own request
+        $profiler->resume();
+        $profiler->pause();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
+    /**
      * Destroying the profiler inherited by a forked process passes the samples it has not flushed yet
      * to the flush callback. The parent process sends those samples itself, so the forked process must
      * not send them under the profiler ID of the parent process.
@@ -754,6 +791,188 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertSame([], StubTransport::$events);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testPauseSendsTheTimeUntilResumeAsIdleSample(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.05);
+
+        $pauseTimestamp = microtime(true);
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertTrue($profiler->isPaused());
+
+        // Code that runs while the profiler is paused is not sampled
+        self::busyWait(0.3);
+
+        $resumeTimestamp = microtime(true);
+        $profiler->resume();
+
+        $this->assertFalse($profiler->isPaused());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $samples = self::getSamplesOfSingleChunk();
+        $idleSamples = array_values(array_filter($samples, static function (array $sample): bool {
+            return $sample['stack'] === [];
+        }));
+
+        $this->assertCount(1, $idleSamples);
+        $this->assertGreaterThanOrEqual($pauseTimestamp, $idleSamples[0]['timestamp']);
+        $this->assertLessThan($resumeTimestamp, $idleSamples[0]['timestamp']);
+
+        // Excimer timestamps samples with its own clock, so a sample taken right before the pause is only roughly before it
+        $pausedSamples = array_filter($samples, static function (array $sample) use ($pauseTimestamp, $resumeTimestamp): bool {
+            return $sample['stack'] !== [] && $sample['timestamp'] > $pauseTimestamp + 0.1 && $sample['timestamp'] < $resumeTimestamp - 0.01;
+        });
+
+        $this->assertSame([], $pausedSamples);
+
+        $resumedSamples = array_filter($samples, static function (array $sample) use ($resumeTimestamp): bool {
+            return $sample['stack'] !== [] && $sample['timestamp'] >= $resumeTimestamp - 0.01;
+        });
+
+        $this->assertNotEmpty($resumedSamples);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerIsPausedOnceEveryRequestThatResumedItPausedIt(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        // The first request of a worker did not resume the profiler, as it was started with the worker
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        $profiler->resume();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->resume();
+        $profiler->pause();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartResumesThePausedProfiler(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        $profiler->start();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStopDiscardsProfileChunkWithOnlyIdleSamples(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+        $profiler->pause();
+        $profiler->stop();
+
+        $this->assertSame([], StubTransport::$events);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testPauseCapturesTheChunksEndingWithTheIdleTime(): void
+    {
+        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+
+        $profiler = new ContinuousProfiler(6060, 65.0, 0.05);
+        $profiler->start();
+
+        self::busyWait(0.1);
+
+        $pauseTimestamp = microtime(true);
+
+        // The flush interval passed, so the samples are flushed once the profiler is paused
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $samples = self::getSamplesOfSingleChunk();
+        $lastSample = end($samples);
+
+        $this->assertNotFalse($lastSample);
+        $this->assertSame([], $lastSample['stack']);
+        $this->assertGreaterThanOrEqual($pauseTimestamp, $lastSample['timestamp']);
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testPauseAndResumeWorkBeforeAClientIsBound(): void
+    {
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        $profiler->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        $profiler->resume();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->onClientBound($this->bindClient(['profile_session_sample_rate' => 1.0]));
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $idleSamples = array_filter(self::getSamplesOfSingleChunk(), static function (array $sample): bool {
+            return $sample['stack'] === [];
+        });
+
+        $this->assertCount(1, $idleSamples);
+    }
+
     private function bindClient(array $options): Client
     {
         $client = new Client(new Options($options), StubTransport::getInstance());
@@ -832,6 +1051,30 @@ final class ContinuousProfilerTest extends TestCase
         unlink($resultFile);
 
         return \is_array($result) ? $result : null;
+    }
+
+    /**
+     * @return array<int, array{stack: int[], timestamp: float}>
+     */
+    private static function getSamplesOfSingleChunk(): array
+    {
+        self::assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $profileChunk = $event->getProfileChunk();
+
+        self::assertNotNull($profileChunk);
+
+        $payload = $profileChunk->getFormattedData($event);
+
+        self::assertNotNull($payload);
+
+        return array_map(static function (array $sample) use ($payload): array {
+            return [
+                'stack' => $payload['profile']['stacks'][$sample['stack_id']],
+                'timestamp' => $sample['timestamp'],
+            ];
+        }, $payload['profile']['samples']);
     }
 
     /**

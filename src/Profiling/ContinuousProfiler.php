@@ -12,6 +12,8 @@ use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
 /**
+ * @phpstan-import-type ExcimerLogStackEntry from ExcimerLogConverter
+ *
  * @internal
  */
 final class ContinuousProfiler
@@ -74,6 +76,21 @@ final class ContinuousProfiler
     private $nextFlushTimestamp = 0.0;
 
     /**
+     * @var int The number of requests running code, which resumed the profiler and did not pause it yet
+     */
+    private $activeRequestCount = 0;
+
+    /**
+     * @var bool Whether the running profiler is paused
+     */
+    private $paused = false;
+
+    /**
+     * @var float[] The times the profiler was paused, as seconds since the start of the running profiler
+     */
+    private $pauseTimestamps = [];
+
+    /**
      * @var bool|null Whether the profiling session is sampled, false once continuous profiling is disabled,
      *                undecided while a profiler started before a client was bound
      */
@@ -119,14 +136,22 @@ final class ContinuousProfiler
      * The profiler is started even if the SDK is not initialized yet. Once init is called, it will keep or discard
      * the samples, based on the configured options. Only for manual profiling, `trace` will start with the
      * transaction anyway.
+     *
+     * A running profiler that is paused is resumed.
      */
     public function start(): void
     {
         $this->restartInForkedProcess();
 
+        if ($this->profiler !== null) {
+            $this->resumeTimer();
+
+            return;
+        }
+
         // The profiling session is decided once, so it is not restarted while no client is bound after a re-init
         // and the warnings about a disabled session are not repeated
-        if ($this->profiler !== null || $this->sampled === false) {
+        if ($this->sampled === false) {
             return;
         }
 
@@ -279,6 +304,49 @@ final class ContinuousProfiler
         $this->capturePendingChunks();
     }
 
+    /**
+     * Pauses the profiler once every request that resumed it paused it again, e.g. a worker that finished its last
+     * request and waits for the next one. The profiler is also paused by a request that never resumed it, e.g. the
+     * first request of a worker that started the profiler. The time until the profiler is resumed is sent as idle,
+     * instead of being attributed to the stack of the sample taken before it.
+     *
+     * The pending chunks are captured while the profiler is paused, as no code is sampled in the meantime.
+     */
+    public function pause(): void
+    {
+        $this->restartInForkedProcess();
+
+        $this->activeRequestCount = max(0, $this->activeRequestCount - 1);
+
+        if ($this->activeRequestCount > 0 || $this->paused) {
+            return;
+        }
+
+        if ($this->profiler === null || $this->startTimestamp === null) {
+            return;
+        }
+
+        $this->profiler->stop();
+
+        $this->paused = true;
+        $this->pauseTimestamps[] = microtime(true) - $this->startTimestamp;
+
+        $this->capturePendingChunks();
+    }
+
+    /**
+     * Resumes the paused profiler, e.g. a worker that received a request. Each request resumes the profiler before
+     * it pauses it, so that the profiler keeps running while another request is handled.
+     */
+    public function resume(): void
+    {
+        $this->restartInForkedProcess();
+
+        ++$this->activeRequestCount;
+
+        $this->resumeTimer();
+    }
+
     public function capturePendingChunks(): void
     {
         $this->restartInForkedProcess();
@@ -309,6 +377,11 @@ final class ContinuousProfiler
         return $this->profiler !== null;
     }
 
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
     /**
      * Gets the ID of the running profiler, which is restarted first if the process was forked,
      * so that spans created in the forked process are linked to the profiler sampling it.
@@ -330,12 +403,19 @@ final class ContinuousProfiler
     private function completeChunks(iterable $entries): void
     {
         $chunkEntries = [];
+        $chunkStartTimestamp = 0.0;
 
-        foreach ($entries as $entry) {
-            if ($chunkEntries !== [] && $entry->getTimestamp() - $chunkEntries[0]->getTimestamp() >= $this->maxChunkDuration) {
+        foreach ($this->addIdleSamples($entries) as $entry) {
+            $timestamp = $entry instanceof \ExcimerLogEntry ? $entry->getTimestamp() : $entry['timestamp'];
+
+            if ($chunkEntries !== [] && $timestamp - $chunkStartTimestamp >= $this->maxChunkDuration) {
                 $this->completeChunk($chunkEntries);
 
                 $chunkEntries = [];
+            }
+
+            if ($chunkEntries === []) {
+                $chunkStartTimestamp = $timestamp;
             }
 
             $chunkEntries[] = $entry;
@@ -345,7 +425,45 @@ final class ContinuousProfiler
     }
 
     /**
-     * @param \ExcimerLogEntry[] $entries
+     * Merges the pause timestamps into the entries obtained from Excimer. This is necessary for runtimes such
+     * as FrankenPHP that can remain active between requests. Without idle samples, it would not be immediately
+     * clear when a request ended, and it would inflate durations of the last sample in a request.
+     *
+     * @param iterable<\ExcimerLogEntry> $entries
+     *
+     * @return array<int, \ExcimerLogEntry|ExcimerLogStackEntry>
+     */
+    private function addIdleSamples(iterable $entries): array
+    {
+        $entriesWithIdleSamples = [];
+        $pauseIndex = 0;
+
+        // Merge paused timestamps between entries in case multiple pauses have happened before Excimers flush
+        // callback fired.
+        foreach ($entries as $entry) {
+            while (isset($this->pauseTimestamps[$pauseIndex]) && $this->pauseTimestamps[$pauseIndex] < $entry->getTimestamp()) {
+                $entriesWithIdleSamples[] = ['trace' => [], 'timestamp' => $this->pauseTimestamps[$pauseIndex]];
+
+                ++$pauseIndex;
+            }
+
+            $entriesWithIdleSamples[] = $entry;
+        }
+
+        // Add all remaining pause samples at the end
+        while (isset($this->pauseTimestamps[$pauseIndex])) {
+            $entriesWithIdleSamples[] = ['trace' => [], 'timestamp' => $this->pauseTimestamps[$pauseIndex]];
+
+            ++$pauseIndex;
+        }
+
+        $this->pauseTimestamps = [];
+
+        return $entriesWithIdleSamples;
+    }
+
+    /**
+     * @param array<int, \ExcimerLogEntry|ExcimerLogStackEntry> $entries
      */
     private function completeChunk(array $entries): void
     {
@@ -353,7 +471,10 @@ final class ContinuousProfiler
             return;
         }
 
-        $sampleCount = \count($entries);
+        // Like Relay, only the samples with a stack are counted
+        $sampleCount = \count(array_filter($entries, static function ($entry): bool {
+            return $entry instanceof \ExcimerLogEntry;
+        }));
 
         // Samples collected before a client was bound are only sent once it decided to keep the session
         if ($sampleCount === 0 || $this->sampled === null) {
@@ -387,9 +508,22 @@ final class ContinuousProfiler
         $this->profilerId = null;
         $this->processId = null;
         $this->startTimestamp = null;
+        $this->paused = false;
+        $this->pauseTimestamps = [];
 
         // A forked process inherits the completed chunks, which the parent process captures itself
         $this->pendingChunks->drain();
+    }
+
+    private function resumeTimer(): void
+    {
+        if ($this->profiler === null || !$this->paused) {
+            return;
+        }
+
+        $this->profiler->start();
+
+        $this->paused = false;
     }
 
     /**
@@ -405,6 +539,9 @@ final class ContinuousProfiler
         // The parent process finishes its own root spans, so a profiler running for them is not restarted
         $restart = $this->activeRootSpans === [];
         $this->activeRootSpans = [];
+
+        // The parent process finishes its own requests, so they do not keep the profiler of this process running
+        $this->activeRequestCount = 0;
 
         // The timer of the inherited profiler does not exist in this process, so tearing it down emits warnings
         set_error_handler(static function (): bool {

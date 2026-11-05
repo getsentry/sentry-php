@@ -359,5 +359,47 @@ final class ExcimerLogConverterTest extends TestCase
                 ]
             ),
         ];
+
+        yield 'Samples after an idle sample are not moved' => [
+            [
+                [
+                    'trace' => [
+                        [
+                            'file' => '/var/www/html/index.php',
+                            'line' => 42,
+                        ],
+                    ],
+                    'timestamp' => 0.01,
+                ],
+                [
+                    'trace' => [],
+                    'timestamp' => 0.02,
+                ],
+                [
+                    'trace' => [
+                        [
+                            'file' => '/var/www/html/index.php',
+                            'line' => 42,
+                        ],
+                    ],
+                    'timestamp' => 0.22,
+                    'event_count' => 20,
+                ],
+            ],
+            new ProfileData(
+                [
+                    new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42),
+                ],
+                [
+                    [0],
+                    [],
+                ],
+                [
+                    new ProfileSample(0, 0.01),
+                    new ProfileSample(1, 0.02),
+                    new ProfileSample(0, 0.22),
+                ]
+            ),
+        ];
     }
 }

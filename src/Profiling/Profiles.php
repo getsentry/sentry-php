@@ -68,6 +68,34 @@ class Profiles
     }
 
     /**
+     * Pauses the continuous profiler if the "profile_lifecycle" option is set to "manual", once every
+     * request that resumed it paused it again, e.g. a worker that finished its last request and waits
+     * for the next one. The time until the profiler is resumed is sent as idle.
+     */
+    public function pause(): void
+    {
+        if (!$this->isManualLifecycle()) {
+            return;
+        }
+
+        $this->continuousProfiler->pause();
+    }
+
+    /**
+     * Resumes the paused continuous profiler if the "profile_lifecycle" option is set to "manual",
+     * e.g. a worker that received a request. Each request resumes the profiler before it pauses it,
+     * so that the profiler keeps running while another request is handled.
+     */
+    public function resume(): void
+    {
+        if (!$this->isManualLifecycle()) {
+            return;
+        }
+
+        $this->continuousProfiler->resume();
+    }
+
+    /**
      * Get the continuous profiler.
      *
      * @internal
