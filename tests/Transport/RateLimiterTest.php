@@ -60,6 +60,14 @@ final class RateLimiterTest extends TestCase
             ],
         ];
 
+        yield 'Back-off using X-Sentry-Rate-Limits header with profile_chunk category' => [
+            new Response(429, ['X-Sentry-Rate-Limits' => ['60:profile_chunk:org']], ''),
+            true,
+            [
+                EventType::profileChunk(),
+            ],
+        ];
+
         yield 'Back-off using X-Sentry-Rate-Limits header with missing categories should lock them all' => [
             new Response(429, ['X-Sentry-Rate-Limits' => ['60::org']], ''),
             true,

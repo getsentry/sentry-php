@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Breadcrumb;
 use Sentry\CheckIn;
 use Sentry\CheckInStatus;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -18,10 +19,14 @@ use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
 use Sentry\Profiling\ProfilerInterface;
+use Sentry\Profiling\Profiles;
+use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tests\StubLogger;
+use Sentry\Tests\StubTransport;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SamplingContext;
@@ -232,6 +237,37 @@ final class HubTest extends TestCase
         $hub->bindClient($client2);
 
         $this->assertSame($client2, $hub->getClient());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testBindClientStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $hub = new Hub();
+        $hub->bindClient(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testConstructorStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        new Hub(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
     }
 
     /**
@@ -1170,5 +1206,99 @@ final class HubTest extends TestCase
 
             $this->assertEquals($event->getContexts()['trace'], $traceContext);
         });
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartTransactionProfilesSampledTransactionsInTraceLifecycle(): void
+    {
+        StubTransport::$events = [];
+
+        $hub = $this->initHubWithProfileLifecycleTrace();
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        $transaction = $hub->startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        $profilerId = $profiler->getProfilerId();
+
+        $this->assertSame($profilerId, $transaction->getData('profiler_id'));
+
+        self::busyWait(0.05);
+
+        $transaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertCount(2, StubTransport::$events);
+
+        [$chunkEvent, $transactionEvent] = StubTransport::$events;
+
+        $this->assertNotNull($chunkEvent->getProfileChunk());
+        $this->assertSame($profilerId, $chunkEvent->getProfileChunk()->getProfilerId());
+        $this->assertSame(['profiler_id' => $profilerId], $transactionEvent->getContexts()['profile']);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testContinuousProfilerRunsUntilTheLastSampledTransactionIsFinished(): void
+    {
+        StubTransport::$events = [];
+
+        $hub = $this->initHubWithProfileLifecycleTrace();
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        $firstTransaction = $hub->startTransaction(TransactionContext::make());
+        $secondTransaction = $hub->startTransaction(TransactionContext::make());
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.05);
+        $firstFinishTimestamp = microtime(true);
+
+        $firstTransaction->finish();
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
+
+        self::busyWait(0.05);
+
+        $secondTransaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+
+        $chunkEvents = array_values(array_filter(StubTransport::$events, static function (Event $event): bool {
+            return $event->getProfileChunk() !== null;
+        }));
+
+        $this->assertCount(1, $chunkEvents);
+
+        $payload = $chunkEvents[0]->getProfileChunk()->getFormattedData($chunkEvents[0]);
+
+        $this->assertNotNull($payload);
+        $this->assertLessThan($firstFinishTimestamp, $payload['profile']['samples'][0]['timestamp']);
+    }
+
+    private function initHubWithProfileLifecycleTrace(): HubInterface
+    {
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
+
+        return $hub;
+    }
+
+    private static function busyWait(float $seconds): void
+    {
+        $end = microtime(true) + $seconds;
+
+        while (microtime(true) < $end) {
+            // Burn CPU so that Excimer collects samples
+        }
     }
 }

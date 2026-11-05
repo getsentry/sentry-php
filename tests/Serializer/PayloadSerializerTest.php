@@ -27,6 +27,10 @@ use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
+use Sentry\Profiling\ProfileChunk;
+use Sentry\Profiling\ProfileData;
+use Sentry\Profiling\ProfileFrame;
+use Sentry\Profiling\ProfileSample;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
@@ -543,6 +547,30 @@ TEXT
 {"type":"trace_metric","item_count":1,"content_type":"application\/vnd.sentry.items.trace-metric+json"}
 {"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-distribution","value":5,"unit":"day","type":"distribution","attributes":{"foo":{"type":"string","value":"bar"}}}]}
 TEXT
+        ];
+
+        $profileChunk = new ProfileChunk('71bba98d90b545c39f2ae73f702d7ef4', 1677573660.0, new ProfileData(
+            [new ProfileFrame('/var/www/html/index.php', '/var/www/html/index.php', '/var/www/html/index.php', null, 42)],
+            [[0]],
+            [
+                new ProfileSample(0, 0.25),
+                new ProfileSample(0, 0.5),
+            ]
+        ));
+        $chunkId = $profileChunk->getChunkId();
+
+        $event = Event::createProfileChunk(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setRelease('1.0.0');
+        $event->setProfileChunk($profileChunk);
+
+        yield [
+            $event,
+            <<<TEXT
+{"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
+{"type":"profile_chunk","platform":"php","content_type":"application\/json"}
+{"version":"2","profiler_id":"71bba98d90b545c39f2ae73f702d7ef4","chunk_id":"$chunkId","platform":"php","environment":"production","client_sdk":{"name":"sentry.php","version":"$sdkVersion"},"profile":{"frames":[{"filename":"\/var\/www\/html\/index.php","abs_path":"\/var\/www\/html\/index.php","module":null,"function":"\/var\/www\/html\/index.php","lineno":42}],"samples":[{"stack_id":0,"thread_id":"0","timestamp":1677573660.25},{"stack_id":0,"thread_id":"0","timestamp":1677573660.5}],"stacks":[[0]],"thread_metadata":{"0":{"name":"main"}}},"release":"1.0.0"}
+TEXT
+            ,
         ];
 
         $event = Event::createClientReport();

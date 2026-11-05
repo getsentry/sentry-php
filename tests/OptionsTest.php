@@ -184,6 +184,20 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'profile_session_sample_rate',
+            0.5,
+            'getProfileSessionSampleRate',
+            'setProfileSessionSampleRate',
+        ];
+
+        yield [
+            'profile_lifecycle',
+            'trace',
+            'getProfileLifecycle',
+            'setProfileLifecycle',
+        ];
+
+        yield [
             'profiler_factory',
             static function (): void {},
             'getProfilerFactory',
@@ -634,6 +648,8 @@ final class OptionsTest extends TestCase
             'traces_sampler' => null,
             'profiles_sample_rate' => null,
             'profiles_sampler' => null,
+            'profile_session_sample_rate' => null,
+            'profile_lifecycle' => 'manual',
             'profiler_factory' => null,
             'attach_stacktrace' => false,
             'attach_metric_code_locations' => false,
@@ -1138,6 +1154,22 @@ final class OptionsTest extends TestCase
     /**
      * @backupGlobals enabled
      */
+    public function testProfileLifecycleOptionFallsBackToManualForInvalidValues(): void
+    {
+        $options = new Options(['profile_lifecycle' => 'invalid']);
+
+        $this->assertSame('manual', $options->getProfileLifecycle());
+    }
+
+    public function testSetProfileLifecycleKeepsCurrentValueForInvalidValues(): void
+    {
+        $options = new Options(['profile_lifecycle' => 'trace']);
+
+        $options->setProfileLifecycle('invalid');
+
+        $this->assertSame('trace', $options->getProfileLifecycle());
+    }
+
     public function testDsnOptionDefaultValueIsGotFromEnvironmentVariable(): void
     {
         $_SERVER['SENTRY_DSN'] = 'http://public@example.com/1';
