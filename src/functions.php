@@ -263,7 +263,12 @@ function withScope(callable $callback)
 /**
  * Forks the current isolation scope for the duration of the callback.
  *
- * @param callable $callback The callback to be executed
+ * When an isolation scope is given, it is used as-is instead of a fork of the
+ * current one, for example to capture an event with a scope that is no longer
+ * the current one.
+ *
+ * @param callable            $callback       The callback to be executed
+ * @param IsolationScope|null $isolationScope The isolation scope to use for the duration of the callback
  *
  * @phpstan-template T
  *
@@ -273,11 +278,11 @@ function withScope(callable $callback)
  *
  * @phpstan-return T
  */
-function withIsolationScope(callable $callback)
+function withIsolationScope(callable $callback, ?IsolationScope $isolationScope = null)
 {
     $context = SentrySdk::getCurrentRuntimeContext();
     $previousScope = $context->getIsolationScope();
-    $context->setIsolationScope(clone $previousScope);
+    $context->setIsolationScope($isolationScope ?? clone $previousScope);
 
     try {
         return $callback($context->getIsolationScope());

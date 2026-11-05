@@ -581,6 +581,72 @@ final class FunctionsTest extends TestCase
         $this->assertSame('foobarbaz', $returnValue);
     }
 
+    public function testWithIsolationScopeForksCurrentIsolationScope(): void
+    {
+        $previousScope = new IsolationScope();
+        $previousScope->setTag('previous', 'yes');
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($previousScope);
+
+        $callbackScope = withIsolationScope(static function (IsolationScope $scope): IsolationScope {
+            $scope->setTag('callback', 'yes');
+
+            return $scope;
+        });
+
+        $this->assertNotSame($previousScope, $callbackScope);
+        $this->assertSame($previousScope, SentrySdk::getIsolationScope());
+
+        $event = (new GlobalScope())->merge($callbackScope)->applyToEvent(Event::createEvent());
+        $this->assertNotNull($event);
+        $this->assertSame(['previous' => 'yes', 'callback' => 'yes'], $event->getTags());
+
+        $event = (new GlobalScope())->merge($previousScope)->applyToEvent(Event::createEvent());
+        $this->assertNotNull($event);
+        $this->assertSame(['previous' => 'yes'], $event->getTags());
+    }
+
+    public function testWithIsolationScopeUsesGivenIsolationScope(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $previousScope = $this->setClientAndIsolationScope($client);
+
+        $givenScope = new IsolationScope();
+        $givenScope->setTag('scope', 'isolation');
+        $givenScope->setTag('isolation', 'yes');
+
+        $client->expects($this->once())
+            ->method('captureMessage')
+            ->with('foo', null, $this->captureScopeConstraint($givenScope), null)
+            ->willReturn(null);
+
+        $callbackScope = withIsolationScope(static function (IsolationScope $scope): IsolationScope {
+            captureMessage('foo');
+
+            return $scope;
+        }, $givenScope);
+
+        $this->assertSame($givenScope, $callbackScope);
+        $this->assertSame($previousScope, SentrySdk::getIsolationScope());
+    }
+
+    public function testWithIsolationScopeRestoresPreviousScopeWhenCallbackThrows(): void
+    {
+        $previousScope = new IsolationScope();
+        SentrySdk::getCurrentRuntimeContext()->setIsolationScope($previousScope);
+
+        try {
+            withIsolationScope(static function (): void {
+                throw new \RuntimeException('foo');
+            }, new IsolationScope());
+
+            $this->fail('Expected the callback exception.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('foo', $exception->getMessage());
+        }
+
+        $this->assertSame($previousScope, SentrySdk::getIsolationScope());
+    }
+
     public function testConfigureScopeMutatesCurrentIsolationScopeOnly(): void
     {
         $globalScope = SentrySdk::getGlobalScope();
