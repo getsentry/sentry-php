@@ -13,6 +13,7 @@ use Sentry\Integration\IntegrationRegistry;
 use Sentry\Serializer\RepresentationSerializer;
 use Sentry\Serializer\RepresentationSerializerInterface;
 use Sentry\State\Scope;
+use Sentry\Transport\DataCategory;
 use Sentry\Transport\Result;
 use Sentry\Transport\TransportInterface;
 
@@ -162,6 +163,8 @@ class Client implements ClientInterface
                 'The exception will be discarded because it matches an entry in "ignore_exceptions".',
                 ['className' => $className]
             );
+
+            ClientReportAggregator::getInstance()->add(DataCategory::error(), Reason::eventProcessor(), 1);
 
             return null; // short circuit to avoid unnecessary processing
         }
@@ -499,6 +502,8 @@ class Client implements ClientInterface
                         ['event' => $event]
                     );
 
+                    ClientReportAggregator::getInstance()->addEvent($event, Reason::eventProcessor());
+
                     return null;
                 }
             }
@@ -512,6 +517,8 @@ class Client implements ClientInterface
                     \sprintf('The %s will be discarded because it matches a entry in "ignore_transactions".', $eventDescription),
                     ['event' => $event]
                 );
+
+                ClientReportAggregator::getInstance()->addEvent($event, Reason::eventProcessor());
 
                 return null;
             }
