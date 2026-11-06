@@ -6,11 +6,14 @@ namespace Sentry\Profiling;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
+use Sentry\Transport\DataCategory;
 use Sentry\Util\SentryUid;
 
 /**
@@ -149,6 +152,8 @@ final class Profile
     {
         if (!$this->validateExcimerLog()) {
             $this->logger->warning('The profile does not contain enough samples, the profile will be discarded.');
+
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::insufficientData(), 1);
 
             return null;
         }

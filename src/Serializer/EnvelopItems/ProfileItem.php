@@ -27,6 +27,10 @@ class ProfileItem implements EnvelopeItemInterface
 
         $payload = $profile->getFormattedData($event);
         if ($payload === null) {
+            // The profile can never be sent, so detach it to not record its drop again
+            // when the event is serialized a second time (e.g. for Spotlight) or dropped later.
+            $event->setSdkMetadata('profile', null);
+
             return null;
         }
 
