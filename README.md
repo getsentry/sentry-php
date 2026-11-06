@@ -16,11 +16,26 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 [![Monthly Downloads](https://poser.pugx.org/sentry/sentry/d/monthly)](https://packagist.org/packages/sentry/sentry)
 [![Discord](https://img.shields.io/discord/621778831602221064)](https://discord.gg/cWnMQeA)
 
-The Sentry PHP error reporter tracks errors and exceptions that happen during the
-execution of your application and provides instant notification with detailed
-information needed to prioritize, identify, reproduce and fix each issue.
+This is the official PHP SDK for [Sentry](https://sentry.io/). It reports errors and
+exceptions that happen during the execution of your application, and helps you
+understand its performance with tracing, profiling, logs, metrics and cron monitoring.
+
+- [Error Monitoring](https://docs.sentry.io/platforms/php/usage/)
+- [Tracing](https://docs.sentry.io/platforms/php/tracing/)
+- [Profiling](https://docs.sentry.io/platforms/php/profiling/)
+- [Logs](https://docs.sentry.io/platforms/php/logs/)
+- [Metrics](https://docs.sentry.io/platforms/php/metrics/)
+- [Crons](https://docs.sentry.io/platforms/php/crons/)
+- [Feature Flags](https://docs.sentry.io/platforms/php/feature-flags/)
 
 ## Getting started
+
+### Requirements
+
+The SDK requires PHP `7.2` or later with the `curl`, `json` and `mbstring` extensions.
+Profiling additionally requires the [Excimer](https://github.com/wikimedia/mediawiki-php-excimer) extension.
+
+If you are using Laravel or Symfony, use one of the [official integrations](#official-integrations) instead.
 
 ### Install
 
@@ -35,10 +50,17 @@ composer require sentry/sentry
 Initialize the SDK as early as possible in your application.
 
 ```php
-\Sentry\init(['dsn' => '___PUBLIC_DSN___' ]);
+\Sentry\init([
+    'dsn' => '___PUBLIC_DSN___',
+]);
 ```
 
+To learn more about the available options, see the [configuration docs](https://docs.sentry.io/platforms/php/configuration/options/).
+
 ### Usage
+
+Once initialized, the SDK captures unhandled exceptions and errors automatically.
+You can also capture them manually:
 
 ```php
 try {
@@ -90,7 +112,7 @@ The following integrations are available and maintained by members of the Sentry
 
 ## Community
 
-- [Documentation](https://docs.sentry.io/error-reporting/quickstart/?platform=php)
+- [Documentation](https://docs.sentry.io/platforms/php/)
 - [Bug Tracker](http://github.com/getsentry/sentry-php/issues)
 - [Code](http://github.com/getsentry/sentry-php)
 
