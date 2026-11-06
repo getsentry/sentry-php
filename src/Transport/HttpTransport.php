@@ -131,8 +131,21 @@ class HttpTransport implements TransportInterface
             }
         }
 
+        try {
+            $payload = $this->payloadSerializer->serialize($event);
+        } catch (\Throwable $exception) {
+            $this->logger->error(
+                \sprintf('Failed to serialize %s. Reason: "%s".', $eventDescription, $exception->getMessage()),
+                ['exception' => $exception, 'event' => $event]
+            );
+
+            ClientReportAggregator::getInstance()->addEvent($event, Reason::internalSdkError());
+
+            return new Result(ResultStatus::failed());
+        }
+
         $request = new Request();
-        $request->setStringBody($this->payloadSerializer->serialize($event));
+        $request->setStringBody($payload);
 
         try {
             $response = $this->httpClient->sendRequest($request, $this->options);
