@@ -163,7 +163,13 @@ final class LogsAggregator
         $logFlushThreshold = $options->getLogFlushThreshold();
         $logs = $this->getStorage($logFlushThreshold);
 
+        $logCount = \count($logs);
         $logs->push($log);
+
+        // A full bounded buffer drops its oldest log on push, so the count stays the same
+        if (\count($logs) === $logCount) {
+            ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::bufferOverflow(), 1);
+        }
 
         if ($logFlushThreshold !== null && \count($logs) >= $logFlushThreshold) {
             $this->flush($hub);
