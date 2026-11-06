@@ -523,12 +523,6 @@ parameters:
 			path: src/Spotlight/SpotlightClient.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: src/Tracing/DynamicSamplingContext.php
-
-		-
 			message: '#^Property Sentry\\Tracing\\PropagationContext\:\:\$parentSampled is never read, only written\.$#'
 			identifier: property.onlyWritten
 			count: 1
