@@ -1618,7 +1618,7 @@ count = 1
 file = "src/Tracing/DynamicSamplingContext.php"
 code = "possible-method-access-on-null"
 message = "Attempting to call a method on `null`."
-count = 4
+count = 3
 
 [[issues]]
 file = "src/Tracing/DynamicSamplingContext.php"
