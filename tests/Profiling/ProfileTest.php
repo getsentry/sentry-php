@@ -5,15 +5,46 @@ declare(strict_types=1);
 namespace Sentry\Tests\Profiling;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
+use Sentry\SentrySdk;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tests\StubTransport;
 
 final class ProfileTest extends TestCase
 {
+    use ClientReportAssertions;
+
+    public function testGetFormattedDataRecordsProfileWithoutOsContext(): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $event = Event::createTransaction();
+        $event->setRuntimeContext(new RuntimeContext('php', '8.2.3', 'cli'));
+
+        $profile = new Profile();
+        $profile->setExcimerLog([
+            [
+                'trace' => [['file' => '/var/www/html/index.php', 'line' => 42]],
+                'timestamp' => 0.001,
+            ],
+            [
+                'trace' => [['file' => '/var/www/html/index.php', 'line' => 42]],
+                'timestamp' => 0.002,
+            ],
+        ]);
+
+        $this->assertNull($profile->getFormattedData($event));
+        $this->assertClientReports(['profile' => ['insufficient_data' => 1]]);
+    }
+
     /**
      * @dataProvider formattedDataDataProvider
      */

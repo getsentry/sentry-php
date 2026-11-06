@@ -162,6 +162,8 @@ final class Profile
         if (!$this->validateOsContext($osContext)) {
             $this->logger->warning('The OS context is not missing or invalid, the profile will be discarded.');
 
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::insufficientData(), 1);
+
             return null;
         }
 
