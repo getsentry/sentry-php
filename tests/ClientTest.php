@@ -23,6 +23,7 @@ use Sentry\Severity;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
 use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tracing\Span;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
@@ -638,6 +639,46 @@ final class ClientTest extends TestCase
             'transaction' => ['event_processor' => 1],
             'span' => ['event_processor' => 1],
         ]);
+    }
+
+    public function testProcessEventRecordsClientReportWhenEventProcessorRemovesSpans(): void
+    {
+        $client = ClientBuilder::create([
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $scope = new Scope();
+        $scope->addEventProcessor(static function (Event $event): Event {
+            return $event->setSpans(\array_slice($event->getSpans(), 0, 1));
+        });
+
+        $event = Event::createTransaction();
+        $event->setSpans([new Span(), new Span(), new Span()]);
+
+        $client->captureEvent($event, null, $scope);
+
+        $this->assertClientReports(['span' => ['event_processor' => 2]]);
+    }
+
+    public function testProcessEventRecordsClientReportWhenBeforeSendTransactionRemovesSpans(): void
+    {
+        $client = ClientBuilder::create([
+            'before_send_transaction' => static function (Event $event): Event {
+                return $event->setSpans([]);
+            },
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init()->bindClient($client);
+
+        $event = Event::createTransaction();
+        $event->setSpans([new Span(), new Span()]);
+
+        $client->captureEvent($event);
+
+        $this->assertClientReports(['span' => ['before_send' => 2]]);
     }
 
     /**
