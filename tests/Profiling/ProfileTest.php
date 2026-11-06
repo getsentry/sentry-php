@@ -5,21 +5,15 @@ declare(strict_types=1);
 namespace Sentry\Tests\Profiling;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\Client;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
-use Sentry\SentrySdk;
-use Sentry\Tests\ClientReport\ClientReportAssertions;
-use Sentry\Tests\StubTransport;
 
 final class ProfileTest extends TestCase
 {
-    use ClientReportAssertions;
-
     /**
      * @dataProvider formattedDataDataProvider
      */
@@ -33,29 +27,6 @@ final class ProfileTest extends TestCase
         $profile->setEventId(new EventId('815e57b4bb134056ab1840919834689d'));
 
         $this->assertSame($expectedData, $profile->getFormattedData($event));
-    }
-
-    public function testRecordsClientReportWhenProfileHasNotEnoughSamples(): void
-    {
-        SentrySdk::init()->bindClient(new Client(new Options([
-            'send_client_reports' => true,
-        ]), StubTransport::getInstance()));
-
-        $profile = new Profile();
-        $profile->setExcimerLog([
-            [
-                'trace' => [
-                    [
-                        'file' => '/var/www/html/index.php',
-                        'line' => 42,
-                    ],
-                ],
-                'timestamp' => 0.001,
-            ],
-        ]);
-
-        $this->assertNull($profile->getFormattedData(Event::createTransaction()));
-        $this->assertClientReports(['profile' => ['insufficient_data' => 1]]);
     }
 
     public static function formattedDataDataProvider(): \Generator

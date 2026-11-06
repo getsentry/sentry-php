@@ -31,9 +31,12 @@ use Sentry\Profiling\ProfileChunk;
 use Sentry\Profiling\ProfileData;
 use Sentry\Profiling\ProfileFrame;
 use Sentry\Profiling\ProfileSample;
+use Sentry\SentrySdk;
 use Sentry\Serializer\PayloadSerializer;
 use Sentry\Severity;
 use Sentry\Stacktrace;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\Span;
@@ -50,6 +53,8 @@ use Sentry\Util\SentryUid;
  */
 final class PayloadSerializerTest extends TestCase
 {
+    use ClientReportAssertions;
+
     /**
      * @dataProvider serializeAsEnvelopeDataProvider
      */
@@ -64,6 +69,40 @@ final class PayloadSerializerTest extends TestCase
         $result = $serializer->serialize($event);
 
         $this->assertSame($expectedResult, $result);
+    }
+
+    public function testSerializeRecordsProfileWithNotEnoughSamplesOnce(): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $profile = new Profile();
+        $profile->setExcimerLog([
+            [
+                'trace' => [
+                    [
+                        'file' => '/var/www/html/index.php',
+                        'line' => 42,
+                    ],
+                ],
+                'timestamp' => 0.001,
+            ],
+        ]);
+
+        $event = Event::createTransaction();
+        $event->setSdkMetadata('profile', $profile);
+
+        $serializer = new PayloadSerializer(new Options([
+            'dsn' => 'http://public@example.com/sentry/1',
+        ]));
+
+        // Serialize twice, like HttpTransport does when Spotlight is enabled
+        $serializer->serialize($event);
+        $serializer->serialize($event);
+
+        $this->assertNull($event->getSdkMetadata('profile'));
+        $this->assertClientReports(['profile' => ['insufficient_data' => 1]]);
     }
 
     public static function serializeAsEnvelopeDataProvider(): iterable
