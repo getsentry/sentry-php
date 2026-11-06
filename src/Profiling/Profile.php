@@ -171,11 +171,15 @@ final class Profile
         if (!$this->validateRuntimeContext($runtimeContext)) {
             $this->logger->warning('The runtime context is not missing or invalid, the profile will be discarded.');
 
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::insufficientData(), 1);
+
             return null;
         }
 
         if (!$this->validateEvent($event)) {
             $this->logger->warning('The event is missing a transaction and/or trace ID, the profile will be discarded.');
+
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::insufficientData(), 1);
 
             return null;
         }
@@ -210,12 +214,16 @@ final class Profile
         if (!$this->validateMaxDuration((float) $duration)) {
             $this->logger->warning(\sprintf('The profile is %ss which is longer than the allowed %ss, the profile will be discarded.', (float) $duration, self::MAX_PROFILE_DURATION));
 
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::invalid(), 1);
+
             return null;
         }
 
         $startTime = \DateTime::createFromFormat('U.u', number_format($this->startTimeStamp, 4, '.', ''), new \DateTimeZone('UTC'));
         if ($startTime === false) {
             $this->logger->warning(\sprintf('The start time (%s) of the profile is not valid, the profile will be discarded.', $this->startTimeStamp));
+
+            ClientReportAggregator::getInstance()->add(DataCategory::profile(), Reason::invalid(), 1);
 
             return null;
         }
