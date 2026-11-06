@@ -200,6 +200,47 @@ final class HttpTransportTest extends TestCase
         $this->assertSame(ResultStatus::failed(), $result->getStatus());
     }
 
+    public function testRecordsClientReportWhenSerializationFails(): void
+    {
+        SentrySdk::init()->bindClient(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $exception = new \Exception('foo');
+        $event = Event::createEvent();
+
+        /** @var LoggerInterface&MockObject $logger */
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with(
+                new StringMatchesFormatDescription('Failed to serialize event [%s]. Reason: "foo".'),
+                ['exception' => $exception, 'event' => $event]
+            );
+
+        $this->payloadSerializer->expects($this->once())
+            ->method('serialize')
+            ->with($event)
+            ->will($this->throwException($exception));
+
+        $this->httpClient->expects($this->never())
+            ->method('sendRequest');
+
+        $transport = new HttpTransport(
+            new Options([
+                'dsn' => 'http://public@example.com/1',
+            ]),
+            $this->httpClient,
+            $this->payloadSerializer,
+            $logger
+        );
+
+        $result = $transport->send($event);
+
+        $this->assertSame(ResultStatus::failed(), $result->getStatus());
+        $this->assertClientReports(['error' => ['internal_sdk_error' => 1]]);
+    }
+
     public function testSendFailsDueToCurlError(): void
     {
         SentrySdk::init()->bindClient(new Client(new Options([
