@@ -328,7 +328,10 @@ class Scope
     public function addBreadcrumb(Breadcrumb $breadcrumb, int $maxBreadcrumbs = 100): self
     {
         $this->breadcrumbs[] = $breadcrumb;
-        $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+
+        if (\count($this->breadcrumbs) > $maxBreadcrumbs) {
+            $this->breadcrumbs = \array_slice($this->breadcrumbs, -$maxBreadcrumbs);
+        }
 
         return $this;
     }
