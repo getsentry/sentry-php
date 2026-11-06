@@ -32,7 +32,7 @@ trait TestServer
     protected $serverStderr;
 
     /**
-     * @var int the port on which the server is listening, this default value was randomly chosen
+     * @var int the port on which the server is listening, a free port is picked on every start
      */
     protected $serverPort = 45884;
 
@@ -46,11 +46,15 @@ trait TestServer
             unlink(self::$serverOutputFile);
         }
 
+        // Use a fresh port for every server so a port that is already taken cannot
+        // keep the server from starting
+        $this->serverPort = $this->findFreeServerPort();
+
         $pipes = [];
 
         $this->serverProcess = proc_open(
             $command = \sprintf(
-                'php -S localhost:%d %s',
+                'php -S 127.0.0.1:%d %s',
                 $this->serverPort,
                 realpath(__DIR__ . '/../testserver/index.php')
             ),
@@ -66,11 +70,14 @@ trait TestServer
             throw new \RuntimeException("Error starting test server on pid {$pid}, command failed: {$command}");
         }
 
-        $address = "localhost:{$this->serverPort}";
+        $address = "127.0.0.1:{$this->serverPort}";
 
         $streamContext = stream_context_create(['http' => ['timeout' => 1]]);
 
         // Wait for the server to be ready to answer HTTP requests
+        $startTime = microtime(true);
+        $timeout = 5; // 5 seconds timeout
+
         while (true) {
             $response = @file_get_contents("http://{$address}/ping", false, $streamContext);
 
@@ -78,12 +85,15 @@ trait TestServer
                 break;
             }
 
-            usleep(10000);
-        }
+            if (!proc_get_status($this->serverProcess)['running']) {
+                $this->abortTestServerStart("Error starting test server on pid {$pid}, command failed: {$command}");
+            }
 
-        // Ensure the process is still running
-        if (!proc_get_status($this->serverProcess)['running']) {
-            throw new \RuntimeException("Error starting test server on pid {$pid}, command failed: {$command}");
+            if (microtime(true) - $startTime > $timeout) {
+                $this->abortTestServerStart("Timeout waiting for test server to start on {$address}");
+            }
+
+            usleep(10000);
         }
 
         return $address;
@@ -137,6 +147,46 @@ trait TestServer
         $this->serverStderr = null;
 
         return json_decode(file_get_contents(self::$serverOutputFile), true);
+    }
+
+    /**
+     * Stops a test server that failed to start and throws, so that the caller
+     * does not try to stop it again.
+     *
+     * @return never
+     */
+    private function abortTestServerStart(string $message): void
+    {
+        $status = proc_get_status($this->serverProcess);
+
+        if ($status['running']) {
+            $this->killServerProcess($status['pid']);
+        }
+
+        stream_set_blocking($this->serverStderr, false);
+        $stderrOutput = (string) stream_get_contents($this->serverStderr);
+
+        proc_close($this->serverProcess);
+
+        $this->serverProcess = null;
+        $this->serverStderr = null;
+
+        throw new \RuntimeException(trim($message . \PHP_EOL . $stderrOutput));
+    }
+
+    private function findFreeServerPort(): int
+    {
+        $socket = stream_socket_server('tcp://127.0.0.1:0', $errorNo, $errorMessage);
+
+        if ($socket === false) {
+            throw new \RuntimeException(\sprintf('Failed to find a free port for the test server: [%d] %s', $errorNo, $errorMessage));
+        }
+
+        $address = (string) stream_socket_get_name($socket, false);
+
+        fclose($socket);
+
+        return (int) substr($address, (int) strrpos($address, ':') + 1);
     }
 
     private function killServerProcess(int $pid): void
