@@ -132,6 +132,28 @@ final class TraceMetricsTest extends TestCase
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, $metrics);
     }
 
+    public function testRecordsClientReportWhenMetricsBufferOverflows(): void
+    {
+        HubAdapter::getInstance()->bindClient(new Client(new Options([
+            'metric_flush_threshold' => null,
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        for ($i = 0; $i < MetricsAggregator::METRICS_BUFFER_SIZE; ++$i) {
+            traceMetrics()->count('test', 1);
+        }
+
+        $this->assertClientReports([]);
+
+        traceMetrics()->count('test', 1);
+
+        $this->assertClientReports(['trace_metric' => ['buffer_overflow' => 1]]);
+
+        traceMetrics()->flush();
+
+        $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, StubTransport::$events[0]->getMetrics());
+    }
+
     public function testMetricSentWhenEnableMetricsIsFalse(): void
     {
         HubAdapter::getInstance()->bindClient(new Client(new Options([
