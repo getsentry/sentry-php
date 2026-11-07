@@ -44,7 +44,7 @@ class RingBuffer implements \Countable
     private $tail = 0;
 
     /**
-     * @var int
+     * @var int<0, max>
      */
     private $count = 0;
 
