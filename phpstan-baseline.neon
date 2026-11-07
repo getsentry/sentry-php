@@ -607,12 +607,6 @@ parameters:
 			path: src/Util/JSON.php
 
 		-
-			message: '#^Method Sentry\\Util\\RingBuffer\:\:count\(\) should return int\<0, max\> but returns int\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Util/RingBuffer.php
-
-		-
 			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:bounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'
 			identifier: return.type
 			count: 1
