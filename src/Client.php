@@ -193,7 +193,6 @@ class Client implements ClientInterface
         }
 
         try {
-            /** @var Result $result */
             $result = $this->transport->send($event);
             $event = $result->getEvent();
 

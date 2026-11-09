@@ -32,12 +32,6 @@ count = 1
 
 [[issues]]
 file = "src/Client.php"
-code = "redundant-docblock-type"
-message = "Redundant docblock type for variable `$result`."
-count = 1
-
-[[issues]]
-file = "src/Client.php"
 code = "unused-template-parameter"
 message = 'Template parameter `T` is never used in method `Sentry\Client::getIntegration`.'
 count = 1
