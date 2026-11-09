@@ -1,0 +1,57 @@
+name: Backward compatibility
+
+on:
+  pull_request:
+    # `labeled` and `unlabeled` re-evaluate the job when the opt-out label changes.
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+
+env:
+  ROAVE_BC_CHECK_VERSION: 8.27.0
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  roave-bc-check:
+    name: Roave BC Check
+    runs-on: ubuntu-latest
+    # Only pull requests into `master` are checked, so work on a new major branch is not flagged.
+    # Add the `breaking change` label to a pull request to skip the check for an intentional break,
+    # for example when merging a new major branch.
+    if: github.base_ref == 'master' && !contains(github.event.pull_request.labels.*.name, 'breaking change')
+    steps:
+      # The checked out commit is the merge of the pull request into its base branch,
+      # so a depth of 2 makes the base branch available as `HEAD^1`.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.5'
+          coverage: none
+
+      - name: Install Roave BC Check
+        run: composer global require --no-progress --no-interaction "roave/backward-compatibility-check:${ROAVE_BC_CHECK_VERSION}"
+
+      # Development dependencies are needed to resolve the parent classes of optional
+      # integrations such as the Monolog handlers.
+      - name: Run script
+        run: |
+          "$(composer global config bin-dir --absolute)/roave-backward-compatibility-check" \
+            --from="HEAD^1" \
+            --install-development-dependencies \
+            --format=github-actions
