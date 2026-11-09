@@ -1676,18 +1676,6 @@ count = 1
 
 [[issues]]
 file = "src/Tracing/PropagationContext.php"
-code = "redundant-comparison"
-message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
-count = 1
-
-[[issues]]
-file = "src/Tracing/PropagationContext.php"
-code = "redundant-condition"
-message = "This condition (type `true`) will always evaluate to true."
-count = 1
-
-[[issues]]
-file = "src/Tracing/PropagationContext.php"
 code = "write-only-property"
 message = "Property `$parentSampled` is written to but never read."
 count = 1

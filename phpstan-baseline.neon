@@ -523,12 +523,6 @@ parameters:
 			path: src/Tracing/PropagationContext.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between Sentry\\Options and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: src/Tracing/PropagationContext.php
-
-		-
 			message: '#^Method Sentry\\Tracing\\Span\:\:getMetricsSummary\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
