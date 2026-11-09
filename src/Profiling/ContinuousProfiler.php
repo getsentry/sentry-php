@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Sentry\Profiling;
 
 use Sentry\ClientInterface;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\Options;
 use Sentry\SentrySdk;
+use Sentry\Transport\DataCategory;
 use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
@@ -488,6 +491,8 @@ final class ContinuousProfiler
 
         if ($sampleCount < ProfileChunk::MIN_SAMPLE_COUNT) {
             $client->getOptions()->getLoggerOrNullLogger()->debug('The profile chunk does not contain enough samples, the profile chunk will be discarded.');
+
+            ClientReportAggregator::getInstance()->add(DataCategory::profileChunk(), Reason::insufficientData(), 1);
 
             return;
         }
