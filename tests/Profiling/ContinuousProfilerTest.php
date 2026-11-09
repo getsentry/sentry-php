@@ -14,11 +14,14 @@ use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
 
 final class ContinuousProfilerTest extends TestCase
 {
+    use ClientReportAssertions;
+
     protected function setUp(): void
     {
         StubTransport::$events = [];
@@ -114,6 +117,28 @@ final class ContinuousProfilerTest extends TestCase
 
         $this->assertFalse($profiler->isRunning());
         $this->assertSame([], StubTransport::$events);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStopRecordsClientReportForProfileChunkWithTooFewSamples(): void
+    {
+        $this->bindClient([
+            'profile_session_sample_rate' => 1.0,
+            'send_client_reports' => true,
+        ]);
+
+        $profiler = new ContinuousProfiler();
+        $profiler->start();
+
+        // Excimer records a single sample for the whole time the application is blocked
+        usleep(50000);
+
+        $profiler->stop();
+
+        $this->assertSame([], StubTransport::$events);
+        $this->assertClientReports(['profile_chunk' => ['insufficient_data' => 1]]);
     }
 
     /**
@@ -903,7 +928,10 @@ final class ContinuousProfilerTest extends TestCase
      */
     public function testStopDiscardsProfileChunkWithOnlyIdleSamples(): void
     {
-        $this->bindClient(['profile_session_sample_rate' => 1.0]);
+        $this->bindClient([
+            'profile_session_sample_rate' => 1.0,
+            'send_client_reports' => true,
+        ]);
 
         $profiler = new ContinuousProfiler();
         $profiler->start();
@@ -911,6 +939,8 @@ final class ContinuousProfilerTest extends TestCase
         $profiler->stop();
 
         $this->assertSame([], StubTransport::$events);
+        // No code was sampled, so no profiling data was lost
+        $this->assertClientReports([]);
     }
 
     /**
