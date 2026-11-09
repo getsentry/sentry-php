@@ -43,12 +43,6 @@ parameters:
 			path: src/HttpClient/HttpClient.php
 
 		-
-			message: '#^Method Sentry\\HttpClient\\Request\:\:getStringBody\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: src/HttpClient/Request.php
-
-		-
 			message: '#^Method Sentry\\Integration\\IntegrationRegistry\:\:getIntegrationsToSetup\(\) should return array\<Sentry\\Integration\\IntegrationInterface\> but returns array\<object\|string\>\.$#'
 			identifier: return.type
 			count: 1
