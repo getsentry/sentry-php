@@ -55,12 +55,6 @@ parameters:
 			path: src/Integration/IntegrationRegistry.php
 
 		-
-			message: '#^Parameter \#1 \$transaction of method Sentry\\Event\:\:setTransaction\(\) expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Integration/TransactionIntegration.php
-
-		-
 			message: '#^Parameter \#2 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
