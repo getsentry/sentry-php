@@ -313,12 +313,6 @@ message = "Too many arguments provided for function `curl_share_init_persistent`
 count = 1
 
 [[issues]]
-file = "src/HttpClient/Request.php"
-code = "redundant-comparison"
-message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
-count = 1
-
-[[issues]]
 file = "src/HttpClient/Response.php"
 code = "less-specific-argument"
 message = "Argument type mismatch for argument #1 of `strtolower`: expected `string`, but provided type `array-key` is less specific."
