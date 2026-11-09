@@ -1316,7 +1316,7 @@ final class Options
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
-            'trace_ignore_status_codes' => [],
+            'trace_ignore_status_codes' => [404],
             'before_send' => static function (Event $event): Event {
                 return $event;
             },

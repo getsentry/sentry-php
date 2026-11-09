@@ -914,7 +914,7 @@ final class ClientTest extends TestCase
     /**
      * @dataProvider traceIgnoreStatusCodesDataProvider
      */
-    public function testProcessEventDiscardsEventWhenTraceIgnoreStatusCodesMatches(?int $statusCode, array $ignoredStatusCodes, bool $shouldIgnore): void
+    public function testProcessEventDiscardsEventWhenTraceIgnoreStatusCodesMatches(?int $statusCode, ?array $ignoredStatusCodes, bool $shouldIgnore): void
     {
         $event = Event::createTransaction();
         $event->setTransaction('GET /api/users');
@@ -957,7 +957,13 @@ final class ClientTest extends TestCase
                       });
         }
 
-        $client = ClientBuilder::create(['trace_ignore_status_codes' => $ignoredStatusCodes])
+        $options = [];
+
+        if ($ignoredStatusCodes !== null) {
+            $options['trace_ignore_status_codes'] = $ignoredStatusCodes;
+        }
+
+        $client = ClientBuilder::create($options)
                                ->setTransport($transport)
                                ->setLogger($logger)
                                ->getClient();
@@ -967,7 +973,19 @@ final class ClientTest extends TestCase
 
     public static function traceIgnoreStatusCodesDataProvider(): \Generator
     {
-        yield 'Default does not ignore any status code' => [
+        yield 'Default ignores 404' => [
+            404,
+            null,
+            true,
+        ];
+
+        yield 'Default does not ignore other status codes' => [
+            500,
+            null,
+            false,
+        ];
+
+        yield 'Empty list does not ignore any status code' => [
             404,
             [],
             false,
