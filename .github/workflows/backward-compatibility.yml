@@ -2,11 +2,13 @@ name: Backward compatibility
 
 on:
   pull_request:
-    # `labeled` and `unlabeled` re-evaluate the job when the opt-out label changes.
+    # `edited` re-evaluates the job when the base branch changes, `labeled` and `unlabeled`
+    # when the opt-out label changes.
     types:
       - opened
       - reopened
       - synchronize
+      - edited
       - labeled
       - unlabeled
 
