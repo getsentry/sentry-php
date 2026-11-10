@@ -8,6 +8,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientInterface;
+use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
@@ -129,16 +130,26 @@ final class ContinuousProfilerTest extends TestCase
             'send_client_reports' => true,
         ]);
 
-        $profiler = new ContinuousProfiler();
+        // A chunk is completed after every sample, so each chunk has too few samples, no matter how many are collected
+        $profiler = new ContinuousProfiler(1);
         $profiler->start();
 
-        // Excimer records a single sample for the whole time the application is blocked
-        usleep(50000);
+        self::busyWait(0.05);
 
         $profiler->stop();
 
         $this->assertSame([], StubTransport::$events);
-        $this->assertClientReports(['profile_chunk' => ['insufficient_data' => 1]]);
+
+        ClientReportAggregator::getInstance()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $clientReports = StubTransport::$events[0]->getClientReports();
+
+        $this->assertCount(1, $clientReports);
+        $this->assertSame('profile_chunk', $clientReports[0]->getCategory());
+        $this->assertSame('insufficient_data', $clientReports[0]->getReason());
+        $this->assertGreaterThanOrEqual(1, $clientReports[0]->getQuantity());
     }
 
     /**
