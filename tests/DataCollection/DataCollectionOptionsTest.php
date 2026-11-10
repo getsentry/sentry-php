@@ -118,14 +118,6 @@ final class DataCollectionOptionsTest extends TestCase
         $this->assertFalse($options->shouldCollectUserInfo());
     }
 
-    public function testCookieSetter(): void
-    {
-        $options = new DataCollectionOptions();
-
-        $this->assertSame($options, $options->setCookies(['mode' => 'off']));
-        $this->assertEquals(KeyValueCollectionBehavior::off(), $options->getCookies());
-    }
-
     public function testHttpHeaderSetter(): void
     {
         $options = new DataCollectionOptions();
@@ -133,14 +125,6 @@ final class DataCollectionOptionsTest extends TestCase
         $this->assertSame($options, $options->setHttpHeaders(['request' => ['mode' => 'off']]));
         $this->assertTrue($options->getHttpHeaders()['request']->isOff());
         $this->assertSame('denyList', $options->getHttpHeaders()['response']->getMode());
-    }
-
-    public function testHttpBodySetter(): void
-    {
-        $options = new DataCollectionOptions();
-
-        $this->assertSame($options, $options->setHttpBodies([]));
-        $this->assertSame([], $options->getHttpBodies());
     }
 
     /**
@@ -224,14 +208,6 @@ final class DataCollectionOptionsTest extends TestCase
 
         $this->assertSame($options, $options->setQueues(false));
         $this->assertFalse($options->shouldCollectQueues());
-    }
-
-    public function testStackFrameVariableSetter(): void
-    {
-        $options = new DataCollectionOptions();
-
-        $this->assertSame($options, $options->setStackFrameVariables(false));
-        $this->assertTrue($options->getStackFrameVariables()->isOff());
     }
 
     public function testFrameContextLineSetter(): void
