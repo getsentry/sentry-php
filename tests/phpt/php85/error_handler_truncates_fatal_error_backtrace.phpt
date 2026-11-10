@@ -73,6 +73,6 @@ outerRecursion(0);
 Fatal error: Class Sentry\Tests\TestClass contains 1 abstract method and must therefore be declared abstract or implement the remaining method (JsonSerializable::jsonSerialize) in %s on line %d
 Stack trace:
 %A
-All frames: 353
+All frames: %d
 Frames: 250
 bool(true)

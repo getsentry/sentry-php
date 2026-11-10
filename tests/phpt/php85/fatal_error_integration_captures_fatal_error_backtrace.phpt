@@ -36,8 +36,10 @@ $transport = new class implements TransportInterface {
     {
         echo 'Transport called' . PHP_EOL;
 
-        foreach ($event->getExceptions()[0]->getStacktrace()->getFrames() as $frame) {
-            echo ($frame->getFunctionName() ?? '{main}') . PHP_EOL;
+        // PHPUnit runs the test through a `require` when it collects code
+        // coverage, which adds an outermost frame to the stack trace
+        foreach (\array_slice($event->getExceptions()[0]->getStacktrace()->getFrames(), -2) as $frame) {
+            echo $frame->getFunctionName() . PHP_EOL;
         }
 
         return new Result(ResultStatus::success());
@@ -81,6 +83,5 @@ Fatal error: Class Sentry\Tests\TestClass contains 1 abstract method and must th
 Stack trace:
 %A
 Transport called
-{main}
 Sentry\Tests\outer
 Sentry\Tests\inner

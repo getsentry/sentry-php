@@ -29,7 +29,9 @@ $errorHandler = ErrorHandler::registerOnceFatalErrorHandler();
 $errorHandler->addFatalErrorHandlerListener(static function (FatalErrorException $exception): void {
     echo 'Fatal error listener called' . PHP_EOL;
 
-    foreach ($exception->getTrace() as $frame) {
+    // PHPUnit runs the test through a `require` when it collects code
+    // coverage, which adds an outermost entry to the backtrace
+    foreach (\array_slice($exception->getTrace(), 0, 2) as $frame) {
         echo $frame['function'] . PHP_EOL;
     }
 });
