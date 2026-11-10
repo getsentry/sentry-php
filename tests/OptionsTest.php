@@ -602,7 +602,7 @@ final class OptionsTest extends TestCase
             'server_name' => gethostname(),
             'ignore_exceptions' => [],
             'ignore_transactions' => [],
-            'trace_ignore_status_codes' => [],
+            'trace_ignore_status_codes' => [404],
             'before_send' => \Closure::class,
             'before_send_transaction' => \Closure::class,
             'before_send_check_in' => \Closure::class,
@@ -880,32 +880,32 @@ final class OptionsTest extends TestCase
 
         yield 'String status code' => [
             ['404'],
-            [],
+            [404],
         ];
 
         yield 'Range with more than two elements' => [
             [[400, 450, 499]],
-            [],
+            [404],
         ];
 
         yield 'Range with a single element' => [
             [[400]],
-            [],
+            [404],
         ];
 
         yield 'Range with non-integer bounds' => [
             [['400', '499']],
-            [],
+            [404],
         ];
 
         yield 'Range with lower bound greater than upper bound' => [
             [[599, 500]],
-            [],
+            [404],
         ];
 
         yield 'Range with string keys' => [
             [['min' => 500, 'max' => 599]],
-            [],
+            [404],
         ];
     }
 

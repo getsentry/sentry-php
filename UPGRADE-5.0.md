@@ -164,3 +164,16 @@ $options->setMaxRequestBodySize('never');
 ```
 
 The allowed values for this option are now: `'never'`, `'small'`, `'medium'`, `'always'`.
+
+### 404 Transactions Are No Longer Sent By Default
+
+The `trace_ignore_status_codes` option now defaults to `[404]`. Transactions whose `http.response.status_code` data is `404` are discarded instead of being sent to Sentry.
+
+To keep tracing all requests regardless of their status code, set the option to an empty list:
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'trace_ignore_status_codes' => [],
+]);
+```
