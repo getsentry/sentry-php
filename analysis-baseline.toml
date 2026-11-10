@@ -1874,18 +1874,6 @@ count = 1
 
 [[issues]]
 file = "src/Util/JSON.php"
-code = "falsable-return-statement"
-message = '''Function `Sentry\Util\JSON::encode` is declared to return `string` but possibly returns 'false' (inferred as `false|non-empty-string`).'''
-count = 1
-
-[[issues]]
-file = "src/Util/JSON.php"
-code = "invalid-return-statement"
-message = 'Invalid return type for function `Sentry\Util\JSON::encode`: expected `string`, but found `false|non-empty-string`.'
-count = 1
-
-[[issues]]
-file = "src/Util/JSON.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 1
