@@ -495,6 +495,8 @@ final class Event
     }
 
     /**
+     * @return array<string, MetricsSummary>
+     *
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
     public function getMetricsSummary(): array

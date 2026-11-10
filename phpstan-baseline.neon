@@ -7,12 +7,6 @@ parameters:
 			path: src/Client.php
 
 		-
-			message: '#^Method Sentry\\Event\:\:getMetricsSummary\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Event.php
-
-		-
 			message: '#^Method Sentry\\Event\:\:setMetricsSummary\(\) has parameter \$metricsSummary with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
