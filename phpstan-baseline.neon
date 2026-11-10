@@ -589,12 +589,6 @@ parameters:
 			path: src/Util/CodeLocationResolver.php
 
 		-
-			message: '#^Method Sentry\\Util\\JSON\:\:encode\(\) should return string but returns string\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Util/JSON.php
-
-		-
 			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:bounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'
 			identifier: return.type
 			count: 1

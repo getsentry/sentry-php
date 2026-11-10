@@ -41,7 +41,7 @@ final class JSON
 
         $encounteredAnyError = json_last_error() !== \JSON_ERROR_NONE;
 
-        if (($encounteredAnyError && ($encodedData === 'null' || $encodedData === false)) || !\in_array(json_last_error(), $allowedErrors, true)) {
+        if ($encodedData === false || ($encounteredAnyError && $encodedData === 'null') || !\in_array(json_last_error(), $allowedErrors, true)) {
             throw new JsonException(\sprintf('Could not encode value into JSON format. Error was: "%s".', json_last_error_msg()));
         }
 
