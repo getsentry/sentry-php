@@ -463,6 +463,18 @@ message = "Assigning `mixed` type to a variable may lead to unexpected behavior.
 count = 2
 
 [[issues]]
+file = "src/Integration/TransactionIntegration.php"
+code = "redundant-comparison"
+message = "Redundant `!==` comparison: left-hand side is always not identical to right-hand side."
+count = 1
+
+[[issues]]
+file = "src/Integration/TransactionIntegration.php"
+code = "redundant-type-comparison"
+message = "Redundant condition: variable `$_SERVER['REQUEST_URI']` (type `non-empty-string`) is already known to be `string`."
+count = 1
+
+[[issues]]
 file = "src/Logger/DebugLogger.php"
 code = "incompatible-parameter-type"
 message = 'Parameter `$message` of `Sentry\Logger\DebugFileLogger::log()` expects type `string` but parent `Psr\Log\LoggerInterface::log()` expects type `Stringable|string`'
