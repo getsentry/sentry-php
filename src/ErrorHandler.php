@@ -540,7 +540,7 @@ final class ErrorHandler
 
     /**
      * Returns the backtrace of the given fatal error, truncated to its
-     * innermost and outermost frames
+     * innermost and outermost frames.
      *
      * @param array<string, mixed> $error The error as returned by {@see error_get_last()}
      *
