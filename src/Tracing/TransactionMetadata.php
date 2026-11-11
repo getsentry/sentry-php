@@ -27,7 +27,7 @@ final class TransactionMetadata
     private $parentSamplingRate;
 
     /**
-     * @var float|int|null
+     * @var float|null
      */
     private $sampleRand;
 
