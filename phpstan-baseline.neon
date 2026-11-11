@@ -535,12 +535,6 @@ parameters:
 			path: src/Tracing/Span.php
 
 		-
-			message: '#^Property Sentry\\Tracing\\TransactionMetadata\:\:\$sampleRand \(float\|int\|null\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Tracing/TransactionMetadata.php
-
-		-
 			message: '#^Parameter \#1 \$email of method Sentry\\UserDataBag\:\:setEmail\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
