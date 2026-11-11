@@ -7,12 +7,6 @@ parameters:
 			path: src/Client.php
 
 		-
-			message: '#^Method Sentry\\Event\:\:setMetricsSummary\(\) has parameter \$metricsSummary with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Event.php
-
-		-
 			message: '#^Parameter \#3 \$value of function curl_setopt expects CurlShareHandle, object\|resource given\.$#'
 			identifier: argument.type
 			count: 1
