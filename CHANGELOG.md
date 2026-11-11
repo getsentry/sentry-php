@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 4.37.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.0.
+
+### Features
+
+- Add stack traces to fatal errors on PHP 8.5 and later, which provides their backtrace unless the `fatal_error_backtraces` INI setting is disabled. [(#2346)](https://github.com/getsentry/sentry-php/pull/2346)
+- Record more dropped telemetry in client reports, such as spans removed by event processors and `before_send_transaction`, logs and metrics dropped by their buffer limits, invalid profiles and profile chunks, and events that fail to serialize. [(#2319)](https://github.com/getsentry/sentry-php/pull/2319), [(#2322)](https://github.com/getsentry/sentry-php/pull/2322), [(#2324)](https://github.com/getsentry/sentry-php/pull/2324), [(#2325)](https://github.com/getsentry/sentry-php/pull/2325), [(#2326)](https://github.com/getsentry/sentry-php/pull/2326), [(#2327)](https://github.com/getsentry/sentry-php/pull/2327), [(#2328)](https://github.com/getsentry/sentry-php/pull/2328), [(#2329)](https://github.com/getsentry/sentry-php/pull/2329), [(#2334)](https://github.com/getsentry/sentry-php/pull/2334)
+
+### Misc
+
+- Only trim the breadcrumbs of a scope when they exceed `max_breadcrumbs`, instead of on every added breadcrumb. [(#2321)](https://github.com/getsentry/sentry-php/pull/2321)
+
 ## 4.36.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.36.0.
