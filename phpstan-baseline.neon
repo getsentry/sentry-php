@@ -511,12 +511,6 @@ parameters:
 			path: src/Tracing/PropagationContext.php
 
 		-
-			message: '#^Method Sentry\\Tracing\\Span\:\:getMetricsSummary\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Tracing/Span.php
-
-		-
 			message: '#^Method Sentry\\Tracing\\Span\:\:setMetricsSummary\(\) has parameter \$tags with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
