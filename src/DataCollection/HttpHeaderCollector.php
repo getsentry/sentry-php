@@ -14,11 +14,10 @@ final class HttpHeaderCollector
 
     /**
      * @param array<array-key, string[]>|null $headers
-     * @param string[]|null                   $piiSanitizeHeaders
      *
      * @return array<array-key, string[]>|null `null` if headers are not collected or not available
      */
-    public static function collect(Options $options, HttpMessageType $type, ?array $headers, ?array $piiSanitizeHeaders = null): ?array
+    public static function collect(Options $options, HttpMessageType $type, ?array $headers): ?array
     {
         if ($headers === null) {
             return null;
@@ -32,13 +31,7 @@ final class HttpHeaderCollector
             return null;
         }
 
-        $filtered = self::filterRefererUrls($options, $type, $filtered);
-
-        if ($piiSanitizeHeaders === null) {
-            return $filtered;
-        }
-
-        return self::sanitize($filtered, $piiSanitizeHeaders);
+        return self::filterRefererUrls($options, $type, $filtered);
     }
 
     /**
@@ -63,28 +56,5 @@ final class HttpHeaderCollector
         }
 
         return $headers;
-    }
-
-    /**
-     * @param array<array-key, string[]> $headers
-     * @param string[]                   $names
-     *
-     * @return array<array-key, string[]>
-     */
-    private static function sanitize(array $headers, array $names): array
-    {
-        $names = array_map('strtolower', $names);
-        $sanitized = [];
-
-        foreach ($headers as $name => $values) {
-            $shouldSanitize = \in_array(strtolower((string) $name), $names, true);
-            $sanitized[$name] = [];
-
-            foreach ($values as $headerLine => $headerValue) {
-                $sanitized[$name][$headerLine] = $shouldSanitize ? KeyValueDataFilter::FILTERED_VALUE : $headerValue;
-            }
-        }
-
-        return $sanitized;
     }
 }

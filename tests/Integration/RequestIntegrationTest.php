@@ -27,12 +27,12 @@ final class RequestIntegrationTest extends TestCase
     /**
      * @dataProvider invokeDataProvider
      */
-    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser, array $integrationOptions = []): void
+    public function testInvoke(array $options, ServerRequestInterface $request, array $expectedRequestContextData, ?UserDataBag $initialUser, ?UserDataBag $expectedUser): void
     {
         $event = Event::createEvent();
         $event->setUser($initialUser);
 
-        $this->setupIntegration($request, $options, $integrationOptions);
+        $this->setupIntegration($request, $options);
 
         withIsolationScope(function (IsolationScope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
@@ -354,26 +354,6 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield 'explicit header restrictions are applied' => [
-            [],
-            (new ServerRequest('GET', 'https://example.com/'))
-                ->withHeader('X-Tenant-ID', 'tenant')
-                ->withHeader('X-Forwarded-For', '203.0.113.7'),
-            [
-                'url' => 'https://example.com/',
-                'method' => 'GET',
-                'cookies' => [],
-                'headers' => [
-                    'Host' => ['example.com'],
-                    'X-Tenant-ID' => ['[Filtered]'],
-                    'X-Forwarded-For' => ['203.0.113.7'],
-                ],
-            ],
-            null,
-            null,
-            ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
-        ];
-
         yield 'data collection can disable all incoming request data' => [
             [
                 'data_collection' => [
@@ -570,9 +550,9 @@ final class RequestIntegrationTest extends TestCase
         ];
     }
 
-    private function setupIntegration(ServerRequestInterface $request, array $options, array $integrationOptions = []): void
+    private function setupIntegration(ServerRequestInterface $request, array $options): void
     {
-        $integration = new RequestIntegration($this->createRequestFetcher($request), $integrationOptions);
+        $integration = new RequestIntegration($this->createRequestFetcher($request));
         $integration->setupOnce();
 
         /** @var ClientInterface&MockObject $client */

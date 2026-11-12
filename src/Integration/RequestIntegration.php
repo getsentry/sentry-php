@@ -12,7 +12,6 @@ use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
-use Sentry\OptionsResolver;
 use Sentry\SentrySdk;
 use Sentry\UserDataBag;
 
@@ -30,35 +29,13 @@ final class RequestIntegration implements IntegrationInterface
     private $requestFetcher;
 
     /**
-     * @var array<string, mixed> The explicitly configured options
-     *
-     * @phpstan-var array{
-     *     pii_sanitize_headers?: string[]
-     * }
-     */
-    private $options;
-
-    /**
      * Constructor.
      *
      * @param RequestFetcherInterface|null $requestFetcher PSR-7 request fetcher
-     * @param array<string, mixed>         $options        The options
-     *
-     * @phpstan-param array{
-     *     pii_sanitize_headers?: string[]
-     * } $options
      */
-    public function __construct(?RequestFetcherInterface $requestFetcher = null, array $options = [])
+    public function __construct(?RequestFetcherInterface $requestFetcher = null)
     {
-        $resolver = new OptionsResolver();
-
-        $this->configureOptions($resolver);
-
         $this->requestFetcher = $requestFetcher ?? new RequestFetcher();
-
-        /** @var array{pii_sanitize_headers?: string[]} $resolvedOptions */
-        $resolvedOptions = $resolver->resolveOnly($options);
-        $this->options = $resolvedOptions;
     }
 
     /**
@@ -112,12 +89,7 @@ final class RequestIntegration implements IntegrationInterface
             $requestData['cookies'] = $cookies;
         }
 
-        $headers = HttpHeaderCollector::collect(
-            $options,
-            HttpMessageType::incomingRequest(),
-            $request->getHeaders(),
-            $this->options['pii_sanitize_headers'] ?? null
-        );
+        $headers = HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), $request->getHeaders());
         if ($headers !== null) {
             $requestData['headers'] = $headers;
         }
@@ -149,19 +121,5 @@ final class RequestIntegration implements IntegrationInterface
         }
 
         $event->setUser($user);
-    }
-
-    /**
-     * Configures the options of the client.
-     *
-     * @param OptionsResolver $resolver The resolver for the options
-     */
-    private function configureOptions(OptionsResolver $resolver): void
-    {
-        $resolver->setAllowedTypes('pii_sanitize_headers', 'string[]');
-        $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
-            return array_map('strtolower', $value);
-        });
-        $resolver->setDefault('pii_sanitize_headers', []);
     }
 }

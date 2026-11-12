@@ -34,35 +34,6 @@ final class HttpHeaderCollectorTest extends TestCase
         ], HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $headers));
     }
 
-    public function testHeaderSanitizationDetachesReferencesWithoutChangingInput(): void
-    {
-        $tenantId = 'tenant';
-        $requestId = 'request-id';
-        $headers = ['X-Tenant-Id' => [&$tenantId], 'X-Request-Id' => [&$requestId]];
-
-        $filtered = HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $headers, ['x-tenant-id']);
-
-        $this->assertSame(['X-Tenant-Id' => ['tenant'], 'X-Request-Id' => ['request-id']], $headers);
-
-        $tenantId = 'new-tenant';
-        $requestId = 'new-request-id';
-
-        $this->assertSame(['X-Tenant-Id' => ['[Filtered]'], 'X-Request-Id' => ['request-id']], $filtered);
-    }
-
-    public function testExplicitHeaderRestrictionsAreCaseInsensitiveAndMatchWholeNames(): void
-    {
-        $this->assertSame([
-            'x-tenant-id' => ['[Filtered]', '[Filtered]'],
-            'X-Tenant-ID-Label' => ['visible'],
-            'X-Forwarded-For' => ['203.0.113.7'],
-        ], HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), [
-            'x-tenant-id' => ['first', 'second'],
-            'X-Tenant-ID-Label' => ['visible'],
-            'X-Forwarded-For' => ['203.0.113.7'],
-        ], ['X-TeNaNt-Id']));
-    }
-
     public function testCollectHeadersSupportsNumericNames(): void
     {
         $this->assertSame(
@@ -117,7 +88,7 @@ final class HttpHeaderCollectorTest extends TestCase
     {
         $options = $this->options(['http_headers' => ['mode' => 'off']]);
 
-        $this->assertNull(HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']], ['x-tenant-id']));
+        $this->assertNull(HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']]));
     }
 
     /**
@@ -180,7 +151,6 @@ final class HttpHeaderCollectorTest extends TestCase
     public function testUnavailableHeadersAreNotCollected(): void
     {
         $this->assertNull(HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), null));
-        $this->assertNull(HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), null, ['x-tenant-id']));
     }
 
     /**

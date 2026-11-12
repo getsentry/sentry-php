@@ -255,7 +255,24 @@ The following behavior changed along with it:
 
 - **Request bodies** - Values in request bodies are filtered like other collected data, bodies that cannot be parsed are sent as `[Filtered]`, and uploaded files are no longer added to the request data. The `max_request_body_size` value `'always'` now collects bodies up to 100,000 bytes instead of bodies of any size
 
-- **`RequestIntegration`** - The default list of sanitized headers has been removed, the `data_collection` option decides which header values are filtered. The `X-Forwarded-For` and `X-Real-IP` headers are no longer filtered by default, and the `Cookie` and `Set-Cookie` headers are no longer part of the collected headers. The `pii_sanitize_headers` option still sanitizes the headers it is configured with
+- **`RequestIntegration`** - The `pii_sanitize_headers` option and the default list of sanitized headers have been removed, the constructor only accepts the request fetcher. The `data_collection` option decides which header values are filtered: the `X-Forwarded-For` and `X-Real-IP` headers are no longer filtered by default, and the `Cookie` and `Set-Cookie` headers are no longer part of the collected headers. To filter additional headers, add terms to the deny list of the request headers, a header is filtered if its name contains one of the terms
+  ```php
+  // Before (4.x)
+  \Sentry\init([
+      'integrations' => [
+          new \Sentry\Integration\RequestIntegration(null, ['pii_sanitize_headers' => ['x-tenant-id']]),
+      ],
+  ]);
+
+  // After (5.0)
+  \Sentry\init([
+      'data_collection' => [
+          'http_headers' => [
+              'request' => ['mode' => 'denyList', 'terms' => ['x-tenant-id']],
+          ],
+      ],
+  ]);
+  ```
 
 The helpers in the `Sentry\DataCollection` namespace changed as well:
 
