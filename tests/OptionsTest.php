@@ -191,13 +191,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'context_lines',
-            3,
-            'getContextLines',
-            'setContextLines',
-        ];
-
-        yield [
             'environment',
             'foo',
             'getEnvironment',
@@ -349,13 +342,6 @@ final class OptionsTest extends TestCase
             static function (): void {},
             'getBeforeBreadcrumbCallback',
             'setBeforeBreadcrumbCallback',
-        ];
-
-        yield [
-            'send_default_pii',
-            true,
-            'shouldSendDefaultPii',
-            'setSendDefaultPii',
         ];
 
         yield [
@@ -577,6 +563,9 @@ final class OptionsTest extends TestCase
             $actual[$callbackOption] = \Closure::class;
         }
 
+        $this->assertInstanceOf(DataCollectionOptions::class, $actual['data_collection']);
+        $actual['data_collection'] = DataCollectionOptions::class;
+
         $expected = [
             'integrations' => [],
             'default_integrations' => true,
@@ -592,7 +581,6 @@ final class OptionsTest extends TestCase
             'profile_lifecycle' => 'manual',
             'profiler_factory' => null,
             'attach_stacktrace' => false,
-            'context_lines' => 5,
             'environment' => null,
             'logger' => null,
             'spotlight' => false,
@@ -616,9 +604,8 @@ final class OptionsTest extends TestCase
             'before_breadcrumb' => \Closure::class,
             'in_app_exclude' => [],
             'in_app_include' => [],
-            'send_default_pii' => false,
             'send_client_reports' => false,
-            'data_collection' => null,
+            'data_collection' => DataCollectionOptions::class,
             'max_breadth' => null,
             'transport' => null,
             'http_client' => null,
@@ -699,7 +686,6 @@ final class OptionsTest extends TestCase
 
         $this->assertSame($dataCollection, $options->getDataCollection());
         $resolvedDataCollection = $options->getDataCollection();
-        $this->assertNotNull($resolvedDataCollection);
         $resolvedDataCollection->setFrameContextLines(0);
         $this->assertSame(0, $dataCollection->getFrameContextLines());
     }
@@ -926,39 +912,6 @@ final class OptionsTest extends TestCase
         yield [10, 10];
         yield [0, null];
         yield [-1, null];
-    }
-
-    /**
-     * @dataProvider contextLinesOptionValidatesInputValueDataProvider
-     */
-    public function testContextLinesOptionValidatesInputValue(?int $value, ?int $expectedValue): void
-    {
-        $options = new Options(['context_lines' => $value]);
-
-        $this->assertSame($expectedValue, $options->getContextLines());
-    }
-
-    public static function contextLinesOptionValidatesInputValueDataProvider(): \Generator
-    {
-        yield [
-            -1,
-            5,
-        ];
-
-        yield [
-            0,
-            0,
-        ];
-
-        yield [
-            1,
-            1,
-        ];
-
-        yield [
-            null,
-            null,
-        ];
     }
 
     /**

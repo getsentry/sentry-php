@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Sentry\Options;
 use Sentry\Serializer\Serializer;
 
 final class DatabaseDataCollector
@@ -19,10 +20,9 @@ final class DatabaseDataCollector
      *
      * @return array<string, mixed>
      */
-    public static function collectQueryData(DataCollectionPolicy $policy, array $bindings): array
+    public static function collectQueryData(Options $options, array $bindings): array
     {
-        $options = $policy->getOptions();
-        if ($options === null || $bindings === [] || !$policy->shouldCollectDatabaseQueryData()) {
+        if ($bindings === [] || !$options->getDataCollection()->shouldCollectDatabaseQueryData()) {
             return [];
         }
 

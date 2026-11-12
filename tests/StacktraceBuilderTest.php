@@ -79,17 +79,8 @@ final class StacktraceBuilderTest extends TestCase
 
     public static function stackFrameVariablesDataProvider(): \Generator
     {
-        yield 'legacy behavior is unchanged' => [
+        yield 'sensitive values are filtered by default' => [
             [],
-            [
-                'requestId' => 'request-123',
-                'password' => 'secret',
-                'metadata' => ['api_token' => 'nested-secret', 'name' => 'alice'],
-            ],
-        ];
-
-        yield 'default data collection filters sensitive values' => [
-            ['data_collection' => []],
             [
                 'requestId' => 'request-123',
                 'password' => '[Filtered]',

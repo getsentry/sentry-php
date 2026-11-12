@@ -323,40 +323,20 @@ final class Options
     }
 
     /**
-     * Gets the number of lines of code context to capture, or null if none.
+     * Gets the data collection options.
      */
-    public function getContextLines(): ?int
+    public function getDataCollection(): DataCollectionOptions
     {
-        return $this->options['context_lines'];
-    }
-
-    /**
-     * Sets the number of lines of code context to capture, or null if none.
-     *
-     * @param int|null $contextLines The number of lines of code
-     */
-    public function setContextLines(?int $contextLines): self
-    {
-        return $this->updateOptions(['context_lines' => $contextLines]);
-    }
-
-    /**
-     * Gets the data collection options. `null` means the legacy options such as
-     * `send_default_pii` are used instead.
-     */
-    public function getDataCollection(): ?DataCollectionOptions
-    {
-        /** @var DataCollectionOptions|null $dataCollection */
+        /** @var DataCollectionOptions $dataCollection */
         $dataCollection = $this->options['data_collection'];
 
         return $dataCollection;
     }
 
     /**
-     * Sets the data collection options. Any value other than `null` opts into the
-     * data collection options and ignores the legacy options such as `send_default_pii`.
+     * Sets the data collection options.
      *
-     * @param DataCollectionOptions|array<string, mixed>|null $dataCollection
+     * @param DataCollectionOptions|array<string, mixed> $dataCollection
      */
     public function setDataCollection($dataCollection): self
     {
@@ -896,24 +876,6 @@ final class Options
     }
 
     /**
-     * Should default PII be sent by default.
-     */
-    public function shouldSendDefaultPii(): bool
-    {
-        return $this->options['send_default_pii'];
-    }
-
-    /**
-     * Sets if default PII should be sent with every event (if possible).
-     *
-     * @param bool $enable Flag indicating if default PII will be sent
-     */
-    public function setSendDefaultPii(bool $enable): self
-    {
-        return $this->updateOptions(['send_default_pii' => $enable]);
-    }
-
-    /**
      * Returns whether the SDK should record and send client reports about discarded telemetry.
      */
     public function shouldSendClientReports(): bool
@@ -1218,7 +1180,6 @@ final class Options
         $resolver->setAllowedTypes('profile_lifecycle', 'string');
         $resolver->setAllowedTypes('profiler_factory', ['null', 'callable']);
         $resolver->setAllowedTypes('attach_stacktrace', 'bool');
-        $resolver->setAllowedTypes('context_lines', ['null', 'int']);
         $resolver->setAllowedTypes('environment', ['null', 'string']);
         $resolver->setAllowedTypes('in_app_exclude', 'string[]');
         $resolver->setAllowedTypes('in_app_include', 'string[]');
@@ -1243,7 +1204,6 @@ final class Options
         $resolver->setAllowedTypes('max_breadcrumbs', 'int');
         $resolver->setAllowedTypes('before_breadcrumb', ['callable']);
         $resolver->setAllowedTypes('integrations', ['Sentry\\Integration\\IntegrationInterface[]', 'callable']);
-        $resolver->setAllowedTypes('send_default_pii', 'bool');
         $resolver->setAllowedTypes('send_client_reports', 'bool');
         $resolver->setAllowedTypes('default_integrations', 'bool');
         $resolver->setAllowedTypes('max_breadth', ['null', 'int']);
@@ -1260,7 +1220,7 @@ final class Options
         $resolver->setAllowedTypes('capture_silenced_errors', 'bool');
         $resolver->setAllowedTypes('max_request_body_size', 'string');
         $resolver->setAllowedTypes('class_serializers', 'array');
-        $resolver->setAllowedTypes('data_collection', ['null', 'array', DataCollectionOptions::class]);
+        $resolver->setAllowedTypes('data_collection', ['array', DataCollectionOptions::class]);
 
         $resolver->setAllowedValues('max_request_body_size', ['never', 'small', 'medium', 'always']);
         $resolver->setAllowedValues('profile_lifecycle', ['manual', 'trace']);
@@ -1268,7 +1228,6 @@ final class Options
         $resolver->setAllowedValues('max_breadcrumbs', \Closure::fromCallable([$this, 'validateMaxBreadcrumbsOptions']));
         $resolver->setAllowedValues('class_serializers', \Closure::fromCallable([$this, 'validateClassSerializersOption']));
         $resolver->setAllowedValues('trace_ignore_status_codes', \Closure::fromCallable([$this, 'validateTraceIgnoreStatusCodesOption']));
-        $resolver->setAllowedValues('context_lines', \Closure::fromCallable([$this, 'validateContextLinesOption']));
         $resolver->setAllowedValues('max_breadth', \Closure::fromCallable([$this, 'validateMaxBreadthOption']));
         $resolver->setAllowedValues('log_flush_threshold', \Closure::fromCallable([$this, 'validateLogFlushThresholdOption']));
         $resolver->setAllowedValues('metric_flush_threshold', \Closure::fromCallable([$this, 'validateMetricFlushThresholdOption']));
@@ -1305,7 +1264,6 @@ final class Options
             'profile_lifecycle' => 'manual',
             'profiler_factory' => null,
             'attach_stacktrace' => false,
-            'context_lines' => 5,
             'environment' => $_SERVER['SENTRY_ENVIRONMENT'] ?? null,
             'logger' => null,
             'spotlight' => $_SERVER['SENTRY_SPOTLIGHT'] ?? null,
@@ -1341,7 +1299,6 @@ final class Options
             },
             'in_app_exclude' => [],
             'in_app_include' => [],
-            'send_default_pii' => false,
             'send_client_reports' => false,
             'max_breadth' => null,
             'transport' => null,
@@ -1357,7 +1314,7 @@ final class Options
             'capture_silenced_errors' => false,
             'max_request_body_size' => 'medium',
             'class_serializers' => [],
-            'data_collection' => null,
+            'data_collection' => [],
         ]);
     }
 
@@ -1408,11 +1365,11 @@ final class Options
     }
 
     /**
-     * @param array<string, mixed>|DataCollectionOptions|null $value
+     * @param array<string, mixed>|DataCollectionOptions $value
      */
-    private function normalizeDataCollectionOption($value): ?DataCollectionOptions
+    private function normalizeDataCollectionOption($value): DataCollectionOptions
     {
-        if ($value === null || $value instanceof DataCollectionOptions) {
+        if ($value instanceof DataCollectionOptions) {
             return $value;
         }
 
@@ -1544,16 +1501,6 @@ final class Options
             && \is_int($range[0])
             && \is_int($range[1])
             && $range[0] <= $range[1];
-    }
-
-    /**
-     * Validates that the value passed to the "context_lines" option is valid.
-     *
-     * @param int|null $contextLines The value to validate
-     */
-    private function validateContextLinesOption(?int $contextLines): bool
-    {
-        return $contextLines === null || $contextLines >= 0;
     }
 
     /**

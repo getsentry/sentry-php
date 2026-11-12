@@ -9,7 +9,6 @@ use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpSpanDataCollector;
 use Sentry\Options;
@@ -34,7 +33,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'http.request.header.referer' => 'https://example.com/login?token=[Filtered]',
             'http.request.header.cookie' => ['theme=dark', 'session_id=[Filtered]'],
             'http.request.body.data' => '{"name":"Alice","password":"[Filtered]"}',
-        ], HttpSpanDataCollector::collectServerRequest(self::policy(), $request));
+        ], HttpSpanDataCollector::collectServerRequest(self::options(), $request));
     }
 
     /**
@@ -47,7 +46,7 @@ final class HttpSpanDataCollectorTest extends TestCase
     {
         $request = (new ServerRequest('GET', '/', ['Cookie' => $cookieHeader]))->withCookieParams($cookieParams);
 
-        $this->assertSame($expectedData, HttpSpanDataCollector::collectServerRequest(self::policy(['http_headers' => ['mode' => 'off']]), $request));
+        $this->assertSame($expectedData, HttpSpanDataCollector::collectServerRequest(self::options(['http_headers' => ['mode' => 'off']]), $request));
     }
 
     public static function serverRequestCookiesDataProvider(): \Generator
@@ -74,33 +73,33 @@ final class HttpSpanDataCollectorTest extends TestCase
     /**
      * @dataProvider serverRequestBodyDataProvider
      */
-    public function testServerRequestBodyIsCollected(DataCollectionPolicy $policy, ServerRequestInterface $request, ?string $expectedBody): void
+    public function testServerRequestBodyIsCollected(Options $options, ServerRequestInterface $request, ?string $expectedBody): void
     {
-        $this->assertSame($expectedBody, HttpSpanDataCollector::collectServerRequest($policy, $request)['http.request.body.data'] ?? null);
+        $this->assertSame($expectedBody, HttpSpanDataCollector::collectServerRequest($options, $request)['http.request.body.data'] ?? null);
     }
 
     public static function serverRequestBodyDataProvider(): \Generator
     {
         yield 'form bodies are read from the parsed body' => [
-            self::policy(),
+            self::options(),
             (new ServerRequest('POST', '/', ['Content-Type' => 'application/x-www-form-urlencoded']))->withParsedBody(['name' => 'Alice', 'password' => 'secret']),
             '{"name":"Alice","password":"[Filtered]"}',
         ];
 
         yield 'bodies that cannot be parsed are filtered' => [
-            self::policy(),
+            self::options(),
             new ServerRequest('POST', '/', ['Content-Type' => 'text/plain'], 'Hello World'),
             '[Filtered]',
         ];
 
         yield 'bodies over the size limit are not collected' => [
-            DataCollectionPolicy::fromOptions(new Options(['data_collection' => [], 'max_request_body_size' => 'small'])),
+            new Options(['max_request_body_size' => 'small']),
             new ServerRequest('POST', '/', ['Content-Type' => 'application/json', 'Content-Length' => '2000'], '{}'),
             null,
         ];
 
         yield 'disabled incoming request bodies are not collected' => [
-            self::policy(['http_bodies' => ['outgoingRequest', 'incomingResponse', 'outgoingResponse']]),
+            self::options(['http_bodies' => ['outgoingRequest', 'incomingResponse', 'outgoingResponse']]),
             new ServerRequest('POST', '/', ['Content-Type' => 'application/json'], '{"name":"Alice"}'),
             null,
         ];
@@ -118,7 +117,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'http.request.header.content-type' => 'application/json',
             'http.request.header.cookie' => ['theme=dark', 'session_id=[Filtered]'],
             'http.request.body.data' => '{"name":"Alice","password":"[Filtered]"}',
-        ], HttpSpanDataCollector::collectPsr7Request(self::policy(), HttpMessageType::outgoingRequest(), $request));
+        ], HttpSpanDataCollector::collectPsr7Request(self::options(), HttpMessageType::outgoingRequest(), $request));
     }
 
     public function testPsr7ResponseIsCollected(): void
@@ -132,7 +131,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'http.response.header.content-type' => 'application/json',
             'http.response.header.set-cookie' => ['theme=light', 'session_id=[Filtered]'],
             'http.response.body.data' => '{"status":"ok","token":"[Filtered]"}',
-        ], HttpSpanDataCollector::collectPsr7Response(self::policy(), HttpMessageType::incomingResponse(), $response));
+        ], HttpSpanDataCollector::collectPsr7Response(self::options(), HttpMessageType::incomingResponse(), $response));
     }
 
     public function testHeadersAreCollected(): void
@@ -141,7 +140,7 @@ final class HttpSpanDataCollectorTest extends TestCase
             'http.response.header.x-served-by' => 'web-1, web-2',
             'http.response.header.x-api-key' => '[Filtered]',
             'http.response.header.123' => 'numeric',
-        ], HttpSpanDataCollector::collectHeaders(self::policy(), HttpMessageType::outgoingResponse(), [
+        ], HttpSpanDataCollector::collectHeaders(self::options(), HttpMessageType::outgoingResponse(), [
             'X-Served-By' => ['web-1', 'web-2'],
             'X-Api-Key' => ['secret'],
             'Set-Cookie' => ['theme=dark'],
@@ -157,7 +156,7 @@ final class HttpSpanDataCollectorTest extends TestCase
      */
     public function testCookieHeadersAreCollected(HttpMessageType $type, array $headers, array $expectedData): void
     {
-        $this->assertSame($expectedData, HttpSpanDataCollector::collectCookieHeaders(self::policy(), $type, $headers));
+        $this->assertSame($expectedData, HttpSpanDataCollector::collectCookieHeaders(self::options(), $type, $headers));
     }
 
     public static function cookieHeadersDataProvider(): \Generator
@@ -203,7 +202,7 @@ final class HttpSpanDataCollectorTest extends TestCase
     {
         $this->assertSame(
             ['http.response.header.set-cookie' => ['theme=dark', 'theme=light', 'session_id=[Filtered]', 'preferences=[Filtered]']],
-            HttpSpanDataCollector::collectCookiePairs(self::policy(), HttpMessageType::outgoingResponse(), [
+            HttpSpanDataCollector::collectCookiePairs(self::options(), HttpMessageType::outgoingResponse(), [
                 ['theme', 'dark'],
                 ['theme', 'light'],
                 ['session_id', 'secret'],
@@ -216,7 +215,7 @@ final class HttpSpanDataCollectorTest extends TestCase
     {
         $this->assertSame(
             ['http.response.header.set-cookie' => ['theme=', 'session_id=[Filtered]']],
-            HttpSpanDataCollector::collectCookiePairs(self::policy(), HttpMessageType::outgoingResponse(), [
+            HttpSpanDataCollector::collectCookiePairs(self::options(), HttpMessageType::outgoingResponse(), [
                 ['theme', null],
                 ['session_id', null],
             ])
@@ -227,11 +226,11 @@ final class HttpSpanDataCollectorTest extends TestCase
     {
         $this->assertSame(
             ['http.request.header.cookie' => ['theme=dark', 'lang=[Filtered]', 'session_id=[Filtered]']],
-            HttpSpanDataCollector::collectCookieHeaders(self::policy(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'session_id']]]), HttpMessageType::outgoingRequest(), ['theme=dark; lang=en; session_id=secret'])
+            HttpSpanDataCollector::collectCookieHeaders(self::options(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'session_id']]]), HttpMessageType::outgoingRequest(), ['theme=dark; lang=en; session_id=secret'])
         );
 
-        $this->assertSame([], HttpSpanDataCollector::collectCookieHeaders(self::policy(['cookies' => ['mode' => 'off']]), HttpMessageType::outgoingRequest(), ['theme=dark']));
-        $this->assertSame([], HttpSpanDataCollector::collectCookiePairs(self::policy(['cookies' => ['mode' => 'off']]), HttpMessageType::outgoingResponse(), [['theme', 'dark']]));
+        $this->assertSame([], HttpSpanDataCollector::collectCookieHeaders(self::options(['cookies' => ['mode' => 'off']]), HttpMessageType::outgoingRequest(), ['theme=dark']));
+        $this->assertSame([], HttpSpanDataCollector::collectCookiePairs(self::options(['cookies' => ['mode' => 'off']]), HttpMessageType::outgoingResponse(), [['theme', 'dark']]));
     }
 
     /**
@@ -242,7 +241,7 @@ final class HttpSpanDataCollectorTest extends TestCase
      */
     public function testBodyIsCollected($body, string $contentType, array $expectedData): void
     {
-        $this->assertSame($expectedData, HttpSpanDataCollector::collectBody(self::policy(), HttpMessageType::outgoingResponse(), $body, $contentType));
+        $this->assertSame($expectedData, HttpSpanDataCollector::collectBody(self::options(), HttpMessageType::outgoingResponse(), $body, $contentType));
     }
 
     public static function bodyDataProvider(): \Generator
@@ -286,7 +285,7 @@ final class HttpSpanDataCollectorTest extends TestCase
 
     public function testNothingIsCollectedWhenCollectionIsDisabled(): void
     {
-        $policy = self::policy([
+        $options = self::options([
             'cookies' => ['mode' => 'off'],
             'http_headers' => ['mode' => 'off'],
             'http_bodies' => [],
@@ -294,29 +293,14 @@ final class HttpSpanDataCollectorTest extends TestCase
 
         $request = (new ServerRequest('POST', 'https://example.com/', ['Content-Type' => 'application/json'], '{"name":"Alice"}'))->withCookieParams(['theme' => 'dark']);
 
-        $this->assertSame([], HttpSpanDataCollector::collectServerRequest($policy, $request));
-    }
-
-    public function testNothingIsCollectedWithLegacyOptions(): void
-    {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
-        $type = HttpMessageType::incomingRequest();
-        $request = (new ServerRequest('POST', 'https://example.com/', ['Content-Type' => 'application/json', 'Content-Length' => '16'], '{"name":"Alice"}'))->withCookieParams(['theme' => 'dark']);
-
-        $this->assertSame([], HttpSpanDataCollector::collectServerRequest($policy, $request));
-        $this->assertSame([], HttpSpanDataCollector::collectPsr7Request($policy, $type, $request));
-        $this->assertSame([], HttpSpanDataCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), new Response(200, ['Content-Type' => 'application/json'], '{"status":"ok"}')));
-        $this->assertSame([], HttpSpanDataCollector::collectHeaders($policy, $type, ['Content-Type' => ['application/json']]));
-        $this->assertSame([], HttpSpanDataCollector::collectCookieHeaders($policy, $type, ['theme=dark']));
-        $this->assertSame([], HttpSpanDataCollector::collectCookiePairs($policy, $type, [['theme', 'dark']]));
-        $this->assertSame([], HttpSpanDataCollector::collectBody($policy, $type, ['name' => 'Alice']));
+        $this->assertSame([], HttpSpanDataCollector::collectServerRequest($options, $request));
     }
 
     /**
      * @param array<string, mixed> $dataCollection
      */
-    private static function policy(array $dataCollection = []): DataCollectionPolicy
+    private static function options(array $dataCollection = []): Options
     {
-        return DataCollectionPolicy::fromOptions(new Options(['data_collection' => $dataCollection]));
+        return new Options(['data_collection' => $dataCollection]);
     }
 }

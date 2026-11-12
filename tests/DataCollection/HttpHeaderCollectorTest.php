@@ -5,21 +5,13 @@ declare(strict_types=1);
 namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpHeaderCollector;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\Options;
 
 final class HttpHeaderCollectorTest extends TestCase
 {
-    public function testLegacyModeWithPiiCollectsIncomingRequestHeadersUnfiltered(): void
-    {
-        $headers = ['Authorization' => ['secret'], 'Cookie' => ['session_id=secret']];
-
-        $this->assertSame($headers, HttpHeaderCollector::collect($this->legacyPolicy(true), HttpMessageType::incomingRequest(), $headers));
-    }
-
-    public function testDefaultHeaderRestrictionsDependOnCollectionMode(): void
+    public function testDefaultHeaderRestrictions(): void
     {
         $headers = [
             'Authorization' => ['secret'],
@@ -35,98 +27,53 @@ final class HttpHeaderCollectorTest extends TestCase
         $this->assertSame([
             'Authorization' => ['[Filtered]'],
             'Proxy-Authorization' => ['[Filtered]'],
-            'Cookie' => ['[Filtered]'],
-            'Set-Cookie' => ['[Filtered]'],
-            'X-Forwarded-For' => ['[Filtered]'],
-            'X-Real-IP' => ['[Filtered]'],
-            'X-Authorization-Token' => ['secret'],
-            'X-Request-Id' => ['request-id'],
-        ], HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), $headers));
-        $this->assertSame([
-            'Authorization' => ['[Filtered]'],
-            'Proxy-Authorization' => ['[Filtered]'],
             'X-Forwarded-For' => ['203.0.113.7'],
             'X-Real-IP' => ['203.0.113.7'],
             'X-Authorization-Token' => ['[Filtered]'],
             'X-Request-Id' => ['request-id'],
-        ], HttpHeaderCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), $headers));
+        ], HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $headers));
     }
 
-    /**
-     * @dataProvider legacyUncollectedTypeProvider
-     */
-    public function testLegacyModeDoesNotCollectOtherHeaders(HttpMessageType $type): void
+    public function testHeaderSanitizationDetachesReferencesWithoutChangingInput(): void
     {
-        $this->assertNull(HttpHeaderCollector::collect($this->legacyPolicy(true), $type, ['X-Request-Id' => ['request-id']]));
-    }
-
-    public static function legacyUncollectedTypeProvider(): \Generator
-    {
-        yield 'outgoing request' => [HttpMessageType::outgoingRequest()];
-        yield 'incoming response' => [HttpMessageType::incomingResponse()];
-        yield 'outgoing response' => [HttpMessageType::outgoingResponse()];
-    }
-
-    public function testExplicitlyEmptyHeaderRestrictionsPreserveLegacyHeaders(): void
-    {
-        $headers = ['Authorization' => ['secret'], 'X-Forwarded-For' => ['203.0.113.7']];
-
-        $this->assertSame($headers, HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), $headers, []));
-    }
-
-    public function testLegacyHeaderSanitizationDetachesReferencesWithoutChangingInput(): void
-    {
-        $authorization = 'secret';
+        $tenantId = 'tenant';
         $requestId = 'request-id';
-        $headers = ['Authorization' => [&$authorization], 'X-Request-Id' => [&$requestId]];
+        $headers = ['X-Tenant-Id' => [&$tenantId], 'X-Request-Id' => [&$requestId]];
 
-        $filtered = HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), $headers);
+        $filtered = HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $headers, ['x-tenant-id']);
 
-        $this->assertSame(['Authorization' => ['secret'], 'X-Request-Id' => ['request-id']], $headers);
+        $this->assertSame(['X-Tenant-Id' => ['tenant'], 'X-Request-Id' => ['request-id']], $headers);
 
-        $authorization = 'new-secret';
+        $tenantId = 'new-tenant';
         $requestId = 'new-request-id';
 
-        $this->assertSame(['Authorization' => ['[Filtered]'], 'X-Request-Id' => ['request-id']], $filtered);
+        $this->assertSame(['X-Tenant-Id' => ['[Filtered]'], 'X-Request-Id' => ['request-id']], $filtered);
     }
 
-    /**
-     * @dataProvider collectorConfigurationProvider
-     *
-     * @param array<string, mixed> $configuration
-     */
-    public function testExplicitHeaderRestrictionsAreCaseInsensitiveAndMatchWholeNames(array $configuration): void
+    public function testExplicitHeaderRestrictionsAreCaseInsensitiveAndMatchWholeNames(): void
     {
-        $policy = DataCollectionPolicy::fromOptions(new Options($configuration));
-
         $this->assertSame([
             'x-tenant-id' => ['[Filtered]', '[Filtered]'],
             'X-Tenant-ID-Label' => ['visible'],
             'X-Forwarded-For' => ['203.0.113.7'],
-        ], HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), [
+        ], HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), [
             'x-tenant-id' => ['first', 'second'],
             'X-Tenant-ID-Label' => ['visible'],
             'X-Forwarded-For' => ['203.0.113.7'],
         ], ['X-TeNaNt-Id']));
     }
 
-    public function collectorConfigurationProvider(): \Generator
-    {
-        yield 'legacy' => [[]];
-        yield 'configured' => [['data_collection' => []]];
-    }
-
-    public function testCollectHeadersSupportsNumericNamesInLegacyMode(): void
+    public function testCollectHeadersSupportsNumericNames(): void
     {
         $this->assertSame(
             ['123' => ['test']],
-            HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), [123 => ['test']])
+            HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), [123 => ['test']])
         );
     }
 
     public function testRequestAndResponseHeadersUseTheirOwnBehavior(): void
     {
-        $policy = $this->policy([
+        $options = $this->options([
             'http_headers' => [
                 'request' => [
                     'mode' => 'allowList',
@@ -146,20 +93,20 @@ final class HttpHeaderCollectorTest extends TestCase
             'Host' => ['[Filtered]'],
         ];
 
-        $this->assertSame($expected, HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), $headers));
-        $this->assertSame($expected, HttpHeaderCollector::collect($policy, HttpMessageType::outgoingRequest(), $headers));
-        $this->assertNull(HttpHeaderCollector::collect($policy, HttpMessageType::incomingResponse(), $headers));
-        $this->assertNull(HttpHeaderCollector::collect($policy, HttpMessageType::outgoingResponse(), $headers));
+        $this->assertSame($expected, HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), $headers));
+        $this->assertSame($expected, HttpHeaderCollector::collect($options, HttpMessageType::outgoingRequest(), $headers));
+        $this->assertNull(HttpHeaderCollector::collect($options, HttpMessageType::incomingResponse(), $headers));
+        $this->assertNull(HttpHeaderCollector::collect($options, HttpMessageType::outgoingResponse(), $headers));
     }
 
     public function testCookieHeadersAreExcludedEvenWhenExplicitlyAllowed(): void
     {
-        $policy = $this->policy([
+        $options = $this->options([
             'cookies' => ['mode' => 'off'],
             'http_headers' => ['mode' => 'allowList', 'terms' => ['cookie', 'set-cookie', 'x-test']],
         ]);
 
-        $this->assertSame(['X-Test' => ['visible']], HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), [
+        $this->assertSame(['X-Test' => ['visible']], HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), [
             'CoOkIe' => ['theme=dark'],
             'SET-COOKIE' => ['malformed'],
             'X-Test' => ['visible'],
@@ -168,9 +115,9 @@ final class HttpHeaderCollectorTest extends TestCase
 
     public function testHeadersAreNotCollectedWhenDisabled(): void
     {
-        $policy = $this->policy(['http_headers' => ['mode' => 'off']]);
+        $options = $this->options(['http_headers' => ['mode' => 'off']]);
 
-        $this->assertNull(HttpHeaderCollector::collect($policy, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']], ['x-tenant-id']));
+        $this->assertNull(HttpHeaderCollector::collect($options, HttpMessageType::incomingRequest(), ['Cookie' => ['theme=dark']], ['x-tenant-id']));
     }
 
     /**
@@ -182,7 +129,7 @@ final class HttpHeaderCollectorTest extends TestCase
      */
     public function testRefererQueryStringFollowsTheQueryParamCollectionBehavior(array $dataCollection, array $headers, array $expectedHeaders): void
     {
-        $this->assertSame($expectedHeaders, HttpHeaderCollector::collect($this->policy($dataCollection), HttpMessageType::incomingRequest(), $headers));
+        $this->assertSame($expectedHeaders, HttpHeaderCollector::collect($this->options($dataCollection), HttpMessageType::incomingRequest(), $headers));
     }
 
     public static function refererHeaderDataProvider(): \Generator
@@ -230,30 +177,17 @@ final class HttpHeaderCollectorTest extends TestCase
         ];
     }
 
-    public function testRefererIsNotChangedInLegacyMode(): void
-    {
-        $headers = ['Referer' => ['https://example.com/search?token=secret']];
-
-        $this->assertSame($headers, HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), $headers));
-    }
-
     public function testUnavailableHeadersAreNotCollected(): void
     {
-        $this->assertNull(HttpHeaderCollector::collect($this->policy([]), HttpMessageType::incomingRequest(), null));
-        $this->assertNull(HttpHeaderCollector::collect($this->legacyPolicy(true), HttpMessageType::incomingRequest(), null));
-        $this->assertNull(HttpHeaderCollector::collect($this->legacyPolicy(false), HttpMessageType::incomingRequest(), null, ['x-tenant-id']));
-    }
-
-    private function legacyPolicy(bool $sendDefaultPii): DataCollectionPolicy
-    {
-        return DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => $sendDefaultPii]));
+        $this->assertNull(HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), null));
+        $this->assertNull(HttpHeaderCollector::collect($this->options([]), HttpMessageType::incomingRequest(), null, ['x-tenant-id']));
     }
 
     /**
      * @param array<string, mixed> $dataCollection
      */
-    private function policy(array $dataCollection): DataCollectionPolicy
+    private function options(array $dataCollection): Options
     {
-        return DataCollectionPolicy::fromOptions(new Options(['data_collection' => $dataCollection]));
+        return new Options(['data_collection' => $dataCollection]);
     }
 }

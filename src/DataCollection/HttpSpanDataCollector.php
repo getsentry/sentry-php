@@ -8,6 +8,7 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Exception\JsonException;
+use Sentry\Options;
 use Sentry\Util\JSON;
 
 /**
@@ -23,45 +24,33 @@ final class HttpSpanDataCollector
     /**
      * @return array<string, mixed>
      */
-    public static function collectServerRequest(DataCollectionPolicy $policy, ServerRequestInterface $request): array
+    public static function collectServerRequest(Options $options, ServerRequestInterface $request): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
         $type = HttpMessageType::incomingRequest();
 
-        return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $request->getHeaders()))
-            + self::collectServerRequestCookies($policy, $request)
-            + self::formatBody($type, HttpBodyCollector::collectServerRequest($policy, $request));
+        return self::formatHeaders($type, HttpHeaderCollector::collect($options, $type, $request->getHeaders()))
+            + self::collectServerRequestCookies($options, $request)
+            + self::formatBody($type, HttpBodyCollector::collectServerRequest($options, $request));
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function collectPsr7Request(DataCollectionPolicy $policy, HttpMessageType $type, RequestInterface $request): array
+    public static function collectPsr7Request(Options $options, HttpMessageType $type, RequestInterface $request): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
-        return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $request->getHeaders()))
-            + self::collectCookieHeaders($policy, $type, $request->getHeader('Cookie'))
-            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($policy, $type, $request));
+        return self::formatHeaders($type, HttpHeaderCollector::collect($options, $type, $request->getHeaders()))
+            + self::collectCookieHeaders($options, $type, $request->getHeader('Cookie'))
+            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($options, $type, $request));
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function collectPsr7Response(DataCollectionPolicy $policy, HttpMessageType $type, ResponseInterface $response): array
+    public static function collectPsr7Response(Options $options, HttpMessageType $type, ResponseInterface $response): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
-        return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $response->getHeaders()))
-            + self::collectCookieHeaders($policy, $type, $response->getHeader('Set-Cookie'))
-            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($policy, $type, $response));
+        return self::formatHeaders($type, HttpHeaderCollector::collect($options, $type, $response->getHeaders()))
+            + self::collectCookieHeaders($options, $type, $response->getHeader('Set-Cookie'))
+            + self::formatBody($type, HttpBodyCollector::collectPsr7Message($options, $type, $response));
     }
 
     /**
@@ -72,13 +61,9 @@ final class HttpSpanDataCollector
      *
      * @return array<string, string>
      */
-    public static function collectHeaders(DataCollectionPolicy $policy, HttpMessageType $type, array $headers): array
+    public static function collectHeaders(Options $options, HttpMessageType $type, array $headers): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
-        return self::formatHeaders($type, HttpHeaderCollector::collect($policy, $type, $headers));
+        return self::formatHeaders($type, HttpHeaderCollector::collect($options, $type, $headers));
     }
 
     /**
@@ -86,13 +71,13 @@ final class HttpSpanDataCollector
      *
      * @return array<string, string[]>
      */
-    public static function collectCookieHeaders(DataCollectionPolicy $policy, HttpMessageType $type, array $headers): array
+    public static function collectCookieHeaders(Options $options, HttpMessageType $type, array $headers): array
     {
-        if (!self::shouldCollectCookies($policy)) {
+        if (!self::shouldCollectCookies($options)) {
             return [];
         }
 
-        return self::formatCookies($policy, $type, self::splitCookieHeaders($type, $headers));
+        return self::formatCookies($options, $type, self::splitCookieHeaders($type, $headers));
     }
 
     /**
@@ -100,13 +85,13 @@ final class HttpSpanDataCollector
      *
      * @return array<string, string[]>
      */
-    public static function collectCookiePairs(DataCollectionPolicy $policy, HttpMessageType $type, array $cookies): array
+    public static function collectCookiePairs(Options $options, HttpMessageType $type, array $cookies): array
     {
-        if (!self::shouldCollectCookies($policy)) {
+        if (!self::shouldCollectCookies($options)) {
             return [];
         }
 
-        return self::formatCookies($policy, $type, $cookies);
+        return self::formatCookies($options, $type, $cookies);
     }
 
     /**
@@ -114,13 +99,9 @@ final class HttpSpanDataCollector
      *
      * @return array<string, string>
      */
-    public static function collectBody(DataCollectionPolicy $policy, HttpMessageType $type, $body, string $contentType = '', ?int $bodyLength = null): array
+    public static function collectBody(Options $options, HttpMessageType $type, $body, string $contentType = '', ?int $bodyLength = null): array
     {
-        if ($policy->isLegacyMode()) {
-            return [];
-        }
-
-        return self::formatBody($type, HttpBodyCollector::collect($policy, $type, $body, $contentType, $bodyLength));
+        return self::formatBody($type, HttpBodyCollector::collect($options, $type, $body, $contentType, $bodyLength));
     }
 
     /**
@@ -142,9 +123,9 @@ final class HttpSpanDataCollector
     /**
      * @return array<string, string[]>
      */
-    private static function collectServerRequestCookies(DataCollectionPolicy $policy, ServerRequestInterface $request): array
+    private static function collectServerRequestCookies(Options $options, ServerRequestInterface $request): array
     {
-        if (!self::shouldCollectCookies($policy)) {
+        if (!self::shouldCollectCookies($options)) {
             return [];
         }
 
@@ -157,17 +138,15 @@ final class HttpSpanDataCollector
         }
 
         if ($cookies === []) {
-            return self::formatCookies($policy, $type, self::splitCookieHeaders($type, $request->getHeader('Cookie')));
+            return self::formatCookies($options, $type, self::splitCookieHeaders($type, $request->getHeader('Cookie')));
         }
 
-        return self::formatCookies($policy, $type, $cookies);
+        return self::formatCookies($options, $type, $cookies);
     }
 
-    private static function shouldCollectCookies(DataCollectionPolicy $policy): bool
+    private static function shouldCollectCookies(Options $options): bool
     {
-        $dataCollection = $policy->getDataCollection();
-
-        return $dataCollection !== null && !$dataCollection->getCookies()->isOff();
+        return !$options->getDataCollection()->getCookies()->isOff();
     }
 
     /**
@@ -197,7 +176,7 @@ final class HttpSpanDataCollector
      *
      * @return array<string, string[]>
      */
-    private static function formatCookies(DataCollectionPolicy $policy, HttpMessageType $type, ?array $cookies): array
+    private static function formatCookies(Options $options, HttpMessageType $type, ?array $cookies): array
     {
         if ($cookies === []) {
             return [];
@@ -212,7 +191,7 @@ final class HttpSpanDataCollector
         $values = [];
 
         /** @mago-ignore analysis:mixed-assignment */
-        foreach (HttpCookieCollector::collectPairs($policy, $type, $cookies) ?? [] as [$name, $value]) {
+        foreach (HttpCookieCollector::collectPairs($options, $type, $cookies) ?? [] as [$name, $value]) {
             $values[] = self::formatCookie($name, $value);
         }
 

@@ -6,7 +6,6 @@ namespace Sentry\Integration;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\Event;
 use Sentry\Frame;
 use Sentry\SentrySdk;
@@ -52,10 +51,10 @@ final class FrameContextifierIntegration implements IntegrationInterface
         SentrySdk::getGlobalScope()->addEventProcessor(static function (Event $event): Event {
             $client = SentrySdk::getClient();
 
-            $maxContextLines = DataCollectionPolicy::fromOptions($client->getOptions())->getFrameContextLines();
+            $maxContextLines = $client->getOptions()->getDataCollection()->getFrameContextLines();
             $integration = $client->getIntegration(self::class);
 
-            if ($integration === null || $maxContextLines === null) {
+            if ($integration === null) {
                 return $event;
             }
 

@@ -4,20 +4,10 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Sentry\Options;
+
 final class HttpHeaderCollector
 {
-    /**
-     * Headers sanitized in legacy mode when `send_default_pii` is disabled and no headers are configured explicitly.
-     */
-    public const DEFAULT_PII_SANITIZE_HEADERS = [
-        'authorization',
-        'proxy-authorization',
-        'cookie',
-        'set-cookie',
-        'x-forwarded-for',
-        'x-real-ip',
-    ];
-
     private function __construct()
     {
     }
@@ -28,18 +18,13 @@ final class HttpHeaderCollector
      *
      * @return array<array-key, string[]>|null `null` if headers are not collected or not available
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, ?array $headers, ?array $piiSanitizeHeaders = null): ?array
+    public static function collect(Options $options, HttpMessageType $type, ?array $headers, ?array $piiSanitizeHeaders = null): ?array
     {
         if ($headers === null) {
             return null;
         }
 
-        $dataCollection = $policy->getDataCollection();
-        if ($dataCollection === null) {
-            return self::collectLegacy($policy, $type, $headers, $piiSanitizeHeaders);
-        }
-
-        $httpHeaders = $dataCollection->getHttpHeaders();
+        $httpHeaders = $options->getDataCollection()->getHttpHeaders();
         $behavior = $type->isRequest() ? $httpHeaders['request'] : $httpHeaders['response'];
         $filtered = (new KeyValueDataFilter($behavior))->filterHeaders($headers);
 
@@ -47,7 +32,7 @@ final class HttpHeaderCollector
             return null;
         }
 
-        $filtered = self::filterRefererUrls($policy, $type, $filtered);
+        $filtered = self::filterRefererUrls($options, $type, $filtered);
 
         if ($piiSanitizeHeaders === null) {
             return $filtered;
@@ -57,35 +42,13 @@ final class HttpHeaderCollector
     }
 
     /**
-     * The legacy options only collected the headers of incoming requests. Without `send_default_pii`,
-     * the configured or default PII headers are sanitized.
-     *
-     * @param array<array-key, string[]> $headers
-     * @param string[]|null              $piiSanitizeHeaders
-     *
-     * @return array<array-key, string[]>|null
-     */
-    private static function collectLegacy(DataCollectionPolicy $policy, HttpMessageType $type, array $headers, ?array $piiSanitizeHeaders): ?array
-    {
-        if ($type !== HttpMessageType::incomingRequest()) {
-            return null;
-        }
-
-        if ($policy->shouldCollectUserInfo()) {
-            return $headers;
-        }
-
-        return self::sanitize($headers, $piiSanitizeHeaders ?? self::DEFAULT_PII_SANITIZE_HEADERS);
-    }
-
-    /**
      * The `Referer` header contains a URL, so it is collected like any other URL to apply the query param collection behavior.
      *
      * @param array<array-key, string[]> $headers
      *
      * @return array<array-key, string[]>
      */
-    private static function filterRefererUrls(DataCollectionPolicy $policy, HttpMessageType $type, array $headers): array
+    private static function filterRefererUrls(Options $options, HttpMessageType $type, array $headers): array
     {
         foreach ($headers as $name => $values) {
             if (strtolower((string) $name) !== 'referer') {
@@ -94,7 +57,7 @@ final class HttpHeaderCollector
 
             foreach ($values as $headerLine => $headerValue) {
                 if ($headerValue !== KeyValueDataFilter::FILTERED_VALUE) {
-                    $headers[$name][$headerLine] = HttpUrlCollector::collect($policy, $type, $headerValue) ?? KeyValueDataFilter::FILTERED_VALUE;
+                    $headers[$name][$headerLine] = HttpUrlCollector::collect($options, $type, $headerValue) ?? KeyValueDataFilter::FILTERED_VALUE;
                 }
             }
         }

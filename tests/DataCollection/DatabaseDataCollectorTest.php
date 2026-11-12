@@ -6,7 +6,6 @@ namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\DataCollection\DatabaseDataCollector;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\Options;
 
 final class DatabaseDataCollectorTest extends TestCase
@@ -21,7 +20,7 @@ final class DatabaseDataCollectorTest extends TestCase
             'db.query.parameter.11' => 1.5,
             'db.query.parameter.:name' => 'Alice',
             'db.query.parameter.:code' => '00123',
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
+        ], DatabaseDataCollector::collectQueryData($this->options(), [
             0 => null,
             2 => false,
             7 => 0,
@@ -37,7 +36,7 @@ final class DatabaseDataCollectorTest extends TestCase
         $this->assertSame([
             'db.query.parameter.password' => '[Filtered]',
             'db.query.parameter.name' => 'Alice',
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
+        ], DatabaseDataCollector::collectQueryData($this->options(), [
             'password' => 'secret',
             'name' => 'Alice',
         ]));
@@ -48,7 +47,7 @@ final class DatabaseDataCollectorTest extends TestCase
         $this->assertSame([
             'db.query.parameter.created_at' => 'DateTime(2026-01-02 03:04:05)',
             'db.query.parameter.updated_at' => 'DateTimeImmutable(2026-01-02 03:04:05.123456)',
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
+        ], DatabaseDataCollector::collectQueryData($this->options(), [
             'created_at' => new \DateTime('2026-01-02 03:04:05', new \DateTimeZone('UTC')),
             'updated_at' => new \DateTimeImmutable('2026-01-02 03:04:05.123456', new \DateTimeZone('UTC')),
         ]));
@@ -56,21 +55,20 @@ final class DatabaseDataCollectorTest extends TestCase
 
     public function testSensitiveFieldsIntroducedBySerializationAreFiltered(): void
     {
-        $policy = DataCollectionPolicy::fromOptions(new Options([
-            'data_collection' => [],
+        $options = new Options([
             'class_serializers' => [
                 \stdClass::class => static function (\stdClass $value): array {
                     return ['name' => $value->name, 'password' => 'secret'];
                 },
             ],
-        ]));
+        ]);
 
         $this->assertSame([
             'db.query.parameter.profile' => [
                 'class' => \stdClass::class,
                 'data' => ['name' => 'Alice', 'password' => '[Filtered]'],
             ],
-        ], DatabaseDataCollector::collectQueryData($policy, [
+        ], DatabaseDataCollector::collectQueryData($options, [
             'profile' => (object) ['name' => 'Alice'],
         ]));
     }
@@ -78,8 +76,7 @@ final class DatabaseDataCollectorTest extends TestCase
     public function testSensitiveBindingsDoNotInvokeObjectSerializers(): void
     {
         $calls = 0;
-        $policy = DataCollectionPolicy::fromOptions(new Options([
-            'data_collection' => [],
+        $options = new Options([
             'class_serializers' => [
                 \stdClass::class => static function (\stdClass $value) use (&$calls): array {
                     ++$calls;
@@ -87,12 +84,12 @@ final class DatabaseDataCollectorTest extends TestCase
                     return [];
                 },
             ],
-        ]));
+        ]);
         $object = new \stdClass();
 
         $this->assertSame([
             'db.query.parameter.password' => '[Filtered]',
-        ], DatabaseDataCollector::collectQueryData($policy, [
+        ], DatabaseDataCollector::collectQueryData($options, [
             'password' => $object,
         ]));
         $this->assertSame(0, $calls);
@@ -104,7 +101,7 @@ final class DatabaseDataCollectorTest extends TestCase
             'db.query.parameter.finite' => 1.5,
             'db.query.parameter.infinite' => '[Filtered]',
             'db.query.parameter.nan' => '[Filtered]',
-        ], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), [
+        ], DatabaseDataCollector::collectQueryData($this->options(), [
             'finite' => 1.5,
             'infinite' => \INF,
             'nan' => \NAN,
@@ -116,7 +113,7 @@ final class DatabaseDataCollectorTest extends TestCase
         $name = 'Alice';
         $date = new \DateTime('2026-01-02 03:04:05', new \DateTimeZone('UTC'));
         $bindings = ['names' => [&$name], 'date' => $date];
-        $data = DatabaseDataCollector::collectQueryData($this->enabledPolicy(), $bindings);
+        $data = DatabaseDataCollector::collectQueryData($this->options(), $bindings);
 
         $name = 'Bob';
         $date->modify('+1 day');
@@ -129,19 +126,14 @@ final class DatabaseDataCollectorTest extends TestCase
 
     public function testEmptyBindingsAreOmitted(): void
     {
-        $this->assertSame([], DatabaseDataCollector::collectQueryData($this->enabledPolicy(), []));
+        $this->assertSame([], DatabaseDataCollector::collectQueryData($this->options(), []));
     }
 
-    /**
-     * @dataProvider disabledPolicyProvider
-     *
-     * @param array<string, mixed>|null $dataCollection
-     */
-    public function testDisabledPoliciesOmitBindings(?array $dataCollection, bool $sendDefaultPii): void
+    public function testDisabledCollectionOmitsBindings(): void
     {
         $calls = 0;
-        $options = [
-            'send_default_pii' => $sendDefaultPii,
+        $options = new Options([
+            'data_collection' => ['database_query_data' => false],
             'class_serializers' => [
                 \stdClass::class => static function (\stdClass $value) use (&$calls): array {
                     ++$calls;
@@ -149,28 +141,14 @@ final class DatabaseDataCollectorTest extends TestCase
                     return [];
                 },
             ],
-        ];
-        if ($dataCollection !== null) {
-            $options['data_collection'] = $dataCollection;
-        }
+        ]);
 
-        $this->assertSame([], DatabaseDataCollector::collectQueryData(
-            DataCollectionPolicy::fromOptions(new Options($options)),
-            ['value' => new \stdClass()]
-        ));
+        $this->assertSame([], DatabaseDataCollector::collectQueryData($options, ['value' => new \stdClass()]));
         $this->assertSame(0, $calls);
     }
 
-    public function disabledPolicyProvider(): \Generator
+    private function options(): Options
     {
-        yield 'legacy without PII' => [null, false];
-        yield 'legacy with PII' => [null, true];
-        yield 'configured disabled without PII' => [['database_query_data' => false], false];
-        yield 'configured disabled with PII' => [['database_query_data' => false], true];
-    }
-
-    private function enabledPolicy(): DataCollectionPolicy
-    {
-        return DataCollectionPolicy::fromOptions(new Options(['data_collection' => []]));
+        return new Options();
     }
 }

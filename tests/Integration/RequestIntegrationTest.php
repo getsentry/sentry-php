@@ -53,10 +53,8 @@ final class RequestIntegrationTest extends TestCase
 
     public static function invokeDataProvider(): iterable
     {
-        yield [
-            [
-                'send_default_pii' => true,
-            ],
+        yield 'cookies and headers are collected and the user is kept' => [
+            [],
             (new ServerRequest('GET', 'http://www.example.com/foo'))
                 ->withCookieParams(['foo' => 'bar']),
             [
@@ -73,27 +71,8 @@ final class RequestIntegrationTest extends TestCase
             UserDataBag::createFromUserIdentifier('unique_id'),
         ];
 
-        yield [
-            [
-                'send_default_pii' => false,
-            ],
-            (new ServerRequest('GET', 'http://www.example.com/foo'))
-                ->withCookieParams(['foo' => 'bar']),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'send_default_pii' => true,
-            ],
+        yield 'URL with a port' => [
+            [],
             new ServerRequest('GET', 'http://www.example.com:1234/foo'),
             [
                 'url' => 'http://www.example.com:1234/foo',
@@ -107,32 +86,10 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
-            [
-                'send_default_pii' => false,
-            ],
-            new ServerRequest('GET', 'http://www.example.com:1234/foo'),
-            [
-                'url' => 'http://www.example.com:1234/foo',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['www.example.com:1234'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'send_default_pii' => true,
-            ],
+        yield 'user IP address is collected' => [
+            [],
             (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
-                ->withHeader('Host', 'www.example.com')
-                ->withHeader('Authorization', 'foo')
-                ->withHeader('Proxy-Authorization', 'Basic dXNlcjpwYXNz')
-                ->withHeader('Cookie', 'bar')
-                ->withHeader('Set-Cookie', 'baz'),
+                ->withHeader('Host', 'www.example.com'),
             [
                 'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
                 'method' => 'GET',
@@ -143,20 +100,14 @@ final class RequestIntegrationTest extends TestCase
                 'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
-                    'Authorization' => ['foo'],
-                    'Proxy-Authorization' => ['Basic dXNlcjpwYXNz'],
-                    'Cookie' => ['bar'],
-                    'Set-Cookie' => ['baz'],
                 ],
             ],
             null,
             UserDataBag::createFromUserIpAddress('127.0.0.1'),
         ];
 
-        yield [
-            [
-                'send_default_pii' => true,
-            ],
+        yield 'empty user IP address is not collected' => [
+            [],
             (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '']))
                 ->withHeader('Host', 'www.example.com'),
             [
@@ -171,54 +122,7 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
-            [
-                'send_default_pii' => false,
-            ],
-            (new ServerRequest('GET', 'http://www.example.com/foo?foo=bar&bar=baz', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
-                ->withHeader('Host', 'www.example.com')
-                ->withHeader('Authorization', 'foo')
-                ->withHeader('Proxy-Authorization', 'Basic dXNlcjpwYXNz')
-                ->withHeader('Cookie', 'bar')
-                ->withHeader('Set-Cookie', 'baz'),
-            [
-                'url' => 'http://www.example.com/foo?foo=bar&bar=baz',
-                'method' => 'GET',
-                'query_string' => 'foo=bar&bar=baz',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Authorization' => ['[Filtered]'],
-                    'Proxy-Authorization' => ['[Filtered]'],
-                    'Cookie' => ['[Filtered]'],
-                    'Set-Cookie' => ['[Filtered]'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
-            [
-                'send_default_pii' => false,
-                'integrations' => [
-                    new RequestIntegration(null, ['pii_sanitize_headers' => ['aUthOrIzAtIoN']]),
-                ],
-            ],
-            (new ServerRequest('GET', 'http://www.example.com', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
-                ->withHeader('Authorization', 'foo'),
-            [
-                'url' => 'http://www.example.com',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Authorization' => ['[Filtered]'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
+        yield 'request body size never' => [
             [
                 'max_request_body_size' => 'never',
             ],
@@ -228,6 +132,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['3'],
@@ -237,27 +142,28 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'body that cannot be parsed is filtered' => [
             [
                 'max_request_body_size' => 'small',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Length', (string) (10 ** 3))
-                ->withBody(Utils::streamFor('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravida.')),
+                ->withHeader('Content-Length', '3')
+                ->withBody(Utils::streamFor('foo')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
-                    'Content-Length' => ['1000'],
+                    'Content-Length' => ['3'],
                 ],
-                'data' => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus at placerat est. Donec maximus odio augue, vitae bibendum nisi euismod nec. Nunc vel velit ligula. Ut non ultricies magna, non condimentum turpis. Donec pellentesque id nunc at facilisis. Sed fermentum ultricies nunc, id posuere ex ullamcorper quis. Sed varius tincidunt nulla, id varius nulla interdum sit amet. Pellentesque molestie sapien at mi tristique consequat. Nullam id eleifend arcu. Vivamus sed placerat neque. Ut sapien magna, elementum in euismod pretium, rhoncus vitae augue. Nam ullamcorper dui et tortor semper, eu feugiat elit faucibus. Curabitur vel auctor odio. Phasellus vestibulum ullamcorper dictum. Suspendisse fringilla, ipsum bibendum venenatis vulputate, nunc orci facilisis leo, commodo finibus mi arcu in turpis. Mauris ut ultrices est. Nam quis purus ut nulla interdum ornare. Proin in tellus egestas, commodo magna porta, consequat justo. Vivamus in convallis odio. Pellentesque porttitor, urna non gravid',
+                'data' => '[Filtered]',
             ],
             null,
             null,
         ];
 
-        yield [
+        yield 'parsed body at the small size limit' => [
             [
                 'max_request_body_size' => 'small',
             ],
@@ -270,6 +176,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['1000'],
@@ -283,7 +190,7 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'parsed body over the small size limit' => [
             [
                 'max_request_body_size' => 'small',
             ],
@@ -296,6 +203,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['1001'],
@@ -305,7 +213,7 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'parsed body at the medium size limit' => [
             [
                 'max_request_body_size' => 'medium',
             ],
@@ -318,6 +226,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['10000'],
@@ -331,7 +240,7 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'parsed body over the medium size limit' => [
             [
                 'max_request_body_size' => 'medium',
             ],
@@ -344,6 +253,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['10001'],
@@ -353,7 +263,7 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'uploaded files are not collected' => [
             [
                 'max_request_body_size' => 'always',
             ],
@@ -368,30 +278,17 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Length' => ['444'],
-                ],
-                'data' => [
-                    'foo' => [
-                        [
-                            'client_filename' => 'foo.ext',
-                            'client_media_type' => 'application/text',
-                            'size' => 123,
-                        ],
-                        [
-                            'client_filename' => 'bar.ext',
-                            'client_media_type' => 'application/octet-stream',
-                            'size' => 321,
-                        ],
-                    ],
                 ],
             ],
             null,
             null,
         ];
 
-        yield [
+        yield 'JSON body is decoded' => [
             [
                 'max_request_body_size' => 'always',
             ],
@@ -402,6 +299,7 @@ final class RequestIntegrationTest extends TestCase
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Type' => ['application/json'],
@@ -416,21 +314,20 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
+        yield 'JSON body without a content length is collected' => [
             [
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://www.example.com/foo'))
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Content-Length', '13')
                 ->withBody(Utils::streamFor('{"foo":"bar"}')),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'POST',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     'Content-Type' => ['application/json'],
-                    'Content-Length' => ['13'],
                 ],
                 'data' => [
                     'foo' => 'bar',
@@ -440,32 +337,14 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield [
-            [
-                'max_request_body_size' => 'always',
-            ],
-            (new ServerRequest('POST', 'http://www.example.com/foo'))
-                ->withHeader('Content-Type', 'application/json')
-                ->withBody(Utils::streamFor('{"foo":"bar"}')),
-            [
-                'url' => 'http://www.example.com/foo',
-                'method' => 'POST',
-                'headers' => [
-                    'Host' => ['www.example.com'],
-                    'Content-Type' => ['application/json'],
-                ],
-            ],
-            null,
-            null,
-        ];
-
-        yield [
+        yield 'numeric header names' => [
             [],
             (new ServerRequest('GET', 'http://www.example.com/foo'))
                 ->withHeader('123', 'test'),
             [
                 'url' => 'http://www.example.com/foo',
                 'method' => 'GET',
+                'cookies' => [],
                 'headers' => [
                     'Host' => ['www.example.com'],
                     '123' => ['test'],
@@ -475,8 +354,8 @@ final class RequestIntegrationTest extends TestCase
             null,
         ];
 
-        yield 'explicit header restrictions remain active with data collection' => [
-            ['data_collection' => [], 'send_default_pii' => true],
+        yield 'explicit header restrictions are applied' => [
+            [],
             (new ServerRequest('GET', 'https://example.com/'))
                 ->withHeader('X-Tenant-ID', 'tenant')
                 ->withHeader('X-Forwarded-For', '203.0.113.7'),
@@ -493,25 +372,6 @@ final class RequestIntegrationTest extends TestCase
             null,
             null,
             ['pii_sanitize_headers' => ['x-TeNaNt-Id']],
-        ];
-
-        yield 'explicit empty header restrictions disable legacy sanitization' => [
-            [],
-            (new ServerRequest('GET', 'https://example.com/'))
-                ->withHeader('Authorization', 'Bearer secret')
-                ->withHeader('X-Forwarded-For', '203.0.113.7'),
-            [
-                'url' => 'https://example.com/',
-                'method' => 'GET',
-                'headers' => [
-                    'Host' => ['example.com'],
-                    'Authorization' => ['Bearer secret'],
-                    'X-Forwarded-For' => ['203.0.113.7'],
-                ],
-            ],
-            null,
-            null,
-            ['pii_sanitize_headers' => []],
         ];
 
         yield 'data collection can disable all incoming request data' => [
@@ -574,7 +434,6 @@ final class RequestIntegrationTest extends TestCase
 
         yield 'data collection defaults filter sensitive request data' => [
             [
-                'data_collection' => [],
                 'max_request_body_size' => 'always',
             ],
             (new ServerRequest('POST', 'http://user:password@www.example.com/foo?api%5Ftoken=secret&q=a%20b%26c', [], null, '1.1', ['REMOTE_ADDR' => '127.0.0.1']))
@@ -638,7 +497,7 @@ final class RequestIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setRequest($initialRequest);
 
-        $this->setupIntegration($request, ['data_collection' => [], 'max_request_body_size' => 'always']);
+        $this->setupIntegration($request, ['max_request_body_size' => 'always']);
 
         withIsolationScope(function (IsolationScope $scope) use ($event, $initialRequest): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
@@ -658,7 +517,7 @@ final class RequestIntegrationTest extends TestCase
         $request->expects($this->never())->method('getUploadedFiles');
         $request->expects($this->never())->method('getBody');
 
-        $this->setupIntegration($request, ['data_collection' => [], 'max_request_body_size' => 'always']);
+        $this->setupIntegration($request, ['max_request_body_size' => 'always']);
 
         $event = Event::createEvent();
         $event->setRequest(['data' => null]);
@@ -705,14 +564,9 @@ final class RequestIntegrationTest extends TestCase
 
     public static function nonErrorEventDataProvider(): iterable
     {
-        yield 'transactions with data collection' => [
+        yield 'transactions' => [
             Event::createTransaction(),
-            ['data_collection' => [], 'max_request_body_size' => 'always'],
-        ];
-
-        yield 'transactions with the legacy options' => [
-            Event::createTransaction(),
-            ['send_default_pii' => true, 'max_request_body_size' => 'always'],
+            ['max_request_body_size' => 'always'],
         ];
     }
 

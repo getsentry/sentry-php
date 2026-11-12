@@ -12,27 +12,21 @@ use Sentry\DataCollection\Psr7BodyReader;
 
 final class Psr7BodyReaderTest extends TestCase
 {
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testBodyIsReadAndOriginalPositionIsRestored(int $limit): void
+    public function testBodyIsReadAndOriginalPositionIsRestored(): void
     {
         $stream = Utils::streamFor('request body');
         $stream->seek(4);
 
-        $this->assertSame('request body', Psr7BodyReader::read($stream, $limit));
+        $this->assertSame('request body', Psr7BodyReader::read($stream, 100));
         $this->assertSame(4, $stream->tell());
         $this->assertSame('est body', $stream->getContents());
     }
 
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testNonSeekableBodyIsNotRead(int $limit): void
+    public function testNonSeekableBodyIsNotRead(): void
     {
         $stream = new NoSeekStream(Utils::streamFor('request body'));
 
-        $this->assertNull(Psr7BodyReader::read($stream, $limit));
+        $this->assertNull(Psr7BodyReader::read($stream, 100));
         $this->assertSame('request body', $stream->getContents());
     }
 
@@ -58,30 +52,14 @@ final class Psr7BodyReaderTest extends TestCase
         $this->assertNull(Psr7BodyReader::read($stream, 5));
     }
 
-    public function testTruncatedReadStopsAtLimitAndRestoresOriginalPosition(): void
-    {
-        $stream = $this->createMock(StreamInterface::class);
-        $stream->method('isReadable')->willReturn(true);
-        $stream->method('isSeekable')->willReturn(true);
-        $stream->method('tell')->willReturn(3);
-        $stream->method('eof')->willReturn(false);
-        $stream->expects($this->once())->method('read')->with(5)->willReturn('abcde');
-        $stream->expects($this->once())->method('seek')->with(3);
-
-        $this->assertSame('abcde', Psr7BodyReader::read($stream, 5, true));
-    }
-
     public function testBodyAtLimitIsReturned(): void
     {
         $this->assertSame('body', Psr7BodyReader::read(Utils::streamFor('body'), 4));
     }
 
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testEmptyBodyIsReturned(int $limit): void
+    public function testEmptyBodyIsReturned(): void
     {
-        $this->assertSame('', Psr7BodyReader::read(Utils::streamFor(''), $limit));
+        $this->assertSame('', Psr7BodyReader::read(Utils::streamFor(''), 100));
     }
 
     /**
@@ -96,22 +74,16 @@ final class Psr7BodyReaderTest extends TestCase
         $this->assertNull(Psr7BodyReader::read($stream, $limit));
     }
 
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testUnreadableBodyIsNotRead(int $limit): void
+    public function testUnreadableBodyIsNotRead(): void
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('isReadable')->willReturn(false);
         $stream->expects($this->never())->method('read');
 
-        $this->assertNull(Psr7BodyReader::read($stream, $limit));
+        $this->assertNull(Psr7BodyReader::read($stream, 100));
     }
 
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testReadFailureRestoresOriginalPosition(int $limit): void
+    public function testReadFailureRestoresOriginalPosition(): void
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('isReadable')->willReturn(true);
@@ -121,13 +93,10 @@ final class Psr7BodyReaderTest extends TestCase
         $stream->method('read')->willThrowException(new \RuntimeException('Cannot read'));
         $stream->expects($this->once())->method('seek')->with(3);
 
-        $this->assertNull(Psr7BodyReader::read($stream, $limit));
+        $this->assertNull(Psr7BodyReader::read($stream, 100));
     }
 
-    /**
-     * @dataProvider bodyReadLimitProvider
-     */
-    public function testRestoreFailureOmitsBody(int $limit): void
+    public function testRestoreFailureOmitsBody(): void
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('isReadable')->willReturn(true);
@@ -136,20 +105,10 @@ final class Psr7BodyReaderTest extends TestCase
         $stream->method('eof')->willReturn(true);
         $stream->expects($this->once())->method('seek')->with(3)->willThrowException(new \RuntimeException('Cannot seek'));
 
-        $this->assertNull(Psr7BodyReader::read($stream, $limit));
+        $this->assertNull(Psr7BodyReader::read($stream, 100));
     }
 
-    public function testUnlimitedBodyIsReadAndOriginalPositionIsRestored(): void
-    {
-        $body = str_repeat('a', 100001);
-        $stream = Utils::streamFor($body);
-        $stream->seek(4);
-
-        $this->assertSame($body, Psr7BodyReader::read($stream, -1));
-        $this->assertSame(4, $stream->tell());
-    }
-
-    public function testUnlimitedReadStopsWhenStreamReturnsNoData(): void
+    public function testReadStopsWhenStreamReturnsNoData(): void
     {
         $stream = $this->createMock(StreamInterface::class);
         $stream->method('isReadable')->willReturn(true);
@@ -159,13 +118,7 @@ final class Psr7BodyReaderTest extends TestCase
         $stream->expects($this->once())->method('read')->willReturn('');
         $stream->expects($this->once())->method('seek')->with(3);
 
-        $this->assertSame('', Psr7BodyReader::read($stream, -1));
-    }
-
-    public function bodyReadLimitProvider(): \Generator
-    {
-        yield 'bounded' => [100];
-        yield 'unlimited' => [-1];
+        $this->assertSame('', Psr7BodyReader::read($stream, 100));
     }
 
     public function disabledBodyReadLimitProvider(): \Generator

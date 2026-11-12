@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Integration;
 
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpCookieCollector;
 use Sentry\DataCollection\HttpHeaderCollector;
@@ -89,33 +88,32 @@ final class RequestIntegration implements IntegrationInterface
             return;
         }
 
-        $policy = DataCollectionPolicy::fromOptions($options);
         $uri = $request->getUri();
 
         $requestData = [
-            'url' => HttpUrlCollector::collect($policy, HttpMessageType::incomingRequest(), $uri),
+            'url' => HttpUrlCollector::collect($options, HttpMessageType::incomingRequest(), $uri),
             'method' => $request->getMethod(),
         ];
 
-        $queryString = HttpUrlCollector::collectQueryString($policy, $uri->getQuery());
+        $queryString = HttpUrlCollector::collectQueryString($options, $uri->getQuery());
         if ($queryString !== null) {
             $requestData['query_string'] = $queryString;
         }
 
         $serverParams = $request->getServerParams();
-        if (!empty($serverParams['REMOTE_ADDR']) && $policy->shouldCollectUserInfo()) {
+        if (!empty($serverParams['REMOTE_ADDR']) && $options->getDataCollection()->shouldCollectUserInfo()) {
             /** @var string $ipAddress */
             $ipAddress = $serverParams['REMOTE_ADDR'];
             $this->addRequestUserInfo($event, $ipAddress, $requestData);
         }
 
-        $cookies = HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), $request->getCookieParams());
+        $cookies = HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $request->getCookieParams());
         if ($cookies !== null) {
             $requestData['cookies'] = $cookies;
         }
 
         $headers = HttpHeaderCollector::collect(
-            $policy,
+            $options,
             HttpMessageType::incomingRequest(),
             $request->getHeaders(),
             $this->options['pii_sanitize_headers'] ?? null
@@ -127,7 +125,7 @@ final class RequestIntegration implements IntegrationInterface
         // Request bodies attached here are only relevant for error events, other events would
         // needlessly read the body only to be discarded later on
         if ($event->getType() === EventType::event() && !\array_key_exists('data', $event->getRequest())) {
-            $requestBody = HttpBodyCollector::collectServerRequest($policy, $request);
+            $requestBody = HttpBodyCollector::collectServerRequest($options, $request);
             if ($requestBody !== null) {
                 $requestData['data'] = $requestBody;
             }
@@ -164,6 +162,6 @@ final class RequestIntegration implements IntegrationInterface
         $resolver->setNormalizer('pii_sanitize_headers', static function (array $value): array {
             return array_map('strtolower', $value);
         });
-        $resolver->setDefault('pii_sanitize_headers', HttpHeaderCollector::DEFAULT_PII_SANITIZE_HEADERS);
+        $resolver->setDefault('pii_sanitize_headers', []);
     }
 }

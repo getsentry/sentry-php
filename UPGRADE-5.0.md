@@ -211,6 +211,59 @@ $options->setMaxRequestBodySize('never');
 
 The allowed values for this option are now: `'never'`, `'small'`, `'medium'`, `'always'`.
 
+### `send_default_pii` Replaced By `data_collection`
+
+The `send_default_pii` option and the legacy data collection mode it controlled have been removed, including `Options::shouldSendDefaultPii()` and `Options::setSendDefaultPii()`. The `data_collection` option now always decides which data the SDK collects automatically, and `Options::getDataCollection()` no longer returns `null`.
+
+The `data_collection` defaults collect more data than `send_default_pii` did, with either value:
+
+- The IP address of the user is collected from incoming requests.
+- Cookies, HTTP headers, URL query parameters and function arguments in stack frames are collected, and values whose name matches the built-in list of sensitive terms are replaced with `[Filtered]`.
+- HTTP headers, cookies and bodies of incoming and outgoing requests and responses are attached to spans, and the full URL of outgoing requests is collected.
+- Database query data, queue data and generative AI inputs and outputs are collected by the integrations that support them.
+
+To restrict the collection to roughly what `send_default_pii => false` collected before, opt out of these categories:
+
+```php
+\Sentry\init([
+    'dsn' => '__YOUR_DSN__',
+    'data_collection' => [
+        'user_info' => false,
+        'cookies' => ['mode' => 'off'],
+        'http_bodies' => ['incomingRequest'],
+        'gen_ai' => ['inputs' => false, 'outputs' => false],
+        'database_query_data' => false,
+        'queues' => false,
+    ],
+]);
+```
+
+The following behavior changed along with it:
+
+- **`context_lines`** - The option, `Options::getContextLines()` and `Options::setContextLines()` have been removed. Use `frame_context_lines` of the `data_collection` option instead
+  ```php
+  // Before (4.x)
+  \Sentry\init([
+      'context_lines' => 3,
+  ]);
+
+  // After (5.0)
+  \Sentry\init([
+      'data_collection' => ['frame_context_lines' => 3],
+  ]);
+  ```
+
+- **Request bodies** - Values in request bodies are filtered like other collected data, bodies that cannot be parsed are sent as `[Filtered]`, and uploaded files are no longer added to the request data. The `max_request_body_size` value `'always'` now collects bodies up to 100,000 bytes instead of bodies of any size
+
+- **`RequestIntegration`** - The default list of sanitized headers has been removed, the `data_collection` option decides which header values are filtered. The `X-Forwarded-For` and `X-Real-IP` headers are no longer filtered by default, and the `Cookie` and `Set-Cookie` headers are no longer part of the collected headers. The `pii_sanitize_headers` option still sanitizes the headers it is configured with
+
+The helpers in the `Sentry\DataCollection` namespace changed as well:
+
+- `DataCollectionPolicy` has been removed. The collectors (`HttpBodyCollector`, `HttpCookieCollector`, `HttpHeaderCollector`, `HttpSpanDataCollector`, `HttpUrlCollector` and `DatabaseDataCollector`) take the `Options` as their first argument instead
+- `DataCollectionPolicy::MAX_HTTP_BODY_LENGTH` has moved to `HttpBodyCollector::MAX_HTTP_BODY_LENGTH`
+- `HttpHeaderCollector::DEFAULT_PII_SANITIZE_HEADERS` has been removed
+- `Psr7BodyReader::read()` no longer accepts the `$truncate` argument or a limit of `-1`
+
 ### 404 Transactions Are No Longer Sent By Default
 
 The `trace_ignore_status_codes` option now defaults to `[404]`. Transactions whose `http.response.status_code` data is `404` are discarded instead of being sent to Sentry.

@@ -445,7 +445,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceCollectsConfiguredMetadata(): void
     {
         [$spanData, $breadcrumbData] = $this->traceExchange(
-            ['data_collection' => []],
+            [],
             new Request('GET', 'https://user:password@www.example.com/path?search=hello%20world&password=secret#fragment', [
                 'Authorization' => 'Bearer secret',
                 'Cookie' => 'session_id=secret; theme=dark',
@@ -568,7 +568,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public function testTraceSupportsNumericHeaderNames(): void
     {
         [$spanData] = $this->traceExchange(
-            ['data_collection' => []],
+            [],
             new Request('GET', 'https://www.example.com/', ['123' => 'request']),
             new Response(200, ['456' => 'response'])
         );
@@ -674,34 +674,10 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $this->assertSame($transaction, $scope->getSpan());
     }
 
-    public function testTracePreservesExplicitSpanDataInLegacyMode(): void
-    {
-        $client = $this->createMock(ClientInterface::class);
-        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
-        SentrySdk::init($client);
-        $scope = SentrySdk::getIsolationScope();
-        $transaction = \Sentry\startTransaction(new TransactionContext());
-        $scope->setSpan($transaction);
-        $function = (GuzzleTracingMiddleware::trace($scope))(function () use ($scope): PromiseInterface {
-            $span = $scope->getSpan();
-            $this->assertNotNull($span);
-            $span->setData(['http.query' => 'explicit']);
-
-            return new FulfilledPromise(new Response(200));
-        });
-
-        $function(new Request('GET', 'https://www.example.com/?token=secret'), [])->wait();
-
-        $data = $this->getHttpSpan($transaction)->getData();
-        $this->assertSame('explicit', $data['http.query']);
-        $this->assertSame(200, $data['http.response.status_code']);
-        $this->assertArrayNotHasKey('url.full', $data);
-    }
-
     public function testTracePreservesExplicitSpanData(): void
     {
         $client = $this->createMock(ClientInterface::class);
-        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1, 'data_collection' => []]));
+        $client->method('getOptions')->willReturn(new Options(['traces_sample_rate' => 1]));
         SentrySdk::init($client);
         $scope = SentrySdk::getIsolationScope();
         $transaction = \Sentry\startTransaction(new TransactionContext());
@@ -752,7 +728,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
     public static function enabledBodyCollectionProvider(): \Generator
     {
-        yield 'configured defaults' => [['data_collection' => []]];
+        yield 'defaults' => [[]];
         yield 'bodies independent of headers and cookies' => [['data_collection' => ['http_headers' => ['mode' => 'off'], 'cookies' => ['mode' => 'off']]]];
     }
 
@@ -777,7 +753,6 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
     public static function disabledBodyCollectionProvider(): \Generator
     {
-        yield 'legacy with PII and unlimited request size' => [['send_default_pii' => true, 'max_request_body_size' => 'always']];
         yield 'bodies disabled' => [['data_collection' => ['http_bodies' => []]]];
     }
 
@@ -817,7 +792,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
     public static function responseOnlyBodyCollectionProvider(): \Generator
     {
         yield 'incoming response only' => [['data_collection' => ['http_bodies' => ['incomingResponse']]]];
-        yield 'request size never does not disable response bodies' => [['data_collection' => [], 'max_request_body_size' => 'never']];
+        yield 'request size never does not disable response bodies' => [['max_request_body_size' => 'never']];
     }
 
     public function testTraceCollectsBodiesFromRejectedRequests(): void
@@ -826,7 +801,7 @@ final class GuzzleTracingMiddlewareTest extends TestCase
         $response = new Response(503, ['Content-Type' => 'application/json'], '{"error":"unavailable","token":"secret"}');
 
         [$spanData, $breadcrumbData] = $this->traceExchange(
-            ['data_collection' => []],
+            [],
             $request,
             RequestException::create($request, $response)
         );
@@ -869,8 +844,8 @@ final class GuzzleTracingMiddlewareTest extends TestCase
 
     public static function unreadBodyProvider(): \Generator
     {
-        yield 'no parent span' => [['data_collection' => []], false];
-        yield 'unsampled parent' => [['data_collection' => [], 'traces_sample_rate' => 0], true];
+        yield 'no parent span' => [[], false];
+        yield 'unsampled parent' => [['traces_sample_rate' => 0], true];
     }
 
     /**
@@ -933,12 +908,15 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
+                'url.full' => 'https://www.example.com',
                 'http.response.body.size' => 0,
                 'http.response.status_code' => 200,
             ],
             [
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
+                'url.full' => 'https://www.example.com',
+                'http.request.header.host' => 'www.example.com',
                 'http.response.body.size' => 0,
                 'http.response.status_code' => 200,
             ],
@@ -951,11 +929,12 @@ final class GuzzleTracingMiddlewareTest extends TestCase
             ]),
             new Response(200, ['Content-Type' => 'application/json', 'Set-Cookie' => 'theme=light']),
             [
-                'url' => 'https://www.example.com',
+                'url' => 'https://[Filtered]:[Filtered]@www.example.com?query=string#fragment=1',
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
                 'http.query' => 'query=string',
                 'http.fragment' => 'fragment=1',
+                'url.full' => 'https://[Filtered]:[Filtered]@www.example.com?query=string#fragment=1',
                 'http.response.body.size' => 0,
                 'http.response.status_code' => 200,
             ],
@@ -964,8 +943,14 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'http.request.body.size' => 0,
                 'http.query' => 'query=string',
                 'http.fragment' => 'fragment=1',
+                'url.full' => 'https://[Filtered]:[Filtered]@www.example.com?query=string#fragment=1',
+                'http.request.header.host' => 'www.example.com',
+                'http.request.header.authorization' => '[Filtered]',
+                'http.request.header.cookie' => ['theme=dark'],
                 'http.response.body.size' => 0,
                 'http.response.status_code' => 200,
+                'http.response.header.content-type' => 'application/json',
+                'http.response.header.set-cookie' => ['theme=light'],
             ],
         ];
 
@@ -976,14 +961,19 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'http.request.method' => 'POST',
                 'http.request.body.size' => 10,
+                'url.full' => 'https://www.example.com',
                 'http.response.body.size' => 6,
                 'http.response.status_code' => 403,
             ],
             [
                 'http.request.method' => 'POST',
                 'http.request.body.size' => 10,
+                'url.full' => 'https://www.example.com',
+                'http.request.header.host' => 'www.example.com',
+                'http.request.body.data' => '[Filtered]',
                 'http.response.body.size' => 6,
                 'http.response.status_code' => 403,
+                'http.response.body.data' => '[Filtered]',
             ],
         ];
 
@@ -994,10 +984,13 @@ final class GuzzleTracingMiddlewareTest extends TestCase
                 'url' => 'https://www.example.com',
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
+                'url.full' => 'https://www.example.com',
             ],
             [
                 'http.request.method' => 'GET',
                 'http.request.body.size' => 0,
+                'url.full' => 'https://www.example.com',
+                'http.request.header.host' => 'www.example.com',
             ],
         ];
     }
