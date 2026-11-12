@@ -20,7 +20,7 @@ use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
 use Sentry\UserDataBag;
 
-use function Sentry\withScope;
+use function Sentry\withIsolationScope;
 
 final class RequestIntegrationTest extends TestCase
 {
@@ -34,7 +34,7 @@ final class RequestIntegrationTest extends TestCase
 
         $this->setupIntegration($request, $options, $integrationOptions);
 
-        withScope(function (IsolationScope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event, $expectedRequestContextData, $expectedUser): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);
@@ -640,7 +640,7 @@ final class RequestIntegrationTest extends TestCase
 
         $this->setupIntegration($request, ['data_collection' => [], 'max_request_body_size' => 'always']);
 
-        withScope(function (IsolationScope $scope) use ($event, $initialRequest): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event, $initialRequest): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);
@@ -663,7 +663,7 @@ final class RequestIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setRequest(['data' => null]);
 
-        withScope(function (IsolationScope $scope) use ($event): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);
@@ -690,7 +690,7 @@ final class RequestIntegrationTest extends TestCase
 
         $this->setupIntegration($request, $options);
 
-        withScope(function (IsolationScope $scope) use ($event): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
 
             $this->assertNotNull($event);

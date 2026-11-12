@@ -205,12 +205,6 @@ parameters:
 			path: src/Options.php
 
 		-
-			message: '#^Method Sentry\\Options\:\:getEnableLogs\(\) should return bool but returns mixed\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Options.php
-
-		-
 			message: '#^Method Sentry\\Options\:\:getEnvironment\(\) should return string\|null but returns mixed\.$#'
 			identifier: return.type
 			count: 1

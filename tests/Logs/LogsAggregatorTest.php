@@ -211,9 +211,7 @@ final class LogsAggregatorTest extends TestCase
 
     public function testGlobalScopeAttributesAreAddedToLogMessage(): void
     {
-        $client = ClientBuilder::create([
-            'enable_logs' => true,
-        ])->getClient();
+        $client = ClientBuilder::create()->getClient();
 
         SentrySdk::init($client);
         SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
@@ -333,15 +331,11 @@ final class LogsAggregatorTest extends TestCase
     {
         $client = $this->createMock(ClientInterface::class);
         $client->method('getOptions')
-            ->willReturn(new Options([
-                'enable_logs' => true,
-            ]));
+            ->willReturn(new Options());
 
         $fallbackClient = $this->createMock(ClientInterface::class);
         $fallbackClient->method('getOptions')
-            ->willReturn(new Options([
-                'enable_logs' => true,
-            ]));
+            ->willReturn(new Options());
         $fallbackClient->expects($this->never())
             ->method('captureEvent');
         SentrySdk::init($fallbackClient);

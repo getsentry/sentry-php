@@ -16,7 +16,7 @@ use Sentry\SentrySdk;
 use Sentry\Stacktrace;
 use Sentry\State\IsolationScope;
 
-use function Sentry\withScope;
+use function Sentry\withIsolationScope;
 
 final class FrameContextifierIntegrationTest extends TestCase
 {
@@ -66,7 +66,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
-        withScope(static function (IsolationScope $scope) use (&$event): void {
+        withIsolationScope(static function (IsolationScope $scope) use (&$event): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
         });
 
@@ -178,7 +178,7 @@ final class FrameContextifierIntegrationTest extends TestCase
         $event = Event::createEvent();
         $event->setStacktrace($stacktrace);
 
-        withScope(static function (IsolationScope $scope) use (&$event): void {
+        withIsolationScope(static function (IsolationScope $scope) use (&$event): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event);
         });
 

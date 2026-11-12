@@ -11,53 +11,6 @@ final class HttpCookieParser
     }
 
     /**
-     * @param string[] $headers
-     *
-     * @return array<int, array{string, string}>
-     *
-     * @deprecated Use splitCookieHeaders() instead, which keeps the order and duplicate names of the cookies. To be removed in 5.x.
-     */
-    public static function parseCookieHeaders(array $headers): array
-    {
-        $cookies = [];
-        foreach ($headers as $header) {
-            foreach (explode(';', $header) as $part) {
-                $cookie = self::parsePair(trim($part));
-                if ($cookie === null) {
-                    continue;
-                }
-
-                $cookies[$cookie[0]] = $cookie;
-            }
-        }
-
-        return array_values($cookies);
-    }
-
-    /**
-     * @param string[] $headers
-     *
-     * @return array<int, array{string, string}>
-     *
-     * @deprecated Use splitSetCookieHeaders() instead, which keeps cookies without a name. To be removed in 5.x.
-     */
-    public static function parseSetCookieHeaders(array $headers): array
-    {
-        $cookies = [];
-        foreach ($headers as $header) {
-            // Set-Cookies have path and other attributes so we only take the first segment
-            $cookie = self::parsePair(explode(';', $header, 2)[0]);
-            if ($cookie === null) {
-                continue;
-            }
-
-            $cookies[] = [trim($cookie[0]), $cookie[1]];
-        }
-
-        return $cookies;
-    }
-
-    /**
      * Splits `Cookie` headers into name and value pairs, keeping their order and duplicate names.
      * A segment without `=` is a nameless cookie, its whole segment is the value and its name is empty.
      *
@@ -117,18 +70,5 @@ final class HttpCookieParser
         }
 
         return [trim($pair[0]), trim($pair[1])];
-    }
-
-    /**
-     * @return array{string, string}|null
-     */
-    private static function parsePair(string $part): ?array
-    {
-        $pair = explode('=', $part, 2);
-        if (\count($pair) !== 2 || trim($pair[0]) === '') {
-            return null;
-        }
-
-        return [$pair[0], $pair[1]];
     }
 }

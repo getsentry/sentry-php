@@ -59,7 +59,6 @@ use function Sentry\trace;
 use function Sentry\withContext;
 use function Sentry\withIsolationScope;
 use function Sentry\withMonitor;
-use function Sentry\withScope;
 
 final class FunctionsTest extends TestCase
 {
@@ -574,15 +573,6 @@ final class FunctionsTest extends TestCase
 
         $this->assertNotNull($globalEvent);
         $this->assertSame([], $globalEvent->getAttachments());
-    }
-
-    public function testWithScope(): void
-    {
-        $returnValue = withScope(static function (): string {
-            return 'foobarbaz';
-        });
-
-        $this->assertSame('foobarbaz', $returnValue);
     }
 
     public function testWithIsolationScopeForksCurrentIsolationScope(): void

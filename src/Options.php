@@ -117,34 +117,6 @@ final class Options
     }
 
     /**
-     * Sets if logs should be enabled or not.
-     *
-     * This option no longer gates the manual logging API or logging integrations.
-     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
-     *
-     * @param bool|null $enableLogs Boolean if logs should be enabled or not
-     *
-     * @deprecated since version 4.31. To be removed in version 5.0
-     */
-    public function setEnableLogs(?bool $enableLogs): self
-    {
-        return $this->updateOptions(['enable_logs' => $enableLogs]);
-    }
-
-    /**
-     * Gets if logs is enabled or not.
-     *
-     * This option no longer gates the manual logging API or logging integrations.
-     * To implement a kill switch, use a `before_send_log` callback that returns `null`.
-     *
-     * @deprecated since version 4.31. To be removed in version 5.0
-     */
-    public function getEnableLogs(): bool
-    {
-        return $this->options['enable_logs'] ?? false;
-    }
-
-    /**
      * Gets the number of buffered logs that trigger an immediate flush.
      */
     public function getLogFlushThreshold(): ?int
@@ -186,37 +158,6 @@ final class Options
     public function setMetricFlushThreshold(?int $metricFlushThreshold): self
     {
         return $this->updateOptions(['metric_flush_threshold' => $metricFlushThreshold]);
-    }
-
-    /**
-     * Sets if metrics should be enabled or not.
-     *
-     * This option no longer gates the manual metrics API or metrics integrations.
-     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
-     *
-     * @deprecated since version 4.31. To be removed in version 5.0
-     */
-    public function setEnableMetrics(bool $enableMetrics): self
-    {
-        return $this->updateOptions(['enable_metrics' => $enableMetrics]);
-    }
-
-    /**
-     * Returns whether metrics are enabled or not.
-     *
-     * This option no longer gates the manual metrics API or metrics integrations.
-     * To implement a kill switch, use a `before_send_metric` callback that returns `null`.
-     *
-     * @deprecated since version 4.31. To be removed in version 5.0
-     */
-    public function getEnableMetrics(): bool
-    {
-        /**
-         * @var bool $enableMetrics
-         */
-        $enableMetrics = $this->options['enable_metrics'] ?? true;
-
-        return $enableMetrics;
     }
 
     /**
@@ -1267,9 +1208,7 @@ final class Options
     {
         $resolver->setAllowedTypes('prefixes', 'string[]');
         $resolver->setAllowedTypes('sample_rate', ['int', 'float']);
-        $resolver->setAllowedTypes('enable_logs', 'bool');
         $resolver->setAllowedTypes('log_flush_threshold', ['null', 'int']);
-        $resolver->setAllowedTypes('enable_metrics', 'bool');
         $resolver->setAllowedTypes('metric_flush_threshold', ['null', 'int']);
         $resolver->setAllowedTypes('traces_sample_rate', ['null', 'int', 'float']);
         $resolver->setAllowedTypes('traces_sampler', ['null', 'callable']);
@@ -1356,9 +1295,7 @@ final class Options
             'default_integrations' => true,
             'prefixes' => array_filter(explode(\PATH_SEPARATOR, get_include_path() ?: '')),
             'sample_rate' => 1,
-            'enable_logs' => false,
             'log_flush_threshold' => null,
-            'enable_metrics' => true,
             'metric_flush_threshold' => null,
             'traces_sample_rate' => null,
             'traces_sampler' => null,

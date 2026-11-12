@@ -16,7 +16,6 @@ use Sentry\State\BreadcrumbRecorder;
 use Sentry\State\EventRecorder;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
-use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -52,8 +51,6 @@ use Sentry\Transport\TransportInterface;
  *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
- *     enable_logs?: bool,
- *     enable_metrics?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
  *     http_client?: HttpClientInterface|null,
@@ -240,27 +237,6 @@ function addBreadcrumb($category, ?string $message = null, array $metadata = [],
 function configureScope(callable $callback): void
 {
     $callback(SentrySdk::getIsolationScope());
-}
-
-/**
- * Creates a new scope with and executes the given operation within. The scope
- * is automatically removed once the operation finishes or throws.
- *
- * @param callable $callback The callback to be executed
- *
- * @phpstan-template T
- *
- * @phpstan-param callable(Scope): T $callback
- *
- * @return mixed|void The callback's return value, upon successful execution
- *
- * @phpstan-return T
- *
- * @deprecated This function will be removed in a follow-up PR. Use {@see withIsolationScope()} instead.
- */
-function withScope(callable $callback)
-{
-    return withIsolationScope($callback);
 }
 
 /**
@@ -519,11 +495,6 @@ function logger(): Logs
 }
 
 function metrics(): TraceMetrics
-{
-    return TraceMetrics::getInstance();
-}
-
-function traceMetrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
 }

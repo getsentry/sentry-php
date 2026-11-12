@@ -19,7 +19,7 @@ use Sentry\State\Scope;
 use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\UserDataBag;
 
-use function Sentry\traceMetrics;
+use function Sentry\metrics;
 
 final class TraceMetricsTest extends TestCase
 {
@@ -33,9 +33,9 @@ final class TraceMetricsTest extends TestCase
 
     public function testCounterMetrics(): void
     {
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2, ['foo' => 'bar']);
+        metrics()->count('test-count', 2, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -50,8 +50,8 @@ final class TraceMetricsTest extends TestCase
 
     public function testGaugeMetrics(): void
     {
-        traceMetrics()->gauge('test-gauge', 10, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->gauge('test-gauge', 10, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -66,8 +66,8 @@ final class TraceMetricsTest extends TestCase
 
     public function testDistributionMetrics(): void
     {
-        traceMetrics()->distribution('test-distribution', 10, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->distribution('test-distribution', 10, ['foo' => 'bar']);
+        metrics()->flush();
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
         $this->assertCount(1, $event->getMetrics());
@@ -85,11 +85,11 @@ final class TraceMetricsTest extends TestCase
             'metric_flush_threshold' => 2,
         ]), StubTransport::getInstance()));
 
-        traceMetrics()->count('first-metric', 1, ['foo' => 'bar']);
+        metrics()->count('first-metric', 1, ['foo' => 'bar']);
 
         $this->assertCount(0, StubTransport::$events);
 
-        traceMetrics()->count('second-metric', 2, ['foo' => 'bar']);
+        metrics()->count('second-metric', 2, ['foo' => 'bar']);
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -105,12 +105,12 @@ final class TraceMetricsTest extends TestCase
             'metric_flush_threshold' => null,
         ]), StubTransport::getInstance()));
 
-        traceMetrics()->count('first-metric', 1, ['foo' => 'bar']);
-        traceMetrics()->count('second-metric', 2, ['foo' => 'bar']);
+        metrics()->count('first-metric', 1, ['foo' => 'bar']);
+        metrics()->count('second-metric', 2, ['foo' => 'bar']);
 
         $this->assertCount(0, StubTransport::$events);
 
-        traceMetrics()->flush();
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $this->assertCount(2, StubTransport::$events[0]->getMetrics());
@@ -120,8 +120,8 @@ final class TraceMetricsTest extends TestCase
     {
         SentrySdk::getGlobalScope()->setUser(UserDataBag::createFromUserIdentifier('global-user'));
 
-        traceMetrics()->count('test-count', 2);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
 
@@ -133,15 +133,11 @@ final class TraceMetricsTest extends TestCase
     {
         $client = $this->createMock(ClientInterface::class);
         $client->method('getOptions')
-            ->willReturn(new Options([
-                'enable_metrics' => true,
-            ]));
+            ->willReturn(new Options());
 
         $fallbackClient = $this->createMock(ClientInterface::class);
         $fallbackClient->method('getOptions')
-            ->willReturn(new Options([
-                'enable_metrics' => true,
-            ]));
+            ->willReturn(new Options());
         $fallbackClient->expects($this->never())
             ->method('captureEvent');
         SentrySdk::init($fallbackClient);
@@ -169,10 +165,10 @@ final class TraceMetricsTest extends TestCase
         ]), StubTransport::getInstance()));
 
         for ($i = 0; $i < MetricsAggregator::METRICS_BUFFER_SIZE + 100; ++$i) {
-            traceMetrics()->count('test', 1, ['foo' => 'bar']);
+            metrics()->count('test', 1, ['foo' => 'bar']);
         }
 
-        traceMetrics()->flush();
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -189,32 +185,18 @@ final class TraceMetricsTest extends TestCase
         ]), StubTransport::getInstance()));
 
         for ($i = 0; $i < MetricsAggregator::METRICS_BUFFER_SIZE; ++$i) {
-            traceMetrics()->count('test', 1);
+            metrics()->count('test', 1);
         }
 
         $this->assertClientReports([]);
 
-        traceMetrics()->count('test', 1);
+        metrics()->count('test', 1);
 
         $this->assertClientReports(['trace_metric' => ['buffer_overflow' => 1]]);
 
-        traceMetrics()->flush();
+        metrics()->flush();
 
         $this->assertCount(MetricsAggregator::METRICS_BUFFER_SIZE, StubTransport::$events[0]->getMetrics());
-    }
-
-    public function testMetricSentWhenEnableMetricsIsFalse(): void
-    {
-        SentrySdk::init(new Client(new Options([
-            'enable_metrics' => false,
-        ]), StubTransport::getInstance()));
-
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->flush();
-
-        $this->assertCount(1, StubTransport::$events);
-        $this->assertCount(1, StubTransport::$events[0]->getMetrics());
-        $this->assertSame('test-count', StubTransport::$events[0]->getMetrics()[0]->getName());
     }
 
     public function testBeforeSendMetricExceptionDropsMetricAndIsLogged(): void
@@ -228,8 +210,8 @@ final class TraceMetricsTest extends TestCase
             'send_client_reports' => true,
         ]), StubTransport::getInstance()));
 
-        traceMetrics()->count('test-count', 2);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2);
+        metrics()->flush();
 
         $this->assertEmpty(StubTransport::$events);
         $this->assertContains([
@@ -249,8 +231,8 @@ final class TraceMetricsTest extends TestCase
             'send_client_reports' => true,
         ]), StubTransport::getInstance()));
 
-        traceMetrics()->count('test-count', 2);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2);
+        metrics()->flush();
 
         $this->assertEmpty(StubTransport::$events);
         $this->assertClientReports(['trace_metric' => ['before_send' => 1]]);
@@ -266,8 +248,8 @@ final class TraceMetricsTest extends TestCase
             },
         ]), StubTransport::getInstance()));
 
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -279,8 +261,8 @@ final class TraceMetricsTest extends TestCase
 
     public function testIntType(): void
     {
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -294,8 +276,8 @@ final class TraceMetricsTest extends TestCase
 
     public function testFloatType(): void
     {
-        traceMetrics()->gauge('test-gauge', 10.50, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->gauge('test-gauge', 10.50, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -309,8 +291,8 @@ final class TraceMetricsTest extends TestCase
 
     public function testNullAttributeValueIsStringified(): void
     {
-        traceMetrics()->count('test-count', 2, ['foo' => null]);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2, ['foo' => null]);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $event = StubTransport::$events[0];
@@ -324,8 +306,8 @@ final class TraceMetricsTest extends TestCase
     public function testInvalidTypeIsDiscarded(): void
     {
         // @phpstan-ignore-next-line
-        traceMetrics()->count('test-count', 'test-value');
-        traceMetrics()->flush();
+        metrics()->count('test-count', 'test-value');
+        metrics()->flush();
 
         $this->assertEmpty(StubTransport::$events);
     }
@@ -339,8 +321,8 @@ final class TraceMetricsTest extends TestCase
             ];
         });
 
-        traceMetrics()->count('test-count', 2, ['foo' => 'bar']);
-        traceMetrics()->flush();
+        metrics()->count('test-count', 2, ['foo' => 'bar']);
+        metrics()->flush();
 
         $this->assertCount(1, StubTransport::$events);
         $metric = StubTransport::$events[0]->getMetrics()[0];
