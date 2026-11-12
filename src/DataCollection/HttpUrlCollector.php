@@ -19,7 +19,7 @@ final class HttpUrlCollector
      *
      * @return string|null `null` if the URL is not collected or cannot be parsed
      */
-    public static function collect(Options $options, HttpMessageType $type, $url): ?string
+    public static function collect(Options $options, $url): ?string
     {
         if ($url instanceof UriInterface) {
             $uri = $url;

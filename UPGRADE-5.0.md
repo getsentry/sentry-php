@@ -55,20 +55,28 @@ Use `configureScope()` to mutate the current isolation scope, `withIsolationScop
 
 ### Metrics API Removed
 
-The entire Metrics API has been removed as it is no longer supported. This includes:
+The old Metrics API has been removed as it is no longer supported. The trace metrics API takes over its class and function names:
+
+- **Renamed classes:**
+  - `Sentry\Metrics\TraceMetrics` - Renamed to `Sentry\Metrics\Metrics`
+    ```php
+    // Before (4.x)
+    \Sentry\Metrics\TraceMetrics::getInstance()->flush();
+
+    // After (5.0)
+    \Sentry\Metrics\Metrics::getInstance()->flush();
+    ```
 
 - **Removed classes:**
-  - `Sentry\Metrics\Metrics`
+  - `Sentry\Metrics\Metrics` - The old class with the `increment()`, `distribution()`, `gauge()`, `set()` and `timing()` methods. The class of the same name in 5.0 is the former `TraceMetrics` and sends the metrics it records, use its `count()`, `distribution()` and `gauge()` methods instead
   - `Sentry\Metrics\MetricsUnit`
 
 - **Removed methods:**
-  - `Event::createMetrics()`
-  - `Event::getMetrics()` and `Event::setMetrics()`
   - `Event::getMetricsSummary()` and `Event::setMetricsSummary()`
   - `Span::getMetricsSummary()` and `Span::setMetricsSummary()`
 
 - **Changed functions:**
-  - `metrics()` - No longer returns the removed `Sentry\Metrics\Metrics` class, it now returns `Sentry\Metrics\TraceMetrics`
+  - `metrics()` - Returns the new `Sentry\Metrics\Metrics` class instead of the removed one
 
 - **Removed functions:**
   - `traceMetrics()` and `trace_metrics()` - Use `metrics()` instead
@@ -277,6 +285,7 @@ The following behavior changed along with it:
 The helpers in the `Sentry\DataCollection` namespace changed as well:
 
 - `DataCollectionPolicy` has been removed. The collectors (`HttpBodyCollector`, `HttpCookieCollector`, `HttpHeaderCollector`, `HttpSpanDataCollector`, `HttpUrlCollector` and `DatabaseDataCollector`) take the `Options` as their first argument instead
+- `HttpUrlCollector::collect()`, `HttpCookieCollector::collect()` and `HttpCookieCollector::collectPairs()` no longer take a `HttpMessageType` argument
 - `DataCollectionPolicy::MAX_HTTP_BODY_LENGTH` has moved to `HttpBodyCollector::MAX_HTTP_BODY_LENGTH`
 - `HttpHeaderCollector::DEFAULT_PII_SANITIZE_HEADERS` has been removed
 - `Psr7BodyReader::read()` no longer accepts the `$truncate` argument or a limit of `-1`

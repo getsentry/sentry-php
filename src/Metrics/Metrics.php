@@ -11,7 +11,7 @@ use Sentry\Metrics\Types\GaugeMetric;
 use Sentry\SentrySdk;
 use Sentry\Unit;
 
-class TraceMetrics
+class Metrics
 {
     /**
      * @var self|null
@@ -25,7 +25,7 @@ class TraceMetrics
     public static function getInstance(): self
     {
         if (self::$instance === null) {
-            self::$instance = new TraceMetrics();
+            self::$instance = new Metrics();
         }
 
         return self::$instance;

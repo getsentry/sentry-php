@@ -57,7 +57,7 @@ final class GuzzleTracingMiddleware
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
 
-                $fullUrl = HttpUrlCollector::collect($sdkOptions, HttpMessageType::outgoingRequest(), $requestUri);
+                $fullUrl = HttpUrlCollector::collect($sdkOptions, $requestUri);
                 if ($fullUrl !== null) {
                     $spanAndBreadcrumbData['url.full'] = $fullUrl;
                 }

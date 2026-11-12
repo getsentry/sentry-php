@@ -6,7 +6,6 @@ namespace Sentry\Tests\DataCollection;
 
 use GuzzleHttp\Psr7\Uri;
 use PHPUnit\Framework\TestCase;
-use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpUrlCollector;
 use Sentry\Options;
 
@@ -19,7 +18,7 @@ final class HttpUrlCollectorTest extends TestCase
 
         $this->assertSame(
             'https://[Filtered]:[Filtered]@example.com/a?tag[]=one&tag[]=two&q=a+b&q=a%20b&%74oken=[Filtered]&flag#fragment',
-            HttpUrlCollector::collect($options, HttpMessageType::incomingRequest(), $url)
+            HttpUrlCollector::collect($options, $url)
         );
     }
 
@@ -28,11 +27,11 @@ final class HttpUrlCollectorTest extends TestCase
         $options = new Options();
         $url = 'https://user:password@example.com/?token=secret&q=a+b#fragment';
 
-        $this->assertSame('https://[Filtered]:[Filtered]@example.com/?token=[Filtered]&q=a+b#fragment', HttpUrlCollector::collect($options, HttpMessageType::incomingRequest(), $url));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/?token=[Filtered]&q=a+b#fragment', HttpUrlCollector::collect($options, $url));
 
         $options->setDataCollection(['url_query_params' => ['mode' => 'off']]);
 
-        $this->assertSame('https://[Filtered]:[Filtered]@example.com/#fragment', HttpUrlCollector::collect($options, HttpMessageType::incomingRequest(), $url));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/#fragment', HttpUrlCollector::collect($options, $url));
         $this->assertNull(HttpUrlCollector::collectQueryString($options, 'q=a+b'));
     }
 
@@ -55,7 +54,7 @@ final class HttpUrlCollectorTest extends TestCase
      */
     public function testCollectUrl(string $url, string $expected): void
     {
-        $this->assertSame($expected, HttpUrlCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $url));
+        $this->assertSame($expected, HttpUrlCollector::collect($this->options([]), $url));
     }
 
     /**
@@ -77,13 +76,13 @@ final class HttpUrlCollectorTest extends TestCase
     {
         $uri = new Uri('https://user:password@example.com/a?token=secret&q=1#fragment');
 
-        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a?token=[Filtered]&q=1#fragment', HttpUrlCollector::collect($this->options([]), HttpMessageType::incomingRequest(), $uri));
-        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a#fragment', HttpUrlCollector::collect($this->options(['url_query_params' => ['mode' => 'off']]), HttpMessageType::incomingRequest(), $uri));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a?token=[Filtered]&q=1#fragment', HttpUrlCollector::collect($this->options([]), $uri));
+        $this->assertSame('https://[Filtered]:[Filtered]@example.com/a#fragment', HttpUrlCollector::collect($this->options(['url_query_params' => ['mode' => 'off']]), $uri));
     }
 
     public function testUrlsThatCannotBeParsedAreNotCollected(): void
     {
-        $this->assertNull(HttpUrlCollector::collect($this->options([]), HttpMessageType::incomingRequest(), 'http://exa mple.com:99999/'));
+        $this->assertNull(HttpUrlCollector::collect($this->options([]), 'http://exa mple.com:99999/'));
     }
 
     /**
