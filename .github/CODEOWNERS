@@ -1,1 +1,4 @@
-* @Litarnus @stayallive
+# Members of @getsentry/owners-php-sdk: getsentry/security-as-code, rbac/env/prod-github/team/owners-php-sdk.tf
+# Contractors are listed by handle, because a GitHub team holds only org members:
+# - @stayallive (Alex Bouma)
+* @getsentry/owners-php-sdk @stayallive
