@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
 use Sentry\CheckInStatus;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
@@ -1333,6 +1334,90 @@ final class FunctionsTest extends TestCase
         $this->assertFalse($profiler->isPaused());
 
         $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testStartTransactionProfilesSampledTransactionsInTraceLifecycle(): void
+    {
+        StubTransport::$events = [];
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        $transaction = startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        $profilerId = $profiler->getProfilerId();
+
+        $this->assertSame($profilerId, $transaction->getData('profiler_id'));
+
+        self::busyWait(0.05);
+
+        $transaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertCount(2, StubTransport::$events);
+
+        [$chunkEvent, $transactionEvent] = StubTransport::$events;
+
+        $this->assertNotNull($chunkEvent->getProfileChunk());
+        $this->assertSame($profilerId, $chunkEvent->getProfileChunk()->getProfilerId());
+        $this->assertSame(['profiler_id' => $profilerId], $transactionEvent->getContexts()['profile']);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testContinuousProfilerRunsUntilTheLastSampledTransactionIsFinished(): void
+    {
+        StubTransport::$events = [];
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        $firstTransaction = startTransaction(TransactionContext::make());
+        $secondTransaction = startTransaction(TransactionContext::make());
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.05);
+        $firstFinishTimestamp = microtime(true);
+
+        $firstTransaction->finish();
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
+
+        self::busyWait(0.05);
+
+        $secondTransaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+
+        $chunkEvents = array_values(array_filter(StubTransport::$events, static function (Event $event): bool {
+            return $event->getProfileChunk() !== null;
+        }));
+
+        $this->assertCount(1, $chunkEvents);
+
+        $payload = $chunkEvents[0]->getProfileChunk()->getFormattedData($chunkEvents[0]);
+
+        $this->assertNotNull($payload);
+        $this->assertLessThan($firstFinishTimestamp, $payload['profile']['samples'][0]['timestamp']);
+    }
+
+    private static function initWithProfileLifecycleTrace(): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
     }
 
     private static function busyWait(float $seconds): void

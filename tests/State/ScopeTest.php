@@ -7,16 +7,19 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\Profiling\Profiles;
 use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tests\StubLogger;
+use Sentry\Tests\StubTransport;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -51,6 +54,40 @@ final class ScopeTest extends TestCase
 
         $this->assertSame($scope, $scope->setClient($client));
         $this->assertSame($client, $scope->getClient());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSetClientStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $scope = new IsolationScope();
+        $scope->setClient(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSetClientKeepsAProfilerStartedWithoutClientUndecidedIfANoOpClientIsSet(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        $scope = new IsolationScope();
+        $scope->setClient(new NoOpClient());
+        $scope->setClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
     }
 
     public function testClonedScopeKeepsClientShared(): void

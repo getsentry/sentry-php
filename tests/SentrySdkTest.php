@@ -596,6 +596,21 @@ final class SentrySdkTest extends TestCase
     /**
      * @requires extension excimer
      */
+    public function testInitStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        SentrySdk::init(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
     public function testFlushSendsCollectedProfileSamplesAndKeepsProfiling(): void
     {
         StubTransport::$events = [];

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Sentry\Profiling;
 
-use Sentry\NoOpClient;
 use Sentry\SentrySdk;
 
 class Profiles
@@ -107,13 +106,11 @@ class Profiles
     }
 
     /**
-     * Without a client the lifecycle is not known yet, so the profiler is controlled manually until a client
+     * Without a client the default lifecycle applies, so the profiler is controlled manually until a client
      * is bound, which decides whether the collected samples are kept.
      */
     private function isManualLifecycle(): bool
     {
-        $client = SentrySdk::getClient();
-
-        return $client instanceof NoOpClient || $client->getOptions()->getProfileLifecycle() === 'manual';
+        return SentrySdk::getClient()->getOptions()->getProfileLifecycle() === 'manual';
     }
 }
