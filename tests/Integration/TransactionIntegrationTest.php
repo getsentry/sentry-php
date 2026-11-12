@@ -16,7 +16,7 @@ use Sentry\State\IsolationScope;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 
-use function Sentry\withScope;
+use function Sentry\withIsolationScope;
 
 final class TransactionIntegrationTest extends TestCase
 {
@@ -40,7 +40,7 @@ final class TransactionIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        withScope(function (IsolationScope $scope) use ($event, $hint, $expectedTransaction): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event, $hint, $expectedTransaction): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event, $hint);
 
             $this->assertNotNull($event);
@@ -204,7 +204,7 @@ final class TransactionIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        withScope(function (IsolationScope $scope) use ($event, $hint, $expectedTransaction): void {
+        withIsolationScope(function (IsolationScope $scope) use ($event, $hint, $expectedTransaction): void {
             $scope->setSpan(new Transaction(new TransactionContext('GET /users/{id}')));
 
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent($event, $hint);

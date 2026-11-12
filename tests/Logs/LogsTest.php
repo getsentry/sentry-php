@@ -20,21 +20,7 @@ use function Sentry\logger;
 
 final class LogsTest extends TestCase
 {
-    public function testLogSentWhenEnableLogsIsFalse(): void
-    {
-        $this->assertEvent(function (Event $event) {
-            $this->assertCount(1, $event->getLogs());
-            $this->assertSame('Some info message', $event->getLogs()[0]->getBody());
-        }, [
-            'enable_logs' => false,
-        ]);
-
-        logger()->info('Some info message');
-
-        $this->assertNotNull(logger()->flush());
-    }
-
-    public function testLogSentWithoutEnableLogsOption(): void
+    public function testLogSent(): void
     {
         $this->assertEvent(function (Event $event) {
             $this->assertCount(1, $event->getLogs());

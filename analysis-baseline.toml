@@ -867,12 +867,6 @@ count = 1
 [[issues]]
 file = "src/Options.php"
 code = "mixed-return-statement"
-message = 'Could not infer a precise return type for function `Sentry\Options::getEnableLogs`. Saw type `nonnull`.'
-count = 1
-
-[[issues]]
-file = "src/Options.php"
-code = "mixed-return-statement"
 message = 'Could not infer a precise return type for function `Sentry\Options::getEnvironment`. Saw type `mixed`.'
 count = 1
 

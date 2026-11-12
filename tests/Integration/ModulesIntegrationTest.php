@@ -16,7 +16,7 @@ use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
 
-use function Sentry\withScope;
+use function Sentry\withIsolationScope;
 
 final class ModulesIntegrationTest extends TestCase
 {
@@ -36,7 +36,7 @@ final class ModulesIntegrationTest extends TestCase
 
         SentrySdk::init($client);
 
-        withScope(function (IsolationScope $scope) use ($expectedEmptyModules): void {
+        withIsolationScope(function (IsolationScope $scope) use ($expectedEmptyModules): void {
             $event = SentrySdk::getGlobalScope()->merge($scope)->applyToEvent(Event::createEvent());
 
             $this->assertNotNull($event);

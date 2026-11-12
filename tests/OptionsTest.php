@@ -100,20 +100,6 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
-            'enable_logs',
-            true,
-            'getEnableLogs',
-            'setEnableLogs',
-        ];
-
-        yield [
-            'enable_metrics',
-            false,
-            'getEnableMetrics',
-            'setEnableMetrics',
-        ];
-
-        yield [
             'log_flush_threshold',
             10,
             'getLogFlushThreshold',
@@ -596,9 +582,7 @@ final class OptionsTest extends TestCase
             'default_integrations' => true,
             'prefixes' => $prefixes,
             'sample_rate' => 1,
-            'enable_logs' => false,
             'log_flush_threshold' => null,
-            'enable_metrics' => true,
             'metric_flush_threshold' => null,
             'traces_sample_rate' => null,
             'traces_sampler' => null,

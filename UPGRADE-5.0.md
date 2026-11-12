@@ -8,12 +8,11 @@ This guide provides details on how to upgrade from SDK version 4.x to 5.0.
 
 The deprecated `Sentry\Monolog\Handler` class has been removed.
 
-Use `Sentry\Monolog\LogsHandler` with the `enable_logs` SDK option to capture Monolog records as Sentry logs:
+Use `Sentry\Monolog\LogsHandler` to capture Monolog records as Sentry logs:
 
 ```php
 \Sentry\init([
     'dsn' => '__YOUR_DSN__',
-    'enable_logs' => true,
 ]);
 
 $logger->pushHandler(new \Sentry\Monolog\LogsHandler());
@@ -68,8 +67,18 @@ The entire Metrics API has been removed as it is no longer supported. This inclu
   - `Event::getMetricsSummary()` and `Event::setMetricsSummary()`
   - `Span::getMetricsSummary()` and `Span::setMetricsSummary()`
 
+- **Changed functions:**
+  - `metrics()` - No longer returns the removed `Sentry\Metrics\Metrics` class, it now returns `Sentry\Metrics\TraceMetrics`
+
 - **Removed functions:**
-  - `metrics()` - The global metrics function has been removed
+  - `traceMetrics()` and `trace_metrics()` - Use `metrics()` instead
+    ```php
+    // Before (4.x)
+    \Sentry\traceMetrics()->count('checkout.failed', 1);
+
+    // After (5.0)
+    \Sentry\metrics()->count('checkout.failed', 1);
+    ```
 
 - **Removed options:**
   - `attach_metric_code_locations` - No longer available in Options
@@ -97,6 +106,22 @@ The following deprecated options have been removed from the `Options` class:
   $options->enableSpotlight('http://localhost:8969');
   // or just enable with default URL
   $options->enableSpotlight(true);
+  ```
+
+- **`enable_logs`** and **`enable_metrics`** - Logs and metrics are always captured when their APIs or integrations are used, so both options and their `Options` getters and setters have been removed. To stop sending them, return `null` from the `before_send_log` or `before_send_metric` callback
+  ```php
+  // Before (4.x)
+  \Sentry\init([
+      'enable_logs' => true,
+      'enable_metrics' => false,
+  ]);
+
+  // After (5.0)
+  \Sentry\init([
+      'before_send_metric' => static function (\Sentry\Metrics\Types\Metric $metric): ?\Sentry\Metrics\Types\Metric {
+          return null;
+      },
+  ]);
   ```
 
 ### User Segment Removed
@@ -146,6 +171,27 @@ The following deprecated methods have been removed:
   // After (5.0)
   $traceparent = \Sentry\getTraceparent();
   ```
+
+- **`withScope()`** function - Use `withIsolationScope()` instead
+  ```php
+  // Before (4.x)
+  \Sentry\withScope(static function (\Sentry\State\Scope $scope): void {
+      $scope->setTag('feature', 'checkout');
+  });
+
+  // After (5.0)
+  \Sentry\withIsolationScope(static function (\Sentry\State\IsolationScope $scope): void {
+      $scope->setTag('feature', 'checkout');
+  });
+  ```
+
+- **`Unit::none()`** and **`Unit::custom()`** - Use one of the supported units, or omit the unit
+
+- **`HttpCookieCollector::collectPsr7Request()`** and **`HttpCookieCollector::collectPsr7Response()`** - Use `HttpSpanDataCollector::collectCookieHeaders()` with the `Cookie` or `Set-Cookie` headers instead
+
+- **`HttpCookieCollector::collectGroupedPairs()`** - Use `HttpSpanDataCollector::collectCookiePairs()` instead
+
+- **`HttpCookieParser::parseCookieHeaders()`** and **`HttpCookieParser::parseSetCookieHeaders()`** - Use `HttpCookieParser::splitCookieHeaders()` and `HttpCookieParser::splitSetCookieHeaders()` instead
 
 ### EventType Changes
 
