@@ -1544,12 +1544,6 @@ count = 1
 
 [[issues]]
 file = "src/State/Hub.php"
-code = "mixed-operand"
-message = "Right operand in `<` comparison has `mixed` type."
-count = 1
-
-[[issues]]
-file = "src/State/Hub.php"
 code = "possibly-null-operand"
 message = "Left operand in `<` comparison might be `null` (type `float|null`)."
 count = 1
