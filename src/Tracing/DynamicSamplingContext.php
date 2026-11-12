@@ -206,7 +206,7 @@ final class DynamicSamplingContext
 
     private static function setOrgOptions(Options $options, DynamicSamplingContext $samplingContext): void
     {
-        if ($options->getDsn() !== null && $options->getDsn()->getPublicKey() !== null) {
+        if ($options->getDsn() !== null) {
             $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
         }
 

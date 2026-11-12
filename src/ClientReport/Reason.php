@@ -81,6 +81,11 @@ class Reason
         return self::getInstance('backpressure');
     }
 
+    public static function invalid(): self
+    {
+        return self::getInstance('invalid');
+    }
+
     public function getValue(): string
     {
         return $this->value;

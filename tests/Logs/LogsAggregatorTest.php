@@ -382,6 +382,27 @@ final class LogsAggregatorTest extends TestCase
         $this->assertCount(0, StubTransport::$events);
     }
 
+    public function testRecordsClientReportWhenLogsBufferOverflows(): void
+    {
+        $client = ClientBuilder::create([
+            'log_flush_threshold' => null,
+            'send_client_reports' => true,
+        ])->getClient();
+        SentrySdk::init($client);
+        $aggregator = new LogsAggregator();
+
+        for ($i = 0; $i < 1000; ++$i) {
+            $aggregator->add(LogLevel::info(), 'Test message');
+        }
+
+        $this->assertClientReports([]);
+
+        $aggregator->add(LogLevel::info(), 'Test message');
+
+        $this->assertCount(1000, $aggregator->all());
+        $this->assertClientReports(['log_item' => ['buffer_overflow' => 1]]);
+    }
+
     public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
     {
         $client = ClientBuilder::create()->getClient();

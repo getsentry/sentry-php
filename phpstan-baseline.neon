@@ -31,12 +31,6 @@ parameters:
 			path: src/HttpClient/HttpClient.php
 
 		-
-			message: '#^Method Sentry\\HttpClient\\Request\:\:getStringBody\(\) never returns null so it can be removed from the return type\.$#'
-			identifier: return.unusedType
-			count: 1
-			path: src/HttpClient/Request.php
-
-		-
 			message: '#^Method Sentry\\Integration\\IntegrationRegistry\:\:getIntegrationsToSetup\(\) should return array\<Sentry\\Integration\\IntegrationInterface\> but returns array\<object\|string\>\.$#'
 			identifier: return.type
 			count: 1
@@ -439,28 +433,10 @@ parameters:
 			path: src/Spotlight/SpotlightClient.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: src/Tracing/DynamicSamplingContext.php
-
-		-
 			message: '#^Property Sentry\\Tracing\\PropagationContext\:\:\$parentSampled is never read, only written\.$#'
 			identifier: property.onlyWritten
 			count: 1
 			path: src/Tracing/PropagationContext.php
-
-		-
-			message: '#^Property Sentry\\Tracing\\TransactionMetadata\:\:\$parentSamplingRate \(float\|int\|null\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Tracing/TransactionMetadata.php
-
-		-
-			message: '#^Property Sentry\\Tracing\\TransactionMetadata\:\:\$sampleRand \(float\|int\|null\) is never assigned int so it can be removed from the property type\.$#'
-			identifier: property.unusedType
-			count: 1
-			path: src/Tracing/TransactionMetadata.php
 
 		-
 			message: '#^Parameter \#1 \$email of method Sentry\\UserDataBag\:\:setEmail\(\) expects string\|null, mixed given\.$#'
@@ -509,18 +485,6 @@ parameters:
 			identifier: identical.alwaysFalse
 			count: 1
 			path: src/Util/DebugType.php
-
-		-
-			message: '#^Method Sentry\\Util\\JSON\:\:encode\(\) should return string but returns string\|false\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Util/JSON.php
-
-		-
-			message: '#^Method Sentry\\Util\\RingBuffer\:\:count\(\) should return int\<0, max\> but returns int\.$#'
-			identifier: return.type
-			count: 1
-			path: src/Util/RingBuffer.php
 
 		-
 			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:bounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'

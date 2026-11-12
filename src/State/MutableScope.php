@@ -9,6 +9,8 @@ use Sentry\Breadcrumb;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\NoOpClient;
+use Sentry\Profiling\Profiles;
 use Sentry\Severity;
 use Sentry\UserDataBag;
 
@@ -34,6 +36,10 @@ abstract class MutableScope extends Scope
     public function setClient(ClientInterface $client): self
     {
         $this->scopeData->setClient($client);
+
+        if (!$client instanceof NoOpClient) {
+            Profiles::getInstance()->continuousProfiler()->onClientBound($client);
+        }
 
         return $this;
     }

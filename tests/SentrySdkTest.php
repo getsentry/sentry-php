@@ -6,12 +6,15 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
 use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\Profiling\ContinuousProfiler;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
 use Sentry\Tracing\Span;
@@ -590,6 +593,210 @@ final class SentrySdkTest extends TestCase
         SentrySdk::endContext(12);
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testInitStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        SentrySdk::init(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testFlushSendsCollectedProfileSamplesAndKeepsProfiling(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        self::busyWait(0.05);
+
+        SentrySdk::flush();
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
+        $this->assertCount(1, StubTransport::$events);
+
+        $profileChunk = StubTransport::$events[0]->getProfileChunk();
+
+        $this->assertNotNull($profileChunk);
+        $this->assertSame($profilerId, $profileChunk->getProfilerId());
+
+        self::busyWait(0.05);
+
+        $profiler->stop();
+
+        $this->assertCount(2, StubTransport::$events);
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextStopsProfilerForUnfinishedRootSpans(): void
+    {
+        StubTransport::$events = [];
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        self::busyWait(0.05);
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertNotNull(StubTransport::$events[0]->getProfileChunk());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testInitStopsProfilerForUnfinishedRootSpansOfTheDiscardedContext(): void
+    {
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        startTransaction(TransactionContext::make());
+
+        $this->assertTrue($profiler->isRunning());
+
+        SentrySdk::init();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextKeepsProfilerRunningForRootSpansOfOtherContexts(): void
+    {
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $transaction = startTransaction(TransactionContext::make());
+
+        SentrySdk::startContext();
+        startTransaction(TransactionContext::make());
+        SentrySdk::endContext();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $transaction->finish();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextKeepsProfilerRunningWhileAnotherExecutionSharesTheContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::startContext();
+        startTransaction(TransactionContext::make());
+
+        // A child coroutine of the request shares its context and ends first
+        $storage->share('child');
+        $storage->switchTo('child');
+
+        SentrySdk::endContext();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $storage->switchTo('default');
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testWithContextKeepsProfilerRunningWhileAnotherExecutionSharesTheContext(): void
+    {
+        $storage = new StubRuntimeContextStorage();
+        SentrySdk::setRuntimeContextStorage($storage);
+
+        self::initWithProfileLifecycleTrace();
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        SentrySdk::withContext(static function () use ($storage): void {
+            startTransaction(TransactionContext::make());
+
+            // A detached child coroutine shares the context and outlives the callback
+            $storage->share('child');
+        });
+
+        $this->assertTrue($profiler->isRunning());
+
+        $storage->switchTo('child');
+
+        SentrySdk::endContext();
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testEndContextCapturesTheProfileChunksCompletedWhileSampling(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $profiler = new ContinuousProfiler(5);
+        $previousProfiler = self::replaceContinuousProfiler($profiler);
+
+        try {
+            $profiler->start();
+
+            SentrySdk::startContext();
+
+            self::busyWait(0.2);
+
+            $this->assertSame([], StubTransport::$events);
+
+            SentrySdk::endContext();
+
+            $this->assertTrue($profiler->isRunning());
+            $this->assertGreaterThanOrEqual(2, \count(StubTransport::$events));
+        } finally {
+            $profiler->stop();
+
+            self::replaceContinuousProfiler($previousProfiler);
+        }
+    }
+
     public function testFlushFlushesClientTransport(): void
     {
         /** @var ClientInterface&MockObject $client */
@@ -737,5 +944,44 @@ final class SentrySdkTest extends TestCase
         $event = SentrySdk::getGlobalScope()->merge(SentrySdk::getIsolationScope())->applyToEvent(Event::createEvent());
 
         return $event !== null ? $event->getTags()[$key] ?? null : null;
+    }
+
+    private static function initWithProfileLifecycleTrace(): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
+    }
+
+    /**
+     * Replaces the continuous profiler of the SDK, so that a test can complete chunks quickly, and
+     * returns the previous one.
+     */
+    private static function replaceContinuousProfiler(ContinuousProfiler $continuousProfiler): ContinuousProfiler
+    {
+        $profiles = Profiles::getInstance();
+        $previousContinuousProfiler = $profiles->continuousProfiler();
+
+        $reflectionProperty = new \ReflectionProperty(Profiles::class, 'continuousProfiler');
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
+        $reflectionProperty->setValue($profiles, $continuousProfiler);
+        if (\PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(false);
+        }
+
+        return $previousContinuousProfiler;
+    }
+
+    private static function busyWait(float $seconds): void
+    {
+        $end = microtime(true) + $seconds;
+
+        while (microtime(true) < $end) {
+            // Burn CPU so that Excimer collects samples
+        }
     }
 }

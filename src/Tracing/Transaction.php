@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\Profiling\Profiler;
 use Sentry\Profiling\ProfilerInterface;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\EventRecorder;
 use Sentry\State\IsolationScope;
+use Sentry\Transport\DataCategory;
 
 /**
  * This class stores all the information about a Transaction.
@@ -154,6 +158,8 @@ final class Transaction extends Span
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
+        Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $this->getSpanId());
+
         if ($this->endTimestamp !== null) {
             // Transaction was already finished once and we don't want to re-flush it
             return null;
@@ -164,6 +170,12 @@ final class Transaction extends Span
         parent::finish($endTimestamp);
 
         if ($this->sampled !== true) {
+            // Unsampled transactions have no span recorder, so only the span of the transaction itself is dropped
+            if (SentrySdk::getClient($this->scope)->getOptions()->isTracingEnabled()) {
+                ClientReportAggregator::getInstance()->add(DataCategory::transaction(), Reason::sampleRate(), 1);
+                ClientReportAggregator::getInstance()->add(DataCategory::span(), Reason::sampleRate(), 1);
+            }
+
             return null;
         }
 
@@ -186,6 +198,12 @@ final class Transaction extends Span
         $event->setContext('trace', $this->getTraceContext());
         $event->setSdkMetadata('dynamic_sampling_context', $this->getDynamicSamplingContext());
         $event->setSdkMetadata('transaction_metadata', $this->getMetadata());
+
+        $profilerId = $this->data['profiler_id'] ?? null;
+
+        if (\is_string($profilerId)) {
+            $event->setContext('profile', ['profiler_id' => $profilerId]);
+        }
 
         if ($profile !== null) {
             $event->setSdkMetadata('profile', $profile);

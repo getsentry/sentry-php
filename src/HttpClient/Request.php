@@ -7,7 +7,7 @@ namespace Sentry\HttpClient;
 final class Request
 {
     /**
-     * @var string
+     * @var string|null
      */
     private $stringBody;
 

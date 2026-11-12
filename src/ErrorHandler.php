@@ -37,6 +37,18 @@ final class ErrorHandler
     private const PHP8_UNSILENCEABLE_FATAL_ERRORS = \E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_COMPILE_ERROR | \E_USER_ERROR | \E_RECOVERABLE_ERROR;
 
     /**
+     * The number of innermost stack frames kept for the backtrace of a fatal
+     * error. Together with the outermost ones this mirrors the limit Relay
+     * enforces on stack traces.
+     */
+    private const FATAL_ERROR_BACKTRACE_INNERMOST_FRAMES = 200;
+
+    /**
+     * The number of outermost stack frames kept for the backtrace of a fatal error.
+     */
+    private const FATAL_ERROR_BACKTRACE_OUTERMOST_FRAMES = 50;
+
+    /**
      * @var self|null The current registered handler (this class is a singleton)
      */
     private static $handlerInstance;
@@ -429,7 +441,7 @@ final class ErrorHandler
 
             $errorAsException = new FatalErrorException(self::ERROR_LEVELS_DESCRIPTION[$error['type']] . ': ' . $error['message'], 0, $error['type'], $error['file'], $error['line']);
 
-            $this->exceptionReflection->setValue($errorAsException, []);
+            $this->exceptionReflection->setValue($errorAsException, $this->getFatalErrorBacktrace($error));
 
             $this->invokeListeners($this->fatalErrorListeners, $errorAsException);
         }
@@ -524,6 +536,61 @@ final class ErrorHandler
         }
 
         return $cleanedBacktrace;
+    }
+
+    /**
+     * Returns the backtrace of the given fatal error, truncated to its
+     * innermost and outermost frames.
+     *
+     * @param array<string, mixed> $error The error as returned by {@see error_get_last()}
+     *
+     * @phpstan-param array{trace?: list<StacktraceFrame>, ...} $error
+     *
+     * @return array<int, mixed>
+     */
+    private function getFatalErrorBacktrace(array $error): array
+    {
+        // PHP 8.5+ provides the backtrace of fatal errors, enabled by default
+        $backtrace = $error['trace'] ?? [];
+        $count = \count($backtrace);
+
+        // StacktraceBuilder::buildFromBacktrace() builds one frame per entry
+        // plus a final one for the outermost location, so the limit applies
+        // to the number of entries + 1
+        if ($count + 1 <= self::FATAL_ERROR_BACKTRACE_INNERMOST_FRAMES + self::FATAL_ERROR_BACKTRACE_OUTERMOST_FRAMES) {
+            return $backtrace;
+        }
+
+        // A backtrace entry holds a function and the location it got called
+        // from, which lies inside its caller. That is why
+        // StacktraceBuilder::buildFromBacktrace() builds each frame from two
+        // neighbouring entries: the function of an entry and the location of
+        // the entry before it.
+        //
+        // Just removing the entries in the middle would break that pairing for
+        // the first outermost frame. It would get the location of the last
+        // innermost entry, which lies inside a function that got removed. Its
+        // actual location is held by the last omitted entry, so we move it to
+        // the entry at the cut, which is only needed for its function.
+        $entryAtCut = $backtrace[self::FATAL_ERROR_BACKTRACE_INNERMOST_FRAMES - 1];
+        $lastOmittedEntry = $backtrace[$count - self::FATAL_ERROR_BACKTRACE_OUTERMOST_FRAMES];
+
+        // Not every entry has a location, e.g. if called by an internal function
+        unset($entryAtCut['file'], $entryAtCut['line']);
+
+        if (isset($lastOmittedEntry['file'], $lastOmittedEntry['line'])) {
+            $entryAtCut['file'] = $lastOmittedEntry['file'];
+            $entryAtCut['line'] = $lastOmittedEntry['line'];
+        }
+
+        // The entry at the cut builds the last of the innermost frames. The
+        // outermost side gets one entry less than it has frames, as the final
+        // frame built for the outermost location counts towards the limit.
+        return array_merge(
+            \array_slice($backtrace, 0, self::FATAL_ERROR_BACKTRACE_INNERMOST_FRAMES - 1),
+            [$entryAtCut],
+            \array_slice($backtrace, 1 - self::FATAL_ERROR_BACKTRACE_OUTERMOST_FRAMES)
+        );
     }
 
     /**

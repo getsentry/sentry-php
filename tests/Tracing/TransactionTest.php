@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Tracing;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventId;
@@ -12,9 +13,12 @@ use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
 use Sentry\Profiling\ProfilerInterface;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
+use Sentry\Tests\StubTransport;
 use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\Transaction;
@@ -27,6 +31,8 @@ use function Sentry\startTransaction;
  */
 final class TransactionTest extends TestCase
 {
+    use ClientReportAssertions;
+
     public function testFinish(): void
     {
         ClockMock::withClockMock(1600640877);
@@ -80,9 +86,59 @@ final class TransactionTest extends TestCase
         $this->assertSame($expectedEventId, SentrySdk::getLastEventId());
     }
 
+    /**
+     * @requires extension excimer
+     */
+    public function testSpansCreatedWhileProfilingAreLinkedToTheProfile(): void
+    {
+        StubTransport::$events = [];
+
+        SentrySdk::init(new Client(new Options([
+            'profile_session_sample_rate' => 1.0,
+        ]), StubTransport::getInstance()));
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true));
+        $transaction->initSpanRecorder();
+
+        $profiledSpan = $transaction->startChild(new SpanContext());
+        $profiledSpan->finish();
+
+        $profiler->stop();
+
+        $unprofiledSpan = $transaction->startChild(new SpanContext());
+        $unprofiledSpan->finish();
+
+        $transaction->finish();
+
+        $transactionEvents = array_values(array_filter(StubTransport::$events, static function (Event $event): bool {
+            return $event->getType() === EventType::transaction();
+        }));
+
+        $this->assertCount(1, $transactionEvents);
+
+        $event = $transactionEvents[0];
+        $profileData = [
+            'thread.id' => '0',
+            'thread.name' => 'main',
+            'profiler_id' => $profilerId,
+        ];
+
+        $this->assertSame(['profiler_id' => $profilerId], $event->getContexts()['profile']);
+        $this->assertSame($profileData, $event->getContexts()['trace']['data']);
+        $this->assertSame($profileData, $profiledSpan->getData());
+        $this->assertSame([], $unprofiledSpan->getData());
+    }
+
     public function testFinishDoesNothingIfSampledFlagIsNotTrue(): void
     {
         $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options());
         $client->expects($this->never())
             ->method('captureEvent');
 
@@ -90,6 +146,32 @@ final class TransactionTest extends TestCase
 
         $transaction = new Transaction(new TransactionContext());
         $transaction->finish();
+    }
+
+    public function testFinishRecordsClientReportIfNotSampled(): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'traces_sample_rate' => 0,
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        startTransaction(new TransactionContext())->finish();
+
+        $this->assertClientReports([
+            'transaction' => ['sample_rate' => 1],
+            'span' => ['sample_rate' => 1],
+        ]);
+    }
+
+    public function testFinishDoesNotRecordClientReportIfTracingIsDisabled(): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        startTransaction(new TransactionContext())->finish();
+
+        $this->assertClientReports([]);
     }
 
     public function testFinishIncludesTheCustomProfile(): void

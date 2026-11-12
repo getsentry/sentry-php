@@ -7,16 +7,19 @@ namespace Sentry\Tests\State;
 use PHPUnit\Framework\TestCase;
 use Sentry\Attachment\Attachment;
 use Sentry\Breadcrumb;
+use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\Profiling\Profiles;
 use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
 use Sentry\Tests\StubLogger;
+use Sentry\Tests\StubTransport;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
@@ -51,6 +54,40 @@ final class ScopeTest extends TestCase
 
         $this->assertSame($scope, $scope->setClient($client));
         $this->assertSame($client, $scope->getClient());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSetClientStopsAProfilerStartedWithoutClientIfTheSessionIsNotSampled(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $scope = new IsolationScope();
+        $scope->setClient(new Client(new Options(['profile_session_sample_rate' => 0.0]), StubTransport::getInstance()));
+
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testSetClientKeepsAProfilerStartedWithoutClientUndecidedIfANoOpClientIsSet(): void
+    {
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        $profilerId = $profiler->getProfilerId();
+
+        $scope = new IsolationScope();
+        $scope->setClient(new NoOpClient());
+        $scope->setClient(new Client(new Options(['profile_session_sample_rate' => 1.0]), StubTransport::getInstance()));
+
+        $this->assertTrue($profiler->isRunning());
+        $this->assertSame($profilerId, $profiler->getProfilerId());
     }
 
     public function testClonedScopeKeepsClientShared(): void
@@ -421,6 +458,34 @@ final class ScopeTest extends TestCase
 
         $this->assertNotNull($event);
         $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
+    }
+
+    public function testAddBreadcrumbKeepsTheMostRecentBreadcrumbsInOrder(): void
+    {
+        $scope = new IsolationScope();
+        $breadcrumbs = [];
+
+        for ($i = 0; $i < 5; ++$i) {
+            $breadcrumbs[] = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'test', "breadcrumb {$i}");
+        }
+
+        // Below and at the limit, nothing is dropped
+        $scope->addBreadcrumb($breadcrumbs[0], 3);
+        $scope->addBreadcrumb($breadcrumbs[1], 3);
+        $scope->addBreadcrumb($breadcrumbs[2], 3);
+
+        $this->assertSame([$breadcrumbs[0], $breadcrumbs[1], $breadcrumbs[2]], $scope->getBreadcrumbs());
+
+        // Above the limit, the oldest breadcrumbs are dropped
+        $scope->addBreadcrumb($breadcrumbs[3], 3);
+        $scope->addBreadcrumb($breadcrumbs[4], 3);
+
+        $this->assertSame([$breadcrumbs[2], $breadcrumbs[3], $breadcrumbs[4]], $scope->getBreadcrumbs());
+
+        // Lowering the limit trims the existing breadcrumbs as well
+        $scope->addBreadcrumb($breadcrumbs[0], 1);
+
+        $this->assertSame([$breadcrumbs[0]], $scope->getBreadcrumbs());
     }
 
     public function testClearBreadcrumbs(): void
