@@ -1,5 +1,59 @@
 # CHANGELOG
 
+## 4.37.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.0.
+
+### Features
+
+- Add stack traces to fatal errors on PHP 8.5 and later, which provides their backtrace unless the `fatal_error_backtraces` INI setting is disabled. [(#2346)](https://github.com/getsentry/sentry-php/pull/2346)
+- Record more dropped telemetry in client reports, such as spans removed by event processors and `before_send_transaction`, logs and metrics dropped by their buffer limits, invalid profiles and profile chunks, and events that fail to serialize. [(#2319)](https://github.com/getsentry/sentry-php/pull/2319), [(#2322)](https://github.com/getsentry/sentry-php/pull/2322), [(#2324)](https://github.com/getsentry/sentry-php/pull/2324), [(#2325)](https://github.com/getsentry/sentry-php/pull/2325), [(#2326)](https://github.com/getsentry/sentry-php/pull/2326), [(#2327)](https://github.com/getsentry/sentry-php/pull/2327), [(#2328)](https://github.com/getsentry/sentry-php/pull/2328), [(#2329)](https://github.com/getsentry/sentry-php/pull/2329), [(#2334)](https://github.com/getsentry/sentry-php/pull/2334)
+
+### Misc
+
+- Only trim the breadcrumbs of a scope when they exceed `max_breadcrumbs`, instead of on every added breadcrumb. [(#2321)](https://github.com/getsentry/sentry-php/pull/2321)
+
+## 4.36.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.36.0.
+
+### Features
+
+- Add continuous profiling, which samples the process for as long as the profiler runs and sends the samples in chunks. Enable it with `profile_session_sample_rate` and control it with `\Sentry\profiler()`, including `pause()` and `resume()` between requests in long-running workers, or set `profile_lifecycle` to `trace` to run it while a sampled transaction is active. Requires the `excimer` extension. [(#2303)](https://github.com/getsentry/sentry-php/pull/2303), [(#2310)](https://github.com/getsentry/sentry-php/pull/2310)
+
+  ```php
+  // Regular profiling, e.g. a request or a CLI command
+  \Sentry\init([
+      'dsn' => '__YOUR_DSN__',
+      'profile_session_sample_rate' => 1.0,
+  ]);
+
+  \Sentry\profiler()->start();
+
+  // ...
+
+  \Sentry\profiler()->stop();
+  ```
+
+  ```php
+  // Long-running runtimes like FrankenPHP, RoadRunner or Swoole, pause the profiler between requests
+  \Sentry\profiler()->start();
+
+  $handler = static function (): void {
+      \Sentry\profiler()->resume();
+
+      // Handle the request
+
+      \Sentry\profiler()->pause();
+  };
+
+  while (frankenphp_handle_request($handler)) {
+  }
+  ```
+
+- Add support for PHP 8.6. [(#2307)](https://github.com/getsentry/sentry-php/pull/2307)
+- Record more dropped telemetry in client reports, such as ignored events, unsampled transactions, overflowing spans and failed sends. [(#2299)](https://github.com/getsentry/sentry-php/pull/2299), [(#2306)](https://github.com/getsentry/sentry-php/pull/2306), [(#2308)](https://github.com/getsentry/sentry-php/pull/2308), [(#2309)](https://github.com/getsentry/sentry-php/pull/2309), [(#2316)](https://github.com/getsentry/sentry-php/pull/2316), [(#2317)](https://github.com/getsentry/sentry-php/pull/2317), [(#2318)](https://github.com/getsentry/sentry-php/pull/2318)
+
 ## 4.35.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.35.0.

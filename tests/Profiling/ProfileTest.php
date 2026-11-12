@@ -5,15 +5,87 @@ declare(strict_types=1);
 namespace Sentry\Tests\Profiling;
 
 use PHPUnit\Framework\TestCase;
+use Sentry\Client;
 use Sentry\Context\OsContext;
 use Sentry\Context\RuntimeContext;
 use Sentry\Event;
 use Sentry\EventId;
 use Sentry\Options;
 use Sentry\Profiling\Profile;
+use Sentry\SentrySdk;
+use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tests\StubTransport;
 
 final class ProfileTest extends TestCase
 {
+    use ClientReportAssertions;
+
+    /**
+     * @dataProvider discardedProfileDataProvider
+     */
+    public function testGetFormattedDataRecordsDiscardedProfile(Event $event, array $excimerLog, float $startTimeStamp, string $expectedReason): void
+    {
+        SentrySdk::init(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
+        $profile = new Profile();
+        $profile->setStartTimeStamp($startTimeStamp);
+        $profile->setExcimerLog($excimerLog);
+
+        $this->assertNull($profile->getFormattedData($event));
+        $this->assertClientReports(['profile' => [$expectedReason => 1]]);
+    }
+
+    public static function discardedProfileDataProvider(): \Generator
+    {
+        $excimerLog = [
+            [
+                'trace' => [['file' => '/var/www/html/index.php', 'line' => 42]],
+                'timestamp' => 0.001,
+            ],
+            [
+                'trace' => [['file' => '/var/www/html/index.php', 'line' => 42]],
+                'timestamp' => 0.002,
+            ],
+        ];
+
+        $event = self::createValidTransaction();
+        $event->setOsContext(null);
+
+        yield 'Missing OS context' => [$event, $excimerLog, 1677573660.0, 'insufficient_data'];
+
+        $event = self::createValidTransaction();
+        $event->setRuntimeContext(null);
+
+        yield 'Missing runtime context' => [$event, $excimerLog, 1677573660.0, 'insufficient_data'];
+
+        $event = self::createValidTransaction();
+        $event->setTransaction(null);
+
+        yield 'Missing transaction name' => [$event, $excimerLog, 1677573660.0, 'insufficient_data'];
+
+        $event = self::createValidTransaction();
+        $event->setContext('trace', ['trace_id' => '']);
+
+        yield 'Missing trace ID' => [$event, $excimerLog, 1677573660.0, 'insufficient_data'];
+
+        yield 'Too long duration' => [
+            self::createValidTransaction(),
+            [
+                $excimerLog[0],
+                [
+                    'trace' => [['file' => '/var/www/html/index.php', 'line' => 42]],
+                    'timestamp' => 30.001,
+                ],
+            ],
+            1677573660.0,
+            'invalid',
+        ];
+
+        yield 'Invalid start time' => [self::createValidTransaction(), $excimerLog, \INF, 'invalid'];
+    }
+
     /**
      * @dataProvider formattedDataDataProvider
      */
@@ -365,5 +437,19 @@ final class ProfileTest extends TestCase
             ],
             null,
         ];
+    }
+
+    private static function createValidTransaction(): Event
+    {
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /');
+        $event->setContext('trace', [
+            'trace_id' => '566e3688a61d4bc888951642d6f14a19',
+            'span_id' => '566e3688a61d4bc8',
+        ]);
+        $event->setRuntimeContext(new RuntimeContext('php', '8.2.3', 'cli'));
+        $event->setOsContext(new OsContext('macOS', '13.2.1', '22D68', 'Darwin Kernel Version 22.2.0', 'aarch64'));
+
+        return $event;
     }
 }

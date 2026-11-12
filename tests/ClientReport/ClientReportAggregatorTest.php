@@ -209,6 +209,15 @@ class ClientReportAggregatorTest extends TestCase
         ]);
     }
 
+    public function testAddEventForProfileChunk(): void
+    {
+        ClientReportAggregator::getInstance()->addEvent(Event::createProfileChunk(), Reason::ratelimitBackoff());
+
+        $this->assertClientReports([
+            'profile_chunk' => ['ratelimit_backoff' => 1],
+        ]);
+    }
+
     public function testAddEventIgnoresClientReports(): void
     {
         ClientReportAggregator::getInstance()->addEvent(Event::createClientReport(), Reason::sendError());

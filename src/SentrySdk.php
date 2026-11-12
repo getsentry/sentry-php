@@ -6,6 +6,7 @@ namespace Sentry;
 
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\Profiling\Profiles;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\RuntimeContext;
@@ -209,6 +210,7 @@ final class SentrySdk
     {
         Logs::getInstance()->flush();
         TraceMetrics::getInstance()->flush();
+        Profiles::getInstance()->flush();
 
         self::getClient()->flush();
     }

@@ -423,6 +423,34 @@ final class ScopeTest extends TestCase
         $this->assertSame([$breadcrumb2, $breadcrumb3], $event->getBreadcrumbs());
     }
 
+    public function testAddBreadcrumbKeepsTheMostRecentBreadcrumbsInOrder(): void
+    {
+        $scope = new IsolationScope();
+        $breadcrumbs = [];
+
+        for ($i = 0; $i < 5; ++$i) {
+            $breadcrumbs[] = new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'test', "breadcrumb {$i}");
+        }
+
+        // Below and at the limit, nothing is dropped
+        $scope->addBreadcrumb($breadcrumbs[0], 3);
+        $scope->addBreadcrumb($breadcrumbs[1], 3);
+        $scope->addBreadcrumb($breadcrumbs[2], 3);
+
+        $this->assertSame([$breadcrumbs[0], $breadcrumbs[1], $breadcrumbs[2]], $scope->getBreadcrumbs());
+
+        // Above the limit, the oldest breadcrumbs are dropped
+        $scope->addBreadcrumb($breadcrumbs[3], 3);
+        $scope->addBreadcrumb($breadcrumbs[4], 3);
+
+        $this->assertSame([$breadcrumbs[2], $breadcrumbs[3], $breadcrumbs[4]], $scope->getBreadcrumbs());
+
+        // Lowering the limit trims the existing breadcrumbs as well
+        $scope->addBreadcrumb($breadcrumbs[0], 1);
+
+        $this->assertSame([$breadcrumbs[0]], $scope->getBreadcrumbs());
+    }
+
     public function testClearBreadcrumbs(): void
     {
         $scope = new IsolationScope();

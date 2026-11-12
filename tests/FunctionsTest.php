@@ -13,11 +13,13 @@ use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
 use Sentry\EventId;
+use Sentry\EventType;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\MonitorConfig;
 use Sentry\MonitorSchedule;
 use Sentry\NoOpClient;
 use Sentry\Options;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\Severity;
 use Sentry\State\GlobalScope;
@@ -49,6 +51,7 @@ use function Sentry\getBaggage;
 use function Sentry\getOtlpTracesEndpointUrl;
 use function Sentry\getTraceparent;
 use function Sentry\init;
+use function Sentry\profiler;
 use function Sentry\startContext;
 use function Sentry\startTransaction;
 use function Sentry\trace;
@@ -1215,6 +1218,130 @@ final class FunctionsTest extends TestCase
 
             return true;
         });
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerStartAndStopCaptureProfileChunk(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'manual',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event): bool {
+                return $event->getType() === EventType::profileChunk() && $event->getProfileChunk() !== null;
+            }));
+
+        SentrySdk::init($client);
+
+        profiler()->start();
+
+        $this->assertTrue(Profiles::getInstance()->continuousProfiler()->isRunning());
+
+        self::busyWait(0.05);
+
+        profiler()->stop();
+
+        $this->assertFalse(Profiles::getInstance()->continuousProfiler()->isRunning());
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerStopDoesNotStopTraceLifecycleProfiler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'trace',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        $client->expects($this->once())
+            ->method('captureEvent')
+            ->with($this->callback(static function (Event $event): bool {
+                return $event->getType() === EventType::profileChunk() && $event->getProfileChunk() !== null;
+            }));
+
+        SentrySdk::init($client);
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        self::busyWait(0.05);
+
+        profiler()->stop();
+
+        $this->assertTrue($profiler->isRunning());
+
+        $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerPauseAndResumePauseAndResumeManualLifecycleProfiler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'manual',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        SentrySdk::init($client);
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+
+        profiler()->start();
+        profiler()->pause();
+
+        $this->assertTrue($profiler->isPaused());
+
+        profiler()->resume();
+
+        $this->assertFalse($profiler->isPaused());
+
+        profiler()->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testProfilerPauseDoesNotPauseTraceLifecycleProfiler(): void
+    {
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options([
+                'profile_lifecycle' => 'trace',
+                'profile_session_sample_rate' => 1.0,
+            ]));
+
+        SentrySdk::init($client);
+
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $profiler->start();
+
+        profiler()->pause();
+
+        $this->assertFalse($profiler->isPaused());
+
+        $profiler->stop();
+    }
+
+    private static function busyWait(float $seconds): void
+    {
+        $end = microtime(true) + $seconds;
+
+        while (microtime(true) < $end) {
+            // Burn CPU so that Excimer collects samples
+        }
     }
 
     /**

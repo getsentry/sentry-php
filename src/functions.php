@@ -11,6 +11,7 @@ use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\TraceMetrics;
+use Sentry\Profiling\Profiles;
 use Sentry\State\BreadcrumbRecorder;
 use Sentry\State\EventRecorder;
 use Sentry\State\GlobalScope;
@@ -76,6 +77,8 @@ use Sentry\Transport\TransportInterface;
  *     max_request_body_size?: "never"|"small"|"medium"|"always",
  *     org_id?: int|null,
  *     prefixes?: array<string>,
+ *     profile_lifecycle?: "manual"|"trace",
+ *     profile_session_sample_rate?: int|float|null,
  *     profiler_factory?: callable|null,
  *     profiles_sample_rate?: int|float|null,
  *     profiles_sampler?: callable|null,
@@ -523,6 +526,14 @@ function metrics(): TraceMetrics
 function traceMetrics(): TraceMetrics
 {
     return TraceMetrics::getInstance();
+}
+
+/**
+ * Get the Sentry Profiles client.
+ */
+function profiler(): Profiles
+{
+    return Profiles::getInstance();
 }
 
 /**

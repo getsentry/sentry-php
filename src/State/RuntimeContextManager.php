@@ -7,6 +7,7 @@ namespace Sentry\State;
 use Psr\Log\LoggerInterface;
 use Sentry\ClientInterface;
 use Sentry\ErrorHandler;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 
 /**
@@ -93,6 +94,9 @@ final class RuntimeContextManager
             return;
         }
 
+        Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
+        Profiles::getInstance()->continuousProfiler()->capturePendingChunks();
+
         $client = SentrySdk::getClient($runtimeContext->getIsolationScope());
         $logger = $client->getOptions()->getLoggerOrNullLogger();
 
@@ -104,7 +108,14 @@ final class RuntimeContextManager
      */
     public function discardActiveContext(): void
     {
-        $this->removeActiveContext();
+        $runtimeContext = $this->removeActiveContext();
+
+        if ($runtimeContext === null) {
+            return;
+        }
+
+        // The root spans of a discarded context are not finished anymore, so they must not keep the profiler running
+        Profiles::getInstance()->continuousProfiler()->stopForRuntimeContext($runtimeContext->getId());
     }
 
     private function flushRuntimeContextResources(RuntimeContext $runtimeContext, ClientInterface $client, ?int $timeout, LoggerInterface $logger): void

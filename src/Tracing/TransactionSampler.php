@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Sentry\Tracing;
 
 use Sentry\Options;
+use Sentry\Profiling\ProfileChunk;
+use Sentry\Profiling\Profiles;
 
 /**
  * Applies tracing and profiling sampling decisions to transactions.
@@ -29,6 +31,10 @@ final class TransactionSampler
             $transaction->setSampled(false);
 
             $logger->warning(\sprintf('Transaction [%s] was started but tracing is not enabled.', (string) $transaction->getTraceId()), ['context' => $context]);
+
+            if ($options->getProfileLifecycle() === 'trace') {
+                $logger->warning('The "profile_lifecycle" option is set to "trace" but tracing is not enabled, so no profiles will be collected.');
+            }
 
             return $transaction;
         }
@@ -101,6 +107,22 @@ final class TransactionSampler
         $logger->info(\sprintf('Transaction [%s] was started and sampled, decided by %s.', (string) $transaction->getTraceId(), $sampleSource), ['context' => $context]);
 
         $transaction->initSpanRecorder();
+
+        if ($options->getProfileLifecycle() === 'trace') {
+            $continuousProfiler = Profiles::getInstance()->continuousProfiler();
+            $continuousProfiler->startForRootSpan((string) $transaction->getSpanId());
+
+            $profilerId = $continuousProfiler->getProfilerId();
+
+            // Backfill profiling data because the profiler was started after the transaction
+            if ($profilerId !== null) {
+                $transaction->setData([
+                    'thread.id' => ProfileChunk::THREAD_ID,
+                    'thread.name' => ProfileChunk::THREAD_NAME,
+                    'profiler_id' => $profilerId,
+                ]);
+            }
+        }
 
         $profilesSampleSource = 'config:profiles_sample_rate';
         $profilesSampler = $options->getProfilesSampler();
