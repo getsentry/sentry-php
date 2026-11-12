@@ -474,7 +474,7 @@ class Hub implements HubInterface
     }
 
     /**
-     * @param mixed $sampleRate
+     * @param float|int|null $sampleRate
      */
     private function sample($sampleRate): bool
     {
