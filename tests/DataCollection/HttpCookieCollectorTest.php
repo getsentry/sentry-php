@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpCookieCollector;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\Options;
@@ -19,7 +18,7 @@ final class HttpCookieCollectorTest extends TestCase
             'session_id' => '[Filtered]',
             'empty' => '',
             'preferences' => ['name' => 'Alice', 'password' => '[Filtered]'],
-        ], HttpCookieCollector::collect($this->policy(), HttpMessageType::incomingRequest(), [
+        ], HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), [
             'theme' => 'dark',
             'session_id' => 'secret',
             'empty' => '',
@@ -29,11 +28,11 @@ final class HttpCookieCollectorTest extends TestCase
 
     public function testDisabledCollectionDoesNotCollectCookies(): void
     {
-        $policy = $this->policy(['cookies' => ['mode' => 'off']]);
+        $options = $this->options(['cookies' => ['mode' => 'off']]);
         $cookies = [['theme', 'parsed']];
 
-        $this->assertNull(HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), ['theme' => 'parsed']));
-        $this->assertNull(HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingResponse(), $cookies));
+        $this->assertNull(HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), ['theme' => 'parsed']));
+        $this->assertNull(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $cookies));
     }
 
     public function testResponseCookiePairsPreserveRepeatedAndNullValues(): void
@@ -54,27 +53,27 @@ final class HttpCookieCollectorTest extends TestCase
             ['locale', null],
             ['session_id', '[Filtered]'],
             ['session_id', '[Filtered]'],
-        ], HttpCookieCollector::collectPairs($this->policy(), HttpMessageType::incomingResponse(), $cookies));
+        ], HttpCookieCollector::collectPairs($this->options(), HttpMessageType::incomingResponse(), $cookies));
     }
 
     public function testEmptyCookieCollectionsArePreserved(): void
     {
-        $policy = $this->policy();
+        $options = $this->options();
 
-        $this->assertSame([], HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), []));
-        $this->assertSame([], HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingResponse(), []));
+        $this->assertSame([], HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), []));
+        $this->assertSame([], HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), []));
     }
 
     public function testLargeParsedCookieCollectionsArePreserved(): void
     {
         $cookies = ['preferences' => array_fill(0, 100001, 'value')];
 
-        $this->assertSame($cookies, HttpCookieCollector::collect($this->policy(), HttpMessageType::incomingRequest(), $cookies));
+        $this->assertSame($cookies, HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), $cookies));
     }
 
     public function testResponseCookieAllowListPreservesRepeatedAndNullValues(): void
     {
-        $policy = $this->policy(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'locale', 'api_token']]]);
+        $options = $this->options(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'locale', 'api_token']]]);
         $cookies = [
             ['theme', null], ['theme', 'light'],
             ['locale', null],
@@ -87,12 +86,12 @@ final class HttpCookieCollectorTest extends TestCase
             ['locale', null],
             ['api_token', '[Filtered]'], ['api_token', '[Filtered]'],
             ['tracking_id', '[Filtered]'], ['tracking_id', '[Filtered]'],
-        ], HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingResponse(), $cookies));
+        ], HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $cookies));
     }
 
     public function testDictionariesAndPairsApplyTheSameDenyListRules(): void
     {
-        $policy = $this->policy(['cookies' => ['mode' => 'denyList']]);
+        $options = $this->options(['cookies' => ['mode' => 'denyList']]);
         $resource = fopen('php://memory', 'r+');
         $object = new class {
             public function __toString(): string
@@ -129,8 +128,8 @@ final class HttpCookieCollectorTest extends TestCase
         ];
 
         try {
-            $this->assertSame($expected, HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), $cookies));
-            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingResponse(), $pairs), 1, 0));
+            $this->assertSame($expected, HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $pairs), 1, 0));
         } finally {
             fclose($resource);
         }
@@ -138,7 +137,7 @@ final class HttpCookieCollectorTest extends TestCase
 
     public function testDictionariesAndPairsApplyTheSameAllowListRules(): void
     {
-        $policy = $this->policy(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'preferences', 'name', '0', 'object', 'resource', 'float', 'empty']]]);
+        $options = $this->options(['cookies' => ['mode' => 'allowList', 'terms' => ['theme', 'preferences', 'name', '0', 'object', 'resource', 'float', 'empty']]]);
         $resource = fopen('php://memory', 'r+');
         $object = new class {
             public function __toString(): string
@@ -175,8 +174,8 @@ final class HttpCookieCollectorTest extends TestCase
         ];
 
         try {
-            $this->assertSame($expected, HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), $cookies));
-            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingResponse(), $pairs), 1, 0));
+            $this->assertSame($expected, HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $pairs), 1, 0));
         } finally {
             fclose($resource);
         }
@@ -184,57 +183,11 @@ final class HttpCookieCollectorTest extends TestCase
 
     public function testUnavailableCookiesAreNotCollected(): void
     {
-        $this->assertNull(HttpCookieCollector::collect($this->policy(), HttpMessageType::incomingRequest(), null));
-        $this->assertNull(HttpCookieCollector::collect(
-            DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true])),
-            HttpMessageType::incomingRequest(),
-            null
-        ));
+        $this->assertNull(HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), null));
     }
 
-    public function testLegacyModeWithoutPiiDoesNotCollectCookies(): void
+    private function options(array $dataCollection = []): Options
     {
-        $policy = DataCollectionPolicy::fromOptions(new Options());
-
-        $this->assertNull(HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), ['theme' => 'dark']));
-        $this->assertNull(HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingRequest(), [['theme', 'dark']]));
-    }
-
-    public function testLegacyModeWithPiiCollectsIncomingRequestCookiesUnfiltered(): void
-    {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
-        $cookies = [['session_id', 'secret'], ['theme', 'dark']];
-
-        $this->assertSame(
-            ['session_id' => 'secret', 'theme' => 'dark'],
-            HttpCookieCollector::collect($policy, HttpMessageType::incomingRequest(), ['session_id' => 'secret', 'theme' => 'dark'])
-        );
-        $this->assertSame(
-            [['session_id', 'secret'], ['theme', 'dark']],
-            HttpCookieCollector::collectPairs($policy, HttpMessageType::incomingRequest(), $cookies)
-        );
-    }
-
-    /**
-     * @dataProvider legacyUncollectedTypeProvider
-     */
-    public function testLegacyModeWithPiiDoesNotCollectOtherCookies(HttpMessageType $type): void
-    {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['send_default_pii' => true]));
-
-        $this->assertNull(HttpCookieCollector::collect($policy, $type, ['theme' => 'dark']));
-        $this->assertNull(HttpCookieCollector::collectPairs($policy, $type, [['theme', 'dark']]));
-    }
-
-    public static function legacyUncollectedTypeProvider(): \Generator
-    {
-        yield 'outgoing request' => [HttpMessageType::outgoingRequest()];
-        yield 'incoming response' => [HttpMessageType::incomingResponse()];
-        yield 'outgoing response' => [HttpMessageType::outgoingResponse()];
-    }
-
-    private function policy(array $dataCollection = []): DataCollectionPolicy
-    {
-        return DataCollectionPolicy::fromOptions(new Options(['data_collection' => $dataCollection]));
+        return new Options(['data_collection' => $dataCollection]);
     }
 }

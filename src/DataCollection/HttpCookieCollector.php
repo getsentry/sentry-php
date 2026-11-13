@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\DataCollection;
 
+use Sentry\Options;
+
 final class HttpCookieCollector
 {
     private function __construct()
@@ -15,18 +17,13 @@ final class HttpCookieCollector
      *
      * @return array<array-key, mixed>|null `null` if cookies are not collected or not available
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, ?array $cookies): ?array
+    public static function collect(Options $options, HttpMessageType $type, ?array $cookies): ?array
     {
         if ($cookies === null) {
             return null;
         }
 
-        $dataCollection = $policy->getDataCollection();
-        if ($dataCollection === null) {
-            return self::shouldCollectLegacyCookies($policy, $type) ? $cookies : null;
-        }
-
-        return (new KeyValueDataFilter($dataCollection->getCookies()))->filterKeyValueData($cookies);
+        return (new KeyValueDataFilter($options->getDataCollection()->getCookies()))->filterKeyValueData($cookies);
     }
 
     /**
@@ -34,25 +31,8 @@ final class HttpCookieCollector
      *
      * @return array<int, array{string, mixed}>|null `null` if cookies are not collected
      */
-    public static function collectPairs(DataCollectionPolicy $policy, HttpMessageType $type, array $cookies): ?array
+    public static function collectPairs(Options $options, HttpMessageType $type, array $cookies): ?array
     {
-        $dataCollection = $policy->getDataCollection();
-        if ($dataCollection === null) {
-            if (!self::shouldCollectLegacyCookies($policy, $type)) {
-                return null;
-            }
-
-            return $cookies;
-        }
-
-        return (new KeyValueDataFilter($dataCollection->getCookies()))->filterPairs($cookies);
-    }
-
-    /**
-     * The legacy options only collected the cookies of incoming requests, and only with `send_default_pii`.
-     */
-    private static function shouldCollectLegacyCookies(DataCollectionPolicy $policy, HttpMessageType $type): bool
-    {
-        return $type === HttpMessageType::incomingRequest() && $policy->shouldCollectUserInfo();
+        return (new KeyValueDataFilter($options->getDataCollection()->getCookies()))->filterPairs($cookies);
     }
 }

@@ -8,10 +8,20 @@ use GuzzleHttp\Psr7\Query;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sentry\Exception\JsonException;
+use Sentry\Options;
 use Sentry\Util\JSON;
 
 final class HttpBodyCollector
 {
+    public const MAX_HTTP_BODY_LENGTH = 100000;
+
+    private const MAX_REQUEST_BODY_LENGTH = [
+        'never' => 0,
+        'small' => 1000,
+        'medium' => 10000,
+        'always' => self::MAX_HTTP_BODY_LENGTH,
+    ];
+
     private function __construct()
     {
     }
@@ -21,37 +31,33 @@ final class HttpBodyCollector
      *
      * @return array<array-key, mixed>|string|null
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $messageType, $body, string $contentType = '', ?int $bodyLength = null)
+    public static function collect(Options $options, HttpMessageType $messageType, $body, string $contentType = '', ?int $bodyLength = null)
     {
-        return self::collectSource($policy, $messageType, new InMemoryHttpBodySource($body, $contentType, $bodyLength));
+        return self::collectSource($options, $messageType, new InMemoryHttpBodySource($body, $contentType, $bodyLength));
     }
 
     /**
      * @return mixed
      */
-    public static function collectServerRequest(DataCollectionPolicy $policy, ServerRequestInterface $request)
+    public static function collectServerRequest(Options $options, ServerRequestInterface $request)
     {
-        if ($policy->isLegacyMode()) {
-            return LegacyRequestBodyCollector::collect($policy, $request);
-        }
-
-        return self::collectSource($policy, HttpMessageType::incomingRequest(), new ServerRequestBodySource($request));
+        return self::collectSource($options, HttpMessageType::incomingRequest(), new ServerRequestBodySource($request));
     }
 
     /**
      * @return array<array-key, mixed>|string|null
      */
-    public static function collectPsr7Message(DataCollectionPolicy $policy, HttpMessageType $messageType, MessageInterface $message)
+    public static function collectPsr7Message(Options $options, HttpMessageType $messageType, MessageInterface $message)
     {
-        return self::collectSource($policy, $messageType, new Psr7MessageBodySource($message));
+        return self::collectSource($options, $messageType, new Psr7MessageBodySource($message));
     }
 
     /**
      * @return array<array-key, mixed>|string|null
      */
-    public static function collectSource(DataCollectionPolicy $policy, HttpMessageType $messageType, HttpBodySourceInterface $source)
+    public static function collectSource(Options $options, HttpMessageType $messageType, HttpBodySourceInterface $source)
     {
-        $limit = $policy->getHttpBodyLimit($messageType);
+        $limit = self::getBodyLimit($options, $messageType);
         if ($limit === null) {
             return null;
         }
@@ -97,6 +103,24 @@ final class HttpBodyCollector
         }
 
         return $filtered;
+    }
+
+    /**
+     * @return int|null `null` if the body is not collected
+     */
+    private static function getBodyLimit(Options $options, HttpMessageType $messageType): ?int
+    {
+        if (!$options->getDataCollection()->shouldCollectHttpBody($messageType)) {
+            return null;
+        }
+
+        if (!$messageType->isRequest()) {
+            return self::MAX_HTTP_BODY_LENGTH;
+        }
+
+        $limit = self::MAX_REQUEST_BODY_LENGTH[$options->getMaxRequestBodySize()] ?? 0;
+
+        return $limit > 0 ? $limit : null;
     }
 
     /**

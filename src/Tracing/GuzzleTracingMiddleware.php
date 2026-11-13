@@ -10,7 +10,6 @@ use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Sentry\Breadcrumb;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpMessageType;
 use Sentry\DataCollection\HttpSpanDataCollector;
 use Sentry\DataCollection\HttpUrlCollector;
@@ -44,13 +43,12 @@ final class GuzzleTracingMiddleware
                 ]);
 
                 $sdkOptions = $client->getOptions();
-                $policy = DataCollectionPolicy::fromOptions($sdkOptions);
                 $spanAndBreadcrumbData = [
                     'http.request.method' => $request->getMethod(),
                     'http.request.body.size' => $request->getBody()->getSize(),
                 ];
 
-                $queryString = HttpUrlCollector::collectQueryString($policy, $requestUri->getQuery());
+                $queryString = HttpUrlCollector::collectQueryString($sdkOptions, $requestUri->getQuery());
                 if ($queryString !== null) {
                     $spanAndBreadcrumbData['http.query'] = $queryString;
                 }
@@ -59,7 +57,7 @@ final class GuzzleTracingMiddleware
                     $spanAndBreadcrumbData['http.fragment'] = $requestUri->getFragment();
                 }
 
-                $fullUrl = HttpUrlCollector::collect($policy, HttpMessageType::outgoingRequest(), $requestUri);
+                $fullUrl = HttpUrlCollector::collect($sdkOptions, HttpMessageType::outgoingRequest(), $requestUri);
                 if ($fullUrl !== null) {
                     $spanAndBreadcrumbData['url.full'] = $fullUrl;
                 }
@@ -68,7 +66,7 @@ final class GuzzleTracingMiddleware
                 $childSpan = null;
 
                 if ($parentSpan !== null && $parentSpan->getSampled()) {
-                    $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Request($policy, HttpMessageType::outgoingRequest(), $request));
+                    $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Request($sdkOptions, HttpMessageType::outgoingRequest(), $request));
 
                     $spanContext = new SpanContext();
                     $spanContext->setOp('http.client');
@@ -93,7 +91,7 @@ final class GuzzleTracingMiddleware
                     }
                 }
 
-                $handlerPromiseCallback = static function ($responseOrException) use ($client, $scope, $spanAndBreadcrumbData, $childSpan, $breadcrumbUrl, $policy) {
+                $handlerPromiseCallback = static function ($responseOrException) use ($client, $scope, $spanAndBreadcrumbData, $childSpan, $breadcrumbUrl, $sdkOptions) {
                     if ($childSpan !== null) {
                         // We finish the span first to keep the measured duration as close as possible to the HTTP request time.
                         $childSpan->finish();
@@ -123,7 +121,7 @@ final class GuzzleTracingMiddleware
 
                     if ($childSpan !== null) {
                         if ($response instanceof ResponseInterface) {
-                            $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Response($policy, HttpMessageType::incomingResponse(), $response));
+                            $spanData = array_merge($spanAndBreadcrumbData, HttpSpanDataCollector::collectPsr7Response($sdkOptions, HttpMessageType::incomingResponse(), $response));
 
                             $childSpan->setStatus(SpanStatus::createFromHttpStatusCode($response->getStatusCode()));
                             $childSpan->setData(array_merge($spanData, $childSpan->getData()));

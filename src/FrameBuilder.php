@@ -174,10 +174,9 @@ final class FrameBuilder
             return [];
         }
 
-        $dataCollection = $this->options->getDataCollection();
-        $filter = $dataCollection === null ? null : new KeyValueDataFilter($dataCollection->getStackFrameVariables());
+        $filter = new KeyValueDataFilter($this->options->getDataCollection()->getStackFrameVariables());
 
-        if ($filter !== null && !$filter->isEnabled()) {
+        if (!$filter->isEnabled()) {
             return [];
         }
 
@@ -209,15 +208,7 @@ final class FrameBuilder
             }
         }
 
-        if ($filter !== null) {
-            return $filter->filterKeyValueData($argumentValues, [$this->representationSerializer, 'representationSerialize']) ?? [];
-        }
-
-        foreach ($argumentValues as $argumentName => $argumentValue) {
-            $argumentValues[$argumentName] = $this->representationSerializer->representationSerialize($argumentValue);
-        }
-
-        return $argumentValues;
+        return $filter->filterKeyValueData($argumentValues, [$this->representationSerializer, 'representationSerialize']) ?? [];
     }
 
     /**

@@ -165,7 +165,6 @@ final class LogsAggregatorTest extends TestCase
     public function testAttributesAreAddedToLogMessage(): void
     {
         $client = ClientBuilder::create([
-            'send_default_pii' => true,
             'release' => '1.0.0',
             'environment' => 'production',
             'server_name' => 'web-server-01',
@@ -232,10 +231,10 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
     }
 
-    public function testUserAttributesCanBeSetManuallyWithDefaultPiiOff(): void
+    public function testUserAttributesCanBeSetManuallyWithUserInfoCollectionOff(): void
     {
         $client = ClientBuilder::create([
-            'send_default_pii' => false,
+            'data_collection' => ['user_info' => false],
         ])->getClient();
 
         SentrySdk::init($client);

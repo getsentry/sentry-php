@@ -6,6 +6,7 @@ namespace Sentry\DataCollection;
 
 use GuzzleHttp\Psr7\Uri;
 use Psr\Http\Message\UriInterface;
+use Sentry\Options;
 
 final class HttpUrlCollector
 {
@@ -18,13 +19,8 @@ final class HttpUrlCollector
      *
      * @return string|null `null` if the URL is not collected or cannot be parsed
      */
-    public static function collect(DataCollectionPolicy $policy, HttpMessageType $type, $url): ?string
+    public static function collect(Options $options, HttpMessageType $type, $url): ?string
     {
-        // The legacy options only collected the full URL of incoming requests
-        if ($policy->isLegacyMode()) {
-            return $type === HttpMessageType::incomingRequest() ? (string) $url : null;
-        }
-
         if ($url instanceof UriInterface) {
             $uri = $url;
             $queryString = $url->getQuery();
@@ -52,7 +48,7 @@ final class HttpUrlCollector
             $uri->getScheme(),
             $authority,
             $uri->getPath(),
-            self::collectQueryString($policy, $queryString),
+            self::collectQueryString($options, $queryString),
             $fragment
         );
     }
@@ -60,17 +56,12 @@ final class HttpUrlCollector
     /**
      * @return string|null `null` if the query string is empty or not collected
      */
-    public static function collectQueryString(DataCollectionPolicy $policy, string $queryString): ?string
+    public static function collectQueryString(Options $options, string $queryString): ?string
     {
         if ($queryString === '') {
             return null;
         }
 
-        $dataCollection = $policy->getDataCollection();
-        if ($dataCollection === null) {
-            return $queryString;
-        }
-
-        return (new KeyValueDataFilter($dataCollection->getUrlQueryParams()))->filterQueryString($queryString);
+        return (new KeyValueDataFilter($options->getDataCollection()->getUrlQueryParams()))->filterQueryString($queryString);
     }
 }

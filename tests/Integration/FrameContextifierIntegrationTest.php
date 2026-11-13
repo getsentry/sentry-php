@@ -28,16 +28,9 @@ final class FrameContextifierIntegrationTest extends TestCase
         int $lineNumber,
         int $contextLines,
         int $preContextCount,
-        int $postContextCount,
-        ?int $dataCollectionContextLines = null
+        int $postContextCount
     ): void {
-        $options = ['context_lines' => $contextLines];
-
-        if ($dataCollectionContextLines !== null) {
-            $options['data_collection'] = ['frame_context_lines' => $dataCollectionContextLines];
-        }
-
-        $options = new Options($options);
+        $options = new Options(['data_collection' => ['frame_context_lines' => $contextLines]]);
         /** @var MockObject&LoggerInterface $logger */
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())
@@ -126,19 +119,9 @@ final class FrameContextifierIntegrationTest extends TestCase
             5,
         ];
 
-        yield 'data collection context lines take precedence over legacy option' => [
+        yield 'surrounding context lines can be omitted' => [
             realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
             8,
-            1,
-            3,
-            3,
-            3,
-        ];
-
-        yield 'data collection can omit surrounding context lines' => [
-            realpath(__DIR__ . '/../Fixtures/code/LongFile.php'),
-            8,
-            5,
             0,
             0,
             0,

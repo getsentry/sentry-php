@@ -17,15 +17,9 @@ final class Psr7BodyReader
     {
     }
 
-    /**
-     * @param int  $limit    -1 means unlimited
-     * @param bool $truncate Return the body up to the limit instead of omitting oversized bodies
-     */
-    public static function read(StreamInterface $stream, int $limit, bool $truncate = false): ?string
+    public static function read(StreamInterface $stream, int $limit): ?string
     {
-        $unlimited = $limit === -1;
-
-        if (!$unlimited && $limit <= 0) {
+        if ($limit <= 0) {
             return null;
         }
 
@@ -38,15 +32,10 @@ final class Psr7BodyReader
             try {
                 $stream->rewind();
                 $body = '';
-                $readLimit = $truncate ? $limit : $limit + 1;
+                $readLimit = $limit + 1;
 
-                while (($unlimited || \strlen($body) < $readLimit) && !$stream->eof()) {
-                    $bytesToRead = 10000;
-                    if (!$unlimited) {
-                        $bytesToRead = min($bytesToRead, $readLimit - \strlen($body));
-                    }
-
-                    $buffer = $stream->read($bytesToRead);
+                while (\strlen($body) < $readLimit && !$stream->eof()) {
+                    $buffer = $stream->read(min(10000, $readLimit - \strlen($body)));
                     if ($buffer === '') {
                         break;
                     }
@@ -60,7 +49,7 @@ final class Psr7BodyReader
             return null;
         }
 
-        if (!$unlimited && !$truncate && \strlen($body) > $limit) {
+        if (\strlen($body) > $limit) {
             return null;
         }
 

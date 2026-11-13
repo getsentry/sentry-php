@@ -12,7 +12,6 @@ use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use Sentry\DataCollection\DataCollectionPolicy;
 use Sentry\DataCollection\HttpBodyCollector;
 use Sentry\DataCollection\HttpBodySourceInterface;
 use Sentry\DataCollection\HttpMessageType;
@@ -87,27 +86,23 @@ final class HttpBodyCollectorTest extends TestCase
     /**
      * @dataProvider disabledSourceProvider
      *
-     * @param array<string, mixed>|null $options
+     * @param array<string, mixed> $options
      */
-    public function testDisabledSourcesAreNotAccessed(?array $options, HttpMessageType $messageType): void
+    public function testDisabledSourcesAreNotAccessed(array $options, HttpMessageType $messageType): void
     {
-        $policy = DataCollectionPolicy::fromOptions($options === null ? null : new Options($options));
         $source = $this->createMock(HttpBodySourceInterface::class);
         $source->expects($this->never())->method('getKnownLength');
         $source->expects($this->never())->method('getContentType');
         $source->expects($this->never())->method('read');
 
-        $this->assertNull(HttpBodyCollector::collectSource($policy, $messageType, $source));
+        $this->assertNull(HttpBodyCollector::collectSource(new Options($options), $messageType, $source));
     }
 
     public function disabledSourceProvider(): \Generator
     {
-        yield 'no client options' => [null, HttpMessageType::incomingRequest()];
-        yield 'legacy' => [[], HttpMessageType::incomingRequest()];
-        yield 'legacy PII enabled' => [['send_default_pii' => true], HttpMessageType::incomingRequest()];
         yield 'all bodies disabled' => [['data_collection' => ['http_bodies' => []]], HttpMessageType::incomingRequest()];
         yield 'unselected direction' => [['data_collection' => ['http_bodies' => ['incomingRequest']]], HttpMessageType::outgoingResponse()];
-        yield 'request size never' => [['data_collection' => [], 'max_request_body_size' => 'never'], HttpMessageType::outgoingRequest()];
+        yield 'request size never' => [['max_request_body_size' => 'never'], HttpMessageType::outgoingRequest()];
     }
 
     public function testKnownOversizedSourcesAreNotRead(): void
@@ -161,7 +156,7 @@ final class HttpBodyCollectorTest extends TestCase
     /**
      * @dataProvider bodyDirectionProvider
      */
-    public function testConfiguredDefaultsCollectEveryDirection(HttpMessageType $direction): void
+    public function testDefaultsCollectEveryDirection(HttpMessageType $direction): void
     {
         $this->assertSame([], HttpBodyCollector::collect($this->options(), $direction, []));
     }
@@ -217,11 +212,11 @@ final class HttpBodyCollectorTest extends TestCase
 
     public function testKnownLengthDoesNotReplaceRawBodySizeCheck(): void
     {
-        $policy = $this->options(['max_request_body_size' => 'small']);
+        $options = $this->options(['max_request_body_size' => 'small']);
         $body = JSON::encode(['password' => str_repeat('a', 1000)]);
 
-        $this->assertNull(HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), $body, 'application/json', 1));
-        $this->assertNull(HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), '{}', 'application/json', 1001));
+        $this->assertNull(HttpBodyCollector::collect($options, HttpMessageType::incomingRequest(), $body, 'application/json', 1));
+        $this->assertNull(HttpBodyCollector::collect($options, HttpMessageType::incomingRequest(), '{}', 'application/json', 1001));
     }
 
     public function bodyLimitProvider(): \Generator
@@ -242,12 +237,12 @@ final class HttpBodyCollectorTest extends TestCase
 
     public function testParsedBodiesWithoutKnownLengthAreMeasured(): void
     {
-        $policy = $this->options(['max_request_body_size' => 'small']);
+        $options = $this->options(['max_request_body_size' => 'small']);
 
-        $this->assertNull(HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), ['name' => str_repeat('a', 1000)]));
+        $this->assertNull(HttpBodyCollector::collect($options, HttpMessageType::incomingRequest(), ['name' => str_repeat('a', 1000)]));
         $this->assertSame(
             ['name' => 'Alice', 'password' => '[Filtered]'],
-            HttpBodyCollector::collect($policy, HttpMessageType::incomingRequest(), ['name' => 'Alice', 'password' => 'secret'])
+            HttpBodyCollector::collect($options, HttpMessageType::incomingRequest(), ['name' => 'Alice', 'password' => 'secret'])
         );
     }
 
@@ -260,11 +255,11 @@ final class HttpBodyCollectorTest extends TestCase
 
     public function testParsedServerBodiesWithoutContentLengthAreMeasured(): void
     {
-        $policy = $this->options(['max_request_body_size' => 'small']);
+        $options = $this->options(['max_request_body_size' => 'small']);
         $request = new ServerRequest('POST', '/', ['Transfer-Encoding' => 'chunked']);
 
-        $this->assertNull(HttpBodyCollector::collectServerRequest($policy, $request->withParsedBody(['name' => str_repeat('a', 1000)])));
-        $this->assertSame(['name' => 'Alice'], HttpBodyCollector::collectServerRequest($policy, $request->withParsedBody(['name' => 'Alice'])));
+        $this->assertNull(HttpBodyCollector::collectServerRequest($options, $request->withParsedBody(['name' => str_repeat('a', 1000)])));
+        $this->assertSame(['name' => 'Alice'], HttpBodyCollector::collectServerRequest($options, $request->withParsedBody(['name' => 'Alice'])));
     }
 
     public function testParsedBodiesWithInvalidUtf8AreMeasuredAndCollected(): void
@@ -470,41 +465,26 @@ final class HttpBodyCollectorTest extends TestCase
         $this->assertSame(3, $request->getBody()->tell());
     }
 
-    public function testServerRequestsUseLegacyCollection(): void
-    {
-        $policy = DataCollectionPolicy::fromOptions(new Options(['max_request_body_size' => 'always']));
-        $body = ['name' => 'Alice', 'token' => 'secret'];
-        $request = $this->createMock(ServerRequestInterface::class);
-        $request->method('getHeaderLine')->with('Content-Length')->willReturn('100');
-        $request->expects($this->once())->method('getParsedBody')->willReturn($body);
-        $request->expects($this->once())->method('getUploadedFiles')->willReturn([]);
-        $request->expects($this->never())->method('getBody');
-
-        $this->assertSame($body, HttpBodyCollector::collectServerRequest($policy, $request));
-    }
-
     /**
      * @dataProvider disabledServerRequestCollectionProvider
      *
-     * @param array<string, mixed>|null $options
+     * @param array<string, mixed> $options
      */
-    public function testDisabledServerRequestCollectionDoesNotAccessRequest(?array $options): void
+    public function testDisabledServerRequestCollectionDoesNotAccessRequest(array $options): void
     {
-        $policy = DataCollectionPolicy::fromOptions($options === null ? null : new Options($options));
         $request = $this->createMock(ServerRequestInterface::class);
         $request->expects($this->never())->method('getHeaderLine');
         $request->expects($this->never())->method('getParsedBody');
         $request->expects($this->never())->method('getUploadedFiles');
         $request->expects($this->never())->method('getBody');
 
-        $this->assertNull(HttpBodyCollector::collectServerRequest($policy, $request));
+        $this->assertNull(HttpBodyCollector::collectServerRequest(new Options($options), $request));
     }
 
     public function disabledServerRequestCollectionProvider(): \Generator
     {
-        yield 'no client options' => [null];
-        yield 'legacy never' => [['max_request_body_size' => 'never']];
-        yield 'configured bodies disabled' => [['data_collection' => ['http_bodies' => []]]];
+        yield 'request size never' => [['max_request_body_size' => 'never']];
+        yield 'bodies disabled' => [['data_collection' => ['http_bodies' => []]]];
     }
 
     public function testPsr7BodyIsCollectedWithoutChangingTheStreamPosition(): void
@@ -527,16 +507,15 @@ final class HttpBodyCollectorTest extends TestCase
     /**
      * @dataProvider disabledSourceProvider
      *
-     * @param array<string, mixed>|null $options
+     * @param array<string, mixed> $options
      */
-    public function testDisabledPsr7MessagesAreNotAccessed(?array $options, HttpMessageType $messageType): void
+    public function testDisabledPsr7MessagesAreNotAccessed(array $options, HttpMessageType $messageType): void
     {
-        $policy = DataCollectionPolicy::fromOptions($options === null ? null : new Options($options));
         $message = $this->createMock(MessageInterface::class);
         $message->expects($this->never())->method('getHeaderLine');
         $message->expects($this->never())->method('getBody');
 
-        $this->assertNull(HttpBodyCollector::collectPsr7Message($policy, $messageType, $message));
+        $this->assertNull(HttpBodyCollector::collectPsr7Message(new Options($options), $messageType, $message));
     }
 
     public function testDeclaredOversizedPsr7MessagesAreNotRead(): void
@@ -583,9 +562,9 @@ final class HttpBodyCollectorTest extends TestCase
     /**
      * @param array<string, mixed> $options
      */
-    private function options(array $options = []): DataCollectionPolicy
+    private function options(array $options = []): Options
     {
-        return DataCollectionPolicy::fromOptions(new Options($options + ['data_collection' => [], 'max_request_body_size' => 'always']));
+        return new Options($options + ['max_request_body_size' => 'always']);
     }
 
     /**

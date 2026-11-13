@@ -293,7 +293,7 @@ final class FrameBuilderTest extends TestCase
      */
     public function testFunctionArgumentsAreSerializedBeforeFiltering($argument, $expectedArgument): void
     {
-        $options = new Options(['data_collection' => []]);
+        $options = new Options();
         $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
         $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, [
             'function' => '{closure}',
@@ -346,7 +346,6 @@ final class FrameBuilderTest extends TestCase
     public function testFunctionArgumentsFilterCustomSerializerOutput(): void
     {
         $options = new Options([
-            'data_collection' => [],
             'class_serializers' => [
                 \ArrayObject::class => static function (\ArrayObject $value): array {
                     return ['name' => 'alice', 'password' => 'basad'];
@@ -369,7 +368,7 @@ final class FrameBuilderTest extends TestCase
 
     public function testSensitiveFunctionArgumentsAreNotSerialized(): void
     {
-        $options = new Options(['data_collection' => []]);
+        $options = new Options();
         $serializer = $this->createMock(RepresentationSerializer::class);
         $serializer->expects($this->once())
             ->method('representationSerialize')
