@@ -37,7 +37,7 @@ jobs:
 
       - name: Lint
         env:
-          OPENROUTER_API_KEY: ${{ secrets.DECISION_MODEL_LINTER_OPENROUTER_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.WARDEN_OPENROUTER_API_KEY }}
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.number }}
           OVERRIDDEN: ${{ contains(github.event.pull_request.labels.*.name, env.LABEL) }}
