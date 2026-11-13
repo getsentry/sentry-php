@@ -517,12 +517,6 @@ parameters:
 			path: src/Tracing/Span.php
 
 		-
-			message: '#^Method Sentry\\Tracing\\Span\:\:setMetricsSummary\(\) has parameter \$value with no type specified\.$#'
-			identifier: missingType.parameter
-			count: 1
-			path: src/Tracing/Span.php
-
-		-
 			message: '#^Parameter \#1 \$email of method Sentry\\UserDataBag\:\:setEmail\(\) expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
