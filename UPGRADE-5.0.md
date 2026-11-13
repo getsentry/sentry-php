@@ -20,6 +20,20 @@ $logger->pushHandler(new \Sentry\Monolog\LogsHandler());
 
 To continue sending Monolog records to Sentry issues instead, use `Sentry\Monolog\LogToSentryIssueHandler` for log messages or `Sentry\Monolog\ExceptionToSentryIssueHandler` for exceptions.
 
+### Monolog Handlers No Longer Accept A Hub
+
+The constructors of `Sentry\Monolog\BreadcrumbHandler`, `Sentry\Monolog\LogToSentryIssueHandler` and `Sentry\Monolog\ExceptionToSentryIssueHandler` no longer take a `HubInterface` as their first argument. The remaining arguments moved up by one position:
+
+```php
+// Before (4.x)
+$logger->pushHandler(new \Sentry\Monolog\BreadcrumbHandler(\Sentry\SentrySdk::getCurrentHub()));
+$logger->pushHandler(new \Sentry\Monolog\LogToSentryIssueHandler(\Sentry\SentrySdk::getCurrentHub(), \Monolog\Level::Error));
+
+// After (5.0)
+$logger->pushHandler(new \Sentry\Monolog\BreadcrumbHandler());
+$logger->pushHandler(new \Sentry\Monolog\LogToSentryIssueHandler(\Monolog\Level::Error));
+```
+
 ### Hub APIs Removed
 
 The Hub API has been removed. This includes:
@@ -42,7 +56,7 @@ The SDK now exposes runtime state directly through `SentrySdk`, global helpers, 
 });
 
 // After (5.0)
-\Sentry\configureScope(static function (\Sentry\State\Scope $scope): void {
+\Sentry\configureScope(static function (\Sentry\State\IsolationScope $scope): void {
     $scope->setTag('feature', 'checkout');
 });
 ```
@@ -52,6 +66,85 @@ Use `SentrySdk::getClient()` for the active client, `SentrySdk::getGlobalScope()
 Use `configureScope()` to mutate the current isolation scope, `withIsolationScope()` to run code with a temporary forked scope, and `startTransaction()` to start manual tracing instrumentation.
 
 `SentrySdk::init()` no longer returns a Hub instance. It now returns `void`.
+
+The other Hub methods have the following replacements:
+
+- **`getClient()`** - Use `SentrySdk::getClient()` instead. It never returns `null`, a `Sentry\NoOpClient` with the default options is returned when the SDK has not been initialized, so the client no longer has to be checked before it is used
+  ```php
+  // Before (4.x)
+  $client = \Sentry\SentrySdk::getCurrentHub()->getClient();
+
+  if ($client !== null && $client->getOptions()->getRelease() !== null) {
+      header('X-Release: ' . $client->getOptions()->getRelease());
+  }
+
+  // After (5.0)
+  $release = \Sentry\SentrySdk::getClient()->getOptions()->getRelease();
+
+  if ($release !== null) {
+      header('X-Release: ' . $release);
+  }
+  ```
+
+- **`bindClient()`** - Use `SentrySdk::getGlobalScope()->setClient()` instead
+
+- **`getIntegration()`** - Use `SentrySdk::getClient()->getIntegration()` instead
+
+- **`getLastEventId()`** - Use `SentrySdk::getLastEventId()` instead
+
+- **`pushScope()`** and **`popScope()`** - Use `SentrySdk::pushIsolationScope()` and `SentrySdk::popIsolationScope()` instead
+
+- **`getSpan()`**, **`setSpan()`** and **`getTransaction()`** - Use the methods of the same name on `SentrySdk::getIsolationScope()` instead
+
+The following APIs took a Hub and changed their signature:
+
+- `startContext()` and `SentrySdk::startContext()` - Accept an `IsolationScope` instead of a `HubInterface`
+- `getTraceparent()`, `getBaggage()`, `PropagationContext::toBaggage()` and `GuzzleTracingMiddleware::trace()` - Accept an `IsolationScope` instead of a `HubInterface`
+- `DynamicSamplingContext::fromTransaction()` - Takes a `ClientInterface` instead of a `HubInterface`
+- `AbstractErrorListenerIntegration::captureException()` - No longer takes a `HubInterface`, only the exception
+
+### Scope Split Into Global And Isolation Scope
+
+`Sentry\State\Scope` is now an abstract class and can no longer be instantiated. Its data is held by two scopes instead:
+
+- `Sentry\State\GlobalScope` - Holds data for the whole process and is applied to every event. Use `SentrySdk::getGlobalScope()` or `\Sentry\getGlobalScope()` to access it
+- `Sentry\State\IsolationScope` - Holds data for the current runtime context, for example a single request. Use `SentrySdk::getIsolationScope()`, `\Sentry\getIsolationScope()` or `\Sentry\configureScope()` to access it
+
+The following changed along with it:
+
+- **`new Scope()`** - Use `new IsolationScope()` instead
+
+- **Scope type declarations** - `configureScope()` and `trace()` pass an `IsolationScope` to their callback. The methods that modify a scope, such as `setTag()` or `setUser()`, are no longer declared on `Scope`, declare the `IsolationScope` type instead
+
+- **`Scope::addGlobalEventProcessor()`** - Add the event processor to the global scope instead
+  ```php
+  // Before (4.x)
+  \Sentry\State\Scope::addGlobalEventProcessor($eventProcessor);
+
+  // After (5.0)
+  \Sentry\SentrySdk::getGlobalScope()->addEventProcessor($eventProcessor);
+  ```
+
+- **`Scope::clear()`** - Returns `void` instead of the scope and can no longer be chained
+
+- **`Scope::applyToEvent()`** - Has been removed, the client applies the global and the isolation scope to the events it captures
+
+- **`DynamicSamplingContext::fromOptions()`** - Takes an `IsolationScope` instead of a `Scope`
+
+- **`ClientInterface`** - `captureMessage()`, `captureException()`, `captureLastError()` and `captureEvent()` take an `IsolationScope` instead of a `Scope`. Custom implementations of the interface have to change their method signatures accordingly
+
+- **Event processors** - They are only called for error events and transactions, no longer for check-ins, logs and metrics
+
+- **Runtime contexts** - A context started with `startContext()` or `withContext()` starts with an empty isolation scope and no longer inherits the data that was set with `configureScope()` before the context was started. Set data that applies to every context on the global scope instead
+  ```php
+  // Before (4.x)
+  \Sentry\configureScope(static function (\Sentry\State\Scope $scope): void {
+      $scope->setTag('worker', 'queue-1');
+  });
+
+  // After (5.0)
+  \Sentry\getGlobalScope()->setTag('worker', 'queue-1');
+  ```
 
 ### Metrics API Removed
 
@@ -100,7 +193,7 @@ The following deprecated options have been removed from the `Options` class:
   ```php
   // Before (4.x)
   $options->setEnableTracing(true);
-  
+
   // After (5.0)
   $options->setTracesSampleRate(1.0);
   ```
@@ -109,12 +202,23 @@ The following deprecated options have been removed from the `Options` class:
   ```php
   // Before (4.x)
   $options->setSpotlightUrl('http://localhost:8969');
-  
+
   // After (5.0)
   $options->enableSpotlight('http://localhost:8969');
   // or just enable with default URL
   $options->enableSpotlight(true);
   ```
+
+- **`strict_trace_propagation`** - Use the `strict_trace_continuation` option instead
+  ```php
+  // Before (4.x)
+  $options->enableStrictTracePropagation(true);
+
+  // After (5.0)
+  $options->enableStrictTraceContinuation(true);
+  ```
+
+- **`max_value_length`** - The SDK no longer truncates serialized string values, so the option, `Options::getMaxValueLength()` and `Options::setMaxValueLength()` have been removed without a replacement
 
 - **`enable_logs`** and **`enable_metrics`** - Logs and metrics are always captured when their APIs or integrations are used, so both options and their `Options` getters and setters have been removed. To stop sending them, return `null` from the `before_send_log` or `before_send_metric` callback
   ```php
@@ -163,10 +267,12 @@ The following deprecated methods have been removed:
   ```php
   // Before (4.x)
   $traceparent = $span->toW3CTraceparent();
-  
+
   // After (5.0)
   $traceparent = $span->toTraceparent();
   ```
+
+- **`PropagationContext::toW3CTraceparent()`** - Use `PropagationContext::toTraceparent()` instead
 
 - **`SpanStatus::resourceExchausted()`** (typo) - Use `SpanStatus::resourceExhausted()` instead
   - Note: This was a typo fix where the misspelled method `resourceExchausted` was removed
@@ -175,7 +281,7 @@ The following deprecated methods have been removed:
   ```php
   // Before (4.x)
   $traceparent = \Sentry\getW3CTraceparent();
-  
+
   // After (5.0)
   $traceparent = \Sentry\getTraceparent();
   ```
@@ -194,6 +300,8 @@ The following deprecated methods have been removed:
   ```
 
 - **`Unit::none()`** and **`Unit::custom()`** - Use one of the supported units, or omit the unit
+
+- **`Frame::ANONYMOUS_CLASS_PREFIX`** constant - It has been removed without a replacement
 
 - **`HttpCookieCollector::collectPsr7Request()`** and **`HttpCookieCollector::collectPsr7Response()`** - Use `HttpSpanDataCollector::collectCookieHeaders()` with the `Cookie` or `Set-Cookie` headers instead
 
@@ -302,3 +410,9 @@ To keep tracing all requests regardless of their status code, set the option to 
     'trace_ignore_status_codes' => [],
 ]);
 ```
+
+### Dependencies Removed
+
+The SDK no longer requires the `symfony/options-resolver` and `jean85/pretty-package-versions` packages.
+
+The `ModulesIntegration` reads the installed packages through `Composer\InstalledVersions` now, which requires Composer 2.
