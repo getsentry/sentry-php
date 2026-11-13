@@ -17,7 +17,7 @@ final class HttpCookieCollector
      *
      * @return array<array-key, mixed>|null `null` if cookies are not collected or not available
      */
-    public static function collect(Options $options, HttpMessageType $type, ?array $cookies): ?array
+    public static function collect(Options $options, ?array $cookies): ?array
     {
         if ($cookies === null) {
             return null;
@@ -31,7 +31,7 @@ final class HttpCookieCollector
      *
      * @return array<int, array{string, mixed}>|null `null` if cookies are not collected
      */
-    public static function collectPairs(Options $options, HttpMessageType $type, array $cookies): ?array
+    public static function collectPairs(Options $options, array $cookies): ?array
     {
         return (new KeyValueDataFilter($options->getDataCollection()->getCookies()))->filterPairs($cookies);
     }

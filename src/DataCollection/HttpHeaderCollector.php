@@ -31,7 +31,7 @@ final class HttpHeaderCollector
             return null;
         }
 
-        return self::filterRefererUrls($options, $type, $filtered);
+        return self::filterRefererUrls($options, $filtered);
     }
 
     /**
@@ -41,7 +41,7 @@ final class HttpHeaderCollector
      *
      * @return array<array-key, string[]>
      */
-    private static function filterRefererUrls(Options $options, HttpMessageType $type, array $headers): array
+    private static function filterRefererUrls(Options $options, array $headers): array
     {
         foreach ($headers as $name => $values) {
             if (strtolower((string) $name) !== 'referer') {
@@ -50,7 +50,7 @@ final class HttpHeaderCollector
 
             foreach ($values as $headerLine => $headerValue) {
                 if ($headerValue !== KeyValueDataFilter::FILTERED_VALUE) {
-                    $headers[$name][$headerLine] = HttpUrlCollector::collect($options, $type, $headerValue) ?? KeyValueDataFilter::FILTERED_VALUE;
+                    $headers[$name][$headerLine] = HttpUrlCollector::collect($options, $headerValue) ?? KeyValueDataFilter::FILTERED_VALUE;
                 }
             }
         }

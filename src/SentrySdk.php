@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Sentry;
 
 use Sentry\Logs\Logs;
-use Sentry\Metrics\TraceMetrics;
+use Sentry\Metrics\Metrics;
 use Sentry\Profiling\Profiles;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
@@ -209,7 +209,7 @@ final class SentrySdk
     public static function flush(): void
     {
         Logs::getInstance()->flush();
-        TraceMetrics::getInstance()->flush();
+        Metrics::getInstance()->flush();
         Profiles::getInstance()->flush();
 
         self::getClient()->flush();

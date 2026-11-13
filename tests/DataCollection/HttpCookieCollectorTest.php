@@ -6,7 +6,6 @@ namespace Sentry\Tests\DataCollection;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\DataCollection\HttpCookieCollector;
-use Sentry\DataCollection\HttpMessageType;
 use Sentry\Options;
 
 final class HttpCookieCollectorTest extends TestCase
@@ -18,7 +17,7 @@ final class HttpCookieCollectorTest extends TestCase
             'session_id' => '[Filtered]',
             'empty' => '',
             'preferences' => ['name' => 'Alice', 'password' => '[Filtered]'],
-        ], HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), [
+        ], HttpCookieCollector::collect($this->options(), [
             'theme' => 'dark',
             'session_id' => 'secret',
             'empty' => '',
@@ -31,8 +30,8 @@ final class HttpCookieCollectorTest extends TestCase
         $options = $this->options(['cookies' => ['mode' => 'off']]);
         $cookies = [['theme', 'parsed']];
 
-        $this->assertNull(HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), ['theme' => 'parsed']));
-        $this->assertNull(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $cookies));
+        $this->assertNull(HttpCookieCollector::collect($options, ['theme' => 'parsed']));
+        $this->assertNull(HttpCookieCollector::collectPairs($options, $cookies));
     }
 
     public function testResponseCookiePairsPreserveRepeatedAndNullValues(): void
@@ -53,22 +52,22 @@ final class HttpCookieCollectorTest extends TestCase
             ['locale', null],
             ['session_id', '[Filtered]'],
             ['session_id', '[Filtered]'],
-        ], HttpCookieCollector::collectPairs($this->options(), HttpMessageType::incomingResponse(), $cookies));
+        ], HttpCookieCollector::collectPairs($this->options(), $cookies));
     }
 
     public function testEmptyCookieCollectionsArePreserved(): void
     {
         $options = $this->options();
 
-        $this->assertSame([], HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), []));
-        $this->assertSame([], HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), []));
+        $this->assertSame([], HttpCookieCollector::collect($options, []));
+        $this->assertSame([], HttpCookieCollector::collectPairs($options, []));
     }
 
     public function testLargeParsedCookieCollectionsArePreserved(): void
     {
         $cookies = ['preferences' => array_fill(0, 100001, 'value')];
 
-        $this->assertSame($cookies, HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), $cookies));
+        $this->assertSame($cookies, HttpCookieCollector::collect($this->options(), $cookies));
     }
 
     public function testResponseCookieAllowListPreservesRepeatedAndNullValues(): void
@@ -86,7 +85,7 @@ final class HttpCookieCollectorTest extends TestCase
             ['locale', null],
             ['api_token', '[Filtered]'], ['api_token', '[Filtered]'],
             ['tracking_id', '[Filtered]'], ['tracking_id', '[Filtered]'],
-        ], HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $cookies));
+        ], HttpCookieCollector::collectPairs($options, $cookies));
     }
 
     public function testDictionariesAndPairsApplyTheSameDenyListRules(): void
@@ -128,8 +127,8 @@ final class HttpCookieCollectorTest extends TestCase
         ];
 
         try {
-            $this->assertSame($expected, HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $cookies));
-            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $pairs), 1, 0));
+            $this->assertSame($expected, HttpCookieCollector::collect($options, $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, $pairs), 1, 0));
         } finally {
             fclose($resource);
         }
@@ -174,8 +173,8 @@ final class HttpCookieCollectorTest extends TestCase
         ];
 
         try {
-            $this->assertSame($expected, HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $cookies));
-            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, HttpMessageType::incomingResponse(), $pairs), 1, 0));
+            $this->assertSame($expected, HttpCookieCollector::collect($options, $cookies));
+            $this->assertSame($expected, array_column(HttpCookieCollector::collectPairs($options, $pairs), 1, 0));
         } finally {
             fclose($resource);
         }
@@ -183,7 +182,7 @@ final class HttpCookieCollectorTest extends TestCase
 
     public function testUnavailableCookiesAreNotCollected(): void
     {
-        $this->assertNull(HttpCookieCollector::collect($this->options(), HttpMessageType::incomingRequest(), null));
+        $this->assertNull(HttpCookieCollector::collect($this->options(), null));
     }
 
     private function options(array $dataCollection = []): Options

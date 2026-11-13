@@ -191,7 +191,7 @@ final class HttpSpanDataCollector
         $values = [];
 
         /** @mago-ignore analysis:mixed-assignment */
-        foreach (HttpCookieCollector::collectPairs($options, $type, $cookies) ?? [] as [$name, $value]) {
+        foreach (HttpCookieCollector::collectPairs($options, $cookies) ?? [] as [$name, $value]) {
             $values[] = self::formatCookie($name, $value);
         }
 

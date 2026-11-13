@@ -68,7 +68,7 @@ final class RequestIntegration implements IntegrationInterface
         $uri = $request->getUri();
 
         $requestData = [
-            'url' => HttpUrlCollector::collect($options, HttpMessageType::incomingRequest(), $uri),
+            'url' => HttpUrlCollector::collect($options, $uri),
             'method' => $request->getMethod(),
         ];
 
@@ -84,7 +84,7 @@ final class RequestIntegration implements IntegrationInterface
             $this->addRequestUserInfo($event, $ipAddress, $requestData);
         }
 
-        $cookies = HttpCookieCollector::collect($options, HttpMessageType::incomingRequest(), $request->getCookieParams());
+        $cookies = HttpCookieCollector::collect($options, $request->getCookieParams());
         if ($cookies !== null) {
             $requestData['cookies'] = $cookies;
         }

@@ -10,7 +10,7 @@ use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\Logs\Logs;
-use Sentry\Metrics\TraceMetrics;
+use Sentry\Metrics\Metrics;
 use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
@@ -833,7 +833,7 @@ final class SentrySdkTest extends TestCase
         SentrySdk::startContext();
 
         Logs::getInstance()->info('log');
-        TraceMetrics::getInstance()->count('metric', 1);
+        Metrics::getInstance()->count('metric', 1);
 
         SentrySdk::endContext();
 

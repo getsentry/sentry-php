@@ -21,7 +21,7 @@ use Sentry\UserDataBag;
 
 use function Sentry\metrics;
 
-final class TraceMetricsTest extends TestCase
+final class MetricsTest extends TestCase
 {
     use ClientReportAssertions;
 

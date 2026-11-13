@@ -10,7 +10,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\OTLPIntegration;
 use Sentry\Logs\Logs;
-use Sentry\Metrics\TraceMetrics;
+use Sentry\Metrics\Metrics;
 use Sentry\Profiling\Profiles;
 use Sentry\State\BreadcrumbRecorder;
 use Sentry\State\EventRecorder;
@@ -492,9 +492,9 @@ function logger(): Logs
     return Logs::getInstance();
 }
 
-function metrics(): TraceMetrics
+function metrics(): Metrics
 {
-    return TraceMetrics::getInstance();
+    return Metrics::getInstance();
 }
 
 /**
