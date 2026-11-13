@@ -29,3 +29,4 @@
 /CONTRIBUTING.md export-ignore
 /analysis-baseline.toml export-ignore
 /mago.toml export-ignore
+/decision-model-linter export-ignore
