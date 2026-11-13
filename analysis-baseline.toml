@@ -7,12 +7,6 @@ message = "This condition (type `false`) will always evaluate to false."
 count = 1
 
 [[issues]]
-file = "src/Agent/Transport/AgentClient.php"
-code = "redundant-cast"
-message = "Redundant cast to `(string)`: the expression already has this type."
-count = 1
-
-[[issues]]
 file = "src/Client.php"
 code = "implicit-to-string-cast"
 message = 'Implicit conversion to `string` for left operand via `Sentry\Severity::__toString()`.'
