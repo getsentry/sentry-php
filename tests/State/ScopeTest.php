@@ -490,6 +490,21 @@ final class ScopeTest extends TestCase
         ]], StubLogger::$logs);
     }
 
+    public function testApplyToEventCallsDummyCallback(): void
+    {
+        $event = Event::createEvent();
+        $receivedEvent = null;
+
+        $scope = new Scope();
+        $scope->applyToEvent($event, null, new Options([
+            'dummy_callback' => static function (Event $event) use (&$receivedEvent): void {
+                $receivedEvent = $event;
+            },
+        ]));
+
+        $this->assertSame($event, $receivedEvent);
+    }
+
     public function testEventProcessorReceivesTheEventAndEventHint(): void
     {
         $event = Event::createEvent();

@@ -834,6 +834,28 @@ final class Options
     }
 
     /**
+     * Gets a callback that will be invoked while the scope is applied to an event.
+     *
+     * @phpstan-return callable(Event): void
+     */
+    public function getDummyCallback(): callable
+    {
+        return $this->options['dummy_callback'];
+    }
+
+    /**
+     * Sets a callable to be called while the scope is applied to an event.
+     *
+     * @param callable $callback The callable
+     *
+     * @phpstan-param callable(Event): void $callback
+     */
+    public function setDummyCallback(callable $callback): self
+    {
+        return $this->updateOptions(['dummy_callback' => $callback]);
+    }
+
+    /**
      * Gets a callback that will be invoked before metrics are sent to the server.
      * If `null` is returned it won't be sent.
      *
@@ -1430,6 +1452,7 @@ final class Options
         $resolver->setAllowedTypes('before_send', ['callable']);
         $resolver->setAllowedTypes('before_send_transaction', ['callable']);
         $resolver->setAllowedTypes('before_send_log', 'callable');
+        $resolver->setAllowedTypes('dummy_callback', 'callable');
         $resolver->setAllowedTypes('before_send_metric', ['callable']);
         $resolver->setAllowedTypes('ignore_exceptions', 'string[]');
         $resolver->setAllowedTypes('ignore_transactions', 'string[]');
@@ -1539,6 +1562,8 @@ final class Options
             },
             'before_send_log' => static function (Log $log): Log {
                 return $log;
+            },
+            'dummy_callback' => static function (Event $event): void {
             },
             /**
              * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.

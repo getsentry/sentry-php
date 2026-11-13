@@ -359,6 +359,13 @@ final class OptionsTest extends TestCase
         ];
 
         yield [
+            'dummy_callback',
+            static function (): void {},
+            'getDummyCallback',
+            'setDummyCallback',
+        ];
+
+        yield [
             'before_send_metrics',
             static function (): void {},
             'getBeforeSendMetricsCallback',
@@ -624,6 +631,7 @@ final class OptionsTest extends TestCase
             'before_send_transaction',
             'before_send_check_in',
             'before_send_log',
+            'dummy_callback',
             'before_send_metrics',
             'before_send_metric',
             'before_breadcrumb',
@@ -669,6 +677,7 @@ final class OptionsTest extends TestCase
             'before_send_transaction' => \Closure::class,
             'before_send_check_in' => \Closure::class,
             'before_send_log' => \Closure::class,
+            'dummy_callback' => \Closure::class,
             'before_send_metrics' => \Closure::class,
             'before_send_metric' => \Closure::class,
             'trace_propagation_targets' => null,

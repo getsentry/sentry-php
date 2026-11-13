@@ -549,6 +549,10 @@ class Scope
             }
         }
 
+        if ($options !== null) {
+            ($options->getDummyCallback())($event);
+        }
+
         foreach (array_merge(self::$globalEventProcessors, $this->eventProcessors) as $processor) {
             try {
                 $event = $processor($event, $hint);

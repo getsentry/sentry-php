@@ -51,6 +51,7 @@ use Sentry\Transport\TransportInterface;
  *     }|null,
  *     default_integrations?: bool,
  *     dsn?: string|bool|Dsn|null,
+ *     dummy_callback?: callable,
  *     enable_logs?: bool,
  *     enable_metrics?: bool,
  *     environment?: string|null,

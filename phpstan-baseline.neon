@@ -253,6 +253,12 @@ parameters:
 			path: src/Options.php
 
 		-
+			message: '#^Method Sentry\\Options\:\:getDummyCallback\(\) should return callable\(Sentry\\Event\)\: void but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Options.php
+
+		-
 			message: '#^Method Sentry\\Options\:\:getEnableLogs\(\) should return bool but returns mixed\.$#'
 			identifier: return.type
 			count: 1
