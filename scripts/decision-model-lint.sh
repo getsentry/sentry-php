@@ -8,7 +8,7 @@
 set -eu
 
 if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-  printf '::warning::Skipping decision model lint: the DECISION_MODEL_LINTER_OPENROUTER_API_KEY secret is not available.\n'
+  printf '::warning::Skipping decision model lint: OPENROUTER_API_KEY is empty, so the workflow has no OpenRouter secret.\n'
   exit 0
 fi
 
