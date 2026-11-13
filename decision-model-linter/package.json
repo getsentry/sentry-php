@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@sentry/decision-model-linter": "0.3.0"
+  }
+}
