@@ -74,6 +74,14 @@ final class TransactionIntegrationTest extends TestCase
         yield [
             Event::createEvent(),
             true,
+            null,
+            ['PATH_INFO' => ['/foo/bar']],
+            null,
+        ];
+
+        yield [
+            Event::createEvent(),
+            true,
             EventHint::fromArray([
                 'extra' => [
                     'transaction' => '/foo/bar',
