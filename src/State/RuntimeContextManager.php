@@ -6,6 +6,7 @@ namespace Sentry\State;
 
 use Psr\Log\LoggerInterface;
 use Sentry\ClientInterface;
+use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\ErrorHandler;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
@@ -136,6 +137,16 @@ final class RuntimeContextManager
             $runtimeContext->getMetricsAggregator()->flush($client, $runtimeContext->getIsolationScope());
         } catch (\Throwable $exception) {
             $logger->error('Failed to flush trace metrics while ending a runtime context.', [
+                'exception' => $exception,
+                'runtime_context_id' => $runtimeContext->getId(),
+            ]);
+        }
+
+        // The client reports are flushed after logs and metrics, they include what those flushes discarded.
+        try {
+            ClientReportAggregator::getInstance()->flush($client);
+        } catch (\Throwable $exception) {
+            $logger->error('Failed to flush client reports while ending a runtime context.', [
                 'exception' => $exception,
                 'runtime_context_id' => $runtimeContext->getId(),
             ]);

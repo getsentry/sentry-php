@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry\ClientReport;
 
+use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventType;
 use Sentry\SentrySdk;
@@ -94,7 +95,10 @@ class ClientReportAggregator
         }
     }
 
-    public function flush(): void
+    /**
+     * @param ClientInterface|null $client
+     */
+    public function flush(?ClientInterface $client = null): void
     {
         if (empty($this->reports)) {
             return;
@@ -108,7 +112,7 @@ class ClientReportAggregator
         $event = Event::createClientReport();
         $event->setClientReports($reports);
 
-        $client = SentrySdk::getClient();
+        $client = $client ?? SentrySdk::getClient();
 
         // Reset the client reports only if we successfully sent an event. If it fails it
         // can be sent on the next flush, or it gets discarded anyway.
