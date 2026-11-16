@@ -95,9 +95,6 @@ class ClientReportAggregator
         }
     }
 
-    /**
-     * @param ClientInterface|null $client
-     */
     public function flush(?ClientInterface $client = null): void
     {
         if (empty($this->reports)) {
