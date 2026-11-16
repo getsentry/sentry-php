@@ -585,4 +585,72 @@ final class FrameBuilderTest extends TestCase
         $this->assertSame('1.0E+20', $result['param3']);
         $this->assertSame('1.0', $result['param4']);
     }
+
+    /**
+     * A closure created in a class is not a method of it, so its arguments must not be named after the
+     * parameters of the magic call methods of the class.
+     */
+    public function testClosureArgumentsAreNotNamedAfterTheMagicCallMethodsOfItsClass(): void
+    {
+        $options = new Options();
+        $frameBuilder = new FrameBuilder($options, new RepresentationSerializer($options));
+
+        $object = new class {
+            /**
+             * @var bool
+             */
+            public $called = false;
+
+            /**
+             * @param mixed[] $parameters
+             */
+            public function __call(string $method, array $parameters): void
+            {
+            }
+
+            /**
+             * @param mixed[] $parameters
+             */
+            public static function __callStatic(string $method, array $parameters): void
+            {
+            }
+
+            /**
+             * @return array<string, mixed>
+             */
+            public function getClosureFrame(): array
+            {
+                // The closure uses `$this`, so that it is bound to the object
+                $closure = function (string $request, string $requestOptions): array {
+                    $this->called = true;
+
+                    return debug_backtrace()[0];
+                };
+
+                return $closure('foo', 'bar');
+            }
+
+            /**
+             * @return array<string, mixed>
+             */
+            public static function getStaticClosureFrame(): array
+            {
+                $closure = static function (string $request, string $requestOptions): array {
+                    return debug_backtrace()[0];
+                };
+
+                return $closure('foo', 'bar');
+            }
+        };
+
+        foreach (['->' => $object->getClosureFrame(), '::' => $object::getStaticClosureFrame()] as $type => $backtraceFrame) {
+            $this->assertArrayHasKey('class', $backtraceFrame);
+            $this->assertSame($type, $backtraceFrame['type']);
+            $this->assertStringContainsString('{closure', $backtraceFrame['function']);
+
+            $frame = $frameBuilder->buildFromBacktraceFrame(__FILE__, __LINE__, $backtraceFrame);
+
+            $this->assertSame(['param0' => 'foo', 'param1' => 'bar'], $frame->getVars());
+        }
+    }
 }

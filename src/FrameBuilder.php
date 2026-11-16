@@ -182,8 +182,15 @@ final class FrameBuilder
 
         $reflectionFunction = null;
 
+        // The parameters of a closure cannot be reflected from its frame, so its arguments are named by their position.
+        // A closure created in a class is not a method of it either: `__call` and `__callStatic` of that class do not
+        // describe its parameters.
+        $isClosure = $backtraceFrame['function'] === '__lambda_func' || strpos($backtraceFrame['function'], '{closure') !== false;
+
         try {
-            if (isset($backtraceFrame['class'])) {
+            if ($isClosure) {
+                $reflectionFunction = null;
+            } elseif (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
                 } elseif (isset($backtraceFrame['type']) && $backtraceFrame['type'] === '::') {
@@ -191,7 +198,7 @@ final class FrameBuilder
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
                 }
-            } elseif ($backtraceFrame['function'] !== '__lambda_func' && strpos($backtraceFrame['function'], '{closure') !== 0 && \function_exists($backtraceFrame['function'])) {
+            } elseif (\function_exists($backtraceFrame['function'])) {
                 $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
         } catch (\ReflectionException $e) {
