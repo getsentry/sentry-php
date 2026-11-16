@@ -36,7 +36,7 @@ final class Response
         $this->error = $error;
 
         foreach ($headers as $name => $value) {
-            $this->headerNames[strtolower($name)] = $name;
+            $this->headerNames[strtolower((string) $name)] = $name;
         }
     }
 
