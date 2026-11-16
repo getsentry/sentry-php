@@ -587,8 +587,8 @@ final class FrameBuilderTest extends TestCase
     }
 
     /**
-     * A closure created in a class is not a method of it, so its arguments must not be named after the
-     * parameters of the magic call methods of the class.
+     * The arguments of a closure created in a class must not get the parameter names of that class's
+     * `__call` or `__callStatic`.
      */
     public function testClosureArgumentsAreNotNamedAfterTheMagicCallMethodsOfItsClass(): void
     {

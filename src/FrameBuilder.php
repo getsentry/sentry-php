@@ -181,14 +181,11 @@ final class FrameBuilder
         }
 
         $reflectionFunction = null;
-
-        // The parameters of a closure cannot be reflected from its frame, so its arguments are named by their position.
-        // A closure created in a class is not a method of it either: `__call` and `__callStatic` of that class do not
-        // describe its parameters.
         $isClosure = $backtraceFrame['function'] === '__lambda_func' || strpos($backtraceFrame['function'], '{closure') !== false;
 
         try {
             if ($isClosure) {
+                // We can't look up the parameter names of a closure, so its arguments are named param0, param1, ...
                 $reflectionFunction = null;
             } elseif (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
