@@ -457,7 +457,7 @@ final class Options
             return $this->options['spotlight'];
         }
 
-        return 'http://localhost:8969';
+        return 'http://localhost:8969/stream';
     }
 
     /**
@@ -1353,12 +1353,18 @@ final class Options
     }
 
     /**
-     * Normalizes the spotlight URL by removing the `/stream` at the end if present.
+     * Adds `/stream` to a URL that is only the address of the Spotlight server, any other URL is used as it is.
      */
     private function normalizeSpotlightUrl(string $url): string
     {
-        if (substr_compare($url, '/stream', -7, 7) === 0) {
-            return substr($url, 0, -7);
+        $parts = parse_url($url);
+
+        if ($parts === false || isset($parts['query']) || isset($parts['fragment'])) {
+            return $url;
+        }
+
+        if (\in_array($parts['path'] ?? '', ['', '/'], true)) {
+            return rtrim($url, '/') . '/stream';
         }
 
         return $url;

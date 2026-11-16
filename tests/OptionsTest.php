@@ -1136,7 +1136,7 @@ final class OptionsTest extends TestCase
 
     public static function spotlightEnvironmentValueDataProvider(): array
     {
-        $defaultSpotlightUrl = 'http://localhost:8969';
+        $defaultSpotlightUrl = 'http://localhost:8969/stream';
 
         return [
             ['', false, $defaultSpotlightUrl],
@@ -1145,7 +1145,8 @@ final class OptionsTest extends TestCase
             ['false', false, $defaultSpotlightUrl],
             ['0', false, $defaultSpotlightUrl],
             ['null', false, $defaultSpotlightUrl],
-            ['http://localhost:1234', true, 'http://localhost:1234'],
+            ['http://localhost:1234', true, 'http://localhost:1234/stream'],
+            ['http://localhost:1234/ingest/abc', true, 'http://localhost:1234/ingest/abc'],
             ['some invalid looking value', false, $defaultSpotlightUrl],
         ];
     }
@@ -1262,11 +1263,15 @@ final class OptionsTest extends TestCase
 
     public static function spotlightUrlNormalizationDataProvider(): \Generator
     {
-        yield [['spotlight' => 'http://localhost:8969'], 'http://localhost:8969'];
-        yield [['spotlight' => 'http://localhost:8969/stream'], 'http://localhost:8969'];
+        yield [['spotlight' => 'http://localhost:8969'], 'http://localhost:8969/stream'];
+        yield [['spotlight' => 'http://localhost:8969/'], 'http://localhost:8969/stream'];
+        yield [['spotlight' => 'http://localhost:8969/stream'], 'http://localhost:8969/stream'];
         yield [['spotlight' => 'http://localhost:8969/foo'], 'http://localhost:8969/foo'];
-        yield [['spotlight' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo'];
+        yield [['spotlight' => 'http://localhost:8969/foo/stream'], 'http://localhost:8969/foo/stream'];
         yield [['spotlight' => 'http://localhost:8969/stream/foo'], 'http://localhost:8969/stream/foo'];
+        yield [['spotlight' => 'http://localhost:8969/ingest/abc?key=value'], 'http://localhost:8969/ingest/abc?key=value'];
+        yield [['spotlight' => 'http://localhost:8969?key=value'], 'http://localhost:8969?key=value'];
+        yield [['spotlight' => 'http://user:secret@localhost'], 'http://user:secret@localhost/stream'];
     }
 
     /**
@@ -1281,10 +1286,11 @@ final class OptionsTest extends TestCase
 
     public static function setSpotlightUrlNormalizationDataProvider(): \Generator
     {
-        yield ['http://localhost:8969', 'http://localhost:8969'];
-        yield ['http://localhost:8969/stream', 'http://localhost:8969'];
+        yield ['http://localhost:8969', 'http://localhost:8969/stream'];
+        yield ['http://localhost:8969/', 'http://localhost:8969/stream'];
+        yield ['http://localhost:8969/stream', 'http://localhost:8969/stream'];
         yield ['http://localhost:8969/foo', 'http://localhost:8969/foo'];
-        yield ['http://localhost:8969/foo/stream', 'http://localhost:8969/foo'];
+        yield ['http://localhost:8969/foo/stream', 'http://localhost:8969/foo/stream'];
         yield ['http://localhost:8969/stream/foo', 'http://localhost:8969/stream/foo'];
     }
 

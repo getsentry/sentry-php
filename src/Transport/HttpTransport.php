@@ -228,7 +228,7 @@ class HttpTransport implements TransportInterface
         try {
             $spotLightResponse = SpotlightClient::sendRequest(
                 $request,
-                $this->options->getSpotlightUrl() . '/stream'
+                $this->options->getSpotlightUrl()
             );
 
             if ($spotLightResponse->hasError()) {
