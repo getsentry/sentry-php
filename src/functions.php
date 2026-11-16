@@ -196,7 +196,6 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
 
         throw $e;
     } finally {
-        // The duration is reported for a failed run as well
         captureCheckIn($slug, $status, microtime(true) - $start, $monitorConfig, $checkInId);
     }
 }
