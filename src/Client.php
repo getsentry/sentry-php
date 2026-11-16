@@ -16,6 +16,7 @@ use Sentry\State\IsolationScope;
 use Sentry\Transport\DataCategory;
 use Sentry\Transport\Result;
 use Sentry\Transport\TransportInterface;
+use Sentry\Util\Random;
 
 /**
  * Default implementation of the {@see ClientInterface} interface.
@@ -291,7 +292,7 @@ class Client implements ClientInterface
     {
         $sampleRate = $this->options->getSampleRate();
 
-        if (EventType::event() === $event->getType() && $sampleRate < 1 && random_int(1, 100) / 100.0 > $sampleRate) {
+        if (EventType::event() === $event->getType() && $sampleRate < 1 && Random::int(1, 100) / 100.0 > $sampleRate) {
             $this->logger->info(\sprintf('The %s will be discarded because it has been sampled.', $this->getEventDescription($event)), ['event' => $event]);
 
             ClientReportAggregator::getInstance()->addEvent($event, Reason::sampleRate());

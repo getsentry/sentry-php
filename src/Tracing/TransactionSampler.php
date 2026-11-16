@@ -7,6 +7,7 @@ namespace Sentry\Tracing;
 use Sentry\Options;
 use Sentry\Profiling\ProfileChunk;
 use Sentry\Profiling\Profiles;
+use Sentry\Util\Random;
 
 /**
  * Applies tracing and profiling sampling decisions to transactions.
@@ -190,7 +191,7 @@ final class TransactionSampler
             return true;
         }
 
-        return random_int(0, mt_getrandmax() - 1) / mt_getrandmax() < (float) $sampleRate;
+        return Random::float() < (float) $sampleRate;
     }
 
     /**

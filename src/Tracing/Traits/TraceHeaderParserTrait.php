@@ -8,6 +8,7 @@ use Sentry\SentrySdk;
 use Sentry\Tracing\DynamicSamplingContext;
 use Sentry\Tracing\SpanId;
 use Sentry\Tracing\TraceId;
+use Sentry\Util\Random;
 
 /**
  * @internal
@@ -99,14 +100,14 @@ trait TraceHeaderParserTrait
             } elseif ($samplingContext->has('sample_rate') && $result['parentSampled'] !== null) {
                 if ($result['parentSampled'] === true) {
                     // [0, rate)
-                    $result['sampleRand'] = round(random_int(0, mt_getrandmax() - 1) / mt_getrandmax() * (float) $samplingContext->get('sample_rate'), 6);
+                    $result['sampleRand'] = round(Random::float() * (float) $samplingContext->get('sample_rate'), 6);
                 } else {
                     // [rate, 1)
-                    $result['sampleRand'] = round(random_int(0, mt_getrandmax() - 1) / mt_getrandmax() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample_rate'), 6);
+                    $result['sampleRand'] = round(Random::float() * (1 - (float) $samplingContext->get('sample_rate')) + (float) $samplingContext->get('sample_rate'), 6);
                 }
             } elseif ($result['parentSampled'] !== null) {
                 // [0, 1)
-                $result['sampleRand'] = round(random_int(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
+                $result['sampleRand'] = round(Random::float(), 6);
             }
         }
 
