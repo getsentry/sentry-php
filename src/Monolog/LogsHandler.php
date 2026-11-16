@@ -157,7 +157,7 @@ class LogsHandler implements HandlerInterface
             return [$message, []];
         }
 
-        $body = $message;
+        $replacements = [];
         $attributes = [];
 
         /** @mago-ignore analysis:mixed-assignment */
@@ -180,14 +180,15 @@ class LogsHandler implements HandlerInterface
             }
 
             $attributes["sentry.message.parameter.{$name}"] = $value;
-            $body = str_replace($placeholder, (string) $value, $body);
+            $replacements[$placeholder] = (string) $value;
         }
 
         if ($attributes !== []) {
             $attributes['sentry.message.template'] = $message;
         }
 
-        return [$body, $attributes];
+        // All placeholders are replaced in one pass, so that a value containing a placeholder is not replaced again
+        return [strtr($message, $replacements), $attributes];
     }
 
     /**

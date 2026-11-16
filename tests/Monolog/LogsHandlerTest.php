@@ -212,6 +212,21 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('', $attributes['sentry.message.parameter.user']);
     }
 
+    public function testPlaceholderInAValueIsNotReplacedAgain(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create('Hello {a} and {b}', Logger::INFO, 'channel.foo', ['a' => '{b}', 'b' => 'X'], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes()->toSimpleArray();
+
+        $this->assertSame('Hello {b} and X', $logs[0]->getBody());
+        $this->assertSame('{b}', $attributes['sentry.message.parameter.a']);
+        $this->assertSame('X', $attributes['sentry.message.parameter.b']);
+    }
+
     public function testNoTemplateIsSentWithoutPlaceholderValues(): void
     {
         $handler = new LogsHandler();
