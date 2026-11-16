@@ -791,7 +791,9 @@ foreach (array_reverse($verdicts) as $id => $verdict) {
     }
 
     if ($verdict['noticed'] === 0) {
-        $groups['Notice no mutant'][$id] = sprintf('none of the %d mutants in the lines it runs makes it fail', $verdict['mutants']);
+        $groups['Notice no mutant'][$id] = $verdict['mutants'] === 1
+            ? 'the one mutant in the lines it runs does not make it fail'
+            : sprintf('none of the %d mutants in the lines it runs makes it fail', $verdict['mutants']);
     } elseif ($verdict['by'] !== null) {
         $groups['Notice only what one other test notices too'][$id] = sprintf(
             '%s also noticed by %s%s',
