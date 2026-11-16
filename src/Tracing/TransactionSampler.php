@@ -190,7 +190,7 @@ final class TransactionSampler
             return true;
         }
 
-        return mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < (float) $sampleRate;
+        return random_int(0, mt_getrandmax() - 1) / mt_getrandmax() < (float) $sampleRate;
     }
 
     /**

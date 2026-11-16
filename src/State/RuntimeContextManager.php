@@ -186,7 +186,7 @@ final class RuntimeContextManager
 
     private function generateRuntimeContextId(): string
     {
-        return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
+        return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), random_int(0, mt_getrandmax()));
     }
 
     private function getGlobalContext(): RuntimeContext
