@@ -1003,6 +1003,28 @@ final class ClientTest extends TestCase
         $client->captureEvent($event);
     }
 
+    public function testProcessEventRecordsClientReportWhenTraceIgnoreStatusCodesMatches(): void
+    {
+        $client = ClientBuilder::create([
+            'trace_ignore_status_codes' => [404],
+            'send_client_reports' => true,
+        ])->setTransport(StubTransport::getInstance())->getClient();
+
+        SentrySdk::init($client);
+
+        $event = Event::createTransaction();
+        $event->setTransaction('GET /api/users');
+        $event->setContext('trace', [
+            'data' => ['http.response.status_code' => 404],
+        ]);
+        $event->setSpans([new Span()]);
+
+        $client->captureEvent($event);
+
+        $this->assertSame([], StubTransport::$events);
+        $this->assertClientReports(['transaction' => ['event_processor' => 1], 'span' => ['event_processor' => 2]]);
+    }
+
     /**
      * @dataProvider traceIgnoreStatusCodesDataProvider
      */
