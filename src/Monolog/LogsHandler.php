@@ -77,11 +77,14 @@ class LogsHandler implements HandlerInterface
             return false;
         }
 
+        /** @mago-ignore analysis:mixed-assignment */
+        [$body, $templateAttributes] = self::replacePlaceholders($record['message'], $record['context']);
+
         Logs::getInstance()->aggregator()->add(
             self::getSentryLogLevelFromMonologLevel($record['level']),
-            $record['message'],
+            $body,
             [],
-            $this->compileAttributes($record)
+            array_merge($this->compileAttributes($record), $templateAttributes)
         );
 
         return $this->bubble === false;
@@ -137,6 +140,54 @@ class LogsHandler implements HandlerInterface
         } catch (\Throwable $e) {
             // Just in case so that the destructor can never fail.
         }
+    }
+
+    /**
+     * Replaces the PSR-3 placeholders of a message, such as `{name}`, with the values of the context.
+     *
+     * @param mixed $message
+     * @param mixed $context
+     *
+     * @return array{0: mixed, 1: array<string, bool|float|int|string>} The message and, if a placeholder was replaced,
+     *                                                                  the attributes for the template and its parameters
+     */
+    private static function replacePlaceholders($message, $context): array
+    {
+        if (!\is_string($message) || !\is_array($context) || strpos($message, '{') === false) {
+            return [$message, []];
+        }
+
+        $body = $message;
+        $attributes = [];
+
+        /** @mago-ignore analysis:mixed-assignment */
+        foreach ($context as $name => $value) {
+            $placeholder = '{' . $name . '}';
+
+            if (strpos($message, $placeholder) === false) {
+                continue;
+            }
+
+            if ($value instanceof \Throwable) {
+                // As a string an exception is its whole stack trace, so only its class name and message are used
+                $value = rtrim(\get_class($value) . ': ' . $value->getMessage(), ': ');
+            } elseif ($value === null || (\is_object($value) && method_exists($value, '__toString'))) {
+                $value = (string) $value;
+            }
+
+            if (!\is_scalar($value)) {
+                continue;
+            }
+
+            $attributes["sentry.message.parameter.{$name}"] = $value;
+            $body = str_replace($placeholder, (string) $value, $body);
+        }
+
+        if ($attributes !== []) {
+            $attributes['sentry.message.template'] = $message;
+        }
+
+        return [$body, $attributes];
     }
 
     /**

@@ -153,6 +153,79 @@ final class LogsHandlerTest extends TestCase
         $this->assertSame('channel.foo', $log->attributes()->toSimpleArray()['channel']);
     }
 
+    public function testPlaceholdersAreReplacedAndSentAsTemplate(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create(
+            'Answered {count} phases, from {first} to {last}, failed with {error}',
+            Logger::INFO,
+            'channel.foo',
+            ['count' => 3, 'first' => 'new', 'last' => new \stdClass(), 'error' => new \Exception('failed'), 'other' => 'value'],
+            []
+        ));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes()->toSimpleArray();
+
+        // An object without a text form keeps its placeholder, an exception is shown by its class name and message
+        $this->assertSame('Answered 3 phases, from new to {last}, failed with Exception: failed', $logs[0]->getBody());
+        $this->assertSame('Answered {count} phases, from {first} to {last}, failed with {error}', $attributes['sentry.message.template']);
+        $this->assertSame(3, $attributes['sentry.message.parameter.count']);
+        $this->assertSame('new', $attributes['sentry.message.parameter.first']);
+        $this->assertArrayNotHasKey('sentry.message.parameter.last', $attributes);
+        $this->assertSame('Exception: failed', $attributes['sentry.message.parameter.error']);
+        $this->assertArrayNotHasKey('sentry.message.parameter.other', $attributes);
+
+        // The context is still sent as attributes
+        $this->assertSame(3, $attributes['count']);
+        $this->assertSame('value', $attributes['other']);
+    }
+
+    public function testStringablePlaceholderValuesAreReplaced(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create(
+            'Matched route "{route}" for {user}',
+            Logger::INFO,
+            'channel.foo',
+            [
+                'route' => new class {
+                    public function __toString(): string
+                    {
+                        return 'home';
+                    }
+                },
+                'user' => null,
+            ],
+            []
+        ));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes()->toSimpleArray();
+
+        $this->assertSame('Matched route "home" for ', $logs[0]->getBody());
+        $this->assertSame('home', $attributes['sentry.message.parameter.route']);
+        $this->assertSame('', $attributes['sentry.message.parameter.user']);
+    }
+
+    public function testNoTemplateIsSentWithoutPlaceholderValues(): void
+    {
+        $handler = new LogsHandler();
+        $handler->handle(RecordFactory::create('Nothing to {replace}', Logger::INFO, 'channel.foo', ['other' => 'value'], []));
+
+        $logs = Logs::getInstance()->aggregator()->all();
+        $this->assertCount(1, $logs);
+
+        $attributes = $logs[0]->attributes()->toSimpleArray();
+
+        $this->assertSame('Nothing to {replace}', $logs[0]->getBody());
+        $this->assertArrayNotHasKey('sentry.message.template', $attributes);
+    }
+
     public function testOriginTagNotAppliedWhenUsingDirectly(): void
     {
         \Sentry\logger()->info('No origin attribute');
