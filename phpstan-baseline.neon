@@ -61,12 +61,6 @@ parameters:
 			path: src/Logger/DebugLogger.php
 
 		-
-			message: '#^PHPDoc tag @var with type Sentry\\Metrics\\Types\\Metric is not subtype of native type Sentry\\Metrics\\Types\\CounterMetric\|Sentry\\Metrics\\Types\\DistributionMetric\|Sentry\\Metrics\\Types\\GaugeMetric\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: src/Metrics/MetricsAggregator.php
-
-		-
 			message: '#^Binary operation "\+" between array\<mixed\>\|DateTimeImmutable\|int\|string and array\<mixed\>\|DateTimeImmutable\|int\|string results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
