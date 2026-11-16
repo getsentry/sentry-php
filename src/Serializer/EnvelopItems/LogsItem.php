@@ -30,7 +30,7 @@ class LogsItem implements EnvelopeItemInterface
             JSON::encode($header),
             JSON::encode([
                 'items' => array_map(static function (Log $log): array {
-                    return [
+                    $item = [
                         'timestamp' => $log->getTimestamp(),
                         'trace_id' => $log->getTraceId(),
                         'level' => (string) $log->getLevel(),
@@ -42,6 +42,12 @@ class LogsItem implements EnvelopeItemInterface
                             ];
                         }, $log->attributes()->all()),
                     ];
+
+                    if ($log->getSpanId() !== null) {
+                        $item['span_id'] = $log->getSpanId();
+                    }
+
+                    return $item;
                 }, $logs),
             ])
         );
