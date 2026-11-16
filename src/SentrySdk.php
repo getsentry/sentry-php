@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Sentry;
 
+use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
 use Sentry\Profiling\Profiles;
@@ -211,6 +212,9 @@ final class SentrySdk
         Logs::getInstance()->flush();
         Metrics::getInstance()->flush();
         Profiles::getInstance()->flush();
+
+        // The client reports are flushed last, they include what the flushes above discarded
+        ClientReportAggregator::getInstance()->flush();
 
         self::getClient()->flush();
     }

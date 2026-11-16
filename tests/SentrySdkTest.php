@@ -8,6 +8,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Sentry\Client;
 use Sentry\ClientInterface;
+use Sentry\ClientReport\ClientReportAggregator;
+use Sentry\ClientReport\Reason;
 use Sentry\Event;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
@@ -20,6 +22,7 @@ use Sentry\State\IsolationScope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\TransactionContext;
+use Sentry\Transport\DataCategory;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 
@@ -809,6 +812,60 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init($client);
 
         SentrySdk::flush();
+    }
+
+    public function testFlushSendsClientReports(): void
+    {
+        SentrySdk::init(new Client(new Options(['send_client_reports' => true]), StubTransport::getInstance()));
+
+        ClientReportAggregator::getInstance()->add(DataCategory::error(), Reason::beforeSend(), 2);
+
+        SentrySdk::flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertSame('client_report', (string) StubTransport::$events[0]->getType());
+
+        $reports = StubTransport::$events[0]->getClientReports();
+
+        $this->assertCount(1, $reports);
+        $this->assertSame('error', $reports[0]->getCategory());
+        $this->assertSame('before_send', $reports[0]->getReason());
+        $this->assertSame(2, $reports[0]->getQuantity());
+
+        // The reports are sent once
+        SentrySdk::flush();
+
+        $this->assertCount(1, StubTransport::$events);
+    }
+
+    public function testFlushSendsNoClientReportWithoutDiscardedTelemetry(): void
+    {
+        SentrySdk::init(new Client(new Options(['send_client_reports' => true]), StubTransport::getInstance()));
+
+        SentrySdk::flush();
+
+        $this->assertSame([], StubTransport::$events);
+    }
+
+    public function testEndContextSendsClientReportsWithTheClientOfTheContext(): void
+    {
+        SentrySdk::init(new Client(new Options(['send_client_reports' => true]), StubTransport::getInstance()));
+
+        SentrySdk::startContext();
+
+        ClientReportAggregator::getInstance()->add(DataCategory::transaction(), Reason::sampleRate(), 1);
+
+        SentrySdk::endContext();
+
+        $this->assertCount(1, StubTransport::$events);
+        $this->assertSame('client_report', (string) StubTransport::$events[0]->getType());
+
+        $reports = StubTransport::$events[0]->getClientReports();
+
+        $this->assertCount(1, $reports);
+        $this->assertSame('transaction', $reports[0]->getCategory());
+        $this->assertSame('sample_rate', $reports[0]->getReason());
+        $this->assertSame(1, $reports[0]->getQuantity());
     }
 
     public function testEndContextFlushesResourcesIndependently(): void
