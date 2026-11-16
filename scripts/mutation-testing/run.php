@@ -592,7 +592,9 @@ if ($newCover !== []) {
         foreach ($status === 'stats' ? [] : $logged as $entry) {
             $file = substr($entry['mutator']['originalFilePath'], strlen($out . '/w0/'));
             $code = $entry['mutator']['mutatedSourceCode'];
-            $before = file($root . '/' . $file, \FILE_IGNORE_NEW_LINES);
+            // Both split the same way: file() would drop the empty string after the last line break
+            // that explode() keeps, and then no line at the bottom would ever match.
+            $before = explode("\n", (string) file_get_contents($root . '/' . $file));
             $after = explode("\n", $code);
 
             // The changed lines are what is left between the lines both versions share at the top
