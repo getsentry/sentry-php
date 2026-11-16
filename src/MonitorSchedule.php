@@ -97,10 +97,15 @@ final class MonitorSchedule
      */
     public function toArray(): array
     {
-        return [
+        $data = [
             'type' => $this->type,
             'value' => $this->value,
-            'unit' => (string) $this->unit,
         ];
+
+        if ($this->unit !== null) {
+            $data['unit'] = (string) $this->unit;
+        }
+
+        return $data;
     }
 }
