@@ -556,6 +556,7 @@ class Span
 
     /**
      * @param string|int|float $value
+     * @param string[]         $tags
      *
      * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
      */
