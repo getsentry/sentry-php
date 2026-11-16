@@ -30,13 +30,12 @@ class MetricsItem implements EnvelopeItemInterface
             JSON::encode($header),
             JSON::encode([
                 'items' => array_map(static function (Metric $metric): array {
-                    return [
+                    $item = [
                         'timestamp' => $metric->getTimestamp(),
                         'trace_id' => (string) $metric->getTraceId(),
                         'span_id' => (string) $metric->getSpanId(),
                         'name' => $metric->getName(),
                         'value' => $metric->getValue(),
-                        'unit' => $metric->getUnit() ? (string) $metric->getUnit() : null,
                         'type' => $metric->getType(),
                         'attributes' => array_map(static function (Attribute $attribute): array {
                             return [
@@ -45,6 +44,12 @@ class MetricsItem implements EnvelopeItemInterface
                             ];
                         }, $metric->getAttributes()->all()),
                     ];
+
+                    if ($metric->getUnit() !== null) {
+                        $item['unit'] = (string) $metric->getUnit();
+                    }
+
+                    return $item;
                 }, $metrics),
             ])
         );
