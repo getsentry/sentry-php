@@ -1586,12 +1586,6 @@ count = 1
 
 [[issues]]
 file = "src/Tracing/DynamicSamplingContext.php"
-code = "possible-method-access-on-null"
-message = "Attempting to call a method on `null`."
-count = 3
-
-[[issues]]
-file = "src/Tracing/DynamicSamplingContext.php"
 code = "possibly-null-argument"
 message = 'Argument #2 of method `Sentry\Tracing\DynamicSamplingContext::set` is possibly `null`, but parameter type `string` does not accept it.'
 count = 2
