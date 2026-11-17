@@ -79,7 +79,7 @@ jobs:
 
       # These dependencies are not used running the tests but can cause deprecation warnings so we remove them before running the tests
       - name: Remove unused dependencies
-        run: composer remove carthage-software/mago phpstan/phpstan friendsofphp/php-cs-fixer --dev --no-interaction --no-update
+        run: composer remove carthage-software/mago phpstan/phpstan phpstan/phpstan-deprecation-rules friendsofphp/php-cs-fixer --dev --no-interaction --no-update
 
       - name: Remove RoadRunner dependencies on unsupported PHP versions
         if: ${{ matrix.os == 'windows-latest' || matrix.php.version == '7.2' || matrix.php.version == '7.3' || matrix.php.version == '7.4' || matrix.php.version == '8.0' }}
@@ -147,7 +147,7 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.php }}-${{ matrix.dependencies }}-composer-
 
       - name: Remove unused dependencies
-        run: composer remove carthage-software/mago friendsofphp/php-cs-fixer monolog/monolog phpstan/phpstan spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
+        run: composer remove carthage-software/mago friendsofphp/php-cs-fixer monolog/monolog phpstan/phpstan phpstan/phpstan-deprecation-rules spiral/roadrunner-http spiral/roadrunner-worker --dev --no-interaction --no-update
 
       - name: Set phpunit/phpunit version constraint
         run: composer require phpunit/phpunit:'^9.6.34' --dev --no-interaction --no-update
