@@ -32,8 +32,9 @@ class CheckInItem implements EnvelopeItemInterface
                 'environment' => $checkIn->getEnvironment(),
             ];
 
-            if ($checkIn->getMonitorConfig() !== null) {
-                $payload['monitor_config'] = $checkIn->getMonitorConfig()->toArray();
+            $monitorConfig = $checkIn->getMonitorConfig();
+            if ($monitorConfig !== null) {
+                $payload['monitor_config'] = $monitorConfig->toArray();
             }
 
             if (!empty($event->getContexts()['trace'])) {

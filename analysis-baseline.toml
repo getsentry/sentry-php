@@ -1405,12 +1405,6 @@ message = "Redundant `&&` operation: left operand is always truthy and right ope
 count = 1
 
 [[issues]]
-file = "src/Serializer/EnvelopItems/CheckInItem.php"
-code = "possible-method-access-on-null"
-message = "Attempting to call a method on `null`."
-count = 1
-
-[[issues]]
 file = "src/Serializer/EnvelopItems/EventItem.php"
 code = "deprecated-method"
 message = 'Call to deprecated method: `Sentry\UserDataBag::getSegment`.'
