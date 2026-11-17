@@ -18,6 +18,7 @@ use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
 use Sentry\Transport\TransportInterface;
@@ -344,6 +345,7 @@ function startTransaction(TransactionContext $context, array $customSamplingCont
 /**
  * Execute the given callable while wrapping it in a span added as a child to the current transaction and active span.
  * If there is no transaction active this is a no-op and the scope passed to the trace callable will be unused.
+ * If the callable throws, the span gets the status "internal_error", unless it already has a status.
  *
  * @template T
  *
@@ -369,6 +371,12 @@ function trace(callable $trace, SpanContext $context)
 
         try {
             return $trace($scope);
+        } catch (\Throwable $exception) {
+            if ($span !== null && $span->getStatus() === null) {
+                $span->setStatus(SpanStatus::internalError());
+            }
+
+            throw $exception;
         } finally {
             if ($span !== null) {
                 $span->finish();

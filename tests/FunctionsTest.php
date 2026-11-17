@@ -30,6 +30,7 @@ use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
 use Sentry\Tracing\SpanId;
+use Sentry\Tracing\SpanStatus;
 use Sentry\Tracing\TraceId;
 use Sentry\Tracing\Transaction;
 use Sentry\Tracing\TransactionContext;
@@ -865,6 +866,66 @@ final class FunctionsTest extends TestCase
             $this->assertSame($outerScope, SentrySdk::getIsolationScope());
             $this->assertSame($transaction, SentrySdk::getIsolationScope()->getSpan());
         }
+    }
+
+    public function testTraceSetsAnErrorStatusWhenTheCallableThrows(): void
+    {
+        $transaction = new Transaction(TransactionContext::make());
+        $transaction->setSampled(true);
+        SentrySdk::getIsolationScope()->setSpan($transaction);
+
+        $span = null;
+
+        try {
+            trace(static function (IsolationScope $scope) use (&$span): void {
+                $span = $scope->getSpan();
+
+                throw new \RuntimeException('failed');
+            }, new SpanContext());
+
+            $this->fail('The exception of the callable should be rethrown.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('failed', $exception->getMessage());
+        }
+
+        $this->assertNotNull($span);
+        $this->assertSame(SpanStatus::internalError(), $span->getStatus());
+    }
+
+    public function testTraceKeepsTheStatusSetByTheCallableWhenItThrows(): void
+    {
+        $transaction = new Transaction(TransactionContext::make());
+        $transaction->setSampled(true);
+        SentrySdk::getIsolationScope()->setSpan($transaction);
+
+        $span = null;
+
+        try {
+            trace(static function (IsolationScope $scope) use (&$span): void {
+                $span = $scope->getSpan();
+                $span->setStatus(SpanStatus::notFound());
+
+                throw new \RuntimeException('failed');
+            }, new SpanContext());
+        } catch (\RuntimeException $exception) {
+        }
+
+        $this->assertNotNull($span);
+        $this->assertSame(SpanStatus::notFound(), $span->getStatus());
+    }
+
+    public function testTraceLeavesTheStatusUnsetWhenTheCallableReturns(): void
+    {
+        $transaction = new Transaction(TransactionContext::make());
+        $transaction->setSampled(true);
+        SentrySdk::getIsolationScope()->setSpan($transaction);
+
+        $span = trace(static function (IsolationScope $scope): ?Span {
+            return $scope->getSpan();
+        }, new SpanContext());
+
+        $this->assertNotNull($span);
+        $this->assertNull($span->getStatus());
     }
 
     public function testTraceDoesntCreateSpanIfTransactionIsNotSampled(): void
