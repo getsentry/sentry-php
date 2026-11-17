@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 4.37.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.1.
+
+### Bug Fixes
+
+- Write the HTTP status code into the `http.response.status_code` data of a span in `Span::setHttpStatus()`, so that the `trace_ignore_status_codes` option also applies to transactions whose status is set this way. [(#2384)](https://github.com/getsentry/sentry-php/pull/2384)
+- Fix a `TypeError` when the response of the HTTP client contains a header with a numeric name. [(#2366)](https://github.com/getsentry/sentry-php/pull/2366)
+
 ## 4.37.0
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.0.
