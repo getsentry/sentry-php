@@ -181,9 +181,13 @@ final class FrameBuilder
         }
 
         $reflectionFunction = null;
+        $isClosure = $backtraceFrame['function'] === '__lambda_func' || strpos($backtraceFrame['function'], '{closure') !== false;
 
         try {
-            if (isset($backtraceFrame['class'])) {
+            if ($isClosure) {
+                // We can't look up the parameter names of a closure, so its arguments are named param0, param1, ...
+                $reflectionFunction = null;
+            } elseif (isset($backtraceFrame['class'])) {
                 if (method_exists($backtraceFrame['class'], $backtraceFrame['function'])) {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], $backtraceFrame['function']);
                 } elseif (isset($backtraceFrame['type']) && $backtraceFrame['type'] === '::') {
@@ -191,7 +195,7 @@ final class FrameBuilder
                 } else {
                     $reflectionFunction = new \ReflectionMethod($backtraceFrame['class'], '__call');
                 }
-            } elseif ($backtraceFrame['function'] !== '__lambda_func' && strpos($backtraceFrame['function'], '{closure') !== 0 && \function_exists($backtraceFrame['function'])) {
+            } elseif (\function_exists($backtraceFrame['function'])) {
                 $reflectionFunction = new \ReflectionFunction($backtraceFrame['function']);
             }
         } catch (\ReflectionException $e) {
