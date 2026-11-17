@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Sentry {
+    /**
+     * @param array<string, mixed> $extra_metadata
+     */
+    function instrument(?string $class_name, string $function_name, array $extra_metadata = []): bool
+    {
+    }
+
+    /**
+     * @phpstan-param callable(array{name: string, start_time: float, end_time: float, duration: float, metadata: array<string, mixed>}, mixed): mixed $callback
+     */
+    function setEndCallback(callable $callback): bool
+    {
+    }
+
+    /**
+     * @phpstan-param callable(array{name: string, start_time: float, metadata: array<string, mixed>}): mixed $callback
+     */
+    function setStartCallback(callable $callback): bool
+    {
+    }
+
+    final class Trace
+    {
+        /**
+         * @param array<string, mixed> $metadata
+         */
+        public function __construct(array $metadata = [])
+        {
+        }
+    }
+}
