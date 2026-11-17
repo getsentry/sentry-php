@@ -65,7 +65,9 @@ jobs:
           marker='<!-- tally-report -->'
           report="$RUNNER_TEMP/tally-report.md"
           comment="$RUNNER_TEMP/tally-comment.md"
-          { echo "$marker"; cat "$report"; } > "$comment"
+          # The comment is the headline and the table of all benchmarks, the last table of the
+          # report. The full report with the patch of new expected numbers is in the job summary.
+          { echo "$marker"; awk 'NR == 1 { print; print "" } /^<details>/ { table = 1 } table && /^\|/' "$report"; } > "$comment"
 
           comment_id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
             --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
