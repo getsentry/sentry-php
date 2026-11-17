@@ -37,40 +37,40 @@ const sdk = {
     // Bugbot rule 37.
     ungatedAutomaticPii: {
       prompt:
-        "Does the code automatically collect personal data, such as the user's IP address, cookies, request headers or bodies, or the scope's user attached onto logs, metrics, or other telemetry, without checking send_default_pii (Options::shouldSendDefaultPii()) or going through DataCollectionPolicy?",
+        "Does the code automatically collect personal data, such as the user's IP address, cookies, request headers or bodies, URL query params, database query data, or the scope's user attached onto logs, metrics, or other telemetry, without checking the data_collection options (Options::getDataCollection()) or going through a collector in src/DataCollection/?",
       values: [
         {
           value: "TRUE",
           description:
-            "New collection of request or user data happens on every call, with no send_default_pii or DataCollectionPolicy check deciding whether it runs.",
+            "New collection of request or user data happens on every call, with no data_collection check, such as DataCollectionOptions::shouldCollectUserInfo(), getCookies(), getHttpHeaders(), shouldCollectHttpBody(), getUrlQueryParams(), or shouldCollectDatabaseQueryData(), deciding whether or what it collects.",
           severity: "error",
           report:
-            "Automatic collection of personal data must be off unless `send_default_pii` is on, or must go through `DataCollectionPolicy` when `data_collection` is set. Gate this collection on one of them.",
+            "Automatic collection of personal data must follow the `data_collection` option. Gate this collection on the matching `Options::getDataCollection()` setting, or route it through the collector in `src/DataCollection/` that applies it.",
         },
         {
           value: "FALSE",
           description:
-            "Automatic collection is gated on send_default_pii or DataCollectionPolicy, or the code collects no personal data. Serializing user data that the application set explicitly, with setUser(), configureScope(), or explicit log or metric attributes, does not count: send_default_pii only gates automatic collection.",
+            "Automatic collection is gated on the matching data_collection setting or goes through a collector in src/DataCollection/, or the code collects no personal data. Serializing user data that the application set explicitly, with setUser(), a scope callback, or explicit log or metric attributes, does not count: data_collection only gates automatic collection.",
         },
       ],
     },
     // Bugbot rule 48.
     ignoresGivenHub: {
       prompt:
-        "Does a function that receives a HubInterface, ClientInterface, or Scope argument also call SentrySdk::getCurrentHub(), SentrySdk::getClient(), or SentrySdk::getIsolationScope() for a lookup that the argument should answer?",
+        "Does a function that receives a ClientInterface, IsolationScope, or other Scope argument also call SentrySdk::getClient() without that scope, or SentrySdk::getIsolationScope(), for a lookup that the argument should answer?",
       values: [
         {
           value: "TRUE",
           description:
-            "Within one function, the given hub, client, or scope is used for some lookups while others re-resolve the global one from SentrySdk.",
+            "Within one function, the given client or scope is used for some lookups while others re-resolve the current one from SentrySdk.",
           severity: "warn",
           report:
-            "Resolve the hub, client, or scope once, for example `$hub = $hub ?? SentrySdk::getCurrentHub();`, and use that instance for every lookup in this function. Pass it on to helpers that read current state, such as `getTraceparent()` and `getBaggage()`, so outgoing headers match the hub the caller gave.",
+            "Resolve the client or scope once, for example `$scope = $scope ?? SentrySdk::getIsolationScope();` and `$client = SentrySdk::getClient($scope);`, and use that instance for every lookup in this function. Pass it on to helpers that read current state, such as `getTraceparent()` and `getBaggage()`, so outgoing headers match the scope the caller gave.",
         },
         {
           value: "FALSE",
           description:
-            "Each function that takes a hub, client, or scope uses only that instance, apart from one fallback when the argument is null; or no function takes one.",
+            "Each function that takes a client or scope uses only that instance, apart from one fallback when the argument is null; or no function takes one.",
         },
       ],
     },
