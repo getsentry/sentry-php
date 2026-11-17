@@ -21,4 +21,4 @@ function replace() {
     grep "$2" $3  # verify that replacement was successful
 }
 
-replace "SDK_VERSION = '[0-9.]+'" "SDK_VERSION = '$NEW_VERSION'" ./src/Client.php
+replace "SDK_VERSION = '[^']+'" "SDK_VERSION = '$NEW_VERSION'" ./src/Client.php
