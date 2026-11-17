@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Sentry\Tracing;
 
+use Sentry\Util\Random;
+
 final class TransactionMetadata
 {
     /**
@@ -51,7 +53,7 @@ final class TransactionMetadata
         $this->dynamicSamplingContext = $dynamicSamplingContext;
         $this->source = $source ?? TransactionSource::custom();
         $this->parentSamplingRate = $parentSamplingRate;
-        $this->sampleRand = $sampleRand ?? round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
+        $this->sampleRand = $sampleRand ?? round(Random::float(), 6);
     }
 
     /**

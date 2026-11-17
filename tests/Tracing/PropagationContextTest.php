@@ -27,6 +27,49 @@ final class PropagationContextTest extends TestCase
     }
 
     /**
+     * A worker pool forks its workers after the SDK was initialized in the master process. The workers must not
+     * continue the same random sequence, or all of them make the same sampling decisions.
+     *
+     * @requires extension pcntl
+     * @requires extension posix
+     */
+    public function testForkedProcessesDrawDifferentSampleRands(): void
+    {
+        // Draws a first value in the parent process, like `init()` does in the master process
+        PropagationContext::fromDefaults();
+
+        $sampleRands = [];
+
+        for ($fork = 0; $fork < 2; ++$fork) {
+            $resultFile = tempnam(sys_get_temp_dir(), 'sentry-sample-rand-fork');
+
+            $pid = pcntl_fork();
+
+            if ($pid === 0) {
+                $result = [];
+
+                for ($i = 0; $i < 5; ++$i) {
+                    $result[] = PropagationContext::fromDefaults()->getSampleRand();
+                }
+
+                file_put_contents($resultFile, json_encode($result));
+
+                // Exits without running the shutdown of the test runner in the forked process
+                posix_kill(getmypid(), \SIGKILL);
+            }
+
+            pcntl_waitpid($pid, $status);
+
+            $sampleRands[] = json_decode((string) file_get_contents($resultFile), true);
+            unlink($resultFile);
+        }
+
+        $this->assertCount(5, $sampleRands[0]);
+        $this->assertCount(5, $sampleRands[1]);
+        $this->assertNotSame($sampleRands[0], $sampleRands[1]);
+    }
+
+    /**
      * @dataProvider tracingDataProvider
      */
     public function testFromHeaders(string $sentryTraceHeader, string $baggageHeader, ?TraceId $expectedTraceId, ?SpanId $expectedParentSpanId, ?bool $expectedDynamicSamplingContextFrozen): void

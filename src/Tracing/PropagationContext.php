@@ -7,6 +7,7 @@ namespace Sentry\Tracing;
 use Sentry\SentrySdk;
 use Sentry\State\IsolationScope;
 use Sentry\Tracing\Traits\TraceHeaderParserTrait;
+use Sentry\Util\Random;
 
 final class PropagationContext
 {
@@ -54,7 +55,7 @@ final class PropagationContext
         $context->spanId = SpanId::generate();
         $context->parentSpanId = null;
         $context->parentSampled = null;
-        $context->sampleRand = round(mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax(), 6);
+        $context->sampleRand = round(Random::float(), 6);
         $context->dynamicSamplingContext = null;
 
         return $context;

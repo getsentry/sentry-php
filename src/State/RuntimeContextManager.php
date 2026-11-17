@@ -10,6 +10,7 @@ use Sentry\ClientReport\ClientReportAggregator;
 use Sentry\ErrorHandler;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
+use Sentry\Util\Random;
 
 /**
  * Manages runtime-local SDK state across different execution models.
@@ -197,7 +198,7 @@ final class RuntimeContextManager
 
     private function generateRuntimeContextId(): string
     {
-        return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), mt_rand());
+        return \sprintf('%s-%d', str_replace('.', '', uniqid('', true)), Random::int(0, mt_getrandmax()));
     }
 
     private function getGlobalContext(): RuntimeContext

@@ -12,6 +12,7 @@ use Sentry\NoOpClient;
 use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\Transport\DataCategory;
+use Sentry\Util\Random;
 use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
@@ -592,6 +593,6 @@ final class ContinuousProfiler
             return true;
         }
 
-        return mt_rand(0, mt_getrandmax() - 1) / mt_getrandmax() < $sampleRate;
+        return Random::float() < $sampleRate;
     }
 }
