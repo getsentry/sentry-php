@@ -206,14 +206,16 @@ final class DynamicSamplingContext
 
     private static function setOrgOptions(Options $options, DynamicSamplingContext $samplingContext): void
     {
-        if ($options->getDsn() !== null) {
-            $samplingContext->set('public_key', $options->getDsn()->getPublicKey());
+        $dsn = $options->getDsn();
+
+        if ($dsn !== null) {
+            $samplingContext->set('public_key', $dsn->getPublicKey());
         }
 
         if ($options->getOrgId() !== null) {
             $samplingContext->set('org_id', (string) $options->getOrgId());
-        } elseif ($options->getDsn() !== null && $options->getDsn()->getOrgId() !== null) {
-            $samplingContext->set('org_id', (string) $options->getDsn()->getOrgId());
+        } elseif ($dsn !== null && $dsn->getOrgId() !== null) {
+            $samplingContext->set('org_id', (string) $dsn->getOrgId());
         }
 
         if ($options->getRelease() !== null) {
