@@ -44,6 +44,7 @@ final class CaptureExceptionBench
         $this->exception = $this->createException(self::STACK_DEPTH);
     }
 
+    #[Name('captureException with 20 recursive frames')]
     #[Warmup(1)]
     public function benchCaptureException(): void
     {

@@ -52,6 +52,8 @@ jobs:
         run: |
           vendor/bin/tally run benchmarks || [ $? -eq 1 ]
           cp "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/tally-report.md"
+          # Built here, because the next step has a token that code of the pull request must not run with.
+          php benchmarks/pr-comment.php "$RUNNER_TEMP/tally-report.md" > "$RUNNER_TEMP/tally-table.md"
 
       # Pull requests from forks only get a read-only token, they have the report in the job summary.
       # Dependabot's token is read-only too, so a failed comment does not fail the job either.
@@ -65,9 +67,9 @@ jobs:
           marker='<!-- tally-report -->'
           report="$RUNNER_TEMP/tally-report.md"
           comment="$RUNNER_TEMP/tally-comment.md"
-          # The comment is the headline and the table of all benchmarks, the last table of the
-          # report. The full report with the patch of new expected numbers is in the job summary.
-          { echo "$marker"; awk 'NR == 1 { print; print "" } /^<details>/ { table = 1 } table && /^\|/' "$report"; } > "$comment"
+          # The comment is the headline and the table of all benchmarks. The full report with
+          # the patch of new expected numbers is in the job summary.
+          { echo "$marker"; cat "$RUNNER_TEMP/tally-table.md"; } > "$comment"
 
           comment_id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
             --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
