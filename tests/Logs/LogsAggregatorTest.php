@@ -200,7 +200,8 @@ final class LogsAggregatorTest extends TestCase
         $this->assertSame('production', $attributes->get('sentry.environment')->getValue());
         $this->assertSame('web-server-01', $attributes->get('server.address')->getValue());
         $this->assertSame('User %s performed action %s', $attributes->get('sentry.message.template')->getValue());
-        $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
+        $this->assertSame('566e3688a61d4bc8', $log->getSpanId());
+        $this->assertNull($attributes->get('sentry.trace.parent_span_id'));
         $this->assertSame('sentry.php', $attributes->get('sentry.sdk.name')->getValue());
         $this->assertSame(Client::SDK_VERSION, $attributes->get('sentry.sdk.version')->getValue());
         $this->assertSame('unique_id', $attributes->get('user.id')->getValue());
@@ -228,7 +229,7 @@ final class LogsAggregatorTest extends TestCase
 
         $attributes = $logs[0]->attributes();
         $this->assertSame('global-user', $attributes->get('user.id')->getValue());
-        $this->assertSame('566e3688a61d4bc8', $attributes->get('sentry.trace.parent_span_id')->getValue());
+        $this->assertSame('566e3688a61d4bc8', $logs[0]->getSpanId());
     }
 
     public function testUserAttributesCanBeSetManuallyWithUserInfoCollectionOff(): void
@@ -396,7 +397,7 @@ final class LogsAggregatorTest extends TestCase
         $this->assertClientReports(['log_item' => ['buffer_overflow' => 1]]);
     }
 
-    public function testDoesNotUsePropagationContextSpanIdAsParentSpanIdWhenNoLocalSpanExists(): void
+    public function testDoesNotUsePropagationContextSpanIdWhenNoLocalSpanExists(): void
     {
         $client = ClientBuilder::create()->getClient();
 
@@ -414,10 +415,8 @@ final class LogsAggregatorTest extends TestCase
         $this->assertCount(1, $logs);
         $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
 
-        $parentSpanId = $logs[0]->attributes()->get('sentry.trace.parent_span_id');
-        $this->assertNotNull($parentSpanId);
-        // Log attributes normalize null values to the string "null".
-        $this->assertSame('null', $parentSpanId->getValue());
+        $this->assertNull($logs[0]->getSpanId());
+        $this->assertNull($logs[0]->attributes()->get('sentry.trace.parent_span_id'));
     }
 
     public function testUsesExternalPropagationContextWhenNoLocalSpanExists(): void
@@ -439,7 +438,7 @@ final class LogsAggregatorTest extends TestCase
         $logs = $aggregator->all();
         $this->assertCount(1, $logs);
         $this->assertSame('771a43a4192642f0b136d5159a501700', $logs[0]->getTraceId());
-        $this->assertSame('1234567890abcdef', $logs[0]->attributes()->get('sentry.trace.parent_span_id')->getValue());
+        $this->assertSame('1234567890abcdef', $logs[0]->getSpanId());
 
         Scope::clearExternalPropagationContext();
     }

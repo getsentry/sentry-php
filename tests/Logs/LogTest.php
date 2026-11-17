@@ -16,6 +16,7 @@ final class LogTest extends TestCase
 
         $this->assertSame(1.0, $log->getTimestamp());
         $this->assertSame('123', $log->getTraceId());
+        $this->assertNull($log->getSpanId());
         $this->assertSame(LogLevel::debug(), $log->getLevel());
         $this->assertSame('foo', $log->getBody());
         $this->assertSame([], $log->attributes()->all());
@@ -25,6 +26,9 @@ final class LogTest extends TestCase
 
         $log->setTraceId('456');
         $this->assertSame('456', $log->getTraceId());
+
+        $log->setSpanId('789');
+        $this->assertSame('789', $log->getSpanId());
 
         $log->setLevel(LogLevel::warn());
         $this->assertSame(LogLevel::warn(), $log->getLevel());

@@ -67,14 +67,12 @@ final class LogsAggregator
         }
 
         $traceData = $this->getTraceData($isolationScope);
-        $traceId = $traceData['trace_id'];
-        $parentSpanId = $traceData['parent_span_id'];
 
-        $log = (new Log($timestamp, $traceId, $level, $formattedMessage))
+        $log = (new Log($timestamp, $traceData['trace_id'], $level, $formattedMessage))
+            ->setSpanId($traceData['span_id'])
             ->setAttribute('sentry.release', $options->getRelease())
             ->setAttribute('sentry.environment', $options->getEnvironment() ?? Event::DEFAULT_ENVIRONMENT)
-            ->setAttribute('server.address', $options->getServerName())
-            ->setAttribute('sentry.trace.parent_span_id', $parentSpanId);
+            ->setAttribute('server.address', $options->getServerName());
 
         if ($client instanceof Client) {
             $log->setAttribute('sentry.sdk.name', $client->getSdkIdentifier());
@@ -196,7 +194,7 @@ final class LogsAggregator
     }
 
     /**
-     * @return array{trace_id: string, parent_span_id: string|null}
+     * @return array{trace_id: string, span_id: string|null}
      */
     private function getTraceData(IsolationScope $scope): array
     {
@@ -205,7 +203,7 @@ final class LogsAggregator
         if ($span !== null) {
             return [
                 'trace_id' => (string) $span->getTraceId(),
-                'parent_span_id' => (string) $span->getSpanId(),
+                'span_id' => (string) $span->getSpanId(),
             ];
         }
 
@@ -213,13 +211,13 @@ final class LogsAggregator
         if ($externalPropagationContext !== null) {
             return [
                 'trace_id' => $externalPropagationContext['trace_id'],
-                'parent_span_id' => $externalPropagationContext['span_id'],
+                'span_id' => $externalPropagationContext['span_id'],
             ];
         }
 
         return [
             'trace_id' => (string) $scope->getPropagationContext()->getTraceId(),
-            'parent_span_id' => null,
+            'span_id' => null,
         ];
     }
 

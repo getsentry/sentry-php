@@ -19,6 +19,11 @@ class Log
     private $traceId;
 
     /**
+     * @var string|null
+     */
+    private $spanId;
+
+    /**
      * @var LogLevel
      */
     private $level;
@@ -66,6 +71,18 @@ class Log
     public function setTraceId(string $traceId): self
     {
         $this->traceId = $traceId;
+
+        return $this;
+    }
+
+    public function getSpanId(): ?string
+    {
+        return $this->spanId;
+    }
+
+    public function setSpanId(?string $spanId): self
+    {
+        $this->spanId = $spanId;
 
         return $this;
     }
