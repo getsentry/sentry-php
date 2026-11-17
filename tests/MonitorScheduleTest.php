@@ -40,6 +40,22 @@ final class MonitorScheduleTest extends TestCase
         $this->assertEquals(MonitorScheduleUnit::minute(), $monitorSchedule->getUnit());
     }
 
+    public function testToArrayOmitsTheUnitOfACrontabSchedule(): void
+    {
+        $this->assertSame(
+            ['type' => MonitorSchedule::TYPE_CRONTAB, 'value' => '* * * * *'],
+            MonitorSchedule::crontab('* * * * *')->toArray()
+        );
+    }
+
+    public function testToArrayContainsTheUnitOfAnIntervalSchedule(): void
+    {
+        $this->assertSame(
+            ['type' => MonitorSchedule::TYPE_INTERVAL, 'value' => 10, 'unit' => 'minute'],
+            MonitorSchedule::interval(10, MonitorScheduleUnit::minute())->toArray()
+        );
+    }
+
     /**
      * @dataProvider gettersAndSettersDataProvider
      */
