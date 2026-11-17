@@ -178,6 +178,15 @@ final class SpanTest extends TestCase
         ], $span->getData());
     }
 
+    public function testSetHttpStatusRecordsStatusCodeInData(): void
+    {
+        $span = new Span();
+
+        $span->setHttpStatus(404);
+
+        $this->assertSame(404, $span->getData('http.response.status_code'));
+    }
+
     public function testOriginIsCopiedFromContext(): void
     {
         $context = SpanContext::make()->setOrigin('auto.testing');
