@@ -45,6 +45,7 @@
         "open-telemetry/sem-conv": "^1.27",
         "open-telemetry/sdk": "^1.1",
         "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
         "phpunit/phpunit": "^8.5.52|^9.6.34",
         "spiral/roadrunner-http": "^3.6",
         "spiral/roadrunner-worker": "^3.6"
