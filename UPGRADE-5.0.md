@@ -187,7 +187,7 @@ The old Metrics API has been removed as it is no longer supported. The trace met
 
 ### Deprecated Options Removed
 
-The following deprecated options have been removed from the `Options` class:
+The following deprecated options have been removed from the `Options` class. A removed option that is still passed to `init()` does not raise an error, it is ignored and only reported to the configured `logger` as a debug message:
 
 - **`enable_tracing`** - Use `traces_sample_rate` or `traces_sampler` instead
   ```php
@@ -259,6 +259,8 @@ $scope->setTag('user_segment', 'premium');
 $scope->setContext('user', ['segment' => 'premium']);
 ```
 
+`UserDataBag::getSegment()` and `UserDataBag::setSegment()` have been removed as well. A `segment` key passed to `UserDataBag::createFromArray()` or to `setUser()` is stored as user metadata instead.
+
 ### Deprecated Methods Removed
 
 The following deprecated methods have been removed:
@@ -308,10 +310,6 @@ The following deprecated methods have been removed:
 - **`HttpCookieCollector::collectGroupedPairs()`** - Use `HttpSpanDataCollector::collectCookiePairs()` instead
 
 - **`HttpCookieParser::parseCookieHeaders()`** and **`HttpCookieParser::parseSetCookieHeaders()`** - Use `HttpCookieParser::splitCookieHeaders()` and `HttpCookieParser::splitSetCookieHeaders()` instead
-
-### EventType Changes
-
-The `metrics` event type has been removed from `EventType::cases()` as metrics are no longer supported.
 
 ### Request Body Size Option Value Changed
 
@@ -411,8 +409,55 @@ To keep tracing all requests regardless of their status code, set the option to 
 ]);
 ```
 
+### Spotlight URL Is Used As Given
+
+The SDK no longer appends `/stream` to a Spotlight URL that has a path. The suffix is only added to a URL without a path, such as `http://localhost:8969`, and a URL with a path, a query string or a fragment is used as it is:
+
+```php
+// Sends to http://localhost:8969/stream, as in 4.x
+\Sentry\init(['spotlight' => 'http://localhost:8969']);
+
+// Before (4.x): sends to http://localhost:8969/custom/stream
+// After (5.0): sends to http://localhost:8969/custom
+\Sentry\init(['spotlight' => 'http://localhost:8969/custom']);
+```
+
+`Options::getSpotlightUrl()` returns the URL the envelopes are sent to, which includes the `/stream` suffix, for example `http://localhost:8969/stream` for the default URL.
+
+### Logs Changes
+
+- **Span of a log** - The span that was active when a log was recorded is sent as the `span_id` of the log instead of the `sentry.trace.parent_span_id` attribute. `before_send_log` callbacks that read the attribute have to use `Log::getSpanId()` instead, and searches or alerts in Sentry that filter on the attribute have to be changed
+
+- **`Sentry\Monolog\LogsHandler`** - PSR-3 placeholders such as `{user}` are replaced with the matching values of the record context, so the body of the log changes from the template to the interpolated message. The template is sent as the `sentry.message.template` attribute and the values as `sentry.message.parameter.<name>` attributes
+
+### Transaction Name Of Error Events
+
+The `TransactionIntegration` sets the `transaction` of an error event to the name of the active transaction. In 4.x it only used the `PATH_INFO` server variable, which is missing for most front controllers behind URL rewriting. Without an active transaction, it uses `PATH_INFO` and falls back to the path of `REQUEST_URI`.
+
+Events that had no `transaction` or the `PATH_INFO` value in 4.x can therefore have a different value in 5.0. To keep control over the value, pass it with the event hint:
+
+```php
+\Sentry\captureException($exception, \Sentry\EventHint::fromArray([
+    'extra' => ['transaction' => 'GET /checkout'],
+]));
+```
+
+### Failed `trace()` Callbacks Set A Span Status
+
+When the callback passed to `\Sentry\trace()` throws, the span gets the status `internal_error`, unless a status was already set on it. In 4.x such a span was finished without a status.
+
+### Client Reports Are Sent On Flush
+
+`\Sentry\flush()`, `SentrySdk::flush()` and the end of a runtime context (`endContext()` and `withContext()`) send the pending client reports, when `send_client_reports` is enabled. Code that sent them with `ClientReportAggregator::getInstance()->flush()` right before one of these calls no longer has to do so.
+
 ### Dependencies Removed
 
-The SDK no longer requires the `symfony/options-resolver` and `jean85/pretty-package-versions` packages.
+The SDK no longer requires the `symfony/options-resolver` and `jean85/pretty-package-versions` packages. Packages that were only installed as their dependencies, for example `symfony/deprecation-contracts` or the Symfony PHP polyfills, are no longer installed with the SDK. If your code relies on them, require them in your own `composer.json`.
+
+As the SDK no longer relies on the PHP 8.0 polyfill, the following classes do not implement the `\Stringable` interface on PHP 7.2 to 7.4. They can still be cast to a string, and nothing changes on PHP 8.0 and later:
+
+- `Sentry\CheckInStatus`, `Sentry\Dsn`, `Sentry\EventId`, `Sentry\EventType`, `Sentry\MonitorScheduleUnit`, `Sentry\Severity` and `Sentry\Unit`
+- `Sentry\Tracing\SpanId`, `Sentry\Tracing\SpanStatus`, `Sentry\Tracing\TraceId` and `Sentry\Tracing\TransactionSource`
+- `Sentry\Transport\ResultStatus`
 
 The `ModulesIntegration` reads the installed packages through `Composer\InstalledVersions` now, which requires Composer 2.
