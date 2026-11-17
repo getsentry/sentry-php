@@ -30,3 +30,4 @@
 /analysis-baseline.toml export-ignore
 /mago.toml export-ignore
 /decision-model-linter export-ignore
+/warden.toml export-ignore
