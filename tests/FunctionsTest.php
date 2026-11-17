@@ -26,6 +26,7 @@ use Sentry\Severity;
 use Sentry\State\GlobalScope;
 use Sentry\State\IsolationScope;
 use Sentry\State\Scope;
+use Sentry\Tests\TestUtil\ClockMock;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -467,6 +468,43 @@ final class FunctionsTest extends TestCase
         $this->assertSame(CheckInStatus::inProgress(), $events[0]->getCheckIn()->getStatus());
         $this->assertSame(CheckInStatus::error(), $events[1]->getCheckIn()->getStatus());
         $this->assertSame($events[0]->getCheckIn()->getId(), $events[1]->getCheckIn()->getId());
+    }
+
+    public function testWithMonitorReportsTheDurationOfAFailedRun(): void
+    {
+        ClockMock::withClockMock(1600640877.0);
+
+        $events = [];
+
+        $client = $this->createMock(ClientInterface::class);
+        $this->setClientAndIsolationScope($client);
+
+        $client->expects($this->exactly(2))
+            ->method('getOptions')
+            ->willReturn(new Options());
+        $client->expects($this->exactly(2))
+            ->method('captureEvent')
+            ->willReturnCallback(static function (Event $event) use (&$events): EventId {
+                $events[] = $event;
+
+                return EventId::generate();
+            });
+
+        try {
+            withMonitor('test-crontab', static function (): void {
+                ClockMock::usleep(250000);
+
+                throw new \Exception('monitor failed');
+            });
+
+            $this->fail('The callback exception should be rethrown.');
+        } catch (\Exception $exception) {
+            $this->assertSame('monitor failed', $exception->getMessage());
+        }
+
+        $this->assertCount(2, $events);
+        $this->assertSame(CheckInStatus::error(), $events[1]->getCheckIn()->getStatus());
+        $this->assertEqualsWithDelta(0.25, $events[1]->getCheckIn()->getDuration(), 0.0001);
     }
 
     public function testAddBreadcrumb(): void

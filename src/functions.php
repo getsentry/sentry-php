@@ -188,20 +188,16 @@ function withMonitor(string $slug, callable $callback, ?MonitorConfig $monitorCo
     $checkInId = captureCheckIn($slug, CheckInStatus::inProgress(), null, $monitorConfig);
 
     $status = CheckInStatus::ok();
-    $duration = 0;
+    $start = microtime(true);
 
     try {
-        $start = microtime(true);
-        $result = $callback();
-        $duration = microtime(true) - $start;
-
-        return $result;
+        return $callback();
     } catch (\Throwable $e) {
         $status = CheckInStatus::error();
 
         throw $e;
     } finally {
-        captureCheckIn($slug, $status, $duration, $monitorConfig, $checkInId);
+        captureCheckIn($slug, $status, microtime(true) - $start, $monitorConfig, $checkInId);
     }
 }
 
