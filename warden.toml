@@ -1,0 +1,22 @@
+# Warden Configuration
+# https://github.com/getsentry/warden
+#
+# The org-wide base config already runs security-review on every PR.
+
+version = 1
+
+[[skills]]
+name = "code-review"
+ignorePaths = ["phpstan-baseline.neon", "analysis-baseline.toml"]
+incremental = true
+reportOn = "medium"
+
+# No `draft = false` here on purpose. The org Warden workflow is a
+# ruleset-required workflow, and GitHub only runs those on opened,
+# synchronize, and reopened, whatever types they list. A draft filter would
+# skip PRs that are opened as drafts and marked ready without a new push.
+# Reviewing drafts too means those PRs are already reviewed when they leave
+# draft. `incremental` keeps each push to the new changes only.
+[[skills.triggers]]
+type = "pull_request"
+actions = ["opened", "synchronize", "reopened"]
