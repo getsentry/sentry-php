@@ -547,6 +547,20 @@ TEXT
 
         $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
         $event->setMetrics([
+            new CounterMetric('test-counter', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], 1597790835.0, null),
+        ]);
+
+        yield 'metric without a unit' => [
+            $event,
+            <<<TEXT
+{"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
+{"type":"trace_metric","item_count":1,"content_type":"application\/vnd.sentry.items.trace-metric+json"}
+{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-counter","value":5,"type":"counter","attributes":{"foo":{"type":"string","value":"bar"}}}]}
+TEXT
+        ];
+
+        $event = Event::createMetrics(new EventId('fc9442f5aef34234bb22b9a615e30ccd'));
+        $event->setMetrics([
             new CounterMetric('test-counter', 5, new TraceId('21160e9b836d479f81611368b2aa3d2c'), new SpanId('d051f34163cd45fb'), ['foo' => 'bar'], 1597790835.0, Unit::bit()),
         ]);
 
@@ -555,7 +569,7 @@ TEXT
             <<<TEXT
 {"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"trace_metric","item_count":1,"content_type":"application\/vnd.sentry.items.trace-metric+json"}
-{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-counter","value":5,"unit":"bit","type":"counter","attributes":{"foo":{"type":"string","value":"bar"}}}]}
+{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-counter","value":5,"type":"counter","attributes":{"foo":{"type":"string","value":"bar"}},"unit":"bit"}]}
 TEXT
         ];
 
@@ -569,7 +583,7 @@ TEXT
             <<<TEXT
 {"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"trace_metric","item_count":1,"content_type":"application\/vnd.sentry.items.trace-metric+json"}
-{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-gauge","value":5,"unit":"second","type":"gauge","attributes":{"foo":{"type":"string","value":"bar"}}}]}
+{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-gauge","value":5,"type":"gauge","attributes":{"foo":{"type":"string","value":"bar"}},"unit":"second"}]}
 TEXT
         ];
 
@@ -583,7 +597,7 @@ TEXT
             <<<TEXT
 {"sent_at":"2020-08-18T22:47:15Z","dsn":"http:\/\/public@example.com\/sentry\/1","sdk":{"name":"sentry.php","version":"$sdkVersion","packages":[{"name":"composer:sentry\/sentry","version":"$sdkVersion"}]}}
 {"type":"trace_metric","item_count":1,"content_type":"application\/vnd.sentry.items.trace-metric+json"}
-{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-distribution","value":5,"unit":"day","type":"distribution","attributes":{"foo":{"type":"string","value":"bar"}}}]}
+{"items":[{"timestamp":1597790835,"trace_id":"21160e9b836d479f81611368b2aa3d2c","span_id":"d051f34163cd45fb","name":"test-distribution","value":5,"type":"distribution","attributes":{"foo":{"type":"string","value":"bar"}},"unit":"day"}]}
 TEXT
         ];
 
