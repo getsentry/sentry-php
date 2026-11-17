@@ -1,0 +1,80 @@
+name: Benchmarks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - release/**
+
+permissions:
+  contents: read
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tally:
+    name: Tally
+    # Tally compares instruction counts with the numbers committed next to each benchmark.
+    # The counts depend on the runner image and the PHP build, so neither floats with `latest`.
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The token can comment on pull requests, so the code under test must not find it in .git/config.
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.5'
+          extensions: posix
+          coverage: none
+
+      # Tally needs PHP 8.2+, so it cannot be in composer.json, which has to install on PHP 7.2.
+      # It is required without the dev dependencies, because every installed package ends up in
+      # the modules list of an event and changes the counts.
+      - name: Install dependencies and Tally
+        run: composer require phpstan/tally:1.0.1 --update-no-dev --no-progress --no-interaction --prefer-dist
+
+      # Exit code 1 means a benchmark is slower or could not be measured. That is reported in the
+      # job summary and the pull request comment, and does not fail the job. Exit code 2 means
+      # Tally itself could not run, which still fails, otherwise a broken setup would go unnoticed.
+      - name: Run benchmarks
+        run: |
+          vendor/bin/tally run benchmarks || [ $? -eq 1 ]
+          cp "$GITHUB_STEP_SUMMARY" "$RUNNER_TEMP/tally-report.md"
+
+      # Pull requests from forks only get a read-only token, they have the report in the job summary.
+      # Dependabot's token is read-only too, so a failed comment does not fail the job either.
+      - name: Comment on the pull request
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          marker='<!-- tally-report -->'
+          report="$RUNNER_TEMP/tally-report.md"
+          comment="$RUNNER_TEMP/tally-comment.md"
+          { echo "$marker"; cat "$report"; } > "$comment"
+
+          comment_id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
+            --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
+
+          if [ -n "$comment_id" ]; then
+            # Keep the existing comment up to date, also once the benchmarks are unchanged again.
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -F body=@"$comment" --silent
+          elif grep -q '^> \[!' "$report"; then
+            # Tally starts a section with an alert for slower, faster, new, and not measured
+            # benchmarks. Without one, every benchmark is unchanged and there is nothing to say.
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" -F body=@"$comment" --silent
+          fi
