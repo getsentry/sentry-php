@@ -313,6 +313,8 @@ class Span
             'status_code' => $statusCode,
         ]);
 
+        $this->data['http.response.status_code'] = $statusCode;
+
         $status = SpanStatus::createFromHttpStatusCode($statusCode);
 
         if ($status !== SpanStatus::unknownError()) {

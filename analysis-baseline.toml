@@ -7,12 +7,6 @@ message = "This condition (type `false`) will always evaluate to false."
 count = 1
 
 [[issues]]
-file = "src/Agent/Transport/AgentClient.php"
-code = "redundant-cast"
-message = "Redundant cast to `(string)`: the expression already has this type."
-count = 1
-
-[[issues]]
 file = "src/Attachment/FileAttachment.php"
 code = "avoid-catching-error"
 message = "Avoid catching 'Error' class instances."
@@ -340,12 +334,6 @@ count = 2
 file = "src/HttpClient/HttpClient.php"
 code = "too-many-arguments"
 message = "Too many arguments provided for function `curl_share_init_persistent`."
-count = 1
-
-[[issues]]
-file = "src/HttpClient/Response.php"
-code = "less-specific-argument"
-message = "Argument type mismatch for argument #1 of `strtolower`: expected `string`, but provided type `array-key` is less specific."
 count = 1
 
 [[issues]]
@@ -1447,12 +1435,6 @@ message = "Redundant `&&` operation: left operand is always truthy and right ope
 count = 1
 
 [[issues]]
-file = "src/Serializer/EnvelopItems/CheckInItem.php"
-code = "possible-method-access-on-null"
-message = "Attempting to call a method on `null`."
-count = 1
-
-[[issues]]
 file = "src/Serializer/EnvelopItems/EventItem.php"
 code = "mixed-array-assignment"
 message = "Unsafe array assignment on type `mixed`."
@@ -1607,12 +1589,6 @@ file = "src/Tracing/DynamicSamplingContext.php"
 code = "mixed-argument"
 message = 'Invalid argument type for argument #2 of `Sentry\Tracing\DynamicSamplingContext::set`: expected `string`, but found `mixed`.'
 count = 1
-
-[[issues]]
-file = "src/Tracing/DynamicSamplingContext.php"
-code = "possible-method-access-on-null"
-message = "Attempting to call a method on `null`."
-count = 3
 
 [[issues]]
 file = "src/Tracing/DynamicSamplingContext.php"

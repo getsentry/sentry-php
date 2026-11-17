@@ -68,4 +68,12 @@ final class ResponseTest extends TestCase
         $this->assertSame(['one', 'two', 'three'], $response->getHeader('x-foo'));
         $this->assertSame('one,two,three', $response->getHeaderLine('x-foo'));
     }
+
+    public function testResponseNumericHeaderName(): void
+    {
+        $response = new Response(200, ['123' => ['value']], '');
+
+        $this->assertTrue($response->hasHeader('123'));
+        $this->assertSame(['value'], $response->getHeader('123'));
+    }
 }

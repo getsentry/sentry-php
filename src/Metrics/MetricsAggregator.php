@@ -102,7 +102,6 @@ final class MetricsAggregator
         $spanId = new SpanId($traceContext['span_id']);
 
         $metricTypeClass = self::METRIC_TYPES[$type];
-        /** @var Metric $metric */
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
 
         try {
