@@ -45,7 +45,10 @@ Some changes do not cause an error, so nothing will point you to them. Check eac
 - The send_default_pii option is gone, and the defaults of the data_collection option collect more
   data than before, whichever value send_default_pii had. What gets collected is a privacy decision
   that is mine to make: apply the restrictive configuration from the guide, which is the closest to
-  the old behavior, and list what I could enable on top of it.
+  the old behavior, and list what I could enable on top of it. This only applies if the project
+  does not set the data_collection option yet. If it already does, send_default_pii was already
+  ignored and the existing data_collection configuration keeps applying, so only remove
+  send_default_pii.
 - The client is never null anymore. Remove the null checks, and tell me where one of them was used
   to detect that the SDK is not initialized.
 - Sentry\Metrics\Metrics and \Sentry\metrics() still exist, but they are a different API now. Code
