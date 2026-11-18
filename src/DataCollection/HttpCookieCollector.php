@@ -44,10 +44,8 @@ final class HttpCookieCollector
             return null;
         }
 
-        /** @mago-ignore analysis:deprecated-method */
         $cookies = HttpCookieParser::parseCookieHeaders($request->getHeader('Cookie'));
 
-        /** @mago-ignore analysis:deprecated-method */
         return self::collectGroupedPairs($policy, $type, $cookies);
     }
 
@@ -63,10 +61,8 @@ final class HttpCookieCollector
             return null;
         }
 
-        /** @mago-ignore analysis:deprecated-method */
         $cookies = HttpCookieParser::parseSetCookieHeaders($response->getHeader('Set-Cookie'));
 
-        /** @mago-ignore analysis:deprecated-method */
         return self::collectGroupedPairs($policy, $type, $cookies);
     }
 
