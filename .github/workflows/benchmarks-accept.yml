@@ -1,0 +1,83 @@
+name: Accept benchmarks
+
+# Adding the `accept-benchmarks` label to a pull request measures its benchmarks again and
+# commits the measured numbers to the pull request's branch as the expected ones.
+# Only people with triage access or more can add a label.
+on:
+  pull_request:
+    types:
+      - labeled
+
+permissions:
+  contents: read
+
+jobs:
+  # Runs the code of the pull request and its dependencies, so it only gets a read-only token
+  # and hands the changed expectations to the next job as a patch.
+  measure:
+    name: Measure
+    # The token of a pull request from a fork cannot push, its numbers are accepted locally.
+    if: github.event.label.name == 'accept-benchmarks' && github.event.pull_request.head.repo.full_name == github.repository
+    # Same runner image, PHP, and dependencies as benchmarks.yml, because the counts depend on them.
+    runs-on: ubuntu-24.04
+    outputs:
+      patch: ${{ steps.accept.outputs.patch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: '8.5'
+          extensions: posix
+          coverage: none
+
+      - name: Install dependencies and Tally
+        run: composer require phpstan/tally:1.0.1 --update-no-dev --no-progress --no-interaction --prefer-dist
+
+      - name: Measure and accept
+        id: accept
+        run: |
+          vendor/bin/tally run benchmarks --output="$RUNNER_TEMP/tally-results" || [ $? -eq 1 ]
+          vendor/bin/tally accept "$RUNNER_TEMP/tally-results" benchmarks
+          echo "patch=$(git diff -- benchmarks | base64 --wrap=0)" >> "$GITHUB_OUTPUT"
+
+  # Has the token that can push, and runs nothing from the pull request.
+  commit:
+    name: Commit
+    needs: measure
+    if: always() && needs.measure.result != 'skipped'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # Also when measuring failed, so that adding the label again starts another attempt.
+      - name: Remove the label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh api --method DELETE "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/labels/accept-benchmarks" --silent
+
+      - name: Checkout
+        if: needs.measure.outputs.patch != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # The push is rejected when the branch got new commits since the label was added.
+      # A push with this token does not start workflows, so CI only runs again with the next push.
+      - name: Commit the expected numbers
+        if: needs.measure.outputs.patch != ''
+        env:
+          PATCH: ${{ needs.measure.outputs.patch }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          echo "$PATCH" | base64 --decode | git apply --include='benchmarks/*'
+          git add benchmarks
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit --message='chore(benchmarks): accept new expected numbers'
+          git push origin "HEAD:refs/heads/$HEAD_REF"

@@ -69,7 +69,12 @@ jobs:
           comment="$RUNNER_TEMP/tally-comment.md"
           # The comment is the headline and the table of all benchmarks. The full report with
           # the patch of new expected numbers is in the job summary.
-          { echo "$marker"; cat "$RUNNER_TEMP/tally-table.md"; } > "$comment"
+          {
+            echo "$marker"
+            cat "$RUNNER_TEMP/tally-table.md"
+            echo
+            echo 'Add the `accept-benchmarks` label to commit the measured numbers as the expected ones.'
+          } > "$comment"
 
           comment_id=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate \
             --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n 1)
