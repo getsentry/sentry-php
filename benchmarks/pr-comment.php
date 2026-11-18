@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
  * Turns Tally's Markdown report into the body of the pull request comment: the headline and
- * the table of all benchmarks, with the names from #[Name] instead of the case IDs.
+ * a table with one row per benchmark, with the names from #[Name] instead of the case IDs.
  *
  * Usage: php benchmarks/pr-comment.php <report.md>
  */
@@ -25,9 +25,27 @@ if ($lines === false || $lines === []) {
     exit(1);
 }
 
-echo $lines[0], "\n\n";
+/**
+ * The name from #[Name] of a case like `Class::method` or `Class::method@data set`.
+ */
+function displayName(string $cell): string
+{
+    if (preg_match('/^`([^`@]+)::(\w+)(@.*)?`$/', $cell, $match) !== 1 || !method_exists($match[1], $match[2])) {
+        return $cell;
+    }
 
-// The table of all benchmarks is the one inside <details>, the last of the report.
+    $attributes = (new \ReflectionMethod($match[1], $match[2]))->getAttributes(Name::class);
+    if ($attributes === []) {
+        return $cell;
+    }
+
+    return $attributes[0]->newInstance()->name . ($match[3] ?? '');
+}
+
+// The table of all benchmarks is the one inside <details>, the last of the report. It has a
+// row per metric, with the case only in the first one:
+// | Benchmark | Metric | Expected | Measured | Change | Allowed | Status |
+$benchmarks = [];
 $inTable = false;
 foreach ($lines as $line) {
     if (str_starts_with($line, '<details>')) {
@@ -38,19 +56,32 @@ foreach ($lines as $line) {
         continue;
     }
 
-    // The status is the last column.
-    $line = preg_replace('/[^|]*\|$/', '', $line);
+    [$benchmark, $metric, $expected, $measured, $change, $allowed] = array_map('trim', explode('|', trim($line, '|')));
+    if ($benchmark === 'Benchmark' || str_starts_with($benchmark, '-')) {
+        // the header and the separator below it
+        continue;
+    }
 
-    echo preg_replace_callback(
-        '/^\| `([^`@]+)::(\w+)(@[^`]*)?` \|/',
-        static function (array $match): string {
-            $attributes = (new \ReflectionMethod($match[1], $match[2]))->getAttributes(Name::class);
-            if ($attributes === []) {
-                return $match[0];
-            }
+    if ($benchmark !== '') {
+        $benchmarks[] = ['name' => displayName($benchmark), 'metrics' => []];
+    }
 
-            return \sprintf('| %s%s |', $attributes[0]->newInstance()->name, $match[3] ?? '');
-        },
-        $line
-    ), "\n";
+    $benchmarks[array_key_last($benchmarks)]['metrics'][$metric] = [
+        $change === '-' ? $measured : \sprintf('%s (%s)', $measured, $change),
+        $allowed === '-' ? $expected : \sprintf('%s %s', $expected, $allowed),
+    ];
+}
+
+echo $lines[0], "\n\n";
+echo "| Benchmark | Instructions | Instructions expected | Cycles | Cycles expected | Memory | Memory expected |\n";
+echo "|---|--:|--:|--:|--:|--:|--:|\n";
+
+foreach ($benchmarks as $benchmark) {
+    $cells = [$benchmark['name']];
+    foreach (['instructions', 'cycles', 'memory'] as $metric) {
+        // a benchmark that could not be measured has no metrics
+        array_push($cells, ...($benchmark['metrics'][$metric] ?? ['-', '-']));
+    }
+
+    echo '| ', implode(' | ', $cells), " |\n";
 }
