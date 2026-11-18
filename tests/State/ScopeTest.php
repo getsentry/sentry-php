@@ -344,6 +344,7 @@ final class ScopeTest extends TestCase
             return UserDataBag::createFromArray([
                 'id' => 'resolved_id',
                 'email' => 'foo@example.com',
+                'segment' => 'my_segment',
                 'subscription' => 'pro',
                 'plan' => 'yearly',
             ]);
@@ -353,6 +354,7 @@ final class ScopeTest extends TestCase
             UserDataBag::createFromArray([
                 'id' => 'unique_id',
                 'email' => 'foo@example.com',
+                'segment' => 'my_segment',
                 'subscription' => 'basic',
                 'plan' => 'yearly',
             ]),

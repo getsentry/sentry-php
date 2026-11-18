@@ -278,6 +278,7 @@ class Scope
         $user->setEmail($user->getEmail() ?? $resolvedUser->getEmail());
         $user->setUsername($user->getUsername() ?? $resolvedUser->getUsername());
         $user->setIpAddress($user->getIpAddress() ?? $resolvedUser->getIpAddress());
+        $user->setSegment($user->getSegment() ?? $resolvedUser->getSegment());
 
         return (clone $resolvedUser)->merge($user);
     }
