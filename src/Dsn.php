@@ -89,7 +89,7 @@ final class Dsn implements \Stringable
         }
 
         foreach (['scheme', 'host', 'path', 'user'] as $component) {
-            if (!isset($parsedDsn[$component]) || (isset($parsedDsn[$component]) && empty($parsedDsn[$component]))) {
+            if (empty($parsedDsn[$component])) {
                 throw new \InvalidArgumentException(\sprintf('The "%s" DSN must contain a scheme, a host, a user and a path component.', $value));
             }
         }
