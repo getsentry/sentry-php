@@ -362,6 +362,23 @@ final class ScopeTest extends TestCase
         );
     }
 
+    public function testSetUserResolverDoesNotChangeTheResolvedUser(): void
+    {
+        $resolvedUser = UserDataBag::createFromUserIdentifier('unique_id');
+
+        $scope = new Scope();
+        $scope->setUserResolver(static function () use ($resolvedUser): UserDataBag {
+            return $resolvedUser;
+        });
+
+        $event = Event::createEvent();
+        $event->setUser(UserDataBag::createFromUserIpAddress('127.0.0.1'));
+
+        $scope->applyToEvent($event);
+
+        $this->assertEquals(UserDataBag::createFromUserIdentifier('unique_id'), $resolvedUser);
+    }
+
     public function testSetUserResolverKeepsTheUserIfTheResolverThrows(): void
     {
         $scope = new Scope();

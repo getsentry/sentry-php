@@ -269,8 +269,12 @@ class Scope
             $this->userResolver = $userResolver;
         }
 
-        if ($resolvedUser === null || $this->user === null) {
-            return $this->user ?? $resolvedUser;
+        if ($resolvedUser === null) {
+            return $this->user;
+        }
+
+        if ($this->user === null) {
+            return clone $resolvedUser;
         }
 
         $user = clone $this->user;
