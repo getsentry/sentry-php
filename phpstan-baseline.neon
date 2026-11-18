@@ -481,12 +481,6 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects int, float given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Spotlight/SpotlightClient.php
-
-		-
 			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
 			identifier: argument.type
 			count: 1
