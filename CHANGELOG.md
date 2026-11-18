@@ -1,5 +1,138 @@
 # CHANGELOG
 
+## 5.0.0-beta1
+
+The Sentry SDK team is happy to announce the first beta release of Sentry PHP SDK v5.0.0.
+
+This is a pre-release of the next major version. The API can still change before the stable release, so we do not recommend it for production yet. To try it out, install the beta explicitly:
+
+```bash
+composer require "sentry/sentry:^5.0@beta"
+```
+
+### Breaking Changes
+
+Please refer to the [UPGRADE-5.0.md](https://github.com/getsentry/sentry-php/blob/5.0.0-beta1/UPGRADE-5.0.md) guide for a complete list of breaking changes and how to migrate.
+
+<details>
+<summary>Upgrading with an AI coding agent? Use this prompt.</summary>
+
+```text
+Upgrade this project from version 4 to version 5 of the Sentry PHP SDK (sentry/sentry).
+
+Before you change anything, check composer.json. If the project requires sentry/sentry-laravel or
+sentry/sentry-symfony, stop and tell me: those packages decide which version of sentry/sentry is
+installed, so they have to be upgraded instead.
+
+Otherwise:
+
+1. Run `composer require "sentry/sentry:^5.0@beta"`.
+2. Read vendor/sentry/sentry/UPGRADE-5.0.md completely. It is the source of truth for every breaking
+   change. Version 5 is newer than what you know about this SDK, so do not rely on your memory of its
+   API. When the guide does not cover something, read the code in vendor/sentry/sentry/src instead of
+   guessing.
+3. Search the whole project for usages of the SDK, not only the place where \Sentry\init() is called:
+   everything from the Sentry\ namespace, the \Sentry\...() helper functions, the options passed to
+   init() (they may live in config files or environment-specific overrides), the Monolog handler
+   setup, custom integrations, event processors, and classes that implement or extend SDK types.
+4. Apply the changes from the guide to every usage you found.
+5. Run the static analysis and the tests of the project, if it has them, and fix what the upgrade
+   broke.
+
+Some changes do not cause an error, so nothing will point you to them. Check each of these explicitly:
+
+- Removed options are ignored silently. Compare every option passed to init() with the guide.
+- The send_default_pii option is gone, and the defaults of the data_collection option collect more
+  data than before, whichever value send_default_pii had. What gets collected is a privacy decision
+  that is mine to make: apply the restrictive configuration from the guide, which is the closest to
+  the old behavior, and list what I could enable on top of it. This only applies if the project
+  does not set the data_collection option yet. If it already does, send_default_pii was already
+  ignored and the existing data_collection configuration keeps applying, so only remove
+  send_default_pii.
+- The client is never null anymore. Remove the null checks, and tell me where one of them was used
+  to detect that the SDK is not initialized.
+- Sentry\Metrics\Metrics and \Sentry\metrics() still exist, but they are a different API now. Code
+  that calls them still has to be migrated.
+- Scope data that is set before startContext() or withContext() is no longer inherited by the
+  context. If this project runs long-lived workers (FrankenPHP, RoadRunner, Swoole, queue workers),
+  move the data that should apply to every request or job to the global scope.
+- Event processors no longer run for check-ins, logs and metrics. If one of them filters or scrubs
+  that data, move the logic to before_send_check_in, before_send_log or before_send_metric.
+
+When you are done, give me a summary of what you changed and a separate list of what I have to
+decide or check myself. Include the changes that affect what shows up in Sentry: transactions with
+a 404 status are no longer sent, error events can get a different transaction name, and logs carry
+a span_id instead of the sentry.trace.parent_span_id attribute.
+```
+
+</details>
+
+- The Hub API has been removed, including `Hub`, `HubInterface`, `HubAdapter`, `SentrySdk::getCurrentHub()` and `SentrySdk::setCurrentHub()`. Use the global helper functions, `SentrySdk::getClient()` and the new scopes instead. [(#2157)](https://github.com/getsentry/sentry-php/pull/2157)
+
+  ```php
+  // Before
+  \Sentry\SentrySdk::getCurrentHub()->configureScope(static function (\Sentry\State\Scope $scope): void {
+      $scope->setTag('feature', 'checkout');
+  });
+
+  // After
+  \Sentry\configureScope(static function (\Sentry\State\IsolationScope $scope): void {
+      $scope->setTag('feature', 'checkout');
+  });
+  ```
+
+- `Sentry\State\Scope` is now abstract and split into a `GlobalScope` and an `IsolationScope`. `withScope()` has been replaced by `withIsolationScope()`, and `Scope::addGlobalEventProcessor()` by `SentrySdk::getGlobalScope()->addEventProcessor()`. Event processors only run for error events and transactions. [(#2157)](https://github.com/getsentry/sentry-php/pull/2157), [(#2245)](https://github.com/getsentry/sentry-php/pull/2245)
+
+- A runtime context started with `startContext()` or `withContext()` starts with an empty isolation scope and no longer inherits the data set before it was started. Set data that applies to every context on the global scope. [(#2157)](https://github.com/getsentry/sentry-php/pull/2157)
+
+- The `send_default_pii` option has been removed. The `data_collection` option now always decides which data the SDK collects, and its defaults collect more data than `send_default_pii` did. The `context_lines` option moved to `data_collection.frame_context_lines`. [(#2356)](https://github.com/getsentry/sentry-php/pull/2356)
+
+- The `trace_ignore_status_codes` option now defaults to `[404]`, so transactions of requests that end in a `404` response are no longer sent. [(#2338)](https://github.com/getsentry/sentry-php/pull/2338)
+
+- The old Metrics API has been removed. `Sentry\Metrics\TraceMetrics` has been renamed to `Sentry\Metrics\Metrics`, and `\Sentry\traceMetrics()` has been removed in favor of `\Sentry\metrics()`. [(#1877)](https://github.com/getsentry/sentry-php/pull/1877), [(#2357)](https://github.com/getsentry/sentry-php/pull/2357)
+
+- The `enable_logs` and `enable_metrics` options have been removed. Logs and metrics are always captured when their APIs or integrations are used. [(#2355)](https://github.com/getsentry/sentry-php/pull/2355)
+
+- All deprecated options and methods have been removed, such as `enable_tracing`, `spotlight_url`, `strict_trace_propagation`, the user `segment`, `getW3CTraceparent()` and `SpanStatus::resourceExchausted()`. [(#1877)](https://github.com/getsentry/sentry-php/pull/1877), [(#2355)](https://github.com/getsentry/sentry-php/pull/2355)
+
+- The deprecated `Sentry\Monolog\Handler` has been removed, and the remaining Monolog handlers no longer take a `HubInterface` as their first constructor argument. [(#2136)](https://github.com/getsentry/sentry-php/pull/2136), [(#2157)](https://github.com/getsentry/sentry-php/pull/2157)
+
+- The SDK no longer truncates string values, the `max_value_length` option has been removed. [(#1903)](https://github.com/getsentry/sentry-php/pull/1903)
+
+- The `max_request_body_size` option no longer accepts `'none'`, use `'never'` instead. [(#1942)](https://github.com/getsentry/sentry-php/pull/1942)
+
+- The `symfony/options-resolver` and `jean85/pretty-package-versions` dependencies have been removed, along with the packages that were only installed through them. The `ModulesIntegration` requires Composer 2. [(#1900)](https://github.com/getsentry/sentry-php/pull/1900), [(#1914)](https://github.com/getsentry/sentry-php/pull/1914), [(#1922)](https://github.com/getsentry/sentry-php/pull/1922)
+
+### Features
+
+- Add a global scope and an isolation scope. Data on the global scope is applied to every event of the process and survives across requests in long-running workers, while the isolation scope holds the data of the current runtime context, for example a single request. [(#2157)](https://github.com/getsentry/sentry-php/pull/2157)
+
+  ```php
+  // Applied to every event of this worker process
+  \Sentry\getGlobalScope()->setTag('worker', 'queue-1');
+
+  // Applied to the events of the current request or job only
+  \Sentry\getIsolationScope()->setUser(['id' => '123']);
+  ```
+
+- Add `withIsolationScope()`, which forks the current isolation scope for the duration of a callback, and `SentrySdk::pushIsolationScope()` and `SentrySdk::popIsolationScope()` for code that cannot be wrapped in a callback. [(#2157)](https://github.com/getsentry/sentry-php/pull/2157), [(#2315)](https://github.com/getsentry/sentry-php/pull/2315)
+
+- Add `\Sentry\getClient()` and `SentrySdk::getClient()`, which always return a client. Before the SDK is initialized they return a `NoOpClient`, so the client no longer has to be checked for `null`. [(#1957)](https://github.com/getsentry/sentry-php/pull/1957)
+
+### Bug Fixes
+
+- Use the name of the active transaction as the `transaction` of error events, and fall back to the path of `REQUEST_URI` when `PATH_INFO` is not set. [(#2339)](https://github.com/getsentry/sentry-php/pull/2339)
+- Set the status of a span to `internal_error` when the callback passed to `\Sentry\trace()` throws. [(#2371)](https://github.com/getsentry/sentry-php/pull/2371)
+- Report the duration of a failed run in `\Sentry\withMonitor()` instead of `0`. [(#2372)](https://github.com/getsentry/sentry-php/pull/2372)
+- Replace PSR-3 placeholders with the values of the context in the `Sentry\Monolog\LogsHandler`, and send the template and its parameters as attributes. [(#2377)](https://github.com/getsentry/sentry-php/pull/2377)
+- Send the active span of a log as its `span_id` instead of the `sentry.trace.parent_span_id` attribute. [(#2375)](https://github.com/getsentry/sentry-php/pull/2375)
+- Use a Spotlight URL that has a path as it is, instead of always appending `/stream`. [(#2376)](https://github.com/getsentry/sentry-php/pull/2376)
+- Draw the random numbers for sampling decisions from the operating system, so that forked processes no longer continue the same sequence. [(#2369)](https://github.com/getsentry/sentry-php/pull/2369)
+- Send the pending client reports on `\Sentry\flush()` and when a runtime context ends, with the client of that context. [(#2368)](https://github.com/getsentry/sentry-php/pull/2368)
+- Record a client report for transactions that are dropped by `trace_ignore_status_codes`. [(#2367)](https://github.com/getsentry/sentry-php/pull/2367)
+- Fix the argument names of closures in stack frames. [(#2370)](https://github.com/getsentry/sentry-php/pull/2370)
+- Omit the `unit` of a metric and of a crontab monitor schedule when it is not set. [(#2373)](https://github.com/getsentry/sentry-php/pull/2373), [(#2374)](https://github.com/getsentry/sentry-php/pull/2374)
+
 ## 4.37.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.1.
