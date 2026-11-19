@@ -99,7 +99,7 @@ final class MetricsAggregator
 
         $traceContext = $this->getTraceContext($isolationScope);
         $traceId = new TraceId($traceContext['trace_id']);
-        $spanId = new SpanId($traceContext['span_id']);
+        $spanId = $traceContext['span_id'] !== null ? new SpanId($traceContext['span_id']) : null;
 
         $metricTypeClass = self::METRIC_TYPES[$type];
         $metric = new $metricTypeClass($name, $value, $traceId, $spanId, $attributes, microtime(true), $unit);
@@ -149,15 +149,21 @@ final class MetricsAggregator
     }
 
     /**
-     * @return array{trace_id: string, span_id: string}
+     * @return array{trace_id: string, span_id: string|null}
      */
     private function getTraceContext(IsolationScope $scope): array
     {
         $traceContext = $scope->getTraceContext();
+        $spanId = null;
+
+        // Without an active span the scope falls back to the propagation context, whose span ID belongs to no span
+        if ($scope->getSpan() !== null || IsolationScope::getExternalPropagationContext() !== null) {
+            $spanId = $traceContext['span_id'];
+        }
 
         return [
             'trace_id' => $traceContext['trace_id'],
-            'span_id' => $traceContext['span_id'],
+            'span_id' => $spanId,
         ];
     }
 

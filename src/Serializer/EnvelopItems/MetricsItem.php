@@ -33,7 +33,6 @@ class MetricsItem implements EnvelopeItemInterface
                     $item = [
                         'timestamp' => $metric->getTimestamp(),
                         'trace_id' => (string) $metric->getTraceId(),
-                        'span_id' => (string) $metric->getSpanId(),
                         'name' => $metric->getName(),
                         'value' => $metric->getValue(),
                         'type' => $metric->getType(),
@@ -44,6 +43,10 @@ class MetricsItem implements EnvelopeItemInterface
                             ];
                         }, $metric->getAttributes()->all()),
                     ];
+
+                    if ($metric->getSpanId() !== null) {
+                        $item['span_id'] = (string) $metric->getSpanId();
+                    }
 
                     if ($metric->getUnit() !== null) {
                         $item['unit'] = (string) $metric->getUnit();
