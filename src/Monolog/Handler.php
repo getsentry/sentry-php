@@ -26,6 +26,7 @@ use Sentry\State\Scope;
 final class Handler extends AbstractProcessingHandler
 {
     use CompatibilityProcessingHandlerTrait;
+    use SentryContextFlagTrait;
 
     private const CONTEXT_EXCEPTION_KEY = 'exception';
 
@@ -50,6 +51,19 @@ final class Handler extends AbstractProcessingHandler
 
         $this->hub = $hub;
         $this->fillExtraContext = $fillExtraContext;
+    }
+
+    /**
+     * @param array<string, mixed>|LogRecord $record
+     */
+    public function handle($record): bool
+    {
+        if (self::isSentryIssueDisabled($this->getArrayFieldFromRecord($record, 'context'))) {
+            return false;
+        }
+
+        /** @phpstan-ignore-next-line */
+        return parent::handle($record);
     }
 
     /**
@@ -86,6 +100,20 @@ final class Handler extends AbstractProcessingHandler
 
             $this->hub->captureEvent($event, $hint);
         });
+    }
+
+    /**
+     * @param array<string, mixed>|LogRecord $record
+     *
+     * @return mixed[]
+     */
+    private function getArrayFieldFromRecord($record, string $field): array
+    {
+        if (isset($record[$field]) && \is_array($record[$field])) {
+            return $record[$field];
+        }
+
+        return [];
     }
 
     /**

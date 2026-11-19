@@ -18,6 +18,7 @@ use Sentry\State\Scope;
 class ExceptionToSentryIssueHandler extends AbstractProcessingHandler
 {
     use CompatibilityProcessingHandlerTrait;
+    use SentryContextFlagTrait;
 
     /**
      * @var HubInterface
@@ -42,7 +43,7 @@ class ExceptionToSentryIssueHandler extends AbstractProcessingHandler
         $exception = $this->getExceptionFromRecord($record);
 
         /** @phpstan-ignore-next-line */
-        if ($exception === null || !$this->isHandling($record)) {
+        if ($exception === null || !$this->isHandling($record) || self::isSentryIssueDisabled($this->getContextFromRecord($record))) {
             return false;
         }
 

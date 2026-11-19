@@ -49,6 +49,19 @@ final class HandlerTest extends TestCase
         $handler->handle($record);
     }
 
+    public function testHandleIgnoresRecordsWithSentryDisabledInContext(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->never())
+            ->method('captureEvent');
+
+        $handler = new Handler(new Hub($client, new Scope()), Logger::DEBUG, false);
+
+        $this->assertFalse($handler->handle(RecordFactory::create('foo bar', Logger::WARNING, 'channel.foo', ['sentry' => false], [])));
+        $this->assertFalse($handler->handle(RecordFactory::create('foo bar', Logger::ERROR, 'channel.foo', ['exception' => new \RuntimeException('boom'), 'sentry' => false], [])));
+    }
+
     public static function handleDataProvider(): iterable
     {
         $event = Event::createEvent();
