@@ -1,0 +1,123 @@
+# Deprecated APIs that are still used on purpose.
+# This file is maintained by hand, `--generate-baseline` only rewrites phpstan-baseline.neon.
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to deprecated method setAccessible\(\) of class ReflectionProperty\.$#'
+			reportUnmatched: false # only reported on PHP 8.5+
+			identifier: method.deprecated
+			count: 1
+			path: src/ErrorHandler.php
+
+		-
+			message: '#^Call to deprecated function curl_close\(\)\.$#'
+			reportUnmatched: false # only reported on PHP 8.5+
+			identifier: function.deprecated
+			count: 2
+			path: src/HttpClient/HttpClient.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant DEBUG of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Debug$#
+			'''
+			identifier: classConstant.deprecated
+			count: 2
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant ERROR of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Error$#
+			'''
+			identifier: classConstant.deprecated
+			count: 2
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant INFO of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Info$#
+			'''
+			identifier: classConstant.deprecated
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant NOTICE of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Notice$#
+			'''
+			identifier: classConstant.deprecated
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant WARNING of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Warning$#
+			'''
+			identifier: classConstant.deprecated
+			count: 1
+			path: src/Monolog/BreadcrumbHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant DEBUG of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Debug$#
+			'''
+			identifier: classConstant.deprecated
+			count: 1
+			path: src/Monolog/ExceptionToSentryIssueHandler.php
+
+		-
+			message: '''
+				#^Fetching deprecated class constant DEBUG of class Monolog\\Logger\:
+				Use \\Monolog\\Level\:\:Debug$#
+			'''
+			identifier: classConstant.deprecated
+			count: 1
+			path: src/Monolog/LogToSentryIssueHandler.php
+
+		-
+			message: '''
+				#^Call to deprecated method getEnableTracing\(\) of class Sentry\\Options\:
+				since version 4\.7\. To be removed in version 5\.0$#
+			'''
+			identifier: method.deprecated
+			count: 2
+			path: src/Options.php
+
+		-
+			message: '''
+				#^Call to deprecated method getSegment\(\) of class Sentry\\UserDataBag\:
+				since version 4\.4\. To be removed in version 5\.0$#
+			'''
+			identifier: method.deprecated
+			count: 1
+			path: src/Serializer/EnvelopItems/EventItem.php
+
+		-
+			message: '''
+				#^Call to deprecated method getSegment\(\) of class Sentry\\UserDataBag\:
+				since version 4\.4\. To be removed in version 5\.0$#
+			'''
+			identifier: method.deprecated
+			count: 1
+			path: src/Serializer/EnvelopItems/TransactionItem.php
+
+		-
+			message: '#^Call to deprecated function curl_close\(\)\.$#'
+			reportUnmatched: false # only reported on PHP 8.5+
+			identifier: function.deprecated
+			count: 2
+			path: src/Spotlight/SpotlightClient.php
+
+		-
+			message: '''
+				#^Call to deprecated method setSegment\(\) of class Sentry\\UserDataBag\:
+				since version 4\.4\. To be removed in version 5\.0\. You may use a custom tag or context instead\.$#
+			'''
+			identifier: method.deprecated
+			count: 2
+			path: src/UserDataBag.php
