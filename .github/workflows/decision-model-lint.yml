@@ -14,7 +14,11 @@ jobs:
     name: Lint PR
     # Branches in this repo only, so employees and internal bots but never forks. Every label
     # change re-runs the lint, because a skipped run would replace the last result.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Dependabot PRs only bump dependencies, so they are not linted. Their runs also read
+    # Dependabot secrets instead of Actions secrets, so the key may not be set.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
