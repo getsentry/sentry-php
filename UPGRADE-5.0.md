@@ -430,6 +430,10 @@ The SDK no longer appends `/stream` to a Spotlight URL that has a path. The suff
 
 - **`Sentry\Monolog\LogsHandler`** - PSR-3 placeholders such as `{user}` are replaced with the matching values of the record context, so the body of the log changes from the template to the interpolated message. The template is sent as the `sentry.message.template` attribute and the values as `sentry.message.parameter.<name>` attributes
 
+### Metrics Changes
+
+- **Span of a metric** - A metric only gets a `span_id` when a span is active or the trace was continued from an incoming request. `Metric::getSpanId()` now returns `?SpanId`, so `before_send_metric` callbacks that call it have to handle `null`. In 4.x it returned a span ID that belonged to no span when no span was active
+
 ### Transaction Name Of Error Events
 
 The `TransactionIntegration` sets the `transaction` of an error event to the name of the active transaction. In 4.x it only used the `PATH_INFO` server variable, which is missing for most front controllers behind URL rewriting. Without an active transaction, it uses `PATH_INFO` and falls back to the path of `REQUEST_URI`.

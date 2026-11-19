@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 5.0.0-beta2
+
+The Sentry SDK team is happy to announce the second beta release of Sentry PHP SDK v5.0.0.
+
+This is a pre-release of the next major version. The API can still change before the stable release, so we do not recommend it for production yet. To try it out, install the beta explicitly:
+
+```bash
+composer require "sentry/sentry:^5.0@beta"
+```
+
+Please refer to the [UPGRADE-5.0.md](UPGRADE-5.0.md) guide for a complete list of breaking changes and how to migrate.
+
+### Features
+
+- Add `Scope::setUserResolver()` to resolve the user lazily each time it is read, instead of setting it upfront. User data set with `Scope::setUser()` takes precedence over the data the resolver returns. [(#2396)](https://github.com/getsentry/sentry-php/pull/2396)
+
+  ```php
+  \Sentry\configureScope(static function (\Sentry\State\IsolationScope $scope): void {
+      $scope->setUserResolver(static function (): ?\Sentry\UserDataBag {
+          // Return null as long as the user is not known yet
+          return \Sentry\UserDataBag::createFromUserIdentifier('1234');
+      });
+  });
+  ```
+
+### Bug Fixes
+
+- Only send the `span_id` of a metric when a span is active or the trace was continued from an incoming request. `Metric::getSpanId()` returns `null` otherwise, instead of a span ID that belongs to no span. [(#2403)](https://github.com/getsentry/sentry-php/pull/2403)
+- Record a client report for events that are dropped because the HTTP client fails to send them. [(#2401)](https://github.com/getsentry/sentry-php/pull/2401)
+
 ## 5.0.0-beta1
 
 The Sentry SDK team is happy to announce the first beta release of Sentry PHP SDK v5.0.0.
