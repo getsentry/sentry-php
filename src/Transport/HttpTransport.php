@@ -155,6 +155,9 @@ class HttpTransport implements TransportInterface
                 ['exception' => $exception, 'event' => $event]
             );
 
+            // No response was received, so this is recorded like a failed connection
+            ClientReportAggregator::getInstance()->addEvent($event, Reason::networkError());
+
             return new Result(ResultStatus::failed());
         }
 

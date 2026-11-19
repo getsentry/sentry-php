@@ -162,6 +162,22 @@ abstract class MutableScope extends Scope
     }
 
     /**
+     * Sets a callable that resolves the user each time it is read, which
+     * happens for every event, log and metric, so it should be cheap. The
+     * data set on the scope takes precedence over the data it returns.
+     *
+     * @param callable(): (UserDataBag|null) $userResolver
+     *
+     * @return $this
+     */
+    public function setUserResolver(callable $userResolver): self
+    {
+        $this->scopeData->setUserResolver($userResolver);
+
+        return $this;
+    }
+
+    /**
      * Removes all data of the user context.
      *
      * @return $this

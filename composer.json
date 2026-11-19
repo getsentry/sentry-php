@@ -30,7 +30,7 @@
         "psr/log": "^1.0|^2.0|^3.0"
     },
     "require-dev": {
-        "carthage-software/mago": "1.30.0",
+        "carthage-software/mago": "1.60.2",
         "friendsofphp/php-cs-fixer": "^3.4",
         "guzzlehttp/guzzle": "^7.0|^8.0",
         "guzzlehttp/promises": "^2.0.3|^3.0.0",

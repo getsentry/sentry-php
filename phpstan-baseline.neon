@@ -397,12 +397,6 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects int, float given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Spotlight/SpotlightClient.php
-
-		-
 			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -437,12 +431,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/UserDataBag.php
-
-		-
-			message: '#^PHPDoc tag @var with type list\<array\{function\?\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: string, args\?\: array\<mixed\>\}\> is not subtype of native type list\<array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\}\>\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: src/Util/CodeLocationResolver.php
 
 		-
 			message: '#^Instanceof between mixed and __PHP_Incomplete_Class will always evaluate to false\.$#'

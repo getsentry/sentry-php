@@ -1,12 +1,13 @@
 [source]
 paths = ["src"]
-includes = ["vendor"]
+includes = ["vendor", "stubs"]
 excludes = [
     "tests/resources/**",
     "tests/Fixtures/**",
     "src/Util/ClockMock.php",
     "vendor/open-telemetry/gen-otlp-protobuf/GPBMetadata/**",
 ]
+extensions = ["php", "stub"]
 
 [analyzer]
 baseline = "analysis-baseline.toml"
