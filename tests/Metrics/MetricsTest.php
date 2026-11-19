@@ -17,6 +17,7 @@ use Sentry\Options;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tests\ClientReport\ClientReportAssertions;
+use Sentry\Tracing\Span;
 use Sentry\UserDataBag;
 
 use function Sentry\metrics;
@@ -310,6 +311,33 @@ final class MetricsTest extends TestCase
         metrics()->flush();
 
         $this->assertEmpty(StubTransport::$events);
+    }
+
+    public function testMetricsUseSpanIdOfActiveSpan(): void
+    {
+        $span = new Span();
+        SentrySdk::getIsolationScope()->setSpan($span);
+
+        metrics()->count('test-count', 2);
+        metrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $metric = StubTransport::$events[0]->getMetrics()[0];
+        $this->assertSame((string) $span->getTraceId(), (string) $metric->getTraceId());
+        $this->assertSame((string) $span->getSpanId(), (string) $metric->getSpanId());
+    }
+
+    public function testMetricsHaveNoSpanIdWhenNoSpanIsActive(): void
+    {
+        $traceId = (string) SentrySdk::getIsolationScope()->getPropagationContext()->getTraceId();
+
+        metrics()->count('test-count', 2);
+        metrics()->flush();
+
+        $this->assertCount(1, StubTransport::$events);
+        $metric = StubTransport::$events[0]->getMetrics()[0];
+        $this->assertSame($traceId, (string) $metric->getTraceId());
+        $this->assertNull($metric->getSpanId());
     }
 
     public function testMetricsUseExternalPropagationContextWhenNoLocalSpanExists(): void

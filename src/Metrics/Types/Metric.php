@@ -22,7 +22,7 @@ abstract class Metric
     private $traceId;
 
     /**
-     * @var SpanId
+     * @var SpanId|null
      */
     private $spanId;
 
@@ -47,7 +47,7 @@ abstract class Metric
     public function __construct(
         string $name,
         TraceId $traceId,
-        SpanId $spanId,
+        ?SpanId $spanId,
         float $timestamp,
         array $attributes,
         ?Unit $unit
@@ -91,7 +91,7 @@ abstract class Metric
         return $this->traceId;
     }
 
-    public function getSpanId(): SpanId
+    public function getSpanId(): ?SpanId
     {
         return $this->spanId;
     }

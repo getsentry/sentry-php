@@ -31,7 +31,7 @@ final class CounterMetric extends Metric
         string $name,
         $value,
         TraceId $traceId,
-        SpanId $spanId,
+        ?SpanId $spanId,
         array $attributes,
         float $timestamp,
         ?Unit $unit
