@@ -32,11 +32,6 @@ final class Transaction extends Span
     private $name;
 
     /**
-     * @var Transaction The transaction
-     */
-    protected $transaction;
-
-    /**
      * @var TransactionMetadata
      */
     protected $metadata;
@@ -103,7 +98,7 @@ final class Transaction extends Span
             return $this->metadata->getDynamicSamplingContext();
         }
 
-        $samplingContext = DynamicSamplingContext::fromTransaction($this->transaction, $this->hub);
+        $samplingContext = DynamicSamplingContext::fromTransaction($this, $this->hub);
         $this->getMetadata()->setDynamicSamplingContext($samplingContext);
 
         return $samplingContext;

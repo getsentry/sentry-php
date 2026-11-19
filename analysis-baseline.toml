@@ -1358,12 +1358,6 @@ count = 1
 
 [[issues]]
 file = "src/Tracing/Transaction.php"
-code = "incompatible-property-type"
-message = 'Property `Sentry\Tracing\Transaction::$transaction` has an incompatible type declaration from docblock.'
-count = 1
-
-[[issues]]
-file = "src/Tracing/Transaction.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `Sentry\Tracing\Transaction::getDynamicSamplingContext`: expected `Sentry\Tracing\DynamicSamplingContext`, but found `Sentry\Tracing\DynamicSamplingContext|null`.'
 count = 1
