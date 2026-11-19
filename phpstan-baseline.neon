@@ -523,12 +523,6 @@ parameters:
 			path: src/UserDataBag.php
 
 		-
-			message: '#^PHPDoc tag @var with type list\<array\{function\?\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: string, args\?\: array\<mixed\>\}\> is not subtype of native type list\<array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\}\>\.$#'
-			identifier: varTag.nativeType
-			count: 1
-			path: src/Util/CodeLocationResolver.php
-
-		-
 			message: '#^Method Sentry\\Util\\TelemetryStorage\:\:bounded\(\) should return Sentry\\Util\\TelemetryStorage\<T\> but returns Sentry\\Util\\TelemetryStorage\<mixed\>\.$#'
 			identifier: return.type
 			count: 1

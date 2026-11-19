@@ -42,7 +42,7 @@ final class CodeLocationResolver
      */
     public function resolve(int $limit = 20): ?array
     {
-        /** @var list<StacktraceFrame> $backtrace */
+        /** @var list<array{function: string, line?: int, file?: string, class?: class-string, type?: '->'|'::'}> $backtrace */
         $backtrace = debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS, $limit);
 
         return $this->resolveFromBacktrace($backtrace);
