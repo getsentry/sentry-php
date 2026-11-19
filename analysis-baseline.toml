@@ -685,6 +685,12 @@ message = "Assigning `mixed` type to a variable may lead to unexpected behavior.
 count = 2
 
 [[issues]]
+file = "src/Monolog/Handler.php"
+code = "possibly-invalid-argument"
+message = 'Possible argument type mismatch for argument #1 of `Monolog\Handler\AbstractProcessingHandler::handle`: expected `Monolog\LogRecord`, but possibly received `Monolog\LogRecord|array<string, mixed>`.'
+count = 1
+
+[[issues]]
 file = "src/Monolog/LogToSentryIssueHandler.php"
 code = "deprecated-class-constant"
 message = 'Use of deprecated class constant `Monolog\Logger::DEBUG`.'
