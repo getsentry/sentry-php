@@ -576,18 +576,21 @@ class Scope
             $event->setContext('trace', $traceContext);
         }
 
-        if ($this->span !== null) {
-            // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
-            $transaction = $this->span->getTransaction();
-            if ($transaction !== null) {
-                $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
+        // Do not override a dynamic sampling context already present, a transaction sets its own when it finishes
+        if ($event->getSdkMetadata('dynamic_sampling_context') === null) {
+            if ($this->span !== null) {
+                // Apply the dynamic sampling context to errors if there is a Transaction on the Scope
+                $transaction = $this->span->getTransaction();
+                if ($transaction !== null) {
+                    $event->setSdkMetadata('dynamic_sampling_context', $transaction->getDynamicSamplingContext());
+                }
+            } elseif ($externalPropagationContext === null) {
+                $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
+                if ($dynamicSamplingContext === null && $options !== null) {
+                    $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
+                }
+                $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
             }
-        } elseif ($externalPropagationContext === null) {
-            $dynamicSamplingContext = $this->propagationContext->getDynamicSamplingContext();
-            if ($dynamicSamplingContext === null && $options !== null) {
-                $dynamicSamplingContext = DynamicSamplingContext::fromOptions($options, $this);
-            }
-            $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
         }
 
         foreach (array_merge($this->contexts, $event->getContexts()) as $name => $data) {

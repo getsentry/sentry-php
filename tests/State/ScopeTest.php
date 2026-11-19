@@ -805,6 +805,39 @@ final class ScopeTest extends TestCase
         Scope::clearExternalPropagationContext();
     }
 
+    public function testApplyToEventKeepsDynamicSamplingContextOfEventWithoutSpanOnScope(): void
+    {
+        $dynamicSamplingContext = DynamicSamplingContext::fromHeader('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-transaction=foo');
+
+        $event = Event::createTransaction();
+        $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
+
+        $scope = new Scope();
+        $event = $scope->applyToEvent($event, null, new Options([
+            'dsn' => 'http://public@example.com/1',
+            'traces_sample_rate' => 1.0,
+        ]));
+
+        $this->assertNotNull($event);
+        $this->assertSame($dynamicSamplingContext, $event->getSdkMetadata('dynamic_sampling_context'));
+    }
+
+    public function testApplyToEventKeepsDynamicSamplingContextOfEventWithOtherTransactionOnScope(): void
+    {
+        $dynamicSamplingContext = DynamicSamplingContext::fromHeader('sentry-trace_id=566e3688a61d4bc888951642d6f14a19,sentry-transaction=foo');
+
+        $event = Event::createTransaction();
+        $event->setSdkMetadata('dynamic_sampling_context', $dynamicSamplingContext);
+
+        $scope = new Scope();
+        $scope->setSpan(new Transaction(new TransactionContext('bar')));
+
+        $event = $scope->applyToEvent($event);
+
+        $this->assertNotNull($event);
+        $this->assertSame($dynamicSamplingContext, $event->getSdkMetadata('dynamic_sampling_context'));
+    }
+
     /**
      * @dataProvider eventWithLogCountProvider
      */
