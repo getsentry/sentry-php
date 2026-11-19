@@ -46,6 +46,11 @@ class Scope
     private $user;
 
     /**
+     * @var (callable(): (UserDataBag|null))|null The callable that resolves the user each time it is read
+     */
+    private $userResolver;
+
+    /**
      * @var array<string, array<string, mixed>> The list of contexts associated to this scope
      */
     private $contexts = [];
@@ -248,7 +253,54 @@ class Scope
      */
     public function getUser(): ?UserDataBag
     {
-        return $this->user;
+        if ($this->userResolver === null) {
+            return $this->user;
+        }
+
+        $userResolver = $this->userResolver;
+        // unset the callback to prevent recursion in case getUser is called in the callback
+        $this->userResolver = null;
+
+        try {
+            $resolvedUser = $userResolver();
+        } catch (\Throwable $exception) {
+            $resolvedUser = null;
+        } finally {
+            $this->userResolver = $userResolver;
+        }
+
+        if ($resolvedUser === null) {
+            return $this->user;
+        }
+
+        if ($this->user === null) {
+            return clone $resolvedUser;
+        }
+
+        $user = clone $this->user;
+        $user->setId($user->getId() ?? $resolvedUser->getId());
+        $user->setEmail($user->getEmail() ?? $resolvedUser->getEmail());
+        $user->setUsername($user->getUsername() ?? $resolvedUser->getUsername());
+        $user->setIpAddress($user->getIpAddress() ?? $resolvedUser->getIpAddress());
+        $user->setSegment($user->getSegment() ?? $resolvedUser->getSegment());
+
+        return (clone $resolvedUser)->merge($user);
+    }
+
+    /**
+     * Sets a callable that resolves the user each time it is read, which
+     * happens for every event, log and metric, so it should be cheap. The
+     * data set on the scope takes precedence over the data it returns.
+     *
+     * @param callable(): (UserDataBag|null) $userResolver
+     *
+     * @return $this
+     */
+    public function setUserResolver(callable $userResolver): self
+    {
+        $this->userResolver = $userResolver;
+
+        return $this;
     }
 
     /**
@@ -285,6 +337,7 @@ class Scope
     public function removeUser(): self
     {
         $this->user = null;
+        $this->userResolver = null;
 
         return $this;
     }
@@ -439,6 +492,7 @@ class Scope
     public function clear(): self
     {
         $this->user = null;
+        $this->userResolver = null;
         $this->level = null;
         $this->span = null;
         $this->fingerprint = [];
@@ -489,13 +543,15 @@ class Scope
             $event->setExtra(array_merge($this->extra, $event->getExtra()));
         }
 
-        if ($this->user !== null) {
+        $scopeUser = $this->getUser();
+
+        if ($scopeUser !== null) {
             $user = $event->getUser();
 
             if ($user === null) {
-                $user = $this->user;
+                $user = $scopeUser;
             } else {
-                $user = $this->user->merge($user);
+                $user = $scopeUser->merge($user);
             }
 
             $event->setUser($user);

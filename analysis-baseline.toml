@@ -1262,6 +1262,18 @@ count = 1
 
 [[issues]]
 file = "src/State/Scope.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\UserDataBag::getSegment`.'
+count = 2
+
+[[issues]]
+file = "src/State/Scope.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `Sentry\UserDataBag::setSegment`.'
+count = 1
+
+[[issues]]
+file = "src/State/Scope.php"
 code = "impossible-condition"
 message = "This condition (type `false`) will always evaluate to false."
 count = 2

@@ -305,6 +305,125 @@ final class ScopeTest extends TestCase
         $scope->setUser('foo');
     }
 
+    public function testSetUserResolver(): void
+    {
+        $scope = new Scope();
+        $scope->setUser(UserDataBag::createFromUserIpAddress('127.0.0.1'));
+
+        $resolvable = false;
+        $calls = 0;
+
+        $scope->setUserResolver(static function () use (&$resolvable, &$calls): ?UserDataBag {
+            ++$calls;
+
+            return $resolvable ? UserDataBag::createFromUserIdentifier('unique_id') : null;
+        });
+
+        $this->assertEquals(UserDataBag::createFromUserIpAddress('127.0.0.1'), $scope->getUser());
+        $this->assertSame(1, $calls);
+
+        $resolvable = true;
+
+        $event = $scope->applyToEvent(Event::createEvent());
+
+        $this->assertNotNull($event);
+        $this->assertEquals(UserDataBag::createFromArray(['id' => 'unique_id', 'ip_address' => '127.0.0.1']), $event->getUser());
+        $this->assertSame(2, $calls);
+
+        $resolvable = false;
+
+        $this->assertEquals(UserDataBag::createFromUserIpAddress('127.0.0.1'), $scope->getUser());
+    }
+
+    public function testSetUserResolverDoesNotOverrideTheUser(): void
+    {
+        $scope = new Scope();
+        $scope->setUser(['id' => 'unique_id', 'subscription' => 'basic']);
+
+        $scope->setUserResolver(static function (): UserDataBag {
+            return UserDataBag::createFromArray([
+                'id' => 'resolved_id',
+                'email' => 'foo@example.com',
+                'segment' => 'my_segment',
+                'subscription' => 'pro',
+                'plan' => 'yearly',
+            ]);
+        });
+
+        $this->assertEquals(
+            UserDataBag::createFromArray([
+                'id' => 'unique_id',
+                'email' => 'foo@example.com',
+                'segment' => 'my_segment',
+                'subscription' => 'basic',
+                'plan' => 'yearly',
+            ]),
+            $scope->getUser()
+        );
+    }
+
+    public function testSetUserResolverDoesNotChangeTheResolvedUser(): void
+    {
+        $resolvedUser = UserDataBag::createFromUserIdentifier('unique_id');
+
+        $scope = new Scope();
+        $scope->setUserResolver(static function () use ($resolvedUser): UserDataBag {
+            return $resolvedUser;
+        });
+
+        $event = Event::createEvent();
+        $event->setUser(UserDataBag::createFromUserIpAddress('127.0.0.1'));
+
+        $scope->applyToEvent($event);
+
+        $this->assertEquals(UserDataBag::createFromUserIdentifier('unique_id'), $resolvedUser);
+    }
+
+    public function testSetUserResolverKeepsTheUserIfTheResolverThrows(): void
+    {
+        $scope = new Scope();
+        $scope->setUser(UserDataBag::createFromUserIpAddress('127.0.0.1'));
+
+        $scope->setUserResolver(static function (): UserDataBag {
+            throw new \RuntimeException('foo');
+        });
+
+        $this->assertEquals(UserDataBag::createFromUserIpAddress('127.0.0.1'), $scope->getUser());
+    }
+
+    public function testSetUserResolverIsNotCalledAgainWhileItRuns(): void
+    {
+        $scope = new Scope();
+        $calls = 0;
+
+        $scope->setUserResolver(static function () use ($scope, &$calls): ?UserDataBag {
+            ++$calls;
+
+            return $scope->getUser();
+        });
+
+        $this->assertNull($scope->getUser());
+        $this->assertSame(1, $calls);
+
+        $scope->getUser();
+
+        $this->assertSame(2, $calls);
+    }
+
+    public function testRemoveUserRemovesTheUserResolver(): void
+    {
+        $scope = new Scope();
+        $scope->setUserResolver(static function (): UserDataBag {
+            return UserDataBag::createFromUserIdentifier('unique_id');
+        });
+
+        $this->assertEquals(UserDataBag::createFromUserIdentifier('unique_id'), $scope->getUser());
+
+        $scope->removeUser();
+
+        $this->assertNull($scope->getUser());
+    }
+
     public function testRemoveUser(): void
     {
         $scope = new Scope();
@@ -523,6 +642,9 @@ final class ScopeTest extends TestCase
         $scope->setTags(['bar' => 'foo']);
         $scope->addFeatureFlag('feature', true);
         $scope->setUser(UserDataBag::createFromUserIdentifier('unique_id'));
+        $scope->setUserResolver(static function (): UserDataBag {
+            return UserDataBag::createFromUserIdentifier('resolved_id');
+        });
         $scope->clear();
 
         $event = $scope->applyToEvent(Event::createEvent());
