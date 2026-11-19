@@ -165,6 +165,10 @@ final class HttpTransportTest extends TestCase
 
     public function testSendFailsDueToHttpClientException(): void
     {
+        SentrySdk::init(new Client(new Options([
+            'send_client_reports' => true,
+        ]), StubTransport::getInstance()));
+
         $exception = new \Exception('foo');
         $event = Event::createEvent();
 
@@ -198,6 +202,7 @@ final class HttpTransportTest extends TestCase
         $result = $transport->send($event);
 
         $this->assertSame(ResultStatus::failed(), $result->getStatus());
+        $this->assertClientReports(['error' => ['network_error' => 1]]);
     }
 
     public function testRecordsClientReportWhenSerializationFails(): void

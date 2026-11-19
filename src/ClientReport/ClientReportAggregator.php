@@ -28,7 +28,7 @@ class ClientReportAggregator
      * ]
      *```
      *
-     * @var array<array<string, int>>
+     * @var array<string, array<string, int>>
      */
     private $reports = [];
 

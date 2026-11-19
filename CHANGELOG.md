@@ -45,7 +45,10 @@ Some changes do not cause an error, so nothing will point you to them. Check eac
 - The send_default_pii option is gone, and the defaults of the data_collection option collect more
   data than before, whichever value send_default_pii had. What gets collected is a privacy decision
   that is mine to make: apply the restrictive configuration from the guide, which is the closest to
-  the old behavior, and list what I could enable on top of it.
+  the old behavior, and list what I could enable on top of it. This only applies if the project
+  does not set the data_collection option yet. If it already does, send_default_pii was already
+  ignored and the existing data_collection configuration keeps applying, so only remove
+  send_default_pii.
 - The client is never null anymore. Remove the null checks, and tell me where one of them was used
   to detect that the SDK is not initialized.
 - Sentry\Metrics\Metrics and \Sentry\metrics() still exist, but they are a different API now. Code
@@ -129,6 +132,32 @@ a span_id instead of the sentry.trace.parent_span_id attribute.
 - Record a client report for transactions that are dropped by `trace_ignore_status_codes`. [(#2367)](https://github.com/getsentry/sentry-php/pull/2367)
 - Fix the argument names of closures in stack frames. [(#2370)](https://github.com/getsentry/sentry-php/pull/2370)
 - Omit the `unit` of a metric and of a crontab monitor schedule when it is not set. [(#2373)](https://github.com/getsentry/sentry-php/pull/2373), [(#2374)](https://github.com/getsentry/sentry-php/pull/2374)
+
+## 4.38.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.38.0.
+
+### Features
+
+- Add `Scope::setUserResolver()` to resolve the user lazily each time it is read, instead of setting it upfront. User data set with `Scope::setUser()` takes precedence over the data the resolver returns. [(#2396)](https://github.com/getsentry/sentry-php/pull/2396)
+
+  ```php
+  \Sentry\configureScope(static function (\Sentry\State\Scope $scope): void {
+      $scope->setUserResolver(static function (): ?\Sentry\UserDataBag {
+          // Return null as long as the user is not known yet
+          return \Sentry\UserDataBag::createFromUserIdentifier('1234');
+      });
+  });
+  ```
+
+## 4.37.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.37.1.
+
+### Bug Fixes
+
+- Write the HTTP status code into the `http.response.status_code` data of a span in `Span::setHttpStatus()`, so that the `trace_ignore_status_codes` option also applies to transactions whose status is set this way. [(#2384)](https://github.com/getsentry/sentry-php/pull/2384)
+- Fix a `TypeError` when the response of the HTTP client contains a header with a numeric name. [(#2366)](https://github.com/getsentry/sentry-php/pull/2366)
 
 ## 4.37.0
 

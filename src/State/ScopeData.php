@@ -44,6 +44,11 @@ class ScopeData
     private $user;
 
     /**
+     * @var (callable(): (UserDataBag|null))|null The callable that resolves the user each time it is read
+     */
+    private $userResolver;
+
+    /**
      * @var array<string, array<string, mixed>> The list of contexts associated to this scope
      */
     private $contexts = [];
@@ -135,7 +140,45 @@ class ScopeData
 
     public function getUser(): ?UserDataBag
     {
-        return $this->user;
+        if ($this->userResolver === null) {
+            return $this->user;
+        }
+
+        $userResolver = $this->userResolver;
+        // unset the callback to prevent recursion in case getUser is called in the callback
+        $this->userResolver = null;
+
+        try {
+            $resolvedUser = $userResolver();
+        } catch (\Throwable $exception) {
+            $resolvedUser = null;
+        } finally {
+            $this->userResolver = $userResolver;
+        }
+
+        if ($resolvedUser === null) {
+            return $this->user;
+        }
+
+        if ($this->user === null) {
+            return clone $resolvedUser;
+        }
+
+        $user = clone $this->user;
+        $user->setId($user->getId() ?? $resolvedUser->getId());
+        $user->setEmail($user->getEmail() ?? $resolvedUser->getEmail());
+        $user->setUsername($user->getUsername() ?? $resolvedUser->getUsername());
+        $user->setIpAddress($user->getIpAddress() ?? $resolvedUser->getIpAddress());
+
+        return (clone $resolvedUser)->merge($user);
+    }
+
+    /**
+     * @param callable(): (UserDataBag|null) $userResolver
+     */
+    public function setUserResolver(callable $userResolver): void
+    {
+        $this->userResolver = $userResolver;
     }
 
     /**
@@ -161,6 +204,7 @@ class ScopeData
     public function removeUser(): void
     {
         $this->user = null;
+        $this->userResolver = null;
     }
 
     /**
@@ -328,6 +372,7 @@ class ScopeData
     public function clear(): void
     {
         $this->user = null;
+        $this->userResolver = null;
         $this->level = null;
         $this->fingerprint = [];
         $this->breadcrumbs = [];
@@ -362,6 +407,8 @@ class ScopeData
         } elseif ($this->user !== null) {
             $merged->user = clone $this->user;
         }
+
+        $merged->userResolver = $other->userResolver ?? $this->userResolver;
 
         $merged->level = $other->level ?? $this->level;
         $merged->fingerprint = array_merge($this->fingerprint, $other->fingerprint);

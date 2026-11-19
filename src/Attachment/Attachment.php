@@ -42,8 +42,8 @@ abstract class Attachment
      * If no low overhead way exists, then the result should be cached so that calling it multiple times
      * does not decrease performance.
      *
-     * @return int the size in bytes or null if the length could not be determined, for example if the file
-     *             does not exist
+     * @return int|null the size in bytes or null if the length could not be determined, for example if the file
+     *                  does not exist
      */
     abstract public function getSize(): ?int;
 
@@ -51,8 +51,8 @@ abstract class Attachment
      * Fetches and returns the data. Calling this can have a non-trivial impact on memory usage, depending
      * on the type and size of attachment.
      *
-     * @return string the content as bytes or null if the content could not be retrieved, for example if the file
-     *                does not exist
+     * @return string|null the content as bytes or null if the content could not be retrieved, for example if the
+     *                     file does not exist
      */
     abstract public function getData(): ?string;
 
