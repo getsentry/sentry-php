@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 4.38.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry PHP SDK v4.38.0.
+
+### Features
+
+- Add `Scope::setUserResolver()` to resolve the user lazily each time it is read, instead of setting it upfront. User data set with `Scope::setUser()` takes precedence over the data the resolver returns. [(#2396)](https://github.com/getsentry/sentry-php/pull/2396)
+
+  ```php
+  \Sentry\configureScope(static function (\Sentry\State\Scope $scope): void {
+      $scope->setUserResolver(static function (): ?\Sentry\UserDataBag {
+          // Return null as long as the user is not known yet
+          return \Sentry\UserDataBag::createFromUserIdentifier('1234');
+      });
+  });
+  ```
+
 ## 5.0.0-beta1
 
 The Sentry SDK team is happy to announce the first beta release of Sentry PHP SDK v5.0.0.
