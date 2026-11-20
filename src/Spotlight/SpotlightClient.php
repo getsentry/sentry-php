@@ -12,6 +12,9 @@ use Sentry\HttpClient\Response;
  */
 class SpotlightClient
 {
+    /**
+     * @param non-empty-string $url
+     */
     public static function sendRequest(Request $request, string $url): Response
     {
         if (!\extension_loaded('curl')) {
