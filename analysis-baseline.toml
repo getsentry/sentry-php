@@ -1357,12 +1357,6 @@ message = "Attempting to call a method on `null`."
 count = 1
 
 [[issues]]
-file = "src/Tracing/Traits/TraceHeaderParserTrait.php"
-code = "reference-to-undefined-variable"
-message = "Reference created from a previously undefined variable `$matches`."
-count = 1
-
-[[issues]]
 file = "src/Tracing/Transaction.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `Sentry\Tracing\Transaction::getDynamicSamplingContext`: expected `Sentry\Tracing\DynamicSamplingContext`, but found `Sentry\Tracing\DynamicSamplingContext|null`.'
