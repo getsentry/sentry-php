@@ -46,6 +46,7 @@ trait TraceHeaderParserTrait
         ];
 
         $hasSentryTrace = false;
+        $matches = [];
 
         if (preg_match(self::$sentryTraceparentHeaderRegex, $sentryTrace, $matches)) {
             if (!empty($matches['trace_id'])) {
