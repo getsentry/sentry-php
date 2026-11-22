@@ -1322,12 +1322,6 @@ count = 2
 
 [[issues]]
 file = "src/Tracing/GuzzleTracingMiddleware.php"
-code = "implicit-to-string-cast"
-message = 'Implicit conversion to `string` for right operand via `Psr\Http\Message\UriInterface::__toString()`.'
-count = 1
-
-[[issues]]
-file = "src/Tracing/GuzzleTracingMiddleware.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 1
