@@ -420,6 +420,8 @@ final class ErrorHandler
         $error = error_get_last();
 
         if (!empty($error) && $error['type'] & (\E_ERROR | \E_PARSE | \E_CORE_ERROR | \E_CORE_WARNING | \E_COMPILE_ERROR | \E_COMPILE_WARNING)) {
+            $matches = [];
+
             // If we did not do so already and we are allowed to increase the memory limit, we do so when we detect an OOM error
             if (self::$didIncreaseMemoryLimit === false
                 && $this->memoryLimitIncreaseOnOutOfMemoryErrorValue !== null

@@ -205,12 +205,6 @@ message = "This condition (type `true`) will always evaluate to true."
 count = 1
 
 [[issues]]
-file = "src/ErrorHandler.php"
-code = "reference-to-undefined-variable"
-message = "Reference created from a previously undefined variable `$matches`."
-count = 1
-
-[[issues]]
 file = "src/Event.php"
 code = "impossible-condition"
 message = "This condition (type `false`) will always evaluate to false."
