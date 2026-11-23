@@ -481,12 +481,6 @@ parameters:
 			path: src/Serializer/AbstractSerializer.php
 
 		-
-			message: '#^Parameter \#3 \$value of function curl_setopt expects non\-empty\-string, string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Spotlight/SpotlightClient.php
-
-		-
 			message: '#^Property Sentry\\Tracing\\PropagationContext\:\:\$parentSampled is never read, only written\.$#'
 			identifier: property.onlyWritten
 			count: 1
