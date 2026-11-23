@@ -73,7 +73,7 @@ final class GuzzleTracingMiddleware
                     $spanContext->setOp('http.client');
                     $spanContext->setData($spanData);
                     $spanContext->setOrigin('auto.http.guzzle');
-                    $spanContext->setDescription($request->getMethod() . ' ' . $partialUri);
+                    $spanContext->setDescription($request->getMethod() . ' ' . (string) $partialUri);
 
                     $childSpan = $parentSpan->startChild($spanContext);
 
