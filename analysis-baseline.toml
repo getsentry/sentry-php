@@ -1147,12 +1147,6 @@ message = "Unsafe array assignment on type `mixed`."
 count = 1
 
 [[issues]]
-file = "src/Serializer/EnvelopItems/EventItem.php"
-code = "possibly-null-argument"
-message = 'Argument #1 of method `Sentry\Util\Str::vsprintfOrNull` is possibly `null`, but parameter type `string` does not accept it.'
-count = 1
-
-[[issues]]
 file = "src/Serializer/EnvelopItems/ProfileItem.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."

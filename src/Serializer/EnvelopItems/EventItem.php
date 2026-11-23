@@ -118,14 +118,15 @@ class EventItem implements EnvelopeItemInterface
             $payload['request'] = $event->getRequest();
         }
 
-        if ($event->getMessage() !== null) {
+        $message = $event->getMessage();
+        if ($message !== null) {
             if (empty($event->getMessageParams())) {
-                $payload['message'] = $event->getMessage();
+                $payload['message'] = $message;
             } else {
                 $payload['message'] = [
-                    'message' => $event->getMessage(),
+                    'message' => $message,
                     'params' => $event->getMessageParams(),
-                    'formatted' => $event->getMessageFormatted() ?? Str::vsprintfOrNull($event->getMessage(), $event->getMessageParams()) ?? $event->getMessage(),
+                    'formatted' => $event->getMessageFormatted() ?? Str::vsprintfOrNull($message, $event->getMessageParams()) ?? $message,
                 ];
             }
         }
