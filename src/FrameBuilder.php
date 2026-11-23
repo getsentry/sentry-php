@@ -59,6 +59,8 @@ final class FrameBuilder
      */
     public function buildFromBacktraceFrame(string $file, int $line, array $backtraceFrame): Frame
     {
+        $matches = [];
+
         // The filename can be in any of these formats:
         //   - </path/to/filename>
         //   - </path/to/filename>(<line number>) : eval()'d code
