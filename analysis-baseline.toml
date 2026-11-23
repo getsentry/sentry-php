@@ -151,12 +151,6 @@ message = "This condition (type `true`) will always evaluate to true."
 count = 2
 
 [[issues]]
-file = "src/Dsn.php"
-code = "reference-to-undefined-variable"
-message = "Reference created from a previously undefined variable `$matches`."
-count = 1
-
-[[issues]]
 file = "src/ErrorHandler.php"
 code = "deprecated-method"
 message = "Call to deprecated method: `ReflectionProperty::setAccessible`."
