@@ -11,6 +11,7 @@ use Sentry\Integration\ErrorListenerIntegration;
 use Sentry\Integration\ExceptionListenerIntegration;
 use Sentry\Integration\FatalErrorListenerIntegration;
 use Sentry\Integration\FrameContextifierIntegration;
+use Sentry\Integration\FunctionTracingIntegration;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Integration\IntegrationRegistry;
 use Sentry\Integration\ModulesIntegration;
@@ -77,16 +78,7 @@ final class IntegrationRegistryTest extends TestCase
                 'dsn' => 'http://public@example.com/sentry/1',
                 'default_integrations' => true,
             ]),
-            [
-                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
-                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
-                RequestIntegration::class => new RequestIntegration(),
-                TransactionIntegration::class => new TransactionIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
-                ModulesIntegration::class => new ModulesIntegration(),
-            ],
+            self::getExpectedDefaultIntegrations($options, true),
         ];
 
         yield 'No default integrations and some user integrations' => [
@@ -112,15 +104,7 @@ final class IntegrationRegistryTest extends TestCase
                     $integration2,
                 ],
             ]),
-            [
-                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
-                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
-                RequestIntegration::class => new RequestIntegration(),
-                TransactionIntegration::class => new TransactionIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
-                ModulesIntegration::class => new ModulesIntegration(),
+            self::getExpectedDefaultIntegrations($options, true) + [
                 $integration1ClassName => $integration1,
                 $integration2ClassName => $integration2,
             ],
@@ -135,14 +119,7 @@ final class IntegrationRegistryTest extends TestCase
                     $integration1,
                 ],
             ]),
-            [
-                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
-                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
-                RequestIntegration::class => new RequestIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
-                ModulesIntegration::class => new ModulesIntegration(),
+            self::getExpectedDefaultIntegrations($options, true, [TransactionIntegration::class]) + [
                 TransactionIntegration::class => new TransactionIntegration(),
                 $integration1ClassName => $integration1,
             ],
@@ -156,14 +133,7 @@ final class IntegrationRegistryTest extends TestCase
                     new ModulesIntegration(),
                 ],
             ]),
-            [
-                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
-                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
-                RequestIntegration::class => new RequestIntegration(),
-                TransactionIntegration::class => new TransactionIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
+            self::getExpectedDefaultIntegrations($options, true, [ModulesIntegration::class]) + [
                 ModulesIntegration::class => new ModulesIntegration(),
             ],
         ];
@@ -199,34 +169,76 @@ final class IntegrationRegistryTest extends TestCase
                     return $defaultIntegrations;
                 },
             ]),
-            [
-                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
-                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
-                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
-                RequestIntegration::class => new RequestIntegration(),
-                TransactionIntegration::class => new TransactionIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
-                ModulesIntegration::class => new ModulesIntegration(),
-            ],
+            self::getExpectedDefaultIntegrations($options, true),
         ];
 
         yield 'Default integrations with DSN set to null' => [
-            new Options([
+            $options = new Options([
                 'dsn' => null,
                 'default_integrations' => true,
                 'integrations' => static function (array $defaultIntegrations): array {
                     return $defaultIntegrations;
                 },
             ]),
-            [
-                RequestIntegration::class => new RequestIntegration(),
-                TransactionIntegration::class => new TransactionIntegration(),
-                FrameContextifierIntegration::class => new FrameContextifierIntegration(),
-                EnvironmentIntegration::class => new EnvironmentIntegration(),
-                ModulesIntegration::class => new ModulesIntegration(),
-            ],
+            self::getExpectedDefaultIntegrations($options, false),
         ];
+    }
+
+    /**
+     * @param class-string<IntegrationInterface>[] $excludedDefaultIntegrations
+     *
+     * @return array<class-string<IntegrationInterface>, IntegrationInterface>
+     */
+    private static function getExpectedDefaultIntegrations(Options $options, bool $withErrorIntegrations, array $excludedDefaultIntegrations = []): array
+    {
+        $integrations = [
+            RequestIntegration::class => new RequestIntegration(),
+            TransactionIntegration::class => new TransactionIntegration(),
+            FrameContextifierIntegration::class => new FrameContextifierIntegration(),
+            EnvironmentIntegration::class => new EnvironmentIntegration(),
+            ModulesIntegration::class => new ModulesIntegration(),
+        ];
+
+        if (\function_exists('Sentry\\setStartCallback') && \function_exists('Sentry\\setEndCallback')) {
+            $integrations[FunctionTracingIntegration::class] = new FunctionTracingIntegration();
+        }
+
+        foreach ($excludedDefaultIntegrations as $excludedDefaultIntegration) {
+            unset($integrations[$excludedDefaultIntegration]);
+        }
+
+        if ($withErrorIntegrations) {
+            $integrations = [
+                ExceptionListenerIntegration::class => new ExceptionListenerIntegration(),
+                ErrorListenerIntegration::class => ErrorListenerIntegration::make($options),
+                FatalErrorListenerIntegration::class => new FatalErrorListenerIntegration(),
+            ] + $integrations;
+        }
+
+        return $integrations;
+    }
+
+    /**
+     * @runInSeparateProcess
+     *
+     * @preserveGlobalState disabled
+     */
+    public function testDefaultIntegrationsIncludeFunctionTracingIntegrationWhenExtensionCallbacksExist(): void
+    {
+        if (!\function_exists('Sentry\\setStartCallback')) {
+            eval('namespace Sentry { function setStartCallback(callable $callback): bool { return true; } function setEndCallback(callable $callback): bool { return true; } }');
+        }
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('debug');
+
+        $integrations = IntegrationRegistry::getInstance()->setupIntegrations(new Options([
+            'dsn' => null,
+            'default_integrations' => true,
+        ]), $logger);
+
+        $this->assertArrayHasKey(FunctionTracingIntegration::class, $integrations);
     }
 
     /**
