@@ -36,6 +36,11 @@ final class SentrySdk
     private static $runtimeContextStorage;
 
     /**
+     * @var (callable(\Throwable): bool)|null
+     */
+    private static $cancellationDetector;
+
+    /**
      * Constructor.
      */
     private function __construct()
@@ -74,6 +79,28 @@ final class SentrySdk
 
         self::$runtimeContextStorage = $runtimeContextStorage;
         self::$runtimeContextManager = null;
+    }
+
+    /**
+     * Registers a runtime callback that identifies cancellation of the current execution.
+     * The SDK rethrows matching exceptions instead of treating them as callback or delivery failures.
+     *
+     * The detector must not suspend or throw and may see the same exception more than once.
+     * Registration persists across SDK initialization. Pass null to remove the detector.
+     *
+     * @param (callable(\Throwable): bool)|null $detector
+     */
+    public static function setCancellationDetector(?callable $detector): void
+    {
+        self::$cancellationDetector = $detector;
+    }
+
+    /**
+     * @internal
+     */
+    public static function isCancellation(\Throwable $exception): bool
+    {
+        return self::$cancellationDetector !== null && (self::$cancellationDetector)($exception);
     }
 
     /**
