@@ -172,8 +172,10 @@ final class GuzzleTracingMiddleware
             return false;
         }
 
+        $tracePropagationTargets = $options->getTracePropagationTargets();
+
         // Check if the request destination is allow listed in the trace_propagation_targets option.
-        return $options->getTracePropagationTargets() === null
-               || \in_array($request->getUri()->getHost(), $options->getTracePropagationTargets());
+        return $tracePropagationTargets === null
+               || \in_array($request->getUri()->getHost(), $tracePropagationTargets);
     }
 }
