@@ -15,6 +15,7 @@ use Sentry\EventHint;
 use Sentry\ExceptionDataBag;
 use Sentry\ExceptionMechanism;
 use Sentry\Frame;
+use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Options;
 use Sentry\SentrySdk;
@@ -1237,6 +1238,41 @@ final class ClientTest extends TestCase
             Event::createEvent(),
             'The "before_send" callback failed with exception: "test".'
         );
+    }
+
+    public function testOrdinaryCallbackFailuresAreStillDroppedWithACancellationDetector(): void
+    {
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception): bool {
+            return $exception instanceof \LogicException;
+        });
+
+        $this->assertCallbackFailureDropsEvent(
+            'before_send',
+            Event::createEvent(),
+            'The "before_send" callback failed with exception: "test".'
+        );
+    }
+
+    public function testCaptureEventPropagatesCancellationFromTheHttpClient(): void
+    {
+        $cancellation = new \RuntimeException('Request canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->expects($this->once())->method('sendRequest')->willThrowException($cancellation);
+        $client = ClientBuilder::create([
+            'dsn' => 'http://public@example.com/1',
+            'default_integrations' => false,
+        ])->setHttpClient($httpClient)->getClient();
+
+        try {
+            $client->captureEvent(Event::createEvent());
+            $this->fail('Expected the cancellation to propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame($cancellation, $exception);
+        }
     }
 
     public function testProcessEventDiscardsEventWhenBeforeSendTransactionCallbackThrows(): void
