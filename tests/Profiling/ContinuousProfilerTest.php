@@ -82,6 +82,47 @@ final class ContinuousProfilerTest extends TestCase
     /**
      * @requires extension excimer
      */
+    public function testRootStartedDuringFinalChunkDeliveryKeepsItsOwnRecording(): void
+    {
+        $profiler = new ContinuousProfiler();
+        $deliveredIds = [];
+
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')
+            ->willReturn(new Options(['profile_lifecycle' => 'trace', 'profile_session_sample_rate' => 1.0]));
+        $client->method('captureEvent')
+            ->willReturnCallback(static function (Event $event) use ($profiler, &$deliveredIds): void {
+                $deliveredIds[] = $event->getProfileChunk()->getProfilerId();
+                if (\count($deliveredIds) === 1) {
+                    // A yielding transport lets another request start before this send returns.
+                    $profiler->startForRootSpan('second');
+                }
+            });
+        SentrySdk::init()->bindClient($client);
+
+        $profiler->startForRootSpan('first');
+        try {
+            $firstId = $profiler->getProfilerId();
+            self::busyWait(0.1);
+            $profiler->stopForRootSpan('first');
+
+            $secondId = $profiler->getProfilerId();
+            $this->assertNotNull($secondId);
+            $this->assertNotSame($firstId, $secondId);
+            self::busyWait(0.1);
+            $profiler->stopForRootSpan('second');
+
+            $this->assertFalse($profiler->isRunning());
+            $this->assertSame([$firstId, $secondId], $deliveredIds);
+        } finally {
+            $profiler->stop();
+        }
+    }
+
+    /**
+     * @requires extension excimer
+     */
     public function testStopDoesNotPassProfileChunkToEventProcessors(): void
     {
         $this->bindClient(['profile_session_sample_rate' => 1.0]);
