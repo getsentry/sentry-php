@@ -392,48 +392,55 @@ class Hub implements HubInterface
             }
         }
 
-        $profilesSampleSource = 'config:profiles_sample_rate';
-        $profilesSampler = $options->getProfilesSampler();
+        try {
+            $profilesSampleSource = 'config:profiles_sample_rate';
+            $profilesSampler = $options->getProfilesSampler();
 
-        if ($profilesSampler !== null) {
-            try {
-                $profilesSampleRate = $profilesSampler($samplingContext);
-                $profilesSampleSource = 'config:profiles_sampler';
-            } catch (\Throwable $exception) {
-                if (isCancellation($exception)) {
-                    throw $exception;
+            if ($profilesSampler !== null) {
+                try {
+                    $profilesSampleRate = $profilesSampler($samplingContext);
+                    $profilesSampleSource = 'config:profiles_sampler';
+                } catch (\Throwable $exception) {
+                    if (isCancellation($exception)) {
+                        throw $exception;
+                    }
+
+                    $options->getLoggerOrNullLogger()->error(\sprintf('The "profiles_sampler" callback failed with exception: "%s".', $exception->getMessage()));
+                    $profilesSampleRate = $options->getProfilesSampleRate() ?? 0;
+                    $profilesSampleSource = 'config:profiles_sampler_error_fallback';
                 }
-
-                $options->getLoggerOrNullLogger()->error(\sprintf('The "profiles_sampler" callback failed with exception: "%s".', $exception->getMessage()));
-                $profilesSampleRate = $options->getProfilesSampleRate() ?? 0;
-                $profilesSampleSource = 'config:profiles_sampler_error_fallback';
+            } else {
+                $profilesSampleRate = $options->getProfilesSampleRate();
             }
-        } else {
-            $profilesSampleRate = $options->getProfilesSampleRate();
-        }
 
-        if ($profilesSampleRate === null) {
-            $logger->info(\sprintf('Transaction [%s] is not profiling because neither `profiles_sample_rate` nor `profiles_sampler` option is set.', (string) $transaction->getTraceId()));
-        } elseif (!$this->isValidSampleRate($profilesSampleRate)) {
-            $logger->warning(\sprintf('Transaction [%s] is not profiling because profile sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $profilesSampleSource));
-        } elseif ($this->sample($profilesSampleRate)) {
-            $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
+            if ($profilesSampleRate === null) {
+                $logger->info(\sprintf('Transaction [%s] is not profiling because neither `profiles_sample_rate` nor `profiles_sampler` option is set.', (string) $transaction->getTraceId()));
+            } elseif (!$this->isValidSampleRate($profilesSampleRate)) {
+                $logger->warning(\sprintf('Transaction [%s] is not profiling because profile sample rate (decided by %s) is invalid.', (string) $transaction->getTraceId(), $profilesSampleSource));
+            } elseif ($this->sample($profilesSampleRate)) {
+                $logger->info(\sprintf('Transaction [%s] started profiling because it was sampled.', (string) $transaction->getTraceId()));
 
-            try {
-                $transaction->initProfiler()->start();
-            } catch (\Throwable $exception) {
-                $transaction->detachProfiler();
-                if (isCancellation($exception)) {
-                    throw $exception;
+                try {
+                    $transaction->initProfiler()->start();
+                } catch (\Throwable $exception) {
+                    $transaction->detachProfiler();
+                    if (isCancellation($exception)) {
+                        throw $exception;
+                    }
+
+                    $logger->error(\sprintf('Failed to start the profiler. Reason: "%s".', $exception->getMessage()), ['exception' => $exception]);
                 }
-
-                $logger->error(\sprintf('Failed to start the profiler. Reason: "%s".', $exception->getMessage()), ['exception' => $exception]);
+            } else {
+                $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
             }
-        } else {
-            $logger->info(\sprintf('Transaction [%s] is not profiling because it was not sampled.', (string) $transaction->getTraceId()));
-        }
 
-        return $transaction;
+            return $transaction;
+        } catch (\Throwable $exception) {
+            // The transaction is not returned to be finished, so its root span must not keep the profiler running
+            Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $transaction->getSpanId());
+
+            throw $exception;
+        }
     }
 
     /**

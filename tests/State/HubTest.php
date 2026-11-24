@@ -1281,6 +1281,51 @@ final class HubTest extends TestCase
         $this->assertLessThan($firstFinishTimestamp, $payload['profile']['samples'][0]['timestamp']);
     }
 
+    /**
+     * @dataProvider profileStartupCallbackProvider
+     *
+     * @requires extension excimer
+     */
+    public function testCanceledTransactionStartupReleasesItsContinuousProfilingRoot(string $callbackOption): void
+    {
+        $hub = $this->initHubWithProfileLifecycleTrace();
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $firstTransaction = $hub->startTransaction(TransactionContext::make());
+
+        $cancellation = new \RuntimeException('Request canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $hub->pushScope();
+        $hub->bindClient(new Client(new Options([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profiles_sample_rate' => 1.0,
+            $callbackOption => static function () use ($cancellation): void {
+                throw $cancellation;
+            },
+        ]), StubTransport::getInstance()));
+
+        try {
+            $hub->startTransaction(TransactionContext::make());
+            $this->fail('Expected the cancellation to propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame($cancellation, $exception);
+        } finally {
+            $hub->popScope();
+        }
+
+        $this->assertTrue($profiler->isRunning());
+        $firstTransaction->finish();
+        $this->assertFalse($profiler->isRunning());
+    }
+
+    public static function profileStartupCallbackProvider(): \Generator
+    {
+        yield 'sampler' => ['profiles_sampler'];
+        yield 'factory' => ['profiler_factory'];
+    }
+
     private function initHubWithProfileLifecycleTrace(): HubInterface
     {
         $hub = SentrySdk::init();
