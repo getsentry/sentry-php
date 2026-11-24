@@ -1,0 +1,39 @@
+# getsentry/sentry-php 926220ed11f31ae0533ea4f1bf7f8c4ecf37685e
+
+rubric = "sdk"
+
+[[area]]
+paths = ["src/**"]
+families = ["server"]
+
+[[area]]
+paths = [
+  "src/*", "src/Agent/**", "src/Attachment/**", "src/Attributes/**", "src/ClientReport/**",
+  "src/Context/**", "src/DataCollection/**", "src/Exception/**", "src/HttpClient/**", "src/Logger/**",
+  "src/Logs/**", "src/Metrics/**", "src/Profiling/**", "src/Serializer/**", "src/State/**",
+  "src/Tracing/**", "src/Transport/**", "src/Util/**",
+]
+families = ["server"]
+shared_core = true
+
+# composer.json declares the PHP version and runtime dependencies every customer inherits.
+[[area]]
+paths = ["composer.json"]
+families = ["server"]
+shared_core = true
+
+[[kind]]
+paths = ["tests/**", "phpunit.xml.dist"]
+kind = "tests"
+
+# AUTHORS is not export-ignored in .gitattributes, so it is in the Composer dist archive.
+[[kind]]
+paths = ["scripts/**", "decision-model-linter/**", "AUTHORS"]
+kind = "build-release"
+
+[[kind]]
+paths = [
+  "stubs/**", ".php-cs-fixer.dist.php", "phpstan.neon", "phpstan-baseline.neon", "mago.toml",
+  "analysis-baseline.toml", "codecov.yml", ".git-blame-ignore-revs",
+]
+kind = "dev-tooling"
