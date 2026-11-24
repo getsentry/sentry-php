@@ -13,6 +13,8 @@ use Sentry\SentrySdk;
 use Sentry\Stacktrace;
 use Sentry\State\Scope;
 
+use function Sentry\isCancellation;
+
 /**
  * This integration reads excerpts of code around the line that originated an
  * error.
@@ -185,6 +187,10 @@ final class FrameContextifierIntegration implements IntegrationInterface
 
             $this->excerptCache[$cacheKey] = $frame;
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->logger->warning(
                 \sprintf('Failed to get the source code excerpt for the file "%s".', $filePath),
                 ['exception' => $exception]

@@ -9,6 +9,7 @@ use GuzzleHttp\Psr7\Utils;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
 use Sentry\DataCollection\Psr7BodyReader;
+use Sentry\SentrySdk;
 
 final class Psr7BodyReaderTest extends TestCase
 {
@@ -137,6 +138,26 @@ final class Psr7BodyReaderTest extends TestCase
         $stream->expects($this->once())->method('seek')->with(3)->willThrowException(new \RuntimeException('Cannot seek'));
 
         $this->assertNull(Psr7BodyReader::read($stream, $limit));
+    }
+
+    public function testCanceledReadRestoresOriginalPositionAndPropagates(): void
+    {
+        $cancellation = new \RuntimeException('Read canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('isReadable')->willReturn(true);
+        $stream->method('isSeekable')->willReturn(true);
+        $stream->method('tell')->willReturn(3);
+        $stream->method('eof')->willReturn(false);
+        $stream->method('read')->willThrowException($cancellation);
+        $stream->expects($this->once())->method('seek')->with(3);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Read canceled');
+
+        Psr7BodyReader::read($stream, 10);
     }
 
     public function testUnlimitedBodyIsReadAndOriginalPositionIsRestored(): void

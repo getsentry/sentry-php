@@ -6,6 +6,8 @@ namespace Sentry\DataCollection;
 
 use Psr\Http\Message\StreamInterface;
 
+use function Sentry\isCancellation;
+
 /**
  * Reads a PSR-7 body and restores it's original position after reading finished.
  * It will only read body streams that are seekable, otherwise it could consume the body
@@ -57,6 +59,10 @@ final class Psr7BodyReader
                 $stream->seek($position);
             }
         } catch (\RuntimeException $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             return null;
         }
 

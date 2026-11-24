@@ -7,6 +7,8 @@ namespace Sentry\Attributes;
 use Sentry\Serializer\SerializableInterface;
 use Sentry\Util\JSON;
 
+use function Sentry\isCancellation;
+
 /**
  * @phpstan-type AttributeType 'string'|'boolean'|'integer'|'double'
  * @phpstan-type AttributeValue string|bool|int|float|null
@@ -90,6 +92,10 @@ class Attribute
             try {
                 return new self(JSON::encode($value->toSentry()), 'string');
             } catch (\Throwable $e) {
+                if (isCancellation($e)) {
+                    throw $e;
+                }
+
                 // Ignore the exception and continue trying other methods
             }
         }
@@ -101,6 +107,10 @@ class Attribute
         try {
             return new self(JSON::encode($value), 'string');
         } catch (\Throwable $e) {
+            if (isCancellation($e)) {
+                throw $e;
+            }
+
             // Ignore the exception
         }
 
