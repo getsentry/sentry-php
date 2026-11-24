@@ -24,6 +24,11 @@ final class Profiler implements ProfilerInterface
     private $profile;
 
     /**
+     * @var bool Whether the Excimer extension was available when this profiler was created
+     */
+    private $available = false;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -59,12 +64,17 @@ final class Profiler implements ProfilerInterface
             $this->profiler->stop();
 
             $this->profile->setExcimerLog($this->profiler->flush());
+
+            // Release the Excimer profiler right away: it holds an OS timer (a thread
+            // on Linux) that is only freed on destruction. The owning transaction is
+            // part of a reference cycle, so it may otherwise live until a GC run.
+            $this->profiler = null;
         }
     }
 
     public function getProfile(): ?Profile
     {
-        if ($this->profiler === null) {
+        if (!$this->available) {
             return null;
         }
 
@@ -80,6 +90,7 @@ final class Profiler implements ProfilerInterface
         }
 
         $this->profiler = new \ExcimerProfiler();
+        $this->available = true;
         $this->profile->setStartTimeStamp(microtime(true));
 
         $this->profiler->setEventType(\EXCIMER_REAL);
