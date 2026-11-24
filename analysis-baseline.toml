@@ -68,12 +68,6 @@ count = 1
 
 [[issues]]
 file = "src/Dsn.php"
-code = "possibly-false-operand"
-message = "Left operand in `==` comparison might be `false` (type `false|int(0)|int(1)`)."
-count = 1
-
-[[issues]]
-file = "src/Dsn.php"
 code = "possibly-null-argument"
 message = "Argument #1 of function `strrpos` is possibly `null`, but parameter type `string` does not accept it."
 count = 1

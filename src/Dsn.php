@@ -109,7 +109,7 @@ final class Dsn implements \Stringable
 
         $orgId = null;
         $matches = [];
-        if (preg_match(self::SENTRY_ORG_ID_REGEX, $parsedDsn['host'], $matches) == 1) {
+        if (preg_match(self::SENTRY_ORG_ID_REGEX, $parsedDsn['host'], $matches) === 1) {
             $orgId = (int) $matches[1];
         }
 
