@@ -200,6 +200,10 @@ class Client implements ClientInterface
                 return $event->getId();
             }
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->logger->error(
                 \sprintf('Failed to send the event to Sentry. Reason: "%s".', $exception->getMessage()),
                 ['exception' => $exception, 'event' => $event]
@@ -561,6 +565,10 @@ class Client implements ClientInterface
                 try {
                     return ($this->options->getBeforeSendCallback())($event, $hint);
                 } catch (\Throwable $exception) {
+                    if (isCancellation($exception)) {
+                        throw $exception;
+                    }
+
                     $this->logger->error(\sprintf('The "before_send" callback failed with exception: "%s".', $exception->getMessage()));
 
                     return null;
@@ -569,6 +577,10 @@ class Client implements ClientInterface
                 try {
                     return ($this->options->getBeforeSendTransactionCallback())($event, $hint);
                 } catch (\Throwable $exception) {
+                    if (isCancellation($exception)) {
+                        throw $exception;
+                    }
+
                     $this->logger->error(\sprintf('The "before_send_transaction" callback failed with exception: "%s".', $exception->getMessage()));
 
                     return null;
@@ -577,6 +589,10 @@ class Client implements ClientInterface
                 try {
                     return ($this->options->getBeforeSendCheckInCallback())($event, $hint);
                 } catch (\Throwable $exception) {
+                    if (isCancellation($exception)) {
+                        throw $exception;
+                    }
+
                     $this->logger->error(\sprintf('The "before_send_check_in" callback failed with exception: "%s".', $exception->getMessage()));
 
                     return null;

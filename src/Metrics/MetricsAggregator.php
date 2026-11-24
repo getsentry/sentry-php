@@ -22,6 +22,8 @@ use Sentry\Transport\DataCategory;
 use Sentry\Unit;
 use Sentry\Util\TelemetryStorage;
 
+use function Sentry\isCancellation;
+
 /**
  * @internal
  */
@@ -120,6 +122,10 @@ final class MetricsAggregator
                     return;
                 }
             } catch (\Throwable $exception) {
+                if (isCancellation($exception)) {
+                    throw $exception;
+                }
+
                 $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('The "before_send_metric" callback failed with exception: "%s".', $exception->getMessage()));
                 ClientReportAggregator::getInstance()->add(DataCategory::metric(), Reason::beforeSend(), 1);
 

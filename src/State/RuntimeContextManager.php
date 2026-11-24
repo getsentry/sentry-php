@@ -10,6 +10,8 @@ use Sentry\ErrorHandler;
 use Sentry\Profiling\Profiles;
 use Sentry\Tracing\PropagationContext;
 
+use function Sentry\isCancellation;
+
 /**
  * Manages runtime-local SDK state across different execution models.
  *
@@ -155,6 +157,10 @@ final class RuntimeContextManager
         try {
             $runtimeContext->getLogsAggregator()->flush($hub);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $logger->error('Failed to flush logs while ending a runtime context.', [
                 'exception' => $exception,
                 'runtime_context_id' => $runtimeContext->getId(),
@@ -165,6 +171,10 @@ final class RuntimeContextManager
         try {
             $runtimeContext->getMetricsAggregator()->flush($hub);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $logger->error('Failed to flush trace metrics while ending a runtime context.', [
                 'exception' => $exception,
                 'runtime_context_id' => $runtimeContext->getId(),
@@ -181,6 +191,10 @@ final class RuntimeContextManager
         try {
             $client->flush($timeout);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $logger->error('Failed to flush the client transport while ending a runtime context.', [
                 'exception' => $exception,
                 'runtime_context_id' => $runtimeContext->getId(),
