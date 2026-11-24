@@ -232,6 +232,37 @@ final class TransactionTest extends TestCase
         ], StubLogger::$logs);
     }
 
+    public function testCancellationWhileStoppingTheProfilerEndsTheTransaction(): void
+    {
+        $cancellation = new \RuntimeException('Request canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $profiler = $this->createMock(ProfilerInterface::class);
+        $profiler->expects($this->once())->method('stop')->willThrowException($cancellation);
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options([
+            'profiler_factory' => static function () use ($profiler): ProfilerInterface {
+                return $profiler;
+            },
+        ]));
+        $hub = $this->createMock(HubInterface::class);
+        $hub->method('getClient')->willReturn($client);
+        $hub->expects($this->never())->method('captureEvent');
+        $transaction = new Transaction(TransactionContext::make()->setSampled(true), $hub);
+        $transaction->initProfiler();
+
+        try {
+            $transaction->finish(100.0);
+            $this->fail('Expected the cancellation to propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame($cancellation, $exception);
+        }
+
+        $this->assertSame(100.0, $transaction->getEndTimestamp());
+        $this->assertNull($transaction->finish());
+    }
+
     public function testFluentApi(): void
     {
         $transaction = new Transaction(TransactionContext::make());

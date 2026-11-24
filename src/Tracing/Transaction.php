@@ -16,6 +16,8 @@ use Sentry\SentrySdk;
 use Sentry\State\HubInterface;
 use Sentry\Transport\DataCategory;
 
+use function Sentry\isCancellation;
+
 /**
  * This class stores all the information about a Transaction.
  */
@@ -153,16 +155,20 @@ final class Transaction extends Span
      */
     public function finish(?float $endTimestamp = null): ?EventId
     {
-        Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $this->getSpanId());
+        try {
+            Profiles::getInstance()->continuousProfiler()->stopForRootSpan((string) $this->getSpanId());
 
-        if ($this->endTimestamp !== null) {
-            // Transaction was already finished once and we don't want to re-flush it
-            return null;
+            if ($this->endTimestamp !== null) {
+                // Transaction was already finished once and we don't want to re-flush it
+                return null;
+            }
+
+            $profile = $this->profiler !== null ? $this->finishProfiler($this->profiler) : null;
+        } finally {
+            if ($this->endTimestamp === null) {
+                parent::finish($endTimestamp);
+            }
         }
-
-        $profile = $this->profiler !== null ? $this->finishProfiler($this->profiler) : null;
-
-        parent::finish($endTimestamp);
 
         if ($this->sampled !== true) {
             $client = $this->hub->getClient();
@@ -216,6 +222,10 @@ final class Transaction extends Span
 
             return $this->sampled === true ? $profiler->getProfile() : null;
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $client = $this->hub->getClient();
             if ($client !== null) {
                 $client->getOptions()->getLoggerOrNullLogger()->error(\sprintf('Failed to stop the profiler. Reason: "%s".', $exception->getMessage()), ['exception' => $exception]);

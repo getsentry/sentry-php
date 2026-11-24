@@ -14,6 +14,8 @@ use Sentry\Transport\DataCategory;
 use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
+use function Sentry\isCancellation;
+
 /**
  * @phpstan-import-type ExcimerLogStackEntry from ExcimerLogConverter
  *
@@ -509,6 +511,10 @@ final class ContinuousProfiler
                 $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
             }
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunks.', ['exception' => $exception]);
         }
     }

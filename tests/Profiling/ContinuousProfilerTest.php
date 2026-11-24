@@ -13,11 +13,13 @@ use Sentry\Event;
 use Sentry\EventType;
 use Sentry\Options;
 use Sentry\Profiling\ContinuousProfiler;
+use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Scope;
 use Sentry\Tests\ClientReport\ClientReportAssertions;
 use Sentry\Tests\StubLogger;
 use Sentry\Tests\StubTransport;
+use Sentry\Tracing\TransactionContext;
 
 final class ContinuousProfilerTest extends TestCase
 {
@@ -247,6 +249,25 @@ final class ContinuousProfilerTest extends TestCase
         $this->assertNotSame($firstProfilerId, $profiler->getProfilerId());
 
         $profiler->stop();
+    }
+
+    /**
+     * @requires extension excimer
+     */
+    public function testFinishingATransactionWithAnEndTimestampReleasesItsProfilingRoot(): void
+    {
+        $this->bindClient([
+            'traces_sample_rate' => 1.0,
+            'profile_lifecycle' => 'trace',
+            'profile_session_sample_rate' => 1.0,
+        ]);
+        $transaction = SentrySdk::getCurrentHub()->startTransaction(TransactionContext::make()->setEndTimestamp(123.0));
+        $profiler = Profiles::getInstance()->continuousProfiler();
+        $this->assertTrue($profiler->isRunning());
+
+        $this->assertNull($transaction->finish());
+        $this->assertFalse($profiler->isRunning());
+        $this->assertSame(123.0, $transaction->getEndTimestamp());
     }
 
     /**
