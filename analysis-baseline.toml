@@ -1303,12 +1303,6 @@ message = "Non numeric string of type `string` implicitly cast to `float`."
 count = 4
 
 [[issues]]
-file = "src/Tracing/Traits/TraceHeaderParserTrait.php"
-code = "possible-method-access-on-null"
-message = "Attempting to call a method on `null`."
-count = 1
-
-[[issues]]
 file = "src/Tracing/Transaction.php"
 code = "invalid-return-statement"
 message = 'Invalid return type for function `Sentry\Tracing\Transaction::getDynamicSamplingContext`: expected `Sentry\Tracing\DynamicSamplingContext`, but found `Sentry\Tracing\DynamicSamplingContext|null`.'
