@@ -214,12 +214,14 @@ final class DynamicSamplingContext
             $samplingContext->set('org_id', (string) $dsn->getOrgId());
         }
 
-        if ($options->getRelease() !== null) {
-            $samplingContext->set('release', $options->getRelease());
+        $release = $options->getRelease();
+        if ($release !== null) {
+            $samplingContext->set('release', $release);
         }
 
-        if ($options->getEnvironment() !== null) {
-            $samplingContext->set('environment', $options->getEnvironment());
+        $environment = $options->getEnvironment();
+        if ($environment !== null) {
+            $samplingContext->set('environment', $environment);
         }
     }
 
