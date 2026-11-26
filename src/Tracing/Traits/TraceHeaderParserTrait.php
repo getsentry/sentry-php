@@ -151,8 +151,9 @@ trait TraceHeaderParserTrait
 
         $options = $client->getOptions();
         $clientOrgId = $options->getOrgId();
-        if ($clientOrgId === null && $options->getDsn() !== null) {
-            $clientOrgId = $options->getDsn()->getOrgId();
+        $dsn = $options->getDsn();
+        if ($clientOrgId === null && $dsn !== null) {
+            $clientOrgId = $dsn->getOrgId();
         }
 
         $baggageOrgId = $samplingContext->get('org_id');
