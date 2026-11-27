@@ -42,6 +42,7 @@ final class SentrySdkExtension implements BeforeTestHookInterface
             $reflectionProperty->setAccessible(false);
         }
 
+        SentrySdk::setCancellationDetector(null);
         StubTransport::$events = [];
 
         $reflectionProperty = new \ReflectionProperty(Scope::class, 'globalEventProcessors');

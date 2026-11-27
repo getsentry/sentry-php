@@ -15,6 +15,8 @@ use Sentry\Options;
 use Sentry\Serializer\PayloadSerializerInterface;
 use Sentry\Spotlight\SpotlightClient;
 
+use function Sentry\isCancellation;
+
 /**
  * @internal
  */
@@ -134,6 +136,10 @@ class HttpTransport implements TransportInterface
         try {
             $payload = $this->payloadSerializer->serialize($event);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->logger->error(
                 \sprintf('Failed to serialize %s. Reason: "%s".', $eventDescription, $exception->getMessage()),
                 ['exception' => $exception, 'event' => $event]
@@ -150,6 +156,10 @@ class HttpTransport implements TransportInterface
         try {
             $response = $this->httpClient->sendRequest($request, $this->options);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->logger->error(
                 \sprintf('Failed to send %s to %s. Reason: "%s".', $eventDescription, $targetDescription, $exception->getMessage()),
                 ['exception' => $exception, 'event' => $event]
@@ -241,6 +251,10 @@ class HttpTransport implements TransportInterface
                 );
             }
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->logger->info(
                 \sprintf('Failed to send the event to Spotlight. Reason: "%s".', $exception->getMessage()),
                 ['exception' => $exception, 'event' => $event]

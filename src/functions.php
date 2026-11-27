@@ -572,3 +572,12 @@ function flush(): void
 {
     SentrySdk::flush();
 }
+
+/**
+ * @internal
+ */
+function isCancellation(\Throwable $exception): bool
+{
+    // A catch can run while the application's autoloader is throwing. An unloaded SDK has no detector.
+    return class_exists(SentrySdk::class, false) && SentrySdk::isCancellation($exception);
+}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Sentry\Tests\Serializer;
 
 use Sentry\Options;
+use Sentry\SentrySdk;
 use Sentry\Serializer\AbstractSerializer;
 use Sentry\Serializer\SerializableInterface;
 use Sentry\Serializer\Serializer;
@@ -124,6 +125,26 @@ final class SerializerTest extends AbstractSerializerTest
                 'purpose' => 'To be tested!',
             ],
         ], $this->invokeSerialization($serializer, $object));
+    }
+
+    public function testCancellationFromAClassSerializerPropagates(): void
+    {
+        $cancellation = new \RuntimeException('Serialization canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $serializer = $this->createSerializer(new Options([
+            'class_serializers' => [
+                \stdClass::class => static function () use ($cancellation): void {
+                    throw $cancellation;
+                },
+            ],
+        ]));
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Serialization canceled');
+
+        $this->invokeSerialization($serializer, [new \stdClass()]);
     }
 
     public function testObjectClassSerializerMatchesAnyObject(): void

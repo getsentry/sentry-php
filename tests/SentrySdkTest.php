@@ -6,6 +6,7 @@ namespace Sentry\Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Breadcrumb;
 use Sentry\Client;
 use Sentry\ClientInterface;
 use Sentry\Event;
@@ -16,6 +17,7 @@ use Sentry\Profiling\ContinuousProfiler;
 use Sentry\Profiling\Profiles;
 use Sentry\SentrySdk;
 use Sentry\State\Hub;
+use Sentry\State\HubInterface;
 use Sentry\State\Scope;
 use Sentry\Tracing\Span;
 use Sentry\Tracing\SpanContext;
@@ -611,6 +613,85 @@ final class SentrySdkTest extends TestCase
         SentrySdk::init()->bindClient($client);
 
         SentrySdk::flush();
+    }
+
+    /**
+     * @dataProvider cancellationCallbackDataProvider
+     */
+    public function testCancellationPropagatesFromSdkCallbacks(?string $option, callable $capture): void
+    {
+        $cancellation = new \RuntimeException('Request canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $cancel = static function () use ($cancellation): void {
+            throw $cancellation;
+        };
+        $options = ['traces_sample_rate' => 1.0];
+        if ($option !== null) {
+            $options[$option] = $cancel;
+        }
+        $hub = SentrySdk::init();
+        $hub->bindClient(new Client(new Options($options), StubTransport::getInstance()));
+
+        try {
+            $capture($hub, $cancel);
+            $this->fail('Expected the cancellation to propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame($cancellation, $exception);
+        }
+    }
+
+    public static function cancellationCallbackDataProvider(): \Generator
+    {
+        yield 'breadcrumb' => ['before_breadcrumb', static function (HubInterface $hub): void {
+            $hub->addBreadcrumb(new Breadcrumb(Breadcrumb::LEVEL_INFO, Breadcrumb::TYPE_DEFAULT, 'test'));
+        }];
+
+        $startTransaction = static function (HubInterface $hub): void {
+            $hub->startTransaction(TransactionContext::make());
+        };
+        yield 'trace sampler' => ['traces_sampler', $startTransaction];
+        yield 'profile sampler' => ['profiles_sampler', $startTransaction];
+
+        yield 'event processor' => [null, static function (HubInterface $hub, callable $cancel): void {
+            $hub->pushScope()->addEventProcessor($cancel);
+            $hub->captureEvent(Event::createEvent());
+        }];
+        yield 'user resolver' => [null, static function (HubInterface $hub, callable $cancel): void {
+            $hub->pushScope()->setUserResolver($cancel);
+            $hub->captureEvent(Event::createEvent());
+        }];
+        yield 'log' => ['before_send_log', static function (): void {
+            Logs::getInstance()->info('message');
+        }];
+        yield 'metric' => ['before_send_metric', static function (): void {
+            TraceMetrics::getInstance()->count('counter', 1);
+        }];
+    }
+
+    public function testEndContextReleasesTheContextWhenFlushingIsCanceled(): void
+    {
+        $cancellation = new \RuntimeException('Request canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+
+        $client = $this->createMock(ClientInterface::class);
+        $client->method('getOptions')->willReturn(new Options());
+        $client->expects($this->once())->method('flush')->willThrowException($cancellation);
+        $hub = SentrySdk::init();
+        $hub->bindClient($client);
+        SentrySdk::startContext();
+
+        try {
+            SentrySdk::endContext();
+            $this->fail('Expected the cancellation to propagate.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame($cancellation, $exception);
+        }
+
+        $this->assertSame($hub, SentrySdk::getCurrentHub());
     }
 
     public function testEndContextFlushesResourcesIndependently(): void

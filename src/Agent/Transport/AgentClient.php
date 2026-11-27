@@ -9,6 +9,8 @@ use Sentry\HttpClient\Request;
 use Sentry\HttpClient\Response;
 use Sentry\Options;
 
+use function Sentry\isCancellation;
+
 class AgentClient implements HttpClientInterface
 {
     private const SOCKET_TIMEOUT_SECONDS = 0.01;
@@ -203,6 +205,10 @@ class AgentClient implements HttpClientInterface
         try {
             $fallbackClient = ($this->fallbackClientFactory)();
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $this->fallbackClientFactory = null;
             $this->fallbackClientError = \sprintf(
                 'Failed to initialize fallback HTTP client. Reason: "%s". Fallback delivery has been disabled.',
@@ -255,6 +261,10 @@ class AgentClient implements HttpClientInterface
             try {
                 return $fallbackClient->sendRequest($request, $options);
             } catch (\Throwable $exception) {
+                if (isCancellation($exception)) {
+                    throw $exception;
+                }
+
                 $options->getLoggerOrNullLogger()->debug(
                     'Fallback HTTP client failed while sending envelope.',
                     array_merge($logContext, ['exception' => $exception])

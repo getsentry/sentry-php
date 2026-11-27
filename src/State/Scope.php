@@ -17,6 +17,8 @@ use Sentry\Tracing\Span;
 use Sentry\Tracing\Transaction;
 use Sentry\UserDataBag;
 
+use function Sentry\isCancellation;
+
 /**
  * The scope holds data that should implicitly be sent with Sentry events. It
  * can hold context data, extra parameters, level overrides, fingerprints etc.
@@ -264,6 +266,10 @@ class Scope
         try {
             $resolvedUser = $userResolver();
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $resolvedUser = null;
         } finally {
             $this->userResolver = $userResolver;
@@ -460,6 +466,10 @@ class Scope
         try {
             $context = $callback();
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             return null;
         }
 
@@ -609,6 +619,10 @@ class Scope
             try {
                 $event = $processor($event, $hint);
             } catch (\Throwable $exception) {
+                if (isCancellation($exception)) {
+                    throw $exception;
+                }
+
                 if ($options !== null) {
                     $options->getLoggerOrNullLogger()->error(\sprintf('The event processor failed with exception: "%s".', $exception->getMessage()));
                 }

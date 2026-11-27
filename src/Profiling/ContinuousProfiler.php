@@ -14,6 +14,8 @@ use Sentry\Transport\DataCategory;
 use Sentry\Util\SentryUid;
 use Sentry\Util\TelemetryStorage;
 
+use function Sentry\isCancellation;
+
 /**
  * @phpstan-import-type ExcimerLogStackEntry from ExcimerLogConverter
  *
@@ -287,11 +289,14 @@ final class ContinuousProfiler
         // Passes the remaining samples to the flush callback
         $this->profiler->flush();
 
-        $this->capturePendingChunks();
-
-        $this->clearProfiler();
-
+        // Sending a chunk can yield to another root span starting its own recording.
+        $chunks = $this->clearProfiler();
         $this->activeRootSpans = [];
+
+        $client = SentrySdk::getCurrentHub()->getClient();
+        if ($client !== null) {
+            $this->sendChunks($client, $chunks);
+        }
     }
 
     public function flush(): void
@@ -365,14 +370,7 @@ final class ContinuousProfiler
             return;
         }
 
-        // Stopping or flushing the profiler and ending a runtime context must not fail because of a chunk
-        try {
-            foreach ($this->pendingChunks->drain() as $profileChunk) {
-                $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
-            }
-        } catch (\Throwable $exception) {
-            $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunks.', ['exception' => $exception]);
-        }
+        $this->sendChunks($client, $this->pendingChunks->drain());
     }
 
     public function isRunning(): bool
@@ -502,7 +500,29 @@ final class ContinuousProfiler
         $this->pendingChunks->push(new ProfileChunk($this->profilerId, $this->startTimestamp, $profileData, $client->getOptions()));
     }
 
-    private function clearProfiler(): void
+    /**
+     * @param ProfileChunk[] $chunks
+     */
+    private function sendChunks(ClientInterface $client, array $chunks): void
+    {
+        // Stopping or flushing the profiler and ending a runtime context must not fail because of a chunk
+        try {
+            foreach ($chunks as $profileChunk) {
+                $client->captureEvent(Event::createProfileChunk()->setProfileChunk($profileChunk));
+            }
+        } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
+            $client->getOptions()->getLoggerOrNullLogger()->error('Failed to send the profile chunks.', ['exception' => $exception]);
+        }
+    }
+
+    /**
+     * @return ProfileChunk[] The completed chunks of the recording being cleared
+     */
+    private function clearProfiler(): array
     {
         // Clear the flush callback so that the samples are discarded
         if ($this->profiler !== null) {
@@ -516,8 +536,7 @@ final class ContinuousProfiler
         $this->paused = false;
         $this->pauseTimestamps = [];
 
-        // A forked process inherits the completed chunks, which the parent process captures itself
-        $this->pendingChunks->drain();
+        return $this->pendingChunks->drain();
     }
 
     private function resumeTimer(): void
@@ -554,6 +573,7 @@ final class ContinuousProfiler
         });
 
         try {
+            // The parent process captures its own completed chunks, so discard them in the child
             $this->clearProfiler();
         } finally {
             restore_error_handler();

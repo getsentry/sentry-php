@@ -6,6 +6,7 @@ namespace Sentry\Tests\Attributes;
 
 use PHPUnit\Framework\TestCase;
 use Sentry\Attributes\Attribute;
+use Sentry\SentrySdk;
 use Sentry\Serializer\SerializableInterface;
 
 /**
@@ -133,6 +134,21 @@ final class AttributeTest extends TestCase
                 'value' => '[]',
             ],
         ];
+    }
+
+    public function testCancellationWhileConvertingAnAttributePropagates(): void
+    {
+        $cancellation = new \RuntimeException('Conversion canceled');
+        SentrySdk::setCancellationDetector(static function (\Throwable $exception) use ($cancellation): bool {
+            return $exception === $cancellation;
+        });
+        $value = $this->createMock(SerializableInterface::class);
+        $value->method('toSentry')->willThrowException($cancellation);
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Conversion canceled');
+
+        Attribute::tryFromValue($value);
     }
 
     public function testSerializeAsString(): void

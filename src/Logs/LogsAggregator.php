@@ -18,6 +18,8 @@ use Sentry\Util\Arr;
 use Sentry\Util\Str;
 use Sentry\Util\TelemetryStorage;
 
+use function Sentry\isCancellation;
+
 /**
  * @internal
  */
@@ -137,6 +139,10 @@ final class LogsAggregator
         try {
             $log = ($options->getBeforeSendLogCallback())($log);
         } catch (\Throwable $exception) {
+            if (isCancellation($exception)) {
+                throw $exception;
+            }
+
             $options->getLoggerOrNullLogger()->error(\sprintf('The "before_send_log" callback failed with exception: "%s".', $exception->getMessage()));
             ClientReportAggregator::getInstance()->add(DataCategory::logItem(), Reason::beforeSend(), 1);
 
