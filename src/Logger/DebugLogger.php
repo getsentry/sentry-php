@@ -15,10 +15,11 @@ abstract class DebugLogger extends AbstractLogger
      */
     public function log($level, $message, array $context = []): void
     {
+        $formattedLevel = \is_scalar($level) || $level instanceof \Stringable ? (string) $level : get_debug_type($level);
         $formattedMessageAndContext = implode(' ', array_filter([(string) $message, json_encode($context)]));
 
         $this->write(
-            \sprintf("sentry/sentry: [%s] %s\n", $level, $formattedMessageAndContext)
+            \sprintf("sentry/sentry: [%s] %s\n", $formattedLevel, $formattedMessageAndContext)
         );
     }
 
