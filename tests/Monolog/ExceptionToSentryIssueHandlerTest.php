@@ -152,6 +152,29 @@ final class ExceptionToSentryIssueHandlerTest extends TestCase
         $this->assertFalse($handler->handle($record));
     }
 
+    public function testHandleIgnoresRecordsWithSentryDisabledInContext(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->never())
+            ->method('captureException');
+
+        $handler = new ExceptionToSentryIssueHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
+        $record = RecordFactory::create(
+            'foo bar',
+            Logger::ERROR,
+            'channel.foo',
+            [
+                'exception' => new \RuntimeException('boom'),
+                'sentry' => false,
+            ],
+            []
+        );
+
+        $this->assertTrue($handler->isHandling($record));
+        $this->assertFalse($handler->handle($record));
+    }
+
     public function testHandleIgnoresRecordsBelowThreshold(): void
     {
         $exception = new \RuntimeException('boom');

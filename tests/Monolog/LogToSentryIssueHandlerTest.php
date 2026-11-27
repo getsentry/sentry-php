@@ -8,10 +8,12 @@ use Monolog\Logger;
 use Monolog\LogRecord;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sentry\Breadcrumb;
 use Sentry\ClientBuilder;
 use Sentry\ClientInterface;
 use Sentry\Event;
 use Sentry\EventHint;
+use Sentry\Monolog\BreadcrumbHandler;
 use Sentry\Monolog\ExceptionToSentryIssueHandler;
 use Sentry\Monolog\LogToSentryIssueHandler;
 use Sentry\Severity;
@@ -140,6 +142,82 @@ final class LogToSentryIssueHandlerTest extends TestCase
 
         $this->assertTrue($handler->isHandling($record));
         $this->assertTrue($handler->handle($record));
+    }
+
+    public function testHandleIgnoresRecordsWithSentryDisabledInContext(): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->never())
+            ->method('captureEvent');
+
+        $handler = new LogToSentryIssueHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
+        $record = RecordFactory::create('foo bar', Logger::WARNING, 'channel.foo', ['sentry' => false], []);
+
+        $this->assertTrue($handler->isHandling($record));
+        $this->assertFalse($handler->handle($record));
+    }
+
+    /**
+     * @dataProvider nonFalseSentryContextValueDataProvider
+     *
+     * @param mixed $value
+     */
+    public function testHandleCapturesRecordsWhenSentryContextIsNotFalse($value): void
+    {
+        /** @var ClientInterface&MockObject $client */
+        $client = $this->createMock(ClientInterface::class);
+        $client->expects($this->once())
+            ->method('captureEvent');
+
+        $handler = new LogToSentryIssueHandler(new Hub($client, new Scope()), Logger::DEBUG, false);
+        $record = RecordFactory::create('foo bar', Logger::WARNING, 'channel.foo', ['sentry' => $value], []);
+
+        $this->assertTrue($handler->handle($record));
+    }
+
+    /**
+     * @return iterable<array{mixed}>
+     */
+    public static function nonFalseSentryContextValueDataProvider(): iterable
+    {
+        yield [true];
+        yield [null];
+        yield [0];
+        yield [''];
+        yield ['false'];
+    }
+
+    public function testRecordWithSentryDisabledIsStillRecordedAsBreadcrumb(): void
+    {
+        $client = ClientBuilder::create()
+            ->setTransport(StubTransport::getInstance())
+            ->getClient();
+        $hub = new Hub($client, new Scope());
+
+        $logger = new Logger('channel.foo', [
+            new LogToSentryIssueHandler($hub, Logger::WARNING),
+            new ExceptionToSentryIssueHandler($hub, Logger::WARNING),
+            new BreadcrumbHandler($hub),
+        ]);
+
+        $logger->warning('ignored warning', ['sentry' => false]);
+        $logger->error('ignored exception', ['exception' => new \RuntimeException('boom'), 'sentry' => false]);
+
+        $this->assertCount(0, StubTransport::$events);
+
+        $logger->warning('reported warning');
+
+        $this->assertCount(1, StubTransport::$events);
+
+        $event = StubTransport::$events[0];
+        $this->assertSame('reported warning', $event->getMessage());
+
+        $breadcrumbMessages = array_map(static function (Breadcrumb $breadcrumb): ?string {
+            return $breadcrumb->getMessage();
+        }, $event->getBreadcrumbs());
+
+        $this->assertSame(['ignored warning', 'ignored exception'], $breadcrumbMessages);
     }
 
     public function testHandleIgnoresRecordsBelowThreshold(): void

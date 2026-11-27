@@ -20,6 +20,7 @@ use Sentry\State\Scope;
 class LogToSentryIssueHandler extends AbstractProcessingHandler
 {
     use CompatibilityProcessingHandlerTrait;
+    use SentryContextFlagTrait;
 
     private const CONTEXT_EXCEPTION_KEY = 'exception';
 
@@ -49,6 +50,10 @@ class LogToSentryIssueHandler extends AbstractProcessingHandler
      */
     public function handle($record): bool
     {
+        if (self::isSentryIssueDisabled($this->getArrayFieldFromRecord($record, 'context'))) {
+            return false;
+        }
+
         /** @phpstan-ignore-next-line */
         if (!$this->isHandling($record) || $this->hasThrowable($record)) {
             return false;
