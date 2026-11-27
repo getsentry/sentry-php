@@ -17,6 +17,22 @@ final class StrTest extends TestCase
         $this->assertSame($expected, Str::vsprintfOrNull($message, $values));
     }
 
+    /**
+     * Demo for the mutation testing job, remove before merging: asserts nothing a bug would change.
+     */
+    public function testVsprintfOrNullReturnsAString(): void
+    {
+        $this->assertIsString(Str::vsprintfOrNull('Simple message without values', []));
+    }
+
+    /**
+     * Demo for the mutation testing job, remove before merging: an edge case no other test has.
+     */
+    public function testNullValueIsFormattedAsEmptyString(): void
+    {
+        $this->assertSame('Value: ', Str::vsprintfOrNull('Value: %s', [null]));
+    }
+
     public static function vsprintfOrNullDataProvider(): \Generator
     {
         yield [
@@ -29,6 +45,13 @@ final class StrTest extends TestCase
             'Message with a value: %s',
             ['value'],
             'Message with a value: value',
+        ];
+
+        // Demo for the mutation testing job, remove before merging: the same kind of input as the row above.
+        yield [
+            'Another message with a value: %s',
+            ['other'],
+            'Another message with a value: other',
         ];
 
         yield [

@@ -61,6 +61,13 @@
 
 - Add tests with every behavior change. This is a library repo with broad
   compatibility and regression coverage.
+- Every new test must catch a bug that no existing test catches. Read the
+  tests that already cover the code first, and name that bug before adding the
+  test. If you cannot name one, do not add the test.
+- Add a data-provider row only for input that takes a different branch than
+  the existing rows, not for another value of the same kind.
+- Do not add tests for plain getters and setters. Options are covered by their
+  case in `OptionsTest::optionsDataProvider()`.
 - Every SDK option/default must have a valid case in
   `OptionsTest::optionsDataProvider()`. Keep the exhaustive option-coverage and
   default-validation tests passing when adding or changing options.
@@ -107,3 +114,8 @@
   jobs for FrankenPHP and RoadRunner.
 - `.github/workflows/static-analysis.yaml` runs PHP-CS-Fixer, PHPStan, and
   Psalm on single recent PHP versions rather than across the full test matrix.
+- `.github/workflows/mutation-testing.yml` only runs on pull requests with the
+  `mutation-testing` label. It comments which new tests notice nothing that
+  another test does not notice too. Add the label when a pull request adds
+  tests, then remove each reported test or say in the pull request why it
+  stays. It never fails a pull request.
