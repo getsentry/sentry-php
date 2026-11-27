@@ -226,13 +226,10 @@ class OptionsResolver
                 continue;
             }
 
-            $base = $resolved[$option] ?? null;
-            if (!\is_array($base)) {
-                $base = $default;
-            }
+            /** @var array<string, mixed> $base */
+            $base = \is_array($resolved[$option] ?? null) ? $resolved[$option] : $default;
 
             /** @var array<string, mixed> $default */
-            /** @var array<string, mixed> $base */
             /** @var array<string, mixed> $value */
             $resolved[$option] = $this->applyOptions($base, $default, $value, $path, $logger);
         }
