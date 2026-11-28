@@ -1124,12 +1124,6 @@ count = 1
 
 [[issues]]
 file = "src/Serializer/EnvelopItems/TransactionItem.php"
-code = "invalid-return-statement"
-message = '''Invalid return type for function `Sentry\Serializer\EnvelopItems\TransactionItem::serializeSpan`: expected `array{'data'?: array<string, mixed>, 'description'?: string, 'op'?: string, 'origin': string, 'parent_span_id'?: string, 'span_id': string, 'start_timestamp': float, 'status'?: string, 'tags'?: array<string, string>, 'timestamp'?: float, 'trace_id': string}`, but found `array{'data'?: array<string, mixed>, 'description'?: null|string, 'op'?: null|string, 'origin': string, 'parent_span_id'?: string, 'span_id': string, 'start_timestamp': float, 'status'?: string, 'tags'?: array<string, string>, 'timestamp'?: float|null, 'trace_id': string}`.'''
-count = 1
-
-[[issues]]
-file = "src/Serializer/EnvelopItems/TransactionItem.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 1

@@ -191,20 +191,26 @@ class TransactionItem implements EnvelopeItemInterface
             $result['parent_span_id'] = (string) $span->getParentSpanId();
         }
 
-        if ($span->getEndTimestamp() !== null) {
-            $result['timestamp'] = $span->getEndTimestamp();
+        $endTimestamp = $span->getEndTimestamp();
+
+        if ($endTimestamp !== null) {
+            $result['timestamp'] = $endTimestamp;
         }
 
         if ($span->getStatus() !== null) {
             $result['status'] = (string) $span->getStatus();
         }
 
-        if ($span->getDescription() !== null) {
-            $result['description'] = $span->getDescription();
+        $description = $span->getDescription();
+
+        if ($description !== null) {
+            $result['description'] = $description;
         }
 
-        if ($span->getOp() !== null) {
-            $result['op'] = $span->getOp();
+        $op = $span->getOp();
+
+        if ($op !== null) {
+            $result['op'] = $op;
         }
 
         if (!empty($span->getData())) {
