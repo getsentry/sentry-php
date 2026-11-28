@@ -32,8 +32,10 @@ trait BreadcrumbSeralizerTrait
             'timestamp' => $breadcrumb->getTimestamp(),
         ];
 
-        if ($breadcrumb->getMessage() !== null) {
-            $result['message'] = $breadcrumb->getMessage();
+        $message = $breadcrumb->getMessage();
+
+        if ($message !== null) {
+            $result['message'] = $message;
         }
 
         if (!empty($breadcrumb->getMetadata())) {
